@@ -20,6 +20,142 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
 $upload_dir = __DIR__ . '/../uploads/';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Portfolio Item Management
+    if (isset($_POST['add_portfolio'])) {
+        $t_ar = $_POST['p_title_ar'] ?? '';
+        $t_en = $_POST['p_title_en'] ?? '';
+        $d_ar = $_POST['p_desc_ar'] ?? '';
+        $d_en = $_POST['p_desc_en'] ?? '';
+        $type = $_POST['p_type'] ?? 'image';
+        $order = (int) ($_POST['p_order'] ?? 0);
+        $preview = $_POST['p_preview'] ?? '';
+        $content = '';
+
+        if ($type == 'iframe') {
+            $content = $_POST['p_iframe_url'] ?? '';
+        } else {
+            if (isset($_FILES['p_image_file']) && $_FILES['p_image_file']['error'] === UPLOAD_ERR_OK) {
+                $ext = pathinfo($_FILES['p_image_file']['name'], PATHINFO_EXTENSION);
+                $filename = 'portfolio_' . time() . '.' . $ext;
+                if (move_uploaded_file($_FILES['p_image_file']['tmp_name'], $upload_dir . $filename)) {
+                    $content = $filename;
+                }
+            }
+        }
+
+        if (!empty($content)) {
+            $cat_ar = $_POST['p_category_ar'] ?? '';
+            $cat_en = $_POST['p_category_en'] ?? '';
+            $pdo->prepare("INSERT INTO portfolio_items (title_ar, title_en, description_ar, description_en, category_ar, category_en, item_type, content_url, preview_url, display_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+                ->execute([$t_ar, $t_en, $d_ar, $d_en, $cat_ar, $cat_en, $type, $content, $preview, $order]);
+            $_SESSION['settings_message'] = __('work_added_success');
+            header("Location: settings.php?active_tab=portfolio");
+            exit;
+        }
+    }
+
+    if (isset($_POST['edit_portfolio'])) {
+        $id = (int) $_POST['p_id'];
+        $t_ar = $_POST['p_title_ar'] ?? '';
+        $t_en = $_POST['p_title_en'] ?? '';
+        $d_ar = $_POST['p_desc_ar'] ?? '';
+        $d_en = $_POST['p_desc_en'] ?? '';
+        $cat_ar = $_POST['p_category_ar'] ?? '';
+        $cat_en = $_POST['p_category_en'] ?? '';
+        $type = $_POST['p_type'] ?? 'image';
+        $order = (int) ($_POST['p_order'] ?? 0);
+        $preview = $_POST['p_preview'] ?? '';
+
+        $stmt = $pdo->prepare("UPDATE portfolio_items SET title_ar=?, title_en=?, description_ar=?, description_en=?, category_ar=?, category_en=?, item_type=?, preview_url=?, display_order=? WHERE id=?");
+        $stmt->execute([$t_ar, $t_en, $d_ar, $d_en, $cat_ar, $cat_en, $type, $preview, $order, $id]);
+
+        if ($type == 'iframe' && !empty($_POST['p_iframe_url'])) {
+            $pdo->prepare("UPDATE portfolio_items SET content_url=? WHERE id=?")->execute([$_POST['p_iframe_url'], $id]);
+        } elseif ($type == 'image' && isset($_FILES['p_image_file']) && $_FILES['p_image_file']['error'] === UPLOAD_ERR_OK) {
+            $ext = pathinfo($_FILES['p_image_file']['name'], PATHINFO_EXTENSION);
+            $filename = 'portfolio_' . time() . '.' . $ext;
+            if (move_uploaded_file($_FILES['p_image_file']['tmp_name'], $upload_dir . $filename)) {
+                $pdo->prepare("UPDATE portfolio_items SET content_url=? WHERE id=?")->execute([$filename, $id]);
+            }
+        }
+
+        $_SESSION['settings_message'] = __('settings_updated');
+        header("Location: settings.php?active_tab=portfolio");
+        exit;
+    }
+
+    if (isset($_POST['delete_portfolio_id'])) {
+        $id = (int) $_POST['delete_portfolio_id'];
+        $stmt = $pdo->prepare("SELECT * FROM portfolio_items WHERE id = ?");
+        $stmt->execute([$id]);
+        $ritem = $stmt->fetch();
+        if ($ritem && $ritem['item_type'] == 'image') {
+            @unlink($upload_dir . $ritem['content_url']);
+        }
+        $pdo->prepare("DELETE FROM portfolio_items WHERE id = ?")->execute([$id]);
+        $_SESSION['settings_message'] = __('work_deleted_success');
+        header("Location: settings.php?active_tab=portfolio");
+        exit;
+    }
+
+    // Pricing Plans Management
+    if (isset($_POST['add_pricing_plan'])) {
+        $name_ar = $_POST['plan_name_ar'] ?? '';
+        $name_en = $_POST['plan_name_en'] ?? '';
+        $price = $_POST['plan_price'] ?? 0;
+        $currency_ar = $_POST['plan_currency_ar'] ?? 'ريال';
+        $currency_en = $_POST['plan_currency_en'] ?? 'SAR';
+        $period_ar = $_POST['plan_period_ar'] ?? 'شهرياً';
+        $period_en = $_POST['plan_period_en'] ?? 'Monthly';
+        $desc_ar = $_POST['plan_desc_ar'] ?? '';
+        $desc_en = $_POST['plan_desc_en'] ?? '';
+        $features = $_POST['plan_features'] ?? '';
+        $is_featured = isset($_POST['plan_featured']) ? 1 : 0;
+        $btn_text_ar = $_POST['plan_btn_ar'] ?? 'اشترك الآن';
+        $btn_text_en = $_POST['plan_btn_en'] ?? 'Subscribe Now';
+        $btn_url = $_POST['plan_btn_url'] ?? '';
+        $order = (int) ($_POST['plan_order'] ?? 0);
+
+        $stmt = $pdo->prepare("INSERT INTO pricing_plans (plan_name_ar, plan_name_en, price, currency_ar, currency_en, billing_period_ar, billing_period_en, description_ar, description_en, features, is_featured, button_text_ar, button_text_en, button_url, display_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$name_ar, $name_en, $price, $currency_ar, $currency_en, $period_ar, $period_en, $desc_ar, $desc_en, $features, $is_featured, $btn_text_ar, $btn_text_en, $btn_url, $order]);
+        $_SESSION['settings_message'] = __('plan_added_success');
+        header("Location: settings.php?active_tab=pricing");
+        exit;
+    }
+
+    if (isset($_POST['edit_pricing_plan'])) {
+        $id = (int) $_POST['plan_id'];
+        $name_ar = $_POST['plan_name_ar'] ?? '';
+        $name_en = $_POST['plan_name_en'] ?? '';
+        $price = $_POST['plan_price'] ?? 0;
+        $currency_ar = $_POST['plan_currency_ar'] ?? 'ريال';
+        $currency_en = $_POST['plan_currency_en'] ?? 'SAR';
+        $period_ar = $_POST['plan_period_ar'] ?? 'شهرياً';
+        $period_en = $_POST['plan_period_en'] ?? 'Monthly';
+        $desc_ar = $_POST['plan_desc_ar'] ?? '';
+        $desc_en = $_POST['plan_desc_en'] ?? '';
+        $features = $_POST['plan_features'] ?? '';
+        $is_featured = isset($_POST['plan_featured']) ? 1 : 0;
+        $btn_text_ar = $_POST['plan_btn_ar'] ?? 'اشترك الآن';
+        $btn_text_en = $_POST['plan_btn_en'] ?? 'Subscribe Now';
+        $btn_url = $_POST['plan_btn_url'] ?? '';
+        $order = (int) ($_POST['plan_order'] ?? 0);
+
+        $stmt = $pdo->prepare("UPDATE pricing_plans SET plan_name_ar=?, plan_name_en=?, price=?, currency_ar=?, currency_en=?, billing_period_ar=?, billing_period_en=?, description_ar=?, description_en=?, features=?, is_featured=?, button_text_ar=?, button_text_en=?, button_url=?, display_order=? WHERE id=?");
+        $stmt->execute([$name_ar, $name_en, $price, $currency_ar, $currency_en, $period_ar, $period_en, $desc_ar, $desc_en, $features, $is_featured, $btn_text_ar, $btn_text_en, $btn_url, $order, $id]);
+        $_SESSION['settings_message'] = __('plan_updated_success');
+        header("Location: settings.php?active_tab=pricing");
+        exit;
+    }
+
+    if (isset($_POST['delete_pricing_plan'])) {
+        $id = (int) $_POST['delete_pricing_plan'];
+        $pdo->prepare("DELETE FROM pricing_plans WHERE id = ?")->execute([$id]);
+        $_SESSION['settings_message'] = __('plan_deleted_success');
+        header("Location: settings.php?active_tab=pricing");
+        exit;
+    }
+
     // Handle Deletions first
     $image_fields = ['site_logo', 'site_favicon', 'about_image', 'testimonial_1_image', 'testimonial_2_image', 'testimonial_3_image', 'testimonial_4_image'];
     foreach ($image_fields as $field) {
@@ -71,7 +207,37 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Update other settings
     foreach ($_POST as $key => $value) {
-        if (strpos($key, 'delete_') === 0 || $key === 'test_smtp' || $key === 'test_smtp_email' || $key === 'active_tab')
+        if (
+            strpos($key, 'delete_') === 0 ||
+            $key === 'test_smtp' ||
+            $key === 'test_smtp_email' ||
+            $key === 'active_tab' ||
+            // Portfolio specific fields
+            $key === 'add_portfolio' ||
+            $key === 'edit_portfolio' ||
+            $key === 'delete_portfolio_id' ||
+            $key === 'p_id' ||
+            $key === 'p_title_ar' || $key === 'p_title_en' ||
+            $key === 'p_desc_ar' || $key === 'p_desc_en' ||
+            $key === 'p_category_ar' || $key === 'p_category_en' ||
+            $key === 'p_type' || $key === 'p_iframe_url' ||
+            $key === 'p_preview' || $key === 'p_order' ||
+            // Pricing specific fields
+            $key === 'add_pricing_plan' ||
+            $key === 'edit_pricing_plan' ||
+            $key === 'delete_pricing_plan' ||
+            $key === 'plan_id' ||
+            $key === 'plan_name_ar' || $key === 'plan_name_en' ||
+            $key === 'plan_price' ||
+            $key === 'plan_currency_ar' || $key === 'plan_currency_en' ||
+            $key === 'plan_period_ar' || $key === 'plan_period_en' ||
+            $key === 'plan_desc_ar' || $key === 'plan_desc_en' ||
+            $key === 'plan_features' ||
+            $key === 'plan_featured' ||
+            $key === 'plan_btn_ar' || $key === 'plan_btn_en' ||
+            $key === 'plan_btn_url' ||
+            $key === 'plan_order'
+        )
             continue; // Skip deletion buttons and non-setting fields
 
         $stmt = $pdo->prepare("INSERT INTO settings (setting_key, setting_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE setting_value = ?");
@@ -140,6 +306,13 @@ require_once __DIR__ . '/../includes/header.php';
                         <button onclick="switchTab('landing')"
                             class="tab-btn px-5 py-2.5 rounded-xl text-sm font-bold transition-all border border-white/5"
                             data-tab="landing"><?php echo __('landing_content'); ?></button>
+                        <button onclick="switchTab('portfolio')"
+                            class="tab-btn px-5 py-2.5 rounded-xl text-sm font-bold transition-all border border-white/5"
+                            data-tab="portfolio">
+                            <?php echo __('portfolio'); ?></button>
+                        <button onclick="switchTab('pricing')"
+                            class="tab-btn px-5 py-2.5 rounded-xl text-sm font-bold transition-all border border-white/5"
+                            data-tab="pricing"><?php echo __('pricing'); ?></button>
                         <button onclick="switchTab('notifications')"
                             class="tab-btn px-5 py-2.5 rounded-xl text-sm font-bold transition-all border border-white/5"
                             data-tab="notifications"><?php echo __('notification_settings'); ?></button>
@@ -261,7 +434,8 @@ require_once __DIR__ . '/../includes/header.php';
                             <label
                                 class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('maintenance_mode'); ?></label>
                             <select name="maintenance_mode" class="setting-input">
-                                <option value="0" <?php echo ($settings['maintenance_mode'] ?? '0') == '0' ? 'selected' : ''; ?>><?php echo __('off_live'); ?></option>
+                                <option value="0" <?php echo ($settings['maintenance_mode'] ?? '0') == '0' ? 'selected' : ''; ?>><?php echo __('off_live'); ?>
+                                </option>
                                 <option value="1" <?php echo ($settings['maintenance_mode'] ?? '0') == '1' ? 'selected' : ''; ?>><?php echo __('on_maintenance'); ?></option>
                             </select>
                         </div>
@@ -705,7 +879,8 @@ require_once __DIR__ . '/../includes/header.php';
                                     <select name="feature_<?php echo $i; ?>_icon" class="setting-input text-sm">
                                         <option
                                             value="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                                            <?php echo ($settings['feature_' . $i . '_icon'] ?? '') == 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' ? 'selected' : ''; ?>>🏢 Office / Targeting</option>
+                                            <?php echo ($settings['feature_' . $i . '_icon'] ?? '') == 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' ? 'selected' : ''; ?>>🏢 Office /
+                                            Targeting</option>
                                         <option
                                             value="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
                                             <?php echo ($settings['feature_' . $i . '_icon'] ?? '') == 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' ? 'selected' : ''; ?>>🔒 Security / Lock</option>
@@ -795,7 +970,8 @@ require_once __DIR__ . '/../includes/header.php';
                                         class="block text-gray-500 text-xs font-bold mb-2 uppercase"><?php echo __('choose_icon'); ?></label>
                                     <select name="service_<?php echo $i; ?>_icon" class="setting-input text-sm">
                                         <option value="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" <?php echo ($settings['service_' . $i . '_icon'] ?? '') == 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z' ? 'selected' : ''; ?>>🛍️ Marketing / Shop</option>
-                                        <option value="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" <?php echo ($settings['service_' . $i . '_icon'] ?? '') == 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4' ? 'selected' : ''; ?>>💻 Programming / Code</option>
+                                        <option value="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" <?php echo ($settings['service_' . $i . '_icon'] ?? '') == 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4' ? 'selected' : ''; ?>>
+                                            💻 Programming / Code</option>
                                         <option
                                             value="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
                                             <?php echo ($settings['service_' . $i . '_icon'] ?? '') == 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' ? 'selected' : ''; ?>>📱 Social Media / Users</option>
@@ -1225,6 +1401,178 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
             </div>
 
+            <!-- Portfolio Management Tab -->
+            <div id="portfolio-tab" class="tab-content hidden space-y-8">
+                <div class="glass-card p-6 md:p-8 rounded-2xl border border-white/5">
+                    <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-3">
+                        <span class="w-2 h-8 bg-blue-500 rounded-full"></span>
+                        <?php echo __('portfolio'); ?>
+                    </h3>
+
+                    <!-- Add New Item Form -->
+                    <div class="bg-white/5 p-6 rounded-xl border border-white/5 mb-8">
+                        <h4 class="text-white font-bold mb-4 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 4v16m8-8H4">
+                                </path>
+                            </svg>
+                            <?php echo __('add_new_work'); ?>
+                        </h4>
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div class="space-y-4">
+                                <input type="text" name="p_title_ar" class="setting-input"
+                                    placeholder="<?php echo __('work_title'); ?> (AR)">
+                                <input type="text" name="p_title_en" class="setting-input"
+                                    placeholder="<?php echo __('work_title'); ?> (EN)">
+                                <input type="text" name="p_category_ar" class="setting-input"
+                                    placeholder="التصنيف (عربي: مثل ووردبريس)">
+                                <input type="text" name="p_category_en" class="setting-input"
+                                    placeholder="Category (English: e.g. WordPress)">
+                                <textarea name="p_desc_ar" class="setting-input"
+                                    placeholder="<?php echo __('work_desc'); ?> (AR)"></textarea>
+                                <textarea name="p_desc_en" class="setting-input"
+                                    placeholder="<?php echo __('work_desc'); ?> (EN)"></textarea>
+                            </div>
+                            <div class="space-y-4">
+                                <select name="p_type" class="setting-input" onchange="togglePortfolioType(this.value)">
+                                    <option value="image"><?php echo __('image'); ?></option>
+                                    <option value="iframe"><?php echo __('iframe'); ?></option>
+                                </select>
+
+                                <div id="p_image_group">
+                                    <label
+                                        class="block text-xs text-gray-500 mb-1 uppercase font-bold"><?php echo __('work_image'); ?></label>
+                                    <input type="file" name="p_image_file" class="setting-input" accept="image/*">
+                                </div>
+
+                                <div id="p_iframe_group" class="hidden">
+                                    <label
+                                        class="block text-xs text-gray-500 mb-1 uppercase font-bold"><?php echo __('work_iframe'); ?></label>
+                                    <input type="url" name="p_iframe_url" class="setting-input"
+                                        placeholder="https://example.com">
+                                </div>
+
+                                <input type="url" name="p_preview" class="setting-input"
+                                    placeholder="<?php echo __('work_link'); ?> (Optional)">
+                                <input type="number" name="p_order" class="setting-input"
+                                    placeholder="<?php echo __('display_order'); ?>" value="0">
+
+                                <button type="submit" name="add_portfolio"
+                                    class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all">
+                                    <?php echo __('add_new_work'); ?>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Existing Items List -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left rtl:text-right text-sm">
+                            <thead>
+                                <tr
+                                    class="text-gray-500 border-b border-white/5 uppercase text-[10px] font-black tracking-widest">
+                                    <th class="px-4 py-3">#</th>
+                                    <th class="px-4 py-3"><?php echo __('work_title'); ?></th>
+                                    <th class="px-4 py-3"><?php echo __('work_type'); ?></th>
+                                    <th class="px-4 py-3"><?php echo __('actions'); ?></th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-white/5">
+                                <?php
+                                $pStmt = $pdo->query("SELECT * FROM portfolio_items ORDER BY display_order ASC, id DESC");
+                                while ($pRow = $pStmt->fetch(PDO::FETCH_ASSOC)):
+                                    ?>
+                                    <tr class="hover:bg-white/[0.02] transition-colors group">
+                                        <td class="px-4 py-4 text-gray-500 font-mono"><?php echo $pRow['display_order']; ?>
+                                        </td>
+                                        <td class="px-4 py-4">
+                                            <div class="font-bold text-white"><?php echo $pRow['title_' . $lang]; ?></div>
+                                            <div class="text-[10px] text-blue-400">
+                                                <?php echo htmlspecialchars($pRow['category_' . $lang] ?? ''); ?>
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-4">
+                                            <span
+                                                class="px-2 py-0.5 rounded text-[10px] uppercase font-bold <?php echo $pRow['item_type'] == 'iframe' ? 'bg-indigo-500/20 text-indigo-400' : 'bg-green-500/20 text-green-400'; ?>">
+                                                <?php echo __($pRow['item_type']); ?>
+                                            </span>
+                                        </td>
+                                        <td class="px-4 py-4 text-right rtl:text-left flex items-center justify-end gap-2">
+                                            <button type="button"
+                                                onclick='openEditPortfolio(<?php echo json_encode($pRow); ?>)'
+                                                class="p-2 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M11 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-5M18.364 5.364a9 9 0 1112.728 12.728L5.364 18.364m12.728-12.728L5.364 5.364">
+                                                    </path>
+                                                </svg>
+                                            </button>
+                                            <button type="button"
+                                                onclick="confirmDeletePortfolio(<?php echo $pRow['id']; ?>)"
+                                                class="p-2 text-red-500 hover:bg-red-500/20 rounded-lg transition-colors">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                                    </path>
+                                                </svg>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                <?php endwhile; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                function togglePortfolioType(val, prefix = 'p') {
+                    document.getElementById(prefix + '_image_group').classList.toggle('hidden', val !== 'image');
+                    document.getElementById(prefix + '_iframe_group').classList.toggle('hidden', val !== 'iframe');
+                }
+
+                function openEditPortfolio(item) {
+                    document.getElementById('edit_p_id').value = item.id;
+                    document.getElementById('edit_p_title_ar').value = item.title_ar;
+                    document.getElementById('edit_p_title_en').value = item.title_en;
+                    document.getElementById('edit_p_category_ar').value = item.category_ar || '';
+                    document.getElementById('edit_p_category_en').value = item.category_en || '';
+                    document.getElementById('edit_p_desc_ar').value = item.description_ar;
+                    document.getElementById('edit_p_desc_en').value = item.description_en;
+                    document.getElementById('edit_p_type').value = item.item_type;
+                    document.getElementById('edit_p_preview').value = item.preview_url;
+                    document.getElementById('edit_p_order').value = item.display_order;
+
+                    if (item.item_type === 'iframe') {
+                        document.getElementById('edit_p_iframe_url').value = item.content_url;
+                    }
+
+                    togglePortfolioType(item.item_type, 'edit_p');
+                    document.getElementById('portfolioEditModal').classList.remove('hidden');
+                    document.body.style.overflow = 'hidden'; // Prevent body scroll
+                }
+
+                function closeEditPortfolio() {
+                    document.getElementById('portfolioEditModal').classList.add('hidden');
+                    document.body.style.overflow = ''; // Restore body scroll
+                }
+
+
+                function confirmDeletePortfolio(id) {
+                    document.getElementById('delete_p_id').value = id;
+                    document.getElementById('portfolioDeleteModal').classList.remove('hidden');
+                    document.body.style.overflow = 'hidden'; // Prevent body scroll
+                }
+
+                function closeDeleteModal() {
+                    document.getElementById('portfolioDeleteModal').classList.add('hidden');
+                    document.body.style.overflow = ''; // Restore body scroll
+                }
+            </script>
+
+            <?php include __DIR__ . '/pricing_tab.php'; ?>
+
             <div class="flex justify-end pt-4">
                 <button type="submit"
                     class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold px-12 py-4 rounded-2xl shadow-xl shadow-indigo-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]">
@@ -1232,6 +1580,173 @@ require_once __DIR__ . '/../includes/header.php';
                 </button>
             </div>
         </form>
+
+        <?php include __DIR__ . '/pricing_modals.php'; ?>
+
+        <!-- Modals moved outside the main form to prevent nesting -->
+        <!-- Edit Portfolio Modal -->
+        <div id="portfolioEditModal"
+            class="fixed inset-0 z-[60] hidden flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in overflow-y-auto">
+            <div
+                class="glass-card w-full max-w-2xl my-auto rounded-[2.5rem] border border-white/10 shadow-2xl overflow-hidden animate-scale-in">
+                <!-- Modal Header -->
+                <div
+                    class="bg-gradient-to-r from-indigo-600/20 to-purple-600/20 p-6 border-b border-white/5 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="w-10 h-10 bg-indigo-500/20 rounded-xl flex items-center justify-center text-indigo-400">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M11 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-5M18.364 5.364a9 9 0 1112.728 12.728L5.364 18.364m12.728-12.728L5.364 5.364">
+                                </path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-white"><?php echo __('edit_portfolio'); ?></h3>
+                    </div>
+                    <button onclick="closeEditPortfolio()" class="p-2 hover:bg-white/5 rounded-full transition-colors">
+                        <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <form method="POST" enctype="multipart/form-data" class="p-8 space-y-6 text-left rtl:text-right">
+                    <input type="hidden" name="p_id" id="edit_p_id">
+                    <input type="hidden" name="active_tab" value="portfolio">
+
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div class="space-y-5">
+                            <div>
+                                <label
+                                    class="block text-[10px] text-gray-400 mb-2 uppercase font-black tracking-widest"><?php echo __('work_title'); ?></label>
+                                <div class="space-y-3">
+                                    <input type="text" name="p_title_ar" id="edit_p_title_ar" class="setting-input"
+                                        placeholder="العنوان بالعربي" required>
+                                    <input type="text" name="p_title_en" id="edit_p_title_en" class="setting-input"
+                                        placeholder="Title in English" required>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label
+                                    class="block text-[10px] text-gray-400 mb-2 uppercase font-black tracking-widest"><?php echo __('category'); ?></label>
+                                <div class="space-y-3">
+                                    <input type="text" name="p_category_ar" id="edit_p_category_ar"
+                                        class="setting-input" placeholder="التصنيف بالعربي">
+                                    <input type="text" name="p_category_en" id="edit_p_category_en"
+                                        class="setting-input" placeholder="Category in English">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label
+                                    class="block text-[10px] text-gray-400 mb-2 uppercase font-black tracking-widest"><?php echo __('work_desc'); ?></label>
+                                <div class="space-y-3">
+                                    <textarea name="p_desc_ar" id="edit_p_desc_ar" class="setting-input resize-none"
+                                        rows="3" placeholder="الوصف بالعربي"></textarea>
+                                    <textarea name="p_desc_en" id="edit_p_desc_en" class="setting-input resize-none"
+                                        rows="3" placeholder="Description in English"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-5">
+                            <div>
+                                <label
+                                    class="block text-[10px] text-gray-400 mb-2 uppercase font-black tracking-widest"><?php echo __('work_type'); ?></label>
+                                <select name="p_type" id="edit_p_type" class="setting-input"
+                                    onchange="togglePortfolioType(this.value, 'edit_p')">
+                                    <option value="image"><?php echo __('image'); ?></option>
+                                    <option value="iframe"><?php echo __('iframe'); ?></option>
+                                </select>
+                            </div>
+
+                            <div id="edit_p_image_group" class="p-4 bg-white/5 rounded-2xl border border-white/5">
+                                <label
+                                    class="block text-[10px] text-indigo-400 mb-2 uppercase font-black tracking-widest"><?php echo __('work_image'); ?></label>
+                                <input type="file" name="p_image_file"
+                                    class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500"
+                                    accept="image/*">
+                                <p class="text-[10px] text-gray-500 mt-2 italic">
+                                    <?php echo __('leave_empty_keep_current'); ?>
+                                </p>
+                            </div>
+
+                            <div id="edit_p_iframe_group" class="hidden">
+                                <label
+                                    class="block text-[10px] text-indigo-400 mb-2 uppercase font-black tracking-widest"><?php echo __('work_iframe'); ?></label>
+                                <input type="url" name="p_iframe_url" id="edit_p_iframe_url" class="setting-input"
+                                    placeholder="https://example.com">
+                            </div>
+
+                            <div>
+                                <label
+                                    class="block text-[10px] text-gray-400 mb-2 uppercase font-black tracking-widest"><?php echo __('work_link'); ?></label>
+                                <input type="url" name="p_preview" id="edit_p_preview" class="setting-input"
+                                    placeholder="https://preview.com">
+                            </div>
+
+                            <div>
+                                <label
+                                    class="block text-[10px] text-gray-400 mb-2 uppercase font-black tracking-widest"><?php echo __('display_order'); ?></label>
+                                <input type="number" name="p_order" id="edit_p_order" class="setting-input">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal Footer -->
+                    <div class="flex gap-4 pt-6 border-t border-white/5">
+                        <button type="submit" name="edit_portfolio"
+                            class="flex-1 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold rounded-2xl transition-all shadow-xl shadow-indigo-600/20 flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <?php echo __('save_changes'); ?>
+                        </button>
+                        <button type="button" onclick="closeEditPortfolio()"
+                            class="flex-1 py-4 bg-white/5 hover:bg-white/10 text-white font-bold rounded-2xl border border-white/10 transition-all">
+                            <?php echo __('cancel'); ?>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Custom Delete Confirmation Modal -->
+        <div id="portfolioDeleteModal"
+            class="fixed inset-0 z-[70] hidden flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md animate-fade-in">
+            <div
+                class="glass-card w-full max-w-md p-0 rounded-[2.5rem] border border-red-500/20 shadow-2xl text-center animate-scale-in overflow-hidden">
+                <div class="p-8">
+                    <div
+                        class="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6 text-red-500">
+                        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                            </path>
+                        </svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-4"><?php echo __('are_you_sure_delete_portfolio'); ?>
+                    </h3>
+                    <p class="text-gray-400 mb-8"><?php echo __('undone_action_warning'); ?></p>
+
+                    <form method="POST" class="flex flex-col gap-3">
+                        <input type="hidden" name="delete_portfolio_id" id="delete_p_id">
+                        <input type="hidden" name="active_tab" value="portfolio">
+                        <button type="submit"
+                            class="w-full py-4 bg-red-600 hover:bg-red-500 text-white font-bold rounded-2xl transition-all shadow-xl shadow-red-600/20">
+                            <?php echo __('confirm_delete'); ?>
+                        </button>
+                        <button type="button" onclick="closeDeleteModal()"
+                            class="w-full py-4 bg-white/5 hover:bg-white/10 text-white font-bold rounded-2xl border border-white/10 transition-all">
+                            <?php echo __('cancel'); ?>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -1275,7 +1790,7 @@ require_once __DIR__ . '/../includes/header.php';
 
 <script>
     function switchTab(tabId) {
-        // Hide all tabs
+        // Hideall tabs
         document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
         // Show selected tab
         const targetTab = document.getElementById(tabId + '-tab');

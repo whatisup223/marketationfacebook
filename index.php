@@ -553,6 +553,197 @@ require_once 'includes/header.php';
     </div>
 </section>
 
+<!-- Portfolio Section (Our Work) -->
+<?php
+$portfolioStmt = $pdo->query("SELECT * FROM portfolio_items ORDER BY display_order ASC, id DESC");
+$portfolioItems = $portfolioStmt->fetchAll(PDO::FETCH_ASSOC);
+if (!empty($portfolioItems)):
+    ?>
+    <section id="portfolio" class="py-24 relative overflow-hidden bg-slate-900/30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-5xl font-black text-white mb-4 tracking-tight">
+                    <?php echo getSetting('portfolio_title_' . $lang, __('portfolio_section')); ?>
+                </h2>
+                <div class="w-24 h-1.5 bg-gradient-to-r from-blue-500 to-indigo-600 mx-auto rounded-full"></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <?php foreach ($portfolioItems as $item):
+                    $item_title = $item['title_' . $lang] ?? $item['title_en'];
+                    $item_desc = $item['description_' . $lang] ?? $item['description_en'];
+                    ?>
+                    <div class="group relative perspective-1000">
+                        <div
+                            class="glass-card rounded-[2rem] overflow-hidden border border-white/5 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-blue-500/10 h-full flex flex-col">
+
+                            <!-- Top Browser Frame (Mockup) -->
+                            <div class="bg-gray-800/80 px-4 py-3 flex items-center gap-2 border-b border-white/5">
+                                <div class="flex gap-1.5">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-red-500/50"></span>
+                                    <span class="w-2.5 h-2.5 rounded-full bg-yellow-500/50"></span>
+                                    <span class="w-2.5 h-2.5 rounded-full bg-green-500/50"></span>
+                                </div>
+                                <div
+                                    class="flex-1 bg-white/5 rounded-lg py-1 px-3 text-[10px] text-gray-500 font-mono truncate">
+                                    <?php echo $item['preview_url'] ?: 'https://work-preview.com'; ?>
+                                </div>
+                            </div>
+
+                            <!-- Content Area - Increased Height -->
+                            <div class="relative overflow-hidden bg-gray-900 flex-shrink-0" style="height: 400px;">
+                                <?php if ($item['item_type'] == 'iframe'): ?>
+                                    <iframe src="<?php echo htmlspecialchars($item['content_url']); ?>"
+                                        class="w-full h-full border-0 origin-top-left" style="background: white;"
+                                        sandbox="allow-scripts allow-same-origin allow-forms" loading="lazy"></iframe>
+                                    <div class="absolute inset-0 bg-transparent z-20"></div>
+                                <?php else: ?>
+                                    <img src="uploads/<?php echo $item['content_url']; ?>"
+                                        class="w-full h-full object-cover transition duration-700 group-hover:scale-110"
+                                        alt="<?php echo $item_title; ?>">
+                                <?php endif; ?>
+
+                                <!-- Hover Overlay -->
+                                <div
+                                    class="absolute inset-0 bg-indigo-600/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-sm z-30">
+                                    <?php if (!empty($item['preview_url'])): ?>
+                                        <a href="<?php echo htmlspecialchars($item['preview_url']); ?>" target="_blank"
+                                            class="px-6 py-2 bg-white text-indigo-600 font-bold rounded-full shadow-lg hover:bg-gray-100 transition-all">
+                                            <?php echo __('view'); ?>
+                                        </a>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+
+                            <!-- Details Area - Expanded -->
+                            <div class="p-6 flex-grow flex flex-col justify-between min-h-[180px]">
+                                <div>
+                                    <h3 class="text-xl font-bold text-white mb-3 group-hover:text-blue-400 transition-colors">
+                                        <?php echo $item_title; ?>
+                                    </h3>
+                                    <p class="text-sm text-gray-400 leading-relaxed line-clamp-4"><?php echo $item_desc; ?></p>
+                                </div>
+
+                                <div class="mt-4 pt-4 border-t border-white/5 flex items-center justify-between">
+                                    <span
+                                        class="text-[10px] uppercase font-black tracking-widest text-indigo-400 border border-indigo-500/20 px-3 py-1 rounded-full">
+                                        <?php echo htmlspecialchars($item['category_' . $lang] ?: __($item['item_type'])); ?>
+                                    </span>
+                                    <svg class="w-5 h-5 text-gray-600 group-hover:text-blue-500 transition-colors" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14">
+                                        </path>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+    </section>
+<?php endif; ?>
+
+<!-- Pricing Section -->
+<?php
+$pricingPlans = [];
+$pricingStmt = $pdo->query("SELECT * FROM pricing_plans WHERE is_active = 1 ORDER BY display_order ASC, id ASC");
+while ($row = $pricingStmt->fetch(PDO::FETCH_ASSOC)) {
+    $pricingPlans[] = $row;
+}
+
+if (!empty($pricingPlans)):
+    ?>
+    <section id="pricing" class="py-24 relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-b from-slate-900 via-indigo-900/10 to-slate-900"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-5xl font-black text-white mb-4 tracking-tight">
+                    <?php echo __('pricing_section'); ?>
+                </h2>
+                <div class="w-24 h-1.5 bg-gradient-to-r from-green-500 to-blue-600 mx-auto rounded-full"></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-<?php echo min(count($pricingPlans), 3); ?> gap-8">
+                <?php foreach ($pricingPlans as $plan):
+                    $plan_name = $plan['plan_name_' . $lang] ?? $plan['plan_name_en'];
+                    $plan_desc = $plan['description_' . $lang] ?? $plan['description_en'];
+                    $currency = $plan['currency_' . $lang] ?? $plan['currency_en'];
+                    $period = $plan['billing_period_' . $lang] ?? $plan['billing_period_en'];
+                    $btn_text = $plan['button_text_' . $lang] ?? $plan['button_text_en'];
+                    $features = explode("\n", $plan['features']);
+                    $is_featured = $plan['is_featured'];
+                    ?>
+                    <div class="group relative <?php echo $is_featured ? 'lg:scale-105 lg:-mt-4' : ''; ?>">
+                        <?php if ($is_featured): ?>
+                            <div class="absolute -top-5 left-1/2 -translate-x-1/2 z-10">
+                                <span
+                                    class="bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-xs font-black px-4 py-1.5 rounded-full shadow-lg uppercase tracking-wider">
+                                    <?php echo __('most_popular'); ?>
+                                </span>
+                            </div>
+                        <?php endif; ?>
+
+                        <div
+                            class="glass-card rounded-[2rem] overflow-hidden border <?php echo $is_featured ? 'border-green-500/30 shadow-2xl shadow-green-500/20' : 'border-white/5'; ?> transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl h-full flex flex-col">
+                            <!-- Header -->
+                            <div
+                                class="p-8 text-center <?php echo $is_featured ? 'bg-gradient-to-br from-green-600/20 to-blue-600/20' : 'bg-white/5'; ?> border-b border-white/5">
+                                <h3 class="text-2xl font-black text-white mb-2"><?php echo htmlspecialchars($plan_name); ?></h3>
+                                <?php if ($plan_desc): ?>
+                                    <p class="text-sm text-gray-400"><?php echo htmlspecialchars($plan_desc); ?></p>
+                                <?php endif; ?>
+
+                                <div class="mt-6">
+                                    <div class="flex items-baseline justify-center gap-2">
+                                        <span
+                                            class="text-5xl font-black <?php echo $is_featured ? 'text-green-400' : 'text-white'; ?>">
+                                            <?php echo number_format($plan['price'], 2); ?>
+                                        </span>
+                                        <span class="text-gray-400 text-lg"><?php echo htmlspecialchars($currency); ?></span>
+                                    </div>
+                                    <p class="text-gray-500 text-sm mt-2"><?php echo htmlspecialchars($period); ?></p>
+                                </div>
+                            </div>
+
+                            <!-- Features -->
+                            <div class="p-8 flex-grow">
+                                <ul class="space-y-4">
+                                    <?php foreach ($features as $feature):
+                                        $feature = trim($feature);
+                                        if (empty($feature))
+                                            continue;
+                                        ?>
+                                        <li class="flex items-start gap-3 text-gray-300">
+                                            <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none"
+                                                stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M5 13l4 4L19 7"></path>
+                                            </svg>
+                                            <span class="text-sm leading-relaxed"><?php echo htmlspecialchars($feature); ?></span>
+                                        </li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            </div>
+
+                            <!-- CTA Button -->
+                            <div class="p-8 pt-0">
+                                <?php if (!empty($plan['button_url'])): ?>
+                                    <a href="<?php echo htmlspecialchars($plan['button_url']); ?>"
+                                        class="block w-full py-4 text-center font-bold rounded-2xl transition-all shadow-lg <?php echo $is_featured ? 'bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-500 hover:to-blue-500 text-white shadow-green-600/30' : 'bg-white/10 hover:bg-white/20 text-white border border-white/10'; ?>">
+                                        <?php echo htmlspecialchars($btn_text); ?>
+                                    </a>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+    </section>
+<?php endif; ?>
+
 <!-- Stats Section -->
 <section class="py-24 relative overflow-hidden">
     <div class="absolute inset-0 bg-indigo-500/5 -skew-y-3 transform origin-top-left"></div>
