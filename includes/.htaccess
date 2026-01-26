@@ -1,0 +1,10 @@
+# Protect includes directory - allow only PHP includes, deny direct access
+<Files ~ "\.(php|inc)$">
+    Order allow,deny
+    Deny from all
+</Files>
+
+# Allow access to specific API files if needed (currently moved to /user/)
+# <Files "save_campaign_settings.php">
+#     Allow from all
+# </Files>

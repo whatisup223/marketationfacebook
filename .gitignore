@@ -1,0 +1,34 @@
+# Database
+*.sql
+*.db
+*.sqlite
+
+# Configuration files with sensitive data
+includes/db_config.php
+
+# Logs
+*.log
+includes/settings_debug.log
+user/cron_debug.txt
+
+# Temporary files
+*.tmp
+*.temp
+*.cache
+
+# User uploads
+uploads/*
+!uploads/.gitkeep
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Cron flags
+user/cron_loop.flag

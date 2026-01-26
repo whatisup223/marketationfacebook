@@ -1,0 +1,5 @@
+*.zip
+*.sql
+backup_*/
+temp_restore/
+temp_restore.zip

@@ -1,0 +1,446 @@
+<?php
+ob_start();
+require_once __DIR__ . '/../includes/functions.php';
+
+if (!isLoggedIn()) {
+    header("Location: ../login.php");
+    exit;
+}
+
+$user_id = $_SESSION['user_id'];
+$pdo = getDB();
+$message = '';
+$error = '';
+
+// Handle Add Account
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_account'])) {
+    $fb_name = trim($_POST['fb_name']);
+    $fb_id = trim($_POST['fb_id']);
+    $access_token = trim($_POST['access_token']);
+
+    if (empty($fb_name) || empty($access_token)) {
+        $error = __('error_fields_required');
+    } else {
+        try {
+            $stmt = $pdo->prepare("INSERT INTO fb_accounts (user_id, fb_name, fb_id, access_token, is_active) VALUES (?, ?, ?, ?, 1)");
+            $stmt->execute([$user_id, $fb_name, $fb_id, $access_token]);
+            // Redirect to prevent resubmission
+            header("Location: fb_accounts.php?msg=added");
+            exit;
+        } catch (PDOException $e) {
+            $error = "DB Error: " . $e->getMessage();
+        }
+    }
+}
+
+// Handle Sync Pages
+if (isset($_GET['sync'])) {
+    require_once __DIR__ . '/../includes/facebook_api.php';
+    $acc_id = $_GET['sync'];
+
+    $stmt = $pdo->prepare("SELECT * FROM fb_accounts WHERE id = ? AND user_id = ?");
+    $stmt->execute([$acc_id, $user_id]);
+    $account = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($account) {
+        $fb = new FacebookAPI();
+        $response = $fb->getAccounts($account['access_token']);
+
+        if (isset($response['error'])) {
+            if (is_array($response['error']) || is_object($response['error'])) {
+                // Convert to string safely if needed, but usually it's a string here if simplified in API wrapper
+                $error_str = json_encode($response['error']);
+            } else {
+                $error_str = (string) $response['error'];
+            }
+
+            if (strpos($error_str, 'Application request limit reached') !== false) {
+                $error = __('msg_rate_limit_error');
+            } else {
+                $error = "FB API: " . $error_str;
+            }
+        } elseif (isset($response['data'])) {
+            $count = 0;
+            $insertPage = $pdo->prepare("INSERT INTO fb_pages (account_id, page_name, page_id, page_access_token, category, picture_url) 
+                                         VALUES (?, ?, ?, ?, ?, ?)
+                                         ON DUPLICATE KEY UPDATE 
+                                            account_id = VALUES(account_id),
+                                            page_name = VALUES(page_name), 
+                                            page_access_token = VALUES(page_access_token), 
+                                            picture_url = VALUES(picture_url)");
+
+            $total_pages_found = count($response['data']);
+            $failed_pages = [];
+
+            foreach ($response['data'] as $page) {
+                try {
+                    $picture = $page['picture']['data']['url'] ?? '';
+                    // Ensure all required fields present
+                    if (empty($page['id']) || empty($page['access_token'])) {
+                        $failed_pages[] = "Page: " . ($page['name'] ?? 'Unknown') . " (Missing ID/Token)";
+                        continue;
+                    }
+
+                    $result = $insertPage->execute([
+                        $acc_id,
+                        $page['name'] ?? 'Unknown Page',
+                        $page['id'],
+                        $page['access_token'],
+                        $page['category'] ?? 'General',
+                        $picture
+                    ]);
+
+                    if ($result) {
+                        $count++;
+                    } else {
+                        $failed_pages[] = "Page: " . ($page['name'] ?? 'Unknown') . " (Insert Failed)";
+                    }
+                } catch (PDOException $e) {
+                    $failed_pages[] = "Page: " . ($page['name'] ?? 'Unknown') . " Error: " . $e->getMessage();
+                }
+            }
+
+            if (empty($failed_pages)) {
+                header("Location: fb_accounts.php?msg=synced&count=" . $count);
+                exit;
+            } else {
+                $message = sprintf(__('msg_sync_success'), $count);
+                $error = "Warning: Some pages failed to sync:<br>" . implode("<br>", $failed_pages);
+            }
+        } else {
+            $message = __('msg_no_pages');
+        }
+    }
+}
+
+// Handle Delete Account
+if (isset($_GET['delete'])) {
+    $del_id = $_GET['delete'];
+    $stmt = $pdo->prepare("DELETE FROM fb_accounts WHERE id = ? AND user_id = ?");
+    $stmt->execute([$del_id, $user_id]);
+    header("Location: fb_accounts.php?msg=deleted");
+    exit;
+}
+
+// Handle specific messages
+// Handle specific messages
+if (empty($message) && isset($_GET['msg'])) {
+    if ($_GET['msg'] === 'deleted') {
+        $message = __('msg_account_deleted');
+    } elseif ($_GET['msg'] === 'added') {
+        $message = __('msg_account_linked');
+    } elseif ($_GET['msg'] === 'synced' && isset($_GET['count'])) {
+        $message = sprintf(__('msg_sync_success'), htmlspecialchars($_GET['count']));
+    }
+}
+
+require_once __DIR__ . '/../includes/header.php';
+?>
+
+<div class="flex min-h-screen pt-4">
+    <?php require_once __DIR__ . '/../includes/user_sidebar.php'; ?>
+
+    <div class="flex-1 min-w-0 p-4 md:p-8">
+        <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-white"><?php echo __('fb_accounts'); ?></h1>
+                <p class="text-gray-500 text-sm mt-1"><?php echo __('fb_accounts_desc'); ?></p>
+            </div>
+            <?php
+            // Dynamic Status Logic
+            $stmt_count = $pdo->prepare("SELECT COUNT(*) FROM fb_accounts WHERE user_id = ?");
+            $stmt_count->execute([$user_id]);
+            $has_accounts = (int) $stmt_count->fetchColumn() > 0;
+            ?>
+            <div
+                class="flex items-center gap-2 text-xs font-bold <?php echo $has_accounts ? 'text-green-400 bg-green-500/10 border-green-500/20' : 'text-red-400 bg-red-500/10 border-red-500/20'; ?> px-4 py-2 rounded-xl border">
+                <div
+                    class="w-2 h-2 rounded-full <?php echo $has_accounts ? 'bg-green-500 animate-pulse' : 'bg-red-500'; ?>">
+                </div>
+                <?php echo __('api_status'); ?>: <span
+                    class="uppercase tracking-wide"><?php echo $has_accounts ? __('connected') : __('not_connected'); ?></span>
+            </div>
+        </div>
+
+        <?php if ($message || isset($_GET['msg'])): ?>
+            <div id="success-alert"
+                class="glass-card border-green-500/20 bg-green-500/5 p-4 rounded-2xl flex items-center justify-between gap-3 mb-8 animate-in fade-in slide-in-from-top-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-green-500/20 text-green-500 flex items-center justify-center">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+                    <div class="text-green-400 font-bold"><?php echo $message ?: __('save_changes'); ?></div>
+                </div>
+                <button onclick="document.getElementById('success-alert').remove()"
+                    class="text-gray-400 hover:text-white transition-colors p-1 shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+        <?php endif; ?>
+
+        <?php if ($error): ?>
+            <div id="error-alert"
+                class="glass-card border-red-500/20 bg-red-500/5 p-4 rounded-2xl flex items-center justify-between gap-3 mb-8 animate-in fade-in slide-in-from-top-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-red-500/20 text-red-500 flex items-center justify-center">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                            </path>
+                        </svg>
+                    </div>
+                    <div class="text-red-400 font-bold"><?php echo $error; ?></div>
+                </div>
+                <button onclick="document.getElementById('error-alert').remove()"
+                    class="text-gray-400 hover:text-white transition-colors p-1 shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+        <?php endif; ?>
+
+        <!-- Linked Accounts Section (Full Width) -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-bold text-white"><?php echo __('your_linked_accounts'); ?></h2>
+                <span
+                    class="text-xs bg-gray-800 text-gray-400 px-3 py-1 rounded-full uppercase tracking-tighter font-bold"><?php echo __('manage_profiles'); ?></span>
+            </div>
+            <?php
+            $stmt = $pdo->prepare("SELECT * FROM fb_accounts WHERE user_id = ? ORDER BY created_at DESC");
+            $stmt->execute([$user_id]);
+            $accounts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            if (count($accounts) > 0):
+                foreach ($accounts as $acc):
+                    ?>
+                    <div
+                        class="glass-card p-5 rounded-3xl flex flex-col sm:flex-row sm:items-center justify-between group mb-4 border border-white/5 hover:border-indigo-500/30 transition-all duration-300">
+                        <div class="flex items-center gap-5 mb-4 sm:mb-0">
+                            <div class="relative">
+                                <div
+                                    class="w-14 h-14 rounded-2xl bg-[#1877F2] flex items-center justify-center text-white shadow-xl shadow-blue-600/10">
+                                    <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                                        <path
+                                            d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                                    </svg>
+                                </div>
+                                <div
+                                    class="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-[#1e293b] animate-pulse">
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-white text-lg"><?php echo htmlspecialchars($acc['fb_name']); ?></h3>
+                                <div class="flex items-center gap-3">
+                                    <p class="text-xs text-gray-500 font-mono"><?php echo __('fb_id_label'); ?>: <span
+                                            class="text-gray-400"><?php echo $acc['fb_id'] ?: __('no_data'); ?></span></p>
+                                    <span
+                                        class="text-[10px] text-indigo-400 font-bold bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20 uppercase"><?php echo __('active'); ?></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 self-end sm:self-auto">
+                            <a href="?sync=<?php echo $acc['id']; ?>"
+                                class="px-5 py-2.5 bg-white/5 hover:bg-white/10 text-white rounded-2xl text-xs font-bold transition-all flex items-center gap-2 border border-white/5">
+                                <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                                    </path>
+                                </svg>
+                                <?php echo __('btn_sync_pages'); ?>
+                            </a>
+                            <a href="?delete=<?php echo $acc['id']; ?>"
+                                onclick="return confirm('<?php echo __('confirm_delete_account'); ?>');"
+                                class="p-2.5 text-red-400 hover:bg-red-500/10 rounded-2xl transition-colors border border-transparent hover:border-red-500/20">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                    </path>
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+                <?php endforeach; else: ?>
+                <div class="text-center py-16 text-gray-500 glass-card rounded-3xl border border-white/5 border-dashed">
+                    <div
+                        class="w-16 h-16 bg-gray-800/50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-600">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                            </path>
+                        </svg>
+                    </div>
+                    <p><?php echo __('no_accounts_linked'); ?></p>
+                </div>
+            <?php endif; ?>
+        </div>
+
+        <!-- split Layout: Add Account (Left) & Synced Pages (Right) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Add Account Form -->
+            <div class="h-fit">
+                <div class="glass-card p-6 rounded-3xl border border-white/5 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-600/10 blur-3xl -mr-16 -mt-16"></div>
+
+                    <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
+                        <svg class="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <?php echo __('link_new_account'); ?>
+                    </h2>
+
+                    <form method="POST" class="space-y-5">
+                        <div>
+                            <label
+                                class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2"><?php echo __('account_name_label'); ?></label>
+                            <input type="text" name="fb_name"
+                                class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"
+                                placeholder="<?php echo __('account_name_placeholder'); ?>" required>
+                        </div>
+                        <div>
+                            <label
+                                class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2"><?php echo __('fb_id_label'); ?></label>
+                            <input type="text" name="fb_id"
+                                class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-mono"
+                                placeholder="<?php echo __('fb_id_placeholder'); ?>">
+                        </div>
+                        <div>
+                            <label
+                                class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2"><?php echo __('access_token_label'); ?></label>
+                            <textarea name="access_token" rows="5"
+                                class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-mono text-xs leading-relaxed"
+                                placeholder="<?php echo __('access_token_placeholder'); ?>" required></textarea>
+                            <p class="text-[10px] text-gray-500 mt-2 flex items-center gap-1">
+                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd"
+                                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                                        clip-rule="evenodd"></path>
+                                </svg>
+                                <?php echo __('access_token_note'); ?>
+                            </p>
+                        </div>
+                        <button type="submit" name="add_account"
+                            class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-indigo-600/20 transition-all transform active:scale-95 flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.826L10.242 9.172a4 4 0 015.656 0l4 4a4 4 0 11-5.656 5.656l-1.101-1.102">
+                                </path>
+                            </svg>
+                            <?php echo __('btn_link_account'); ?>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Synced Pages Section -->
+            <div class="glass-card rounded-3xl overflow-hidden border border-white/5 h-fit">
+                <div class="p-6 border-b border-gray-700/50 bg-white/5">
+                    <h2 class="text-xl font-bold text-white"><?php echo __('synced_pages_title'); ?></h2>
+                    <p class="text-xs text-gray-500 mt-1"><?php echo __('synced_pages_subtitle'); ?></p>
+                </div>
+                <?php
+                $pdo->exec("SET NAMES utf8mb4");
+                $stmt = $pdo->prepare("SELECT p.*, a.fb_name as account_name FROM fb_pages p 
+                                        JOIN fb_accounts a ON p.account_id = a.id 
+                                        WHERE a.user_id = ? ORDER BY p.created_at DESC");
+                $stmt->execute([$user_id]);
+                $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                if (count($pages) > 0):
+                    ?>
+                    <div class="overflow-y-auto max-h-[600px] custom-scrollbar">
+                        <table class="w-full text-left">
+                            <thead
+                                class="bg-[#1e293b] text-gray-400 text-[10px] uppercase font-bold sticky top-0 z-10 shadow-lg shadow-black/20">
+                                <tr>
+                                    <th class="px-6 py-4 tracking-widest"><?php echo __('page_info'); ?></th>
+                                    <th class="px-6 py-4 tracking-widest"><?php echo __('category'); ?></th>
+                                    <th class="px-6 py-4 text-right tracking-widest"><?php echo __('actions'); ?></th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-800">
+                                <?php foreach ($pages as $page): ?>
+                                    <tr class="hover:bg-white/5 transition-colors group">
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-4">
+                                                <div class="relative shrink-0">
+                                                    <?php if ($page['picture_url']): ?>
+                                                        <img src="<?php echo htmlspecialchars($page['picture_url']); ?>"
+                                                            class="w-10 h-10 rounded-xl object-cover aspect-square ring-2 ring-white/5">
+                                                    <?php else: ?>
+                                                        <div
+                                                            class="w-10 h-10 rounded-xl bg-gray-700 flex items-center justify-center text-xs font-bold aspect-square">
+                                                            P</div>
+                                                    <?php endif; ?>
+                                                </div>
+                                                <div>
+                                                    <div
+                                                        class="font-bold text-white group-hover:text-indigo-400 transition-colors">
+                                                        <?php echo htmlspecialchars($page['page_name']); ?>
+                                                    </div>
+                                                    <div class="text-[10px] text-gray-500 font-medium">Account: <span
+                                                            class="text-gray-400"><?php echo htmlspecialchars($page['account_name']); ?></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span
+                                                class="px-3 py-1 bg-gray-800 text-gray-400 rounded-full text-[10px] font-bold"><?php echo htmlspecialchars($page['category']); ?></span>
+                                        </td>
+                                        <td class="px-6 py-4 text-right">
+                                            <a href="page_inbox.php?page_id=<?php echo $page['id']; ?>"
+                                                class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/20 transition-all transform hover:-translate-y-0.5 text-xs">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z">
+                                                    </path>
+                                                </svg>
+                                                <?php echo __('open_inbox'); ?>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php else: ?>
+                    <div class="p-16 text-center text-gray-500">
+                        <div
+                            class="w-16 h-16 bg-gray-800/30 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-600">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+                                </path>
+                            </svg>
+                        </div>
+                        <p class="max-w-xs mx-auto text-sm leading-relaxed"><?php echo __('no_pages_synced_desc'); ?></p>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Clean URL query parameters to prevent message persistence on refresh
+    if (window.history.replaceState) {
+        const url = new URL(window.location);
+        url.searchParams.delete('msg');
+        url.searchParams.delete('count');
+        window.history.replaceState(null, '', url);
+    }
+</script>
+
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>
+</div>
+</div>
+
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>

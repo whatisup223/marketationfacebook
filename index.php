@@ -1,0 +1,1045 @@
+<?php
+if (!file_exists(__DIR__ . '/includes/db_config.php')) {
+    header("Location: install.php");
+    exit;
+}
+require_once 'includes/header.php';
+?>
+
+<!-- Hero Section -->
+<div class="relative min-h-screen flex items-center pt-24 pb-16 lg:pt-32 lg:pb-32 overflow-hidden">
+    <!-- Animated Background Blobs -->
+    <div
+        class="absolute top-0 -left-4 w-72 h-72 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob">
+    </div>
+    <div
+        class="absolute top-0 -right-4 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000">
+    </div>
+    <div
+        class="absolute -bottom-8 left-20 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000">
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+
+            <!-- Text Content Side -->
+            <div
+                class="<?php echo $lang === 'ar' ? 'lg:order-2 text-right' : 'lg:order-1 text-left'; ?> animate-fade-in">
+                <div
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md mb-8 hover:bg-white/10 transition-all duration-300">
+                    <span class="flex h-2 w-2 relative">
+                        <span
+                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                    </span>
+                    <span
+                        class="text-indigo-300 text-sm font-semibold tracking-wide uppercase"><?php echo __('hero_badge'); ?></span>
+                </div>
+
+                <h1 class="text-5xl md:text-7xl font-extrabold mb-4 leading-[1.1] tracking-tight text-white">
+                    <?php
+                    $title = __('hero_title');
+                    // Highlight the last word if it's more than one word
+                    $words = explode(' ', $title);
+                    if (count($words) > 1) {
+                        $last = array_pop($words);
+                        echo implode(' ', $words) . ' <span class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-500">' . $last . '</span>';
+                    } else {
+                        echo '<span class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-500">' . $title . '</span>';
+                    }
+                    ?>
+                </h1>
+
+                <!-- Dynamic Hero Feature Text -->
+                <p class="text-indigo-400 font-bold text-lg md:text-xl mb-8 flex items-center gap-2">
+                    <span class="w-8 h-px bg-indigo-500/50"></span>
+                    <?php echo __('hero_feature'); ?>
+                </p>
+
+                <p class="text-xl text-gray-400 mb-10 leading-relaxed max-w-2xl">
+                    <?php echo __('hero_subtitle'); ?>
+                </p>
+
+                <div class="flex flex-col sm:flex-row items-center gap-5 mb-10">
+                    <?php if (!isLoggedIn()): ?>
+                        <a href="register.php"
+                            class="group w-full sm:w-auto px-10 py-5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold rounded-2xl shadow-2xl shadow-indigo-600/30 transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-3">
+                            <span><?php echo __('start_now'); ?></span>
+                            <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                        </a>
+                        <a href="#how-it-works"
+                            class="w-full sm:w-auto px-10 py-5 bg-white/5 hover:bg-white/10 text-white font-bold rounded-2xl border border-white/10 transition-all duration-300 flex items-center justify-center gap-2 backdrop-blur-xl">
+                            <?php echo __('how_it_works'); ?>
+                        </a>
+                    <?php else: ?>
+                        <a href="user/dashboard.php"
+                            class="px-10 py-5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-2xl shadow-2xl shadow-indigo-600/30 transition-all duration-300 hover:scale-[1.02]">
+                            <?php echo __('dashboard'); ?>
+                        </a>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <!-- Calculator/Tool Side -->
+            <div class="<?php echo $lang === 'ar' ? 'lg:order-1' : 'lg:order-2'; ?> perspective-1000">
+                <div class="relative group animate-float">
+                    <!-- Glow effect -->
+                    <div
+                        class="absolute -inset-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-[2.5rem] blur-2xl opacity-20 group-hover:opacity-40 transition duration-1000">
+                    </div>
+
+                    <div
+                        class="relative glass-card rounded-[2.5rem] p-8 border border-white/10 shadow-3xl overflow-hidden backdrop-blur-2xl">
+                        <!-- Decorative Shapes -->
+                        <div class="absolute -top-24 -right-24 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl"></div>
+
+                        <!-- Calculator Header -->
+                        <div class="relative flex items-center justify-between mb-8 pb-6 border-b border-white/5">
+                            <div class="flex items-center gap-4">
+                                <div
+                                    class="w-14 h-14 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-2xl flex items-center justify-center border border-white/10">
+                                    <svg class="w-8 h-8 text-indigo-400" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                            d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z">
+                                        </path>
+                                    </svg>
+                                </div>
+                                <div class="<?php echo $lang === 'ar' ? 'text-right' : 'text-left'; ?>">
+                                    <h3 class="text-white font-bold text-xl mb-1">
+                                        <?php echo __('sim_title'); ?>
+                                    </h3>
+                                    <p class="text-sm text-gray-500">
+                                        <?php echo __('sim_desc'); ?>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Calculator Inputs -->
+                        <div class="space-y-6 relative">
+                            <div>
+                                <div class="flex justify-between mb-3 text-sm">
+                                    <span class="text-gray-400"><?php echo __('sim_followers'); ?></span>
+                                    <span class="text-indigo-400 font-mono font-bold" id="followersVal">10,000</span>
+                                </div>
+                                <input type="range" id="followers" min="1000" max="100000" step="1000" value="10000"
+                                    class="w-full h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                                    oninput="updateSim()">
+                            </div>
+
+                            <div>
+                                <div class="flex justify-between mb-3 text-sm">
+                                    <span class="text-gray-400"><?php echo __('sim_engagement'); ?></span>
+                                    <span class="text-purple-400 font-mono font-bold" id="engagementVal">5%</span>
+                                </div>
+                                <input type="range" id="engagement" min="1" max="20" step="0.5" value="5"
+                                    class="w-full h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                                    oninput="updateSim()">
+                            </div>
+
+                            <!-- Mega Result -->
+                            <div class="relative mt-8 group/result">
+                                <div
+                                    class="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-3xl blur opacity-20 group-hover/result:opacity-40 transition">
+                                </div>
+                                <div
+                                    class="relative bg-black/40 rounded-3xl p-6 border border-white/5 flex flex-col items-center">
+                                    <span
+                                        class="text-xs uppercase tracking-widest text-gray-500 mb-2 font-bold"><?php echo __('sim_total_leads'); ?></span>
+                                    <div class="text-5xl font-black text-white mb-2 tracking-tighter" id="simResult">500
+                                    </div>
+                                    <div class="flex items-center gap-2 text-green-400 text-sm font-semibold">
+                                        <span class="relative flex h-2 w-2">
+                                            <span
+                                                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                            <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                                        </span>
+                                        <?php echo __('sim_accuracy'); ?>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button onclick="location.href='register.php'"
+                                class="w-full py-4 rounded-2xl bg-white text-gray-900 font-extrabold hover:bg-gray-100 transition-colors shadow-lg">
+                                <?php echo __('sim_btn'); ?>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    @keyframes blob {
+        0% {
+            transform: translate(0px, 0px) scale(1);
+        }
+
+        33% {
+            transform: translate(30px, -50px) scale(1.1);
+        }
+
+        66% {
+            transform: translate(-20px, 20px) scale(0.9);
+        }
+
+        100% {
+            transform: translate(0px, 0px) scale(1);
+        }
+    }
+
+    .animate-blob {
+        animation: blob 7s infinite;
+    }
+
+    .animation-delay-2000 {
+        animation-delay: 2s;
+    }
+
+    .animation-delay-4000 {
+        animation-delay: 4s;
+    }
+
+    @keyframes float {
+
+        0%,
+        100% {
+            transform: translateY(0px) rotate(0deg);
+        }
+
+        50% {
+            transform: translateY(-20px) rotate(1deg);
+        }
+    }
+
+    .animate-float {
+        animation: float 6s ease-in-out infinite;
+    }
+
+    .perspective-1000 {
+        perspective: 1000px;
+    }
+</style>
+
+<script>
+    function updateSim() {
+        const f = document.getElementById('followers').value;
+        const e = document.getElementById('engagement').value;
+
+        document.getElementById('followersVal').innerText = parseInt(f).toLocaleString();
+        document.getElementById('engagementVal').innerText = e + '%';
+
+        const res = Math.floor(f * (e / 100));
+        document.getElementById('simResult').innerText = res.toLocaleString();
+    }
+    // Run once on load
+    document.addEventListener('DOMContentLoaded', updateSim);
+</script>
+
+<!-- About Us Section -->
+<section id="about-us" class="py-24 relative overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div
+            class="glass-card rounded-[3rem] p-10 md:p-20 border border-white/10 relative overflow-hidden backdrop-blur-3xl shadow-3xl">
+            <!-- Decorative Background -->
+            <div class="absolute -top-24 -left-24 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl animate-pulse"></div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                <!-- Image/Visual Side -->
+                <div class="relative group">
+                    <div
+                        class="absolute -inset-4 bg-gradient-to-tr from-indigo-500 to-purple-600 rounded-[2.5rem] blur-2xl opacity-20 group-hover:opacity-30 transition duration-1000">
+                    </div>
+                    <div class="relative rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl">
+                        <?php
+                        $about_img = getSetting('about_image');
+                        $about_img_url = !empty($about_img) ? 'uploads/' . $about_img : 'https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&q=80&w=1000';
+                        ?>
+                        <img src="<?php echo $about_img_url; ?>" alt="About Us"
+                            class="w-full h-full object-cover transform hover:scale-105 transition duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent"></div>
+                        <div class="absolute bottom-8 left-8 right-8">
+                            <div class="glass-card p-4 rounded-2xl flex items-center gap-4 border-white/20">
+                                <div
+                                    class="w-12 h-12 bg-indigo-500 rounded-xl flex items-center justify-center text-white shadow-lg">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
+                                        </path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-white font-bold text-sm"><?php echo __('hero_badge'); ?></p>
+                                    <p class="text-gray-400 text-xs"><?php echo __('fast_secure'); ?></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Text Content Side -->
+                <div class="animate-fade-in">
+                    <div
+                        class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 mb-6">
+                        <span class="w-2 h-2 rounded-full bg-indigo-500 animate-ping"></span>
+                        <span
+                            class="text-indigo-300 text-xs font-bold uppercase tracking-widest"><?php echo __('about_us'); ?></span>
+                    </div>
+                    <h2 class="text-4xl md:text-5xl font-black text-white mb-8 leading-tight">
+                        <?php echo __('about_subtitle'); ?>
+                    </h2>
+                    <p class="text-lg text-gray-400 leading-relaxed mb-10">
+                        <?php echo __('about_desc'); ?>
+                    </p>
+
+                    <ul class="space-y-4 mb-10">
+                        <li class="flex items-center gap-4 text-white font-medium">
+                            <span
+                                class="w-6 h-6 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                                        d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </span>
+                            <?php echo __('feature_1_title'); ?>
+                        </li>
+                        <li class="flex items-center gap-4 text-white font-medium">
+                            <span
+                                class="w-6 h-6 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                                        d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </span>
+                            <?php echo __('feature_2_title'); ?>
+                        </li>
+                        <li class="flex items-center gap-4 text-white font-medium">
+                            <span
+                                class="w-6 h-6 rounded-full bg-pink-500/20 flex items-center justify-center text-pink-400">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                                        d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </span>
+                            <?php echo __('feature_3_title'); ?>
+                        </li>
+                    </ul>
+
+                    <a href="#features"
+                        class="inline-flex items-center justify-center px-8 py-4 bg-white/5 hover:bg-white/10 text-white font-bold rounded-2xl border border-white/10 transition-all duration-300 gap-3 group/link">
+                        <span><?php echo __('about_btn'); ?></span>
+                        <svg class="w-5 h-5 group-hover/link:translate-x-1 transition-transform" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section id="features" class="py-24 relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="text-3xl md:text-5xl font-bold mb-4"><?php echo __('features_title'); ?></h2>
+            <div class="w-24 h-1 bg-indigo-500 mx-auto rounded-full"></div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Feature 1 -->
+            <div
+                class="glass-card p-8 rounded-3xl hover:bg-white/5 transition-all duration-300 group border border-white/5 hover:border-indigo-500/30 flex flex-col items-center text-center">
+                <div
+                    class="w-16 h-16 bg-indigo-500/10 rounded-2xl flex items-center justify-center mb-6 text-indigo-400 group-hover:scale-110 transition-transform duration-300">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="<?php echo getSetting('feature_1_icon', 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'); ?>">
+                        </path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold mb-3"><?php echo __('feature_1_title'); ?></h3>
+                <p class="text-gray-400 leading-relaxed"><?php echo __('feature_1_desc'); ?></p>
+            </div>
+
+            <!-- Feature 2 -->
+            <div
+                class="glass-card p-8 rounded-3xl hover:bg-white/5 transition-all duration-300 group border border-white/5 hover:border-purple-500/30 flex flex-col items-center text-center">
+                <div
+                    class="w-16 h-16 bg-purple-500/10 rounded-2xl flex items-center justify-center mb-6 text-purple-400 group-hover:scale-110 transition-transform duration-300">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="<?php echo getSetting('feature_2_icon', 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z'); ?>">
+                        </path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold mb-3"><?php echo __('feature_2_title'); ?></h3>
+                <p class="text-gray-400 leading-relaxed"><?php echo __('feature_2_desc'); ?></p>
+            </div>
+
+            <!-- Feature 3 -->
+            <div
+                class="glass-card p-8 rounded-3xl hover:bg-white/5 transition-all duration-300 group border border-white/5 hover:border-pink-500/30 flex flex-col items-center text-center">
+                <div
+                    class="w-16 h-16 bg-pink-500/10 rounded-2xl flex items-center justify-center mb-6 text-pink-400 group-hover:scale-110 transition-transform duration-300">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="<?php echo getSetting('feature_3_icon', 'M13 10V3L4 14h7v7l9-11h-7z'); ?>"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold mb-3"><?php echo __('feature_3_title'); ?></h3>
+                <p class="text-gray-400 leading-relaxed"><?php echo __('feature_3_desc'); ?></p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Services Section -->
+<section id="services" class="py-24 relative overflow-hidden bg-slate-900/50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="text-3xl md:text-5xl font-bold mb-4">
+                <?php echo getSetting('services_title_' . $lang, __('services_title_ar')); ?>
+            </h2>
+            <div class="w-24 h-1 bg-pink-500 mx-auto rounded-full"></div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 py-8">
+            <?php
+            for ($i = 1; $i <= 6; $i++):
+                $s_title = getSetting('service_' . $i . '_title_' . $lang);
+                $s_desc = getSetting('service_' . $i . '_desc_' . $lang);
+                $s_icon = getSetting('service_' . $i . '_icon', 'M13 10V3L4 14h7v7l9-11h-7z');
+                $is_featured = (getSetting('service_' . $i . '_featured') == '1');
+
+                if (empty($s_title))
+                    continue;
+                ?>
+                <div class="relative group h-full">
+                    <?php if ($is_featured): ?>
+                        <div class="absolute -top-3 left-1/2 -translate-x-1/2 z-20">
+                            <span
+                                class="bg-gradient-to-r from-pink-500 to-rose-600 text-white text-[10px] font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full shadow-lg shadow-pink-500/30">
+                                <?php echo __('most_popular'); ?>
+                            </span>
+                        </div>
+                    <?php endif; ?>
+
+                    <div
+                        class="glass-card h-full flex flex-col p-8 rounded-[2.5rem] border border-white/5 hover:border-pink-500/30 transition-all duration-500 relative overflow-hidden <?php echo $is_featured ? 'bg-white/[0.03] scale-[1.03] ring-2 ring-pink-500/20 z-10' : ''; ?>">
+                        <!-- Background Glow -->
+                        <div
+                            class="absolute -bottom-12 -right-12 w-32 h-32 bg-pink-500/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity">
+                        </div>
+
+                        <!-- Header Icon -->
+                        <div class="mb-8 relative">
+                            <div
+                                class="w-16 h-16 rounded-2xl bg-gradient-to-br from-pink-500/20 to-rose-600/5 flex items-center justify-center text-pink-400 group-hover:scale-110 transition-transform duration-500">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="<?php echo $s_icon; ?>"></path>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <!-- Content -->
+                        <div class="flex-grow">
+                            <h3 class="text-2xl font-black text-white mb-4 tracking-tight"><?php echo $s_title; ?></h3>
+                            <div class="w-12 h-1 bg-pink-500/30 rounded-full mb-8 group-hover:w-20 transition-all"></div>
+
+                            <!-- Checkmark List -->
+                            <ul class="space-y-4 mb-10 text-left">
+                                <?php
+                                $features = explode("\n", $s_desc);
+                                foreach ($features as $feature):
+                                    $feature = trim($feature);
+                                    if (empty($feature))
+                                        continue;
+                                    ?>
+                                    <li class="flex items-start gap-3">
+                                        <div
+                                            class="w-5 h-5 rounded-full bg-pink-500/20 flex items-center justify-center text-pink-400 mt-1 flex-shrink-0">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="4"
+                                                    d="M5 13l4 4L19 7"></path>
+                                            </svg>
+                                        </div>
+                                        <span class="text-gray-300 text-sm leading-tight"><?php echo $feature; ?></span>
+                                    </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="mt-auto">
+                            <?php
+                            $btn_text = getSetting('service_' . $i . '_btn_' . $lang);
+                            if (empty($btn_text))
+                                $btn_text = __('start_now');
+                            ?>
+                            <a href="#contact"
+                                class="flex items-center justify-center w-full py-4 rounded-2xl font-black text-sm tracking-wide transition-all duration-300 <?php echo $is_popular ? 'bg-white text-gray-900 hover:bg-gray-100 shadow-xl shadow-white/10' : 'bg-white/5 text-white border border-white/10 hover:bg-white/10'; ?>">
+                                <span><?php echo $btn_text; ?></span>
+                                <svg class="w-4 h-4 ml-2 rtl:mr-2 rtl:ml-0 group-hover:translate-x-1 transition-transform"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            <?php endfor; ?>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works -->
+<section id="how-it-works" class="py-24 relative overflow-hidden">
+    <div class="absolute inset-0 bg-indigo-900/10 -skew-y-3 transform origin-top-left z-0"></div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="text-center mb-16">
+            <h2 class="text-3xl md:text-5xl font-bold mb-4"><?php echo __('how_it_works_title'); ?></h2>
+            <div class="w-24 h-1 bg-white/20 mx-auto rounded-full"></div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-12 relative">
+            <!-- Connecting Line (Desktop) -->
+            <div
+                class="hidden md:block absolute top-12 left-[16%] right-[16%] h-0.5 bg-gradient-to-r from-transparent via-indigo-500 to-transparent border-t-2 border-dashed border-indigo-500/30 z-0">
+            </div>
+
+            <!-- Step 1 -->
+            <div class="relative z-10 text-center group">
+                <div
+                    class="w-24 h-24 bg-slate-900 border-2 border-indigo-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-indigo-500/20 group-hover:-translate-y-2 transition-transform duration-300">
+                    <span class="text-3xl font-bold text-white">1</span>
+                </div>
+                <h3 class="text-xl font-bold mb-3"><?php echo __('step_1_title'); ?></h3>
+                <p class="text-gray-400"><?php echo __('step_1_desc'); ?></p>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="relative z-10 text-center group">
+                <div
+                    class="w-24 h-24 bg-slate-900 border-2 border-purple-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-purple-500/20 group-hover:-translate-y-2 transition-transform duration-300">
+                    <span class="text-3xl font-bold text-white">2</span>
+                </div>
+                <h3 class="text-xl font-bold mb-3"><?php echo __('step_2_title'); ?></h3>
+                <p class="text-gray-400"><?php echo __('step_2_desc'); ?></p>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="relative z-10 text-center group">
+                <div
+                    class="w-24 h-24 bg-slate-900 border-2 border-pink-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-pink-500/20 group-hover:-translate-y-2 transition-transform duration-300">
+                    <span class="text-3xl font-bold text-white">3</span>
+                </div>
+                <h3 class="text-xl font-bold mb-3"><?php echo __('step_3_title'); ?></h3>
+                <p class="text-gray-400"><?php echo __('step_3_desc'); ?></p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="py-24 relative overflow-hidden">
+    <div class="absolute inset-0 bg-indigo-500/5 -skew-y-3 transform origin-top-left"></div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+            <!-- Stat 1 -->
+            <div
+                class="glass-card p-8 rounded-[2rem] border border-white/10 flex flex-col items-center text-center group hover:bg-white/5 transition-all duration-500">
+                <div
+                    class="w-16 h-16 bg-indigo-500/10 rounded-2xl flex items-center justify-center text-indigo-400 mb-6 group-hover:scale-110 transition-transform">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
+                        </path>
+                    </svg>
+                </div>
+                <div
+                    class="text-4xl font-black text-white mb-2 font-mono tracking-tighter group-hover:text-indigo-400 transition-colors">
+                    <?php
+                    $stat1 = getSetting('stat_users_value', '5K+');
+                    $num1 = preg_replace('/[^0-9]/', '', $stat1);
+                    $suffix1 = preg_replace('/[0-9]/', '', $stat1);
+                    ?>
+                    <span class="stat-counter" data-target="<?php echo $num1; ?>">0</span><?php echo $suffix1; ?>
+                </div>
+                <div class="text-gray-400 font-bold uppercase text-xs tracking-[0.2em]"><?php echo __('stat_users'); ?>
+                </div>
+            </div>
+
+            <!-- Stat 2 -->
+            <div
+                class="glass-card p-8 rounded-[2rem] border border-white/10 flex flex-col items-center text-center group hover:bg-white/5 transition-all duration-500">
+                <div
+                    class="w-16 h-16 bg-purple-500/10 rounded-2xl flex items-center justify-center text-purple-400 mb-6 group-hover:scale-110 transition-transform">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                        </path>
+                    </svg>
+                </div>
+                <div
+                    class="text-4xl font-black text-white mb-2 font-mono tracking-tighter group-hover:text-purple-400 transition-colors">
+                    <?php
+                    $stat2 = getSetting('stat_leads_value', '2M+');
+                    $num2 = preg_replace('/[^0-9]/', '', $stat2);
+                    $suffix2 = preg_replace('/[0-9]/', '', $stat2);
+                    ?>
+                    <span class="stat-counter" data-target="<?php echo $num2; ?>">0</span><?php echo $suffix2; ?>
+                </div>
+                <div class="text-gray-400 font-bold uppercase text-xs tracking-[0.2em]"><?php echo __('stat_leads'); ?>
+                </div>
+            </div>
+
+            <!-- Stat 3 -->
+            <div
+                class="glass-card p-8 rounded-[2rem] border border-white/10 flex flex-col items-center text-center group hover:bg-white/5 transition-all duration-500">
+                <div
+                    class="w-16 h-16 bg-pink-500/10 rounded-2xl flex items-center justify-center text-pink-400 mb-6 group-hover:scale-110 transition-transform">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+                        </path>
+                    </svg>
+                </div>
+                <div
+                    class="text-4xl font-black text-white mb-2 font-mono tracking-tighter group-hover:text-pink-400 transition-colors">
+                    <?php
+                    $stat3 = getSetting('stat_satisfaction_value', '99%');
+                    $num3 = preg_replace('/[^0-9]/', '', $stat3);
+                    $suffix3 = preg_replace('/[0-9]/', '', $stat3);
+                    ?>
+                    <span class="stat-counter" data-target="<?php echo $num3; ?>">0</span><?php echo $suffix3; ?>
+                </div>
+                <div class="text-gray-400 font-bold uppercase text-xs tracking-[0.2em]">
+                    <?php echo __('stat_satisfaction'); ?>
+                </div>
+            </div>
+
+            <!-- Stat 4 -->
+            <div
+                class="glass-card p-8 rounded-[2rem] border border-white/10 flex flex-col items-center text-center group hover:bg-white/5 transition-all duration-500">
+                <div
+                    class="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-400 mb-6 group-hover:scale-110 transition-transform">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z">
+                        </path>
+                    </svg>
+                </div>
+                <div
+                    class="text-4xl font-black text-white mb-2 font-mono tracking-tighter group-hover:text-emerald-400 transition-colors">
+                    <?php
+                    $stat4 = getSetting('stat_support_value', '24/7');
+                    $num4 = preg_replace('/[^0-9]/', '', $stat4);
+                    $suffix4 = preg_replace('/[0-9]/', '', $stat4);
+                    ?>
+                    <span class="stat-counter" data-target="<?php echo $num4; ?>">0</span><?php echo $suffix4; ?>
+                </div>
+                <div class="text-gray-400 font-bold uppercase text-xs tracking-[0.2em]">
+                    <?php echo __('stat_support'); ?>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    // Stats Counter Animation
+    const animateCounters = () => {
+        const counters = document.querySelectorAll('.stat-counter');
+        const speed = 200;
+
+        counters.forEach(counter => {
+            const updateCount = () => {
+                const target = +counter.getAttribute('data-target');
+                const count = +counter.innerText;
+                const inc = target / speed;
+
+                if (count < target) {
+                    counter.innerText = Math.ceil(count + inc);
+                    setTimeout(updateCount, 1);
+                } else {
+                    counter.innerText = target.toLocaleString();
+                }
+            };
+            updateCount();
+        });
+    };
+
+    // Intersection Observer to trigger when visible
+    const statsSection = document.querySelector('.stat-counter')?.parentElement?.parentElement?.parentElement;
+    if (statsSection) {
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) {
+                animateCounters();
+                observer.unobserve(entries[0].target);
+            }
+        }, { threshold: 0.5 });
+        observer.observe(statsSection);
+    }
+</script>
+
+<!-- Testimonials -->
+<section id="testimonials" class="py-24 relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="text-3xl md:text-5xl font-bold mb-4">
+                <?php echo getSetting('testimonials_title_' . $lang, __('testimonials_title')); ?>
+            </h2>
+            <div class="w-24 h-1 bg-indigo-500 mx-auto rounded-full"></div>
+        </div>
+
+        <div class="max-w-4xl mx-auto" x-data="{ 
+            active: 0, 
+            total: 0,
+            init() {
+                this.total = this.$refs.slides.children.length;
+                setInterval(() => {
+                    this.active = (this.active + 1) % this.total;
+                }, 5000);
+            }
+        }">
+            <div class="relative overflow-hidden" x-ref="slides">
+                <?php
+                $count = 0;
+                for ($i = 1; $i <= 4; $i++):
+                    $t_content = getSetting('testimonial_' . $i . '_content_' . $lang);
+                    $t_author = getSetting('testimonial_' . $i . '_author_' . $lang);
+                    $t_image = getSetting('testimonial_' . $i . '_image');
+
+                    if (empty($t_content))
+                        continue;
+
+                    $initial = !empty($t_author) ? mb_substr($t_author, 0, 1, 'UTF-8') : 'U';
+                    $colors = [
+                        ['from-indigo-500', 'to-purple-500'],
+                        ['from-pink-500', 'to-red-500'],
+                        ['from-emerald-500', 'to-teal-500'],
+                        ['from-blue-500', 'to-indigo-500']
+                    ];
+                    $color = $colors[$count % 4];
+                    $slide_index = $count;
+                    $count++;
+                    ?>
+                    <div x-show="active === <?php echo $slide_index; ?>"
+                        x-transition:enter="transition ease-out duration-500"
+                        x-transition:enter-start="opacity-0 transform translate-x-8"
+                        x-transition:enter-end="opacity-100 transform translate-x-0"
+                        x-transition:leave="transition ease-in duration-300 absolute inset-0"
+                        x-transition:leave-start="opacity-100 transform translate-x-0"
+                        x-transition:leave-end="opacity-0 transform -translate-x-8" class="w-full">
+                        <div
+                            class="glass-card p-8 md:p-12 rounded-[2.5rem] relative flex flex-col items-center text-center border border-white/5 shadow-2xl">
+                            <div class="text-indigo-400 mb-6 opacity-30">
+                                <svg class="w-12 h-12 mx-auto" fill="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                        d="M14.017 21L14.017 18C14.017 16.896 14.325 16.053 14.941 15.471C15.558 14.89 16.519 14.506 17.824 14.319L18.441 14.228C19.746 14.041 20.399 12.87 20.399 10.714C20.399 8.558 19.348 7.48 17.245 7.48C15.142 7.48 14.091 8.558 14.091 10.714C14.091 11.838 13.783 12.681 13.167 13.263C12.551 13.845 11.589 14.229 10.285 14.416L9.667 14.507C8.362 14.694 7.71 15.865 7.71 18.021C7.71 20.177 8.761 21.255 10.864 21.255C12.016 21.255 12.894 20.941 13.499 20.312C14.104 19.683 14.406 18.579 14.406 17H14.017V21ZM17.245 7.48C16.193 7.48 15.314 7.794 14.71 8.423C14.105 9.052 13.802 10.156 13.802 11.735H14.191V7.735C14.191 6.631 13.883 5.788 13.267 5.206C12.65 4.624 11.689 4.24 10.384 4.053L9.767 3.962C8.462 3.775 7.81 4.946 7.81 7.102C7.81 9.258 8.861 10.336 10.964 10.336C13.067 10.336 14.118 9.259 14.118 7.102C14.118 5.978 14.426 5.135 15.042 4.553C15.658 3.971 16.62 3.587 17.925 3.4L18.542 3.309C19.847 3.122 20.499 4.293 20.499 6.449C20.499 8.605 19.448 9.683 17.345 9.683L17.245 7.48Z" />
+                                </svg>
+                            </div>
+                            <p class="text-lg md:text-xl text-gray-200 mb-8 leading-relaxed italic font-medium">
+                                "<?php echo nl2br($t_content); ?>"
+                            </p>
+                            <div class="flex flex-col items-center gap-4">
+                                <div
+                                    class="w-14 h-14 rounded-full overflow-hidden bg-gradient-to-tr <?php echo $color[0] . ' ' . $color[1]; ?> flex items-center justify-center text-white font-bold text-xl shadow-xl shadow-indigo-500/20">
+                                    <?php if (!empty($t_image)): ?>
+                                        <img src="uploads/<?php echo $t_image; ?>" class="w-full h-full object-cover">
+                                    <?php else: ?>
+                                        <?php echo $initial; ?>
+                                    <?php endif; ?>
+                                </div>
+                                <div>
+                                    <h4 class="text-lg font-bold text-white mb-1"><?php echo $t_author; ?></h4>
+                                    <div class="flex justify-center text-yellow-400 text-xs tracking-[0.3em]">★★★★★</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <?php endfor; ?>
+            </div>
+
+            <!-- Pagination Dots -->
+            <div class="flex justify-center gap-3 mt-12">
+                <?php for ($j = 0; $j < $count; $j++): ?>
+                    <button @click="active = <?php echo $j; ?>" class="w-3 h-3 rounded-full transition-all duration-300"
+                        :class="active === <?php echo $j; ?> ? 'bg-indigo-500 w-8' : 'bg-white/10 hover:bg-white/20'"></button>
+                <?php endfor; ?>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ Section -->
+<section id="faq" class="py-16 relative overflow-hidden">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="text-center mb-12">
+            <h2 class="text-2xl md:text-4xl font-black text-white mb-3">
+                <?php echo getSetting('faqs_title_' . $lang, __('faqs_title_ar')); ?>
+            </h2>
+            <div class="w-16 h-1 bg-yellow-500 mx-auto rounded-full"></div>
+        </div>
+
+        <div class="space-y-3">
+            <?php
+            for ($i = 1; $i <= 5; $i++):
+                $f_q = getSetting('faq_' . $i . '_q_' . $lang);
+                $f_a = getSetting('faq_' . $i . '_a_' . $lang);
+
+                if (empty($f_q) || empty($f_a))
+                    continue;
+                ?>
+                <div
+                    class="glass-card rounded-[1.5rem] border border-white/5 overflow-hidden group transition-all duration-300">
+                    <button onclick="toggleFaq(<?php echo $i; ?>)"
+                        class="w-full p-5 md:p-6 flex items-center justify-between text-left rtl:text-right gap-4 hover:bg-white/5 transition-colors text-white">
+                        <span class="text-base md:text-lg font-bold group-hover:text-yellow-400 transition-colors">
+                            <?php echo $f_q; ?>
+                        </span>
+                        <div class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center group-hover:bg-yellow-500/20 group-hover:text-yellow-400 transition-all transform"
+                            id="faq-icon-<?php echo $i; ?>">
+                            <svg class="w-5 h-5 transition-transform duration-300" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
+                                </path>
+                            </svg>
+                        </div>
+                    </button>
+                    <div id="faq-ans-<?php echo $i; ?>"
+                        class="hidden px-5 md:px-6 pb-6 text-gray-400 leading-relaxed text-sm md:text-base border-t border-white/5 pt-4 animate-fadeIn">
+                        <?php echo nl2br($f_a); ?>
+                    </div>
+                </div>
+            <?php endfor; ?>
+        </div>
+    </div>
+</section>
+
+<script>
+    function toggleFaq(id) {
+        const ans = document.getElementById('faq-ans-' + id);
+        const icon = document.getElementById('faq-icon-' + id);
+
+        const isHidden = ans.classList.contains('hidden');
+
+        if (isHidden) {
+            ans.classList.remove('hidden');
+            icon.querySelector('svg').style.transform = 'rotate(180deg)';
+        } else {
+            ans.classList.add('hidden');
+            icon.querySelector('svg').style.transform = 'rotate(0deg)';
+        }
+    }
+</script>
+
+<style>
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-fadeIn {
+        animation: fadeIn 0.4s ease-out forwards;
+    }
+</style>
+
+<!-- Call to Action -->
+<section class="py-24 relative overflow-hidden">
+    <!-- Decorative background elements -->
+    <div class="absolute -top-24 -left-24 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl text-indigo-400"></div>
+    <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl text-purple-400"></div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="relative group">
+            <!-- Animated Glow -->
+            <div
+                class="absolute -inset-1 bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-500 rounded-[3rem] blur-2xl opacity-30 group-hover:opacity-50 transition duration-1000">
+            </div>
+
+            <div
+                class="relative glass-card rounded-[3rem] p-12 md:p-20 border border-white/10 overflow-hidden text-center backdrop-blur-3xl">
+                <!-- Inner background pattern -->
+                <div class="absolute inset-0 opacity-[0.03] pointer-events-none"
+                    style="background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); background-size: 40px 40px;">
+                </div>
+
+                <div class="max-w-3xl mx-auto relative z-10">
+                    <h2 class="text-4xl md:text-6xl font-black text-white mb-8 leading-tight tracking-tight">
+                        <?php echo __('cta_title'); ?>
+                    </h2>
+                    <p class="text-xl md:text-2xl text-indigo-200/80 mb-12 leading-relaxed">
+                        <?php echo __('cta_subtitle'); ?>
+                    </p>
+
+                    <div class="flex flex-col sm:flex-row items-center justify-center gap-6">
+                        <a href="register.php"
+                            class="group w-full sm:w-auto px-12 py-5 bg-white text-gray-900 font-black rounded-2xl shadow-2xl hover:bg-gray-100 transition-all duration-300 hover:scale-105 flex items-center justify-center gap-3">
+                            <span><?php echo __('cta_button'); ?></span>
+                            <svg class="w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                                    d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                            </svg>
+                        </a>
+                        <a href="login.php"
+                            class="w-full sm:w-auto px-12 py-5 bg-white/5 hover:bg-white/10 text-white font-bold rounded-2xl border border-white/10 transition-all duration-300 flex items-center justify-center backdrop-blur-md">
+                            <?php echo __('login'); ?>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Decorative Icon Floating -->
+                <div class="absolute top-10 right-10 opacity-10 animate-float hidden lg:block">
+                    <svg class="w-24 h-24 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+                            d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Contact Section -->
+<section id="contact" class="py-24 relative overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="text-center mb-16">
+            <h2 class="text-3xl md:text-5xl font-black text-white mb-4"><?php echo __('contact_us'); ?></h2>
+            <p class="text-indigo-200/60 max-w-2xl mx-auto text-lg"><?php echo __('contact_subtitle'); ?></p>
+            <div class="w-24 h-1.5 bg-gradient-to-r from-indigo-500 to-purple-600 mx-auto rounded-full mt-6"></div>
+        </div>
+
+        <div class="max-w-4xl mx-auto">
+            <!-- Contact Form -->
+            <div class="relative group">
+                <div
+                    class="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-[2.5rem] blur opacity-20 group-hover:opacity-30 transition duration-1000">
+                </div>
+                <div
+                    class="relative glass-card p-8 md:p-12 rounded-[3.5rem] border border-white/10 backdrop-blur-3xl shadow-2xl">
+                    <form action="" method="POST" class="space-y-8">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div>
+                                <label class="block text-gray-400 text-sm font-bold mb-3 ml-1 flex items-center gap-2">
+                                    <div
+                                        class="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z">
+                                            </path>
+                                        </svg>
+                                    </div>
+                                    <?php echo __('your_name'); ?>
+                                </label>
+                                <input type="text" name="name" required
+                                    class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 focus:bg-white/10 transition-all shadow-inner"
+                                    placeholder="John Doe">
+                            </div>
+                            <div>
+                                <label class="block text-gray-400 text-sm font-bold mb-3 ml-1 flex items-center gap-2">
+                                    <div
+                                        class="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
+                                            </path>
+                                        </svg>
+                                    </div>
+                                    <?php echo __('email'); ?>
+                                </label>
+                                <input type="email" name="email" required
+                                    class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 focus:bg-white/10 transition-all shadow-inner"
+                                    placeholder="name@example.com">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div>
+                                <label class="block text-gray-400 text-sm font-bold mb-3 ml-1 flex items-center gap-2">
+                                    <div
+                                        class="w-8 h-8 rounded-lg bg-pink-500/10 flex items-center justify-center text-pink-400">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                    </div>
+                                    <?php echo __('subject'); ?>
+                                </label>
+                                <input type="text" name="subject" required
+                                    class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 focus:bg-white/10 transition-all shadow-inner"
+                                    placeholder="<?php echo $lang === 'ar' ? 'الموضوع' : 'Subject'; ?>">
+                            </div>
+                            <div>
+                                <label class="block text-gray-400 text-sm font-bold mb-3 ml-1 flex items-center gap-2">
+                                    <div
+                                        class="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z">
+                                            </path>
+                                        </svg>
+                                    </div>
+                                    <?php echo __('phone'); ?>
+                                </label>
+                                <input type="text" name="phone"
+                                    class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 focus:bg-white/10 transition-all shadow-inner"
+                                    placeholder="+20 123 456 7890">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-gray-400 text-sm font-bold mb-3 ml-1 flex items-center gap-2">
+                                <div
+                                    class="w-8 h-8 rounded-lg bg-yellow-500/10 flex items-center justify-center text-yellow-400">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z">
+                                        </path>
+                                    </svg>
+                                </div>
+                                <?php echo __('your_message'); ?>
+                            </label>
+                            <textarea name="message" required rows="5"
+                                class="w-full bg-white/5 border border-white/10 rounded-3xl px-6 py-5 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 focus:bg-white/10 transition-all resize-none shadow-inner"
+                                placeholder="<?php echo $lang === 'ar' ? 'اكتب رسالتك هنا...' : 'Write your message here...'; ?>"></textarea>
+                        </div>
+
+                        <button type="submit"
+                            class="w-full py-6 bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black text-lg rounded-[2rem] shadow-2xl shadow-indigo-600/30 transition-all duration-500 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-4 group/btn">
+                            <span><?php echo __('send_message'); ?></span>
+                            <svg class="w-6 h-6 group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 transition-transform"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                                    d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                            </svg>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<?php require_once 'includes/footer.php'; ?>
