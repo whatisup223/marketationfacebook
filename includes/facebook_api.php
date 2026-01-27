@@ -46,19 +46,9 @@ class FacebookAPI
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
-        // Smart SSL Configuration: Auto-detect environment
-        // Development (localhost): SSL verification disabled (fixes Windows certificate issues)
-        // Production: SSL verification enabled (secure)
-        $is_dev = (
-            (isset($_SERVER['HTTP_HOST']) && (
-                strpos($_SERVER['HTTP_HOST'], 'localhost') !== false ||
-                strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false
-            )) ||
-            (php_sapi_name() === 'cli-server') // PHP built-in server
-        );
-
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, !$is_dev);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, $is_dev ? 0 : 2);
+        // Force Disable SSL for testing production
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
 
         curl_setopt($ch, CURLOPT_TIMEOUT, 60); // Longer timeout for uploads
         curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
