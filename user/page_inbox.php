@@ -391,6 +391,99 @@ require_once __DIR__ . '/../includes/header.php';
                     <?php endif; ?>
                 </div>
             </div>
+
+            <!-- GLOBAL RECENT CAMPAIGNS (NEW) -->
+            <div class="mb-12">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                        <svg class="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+                            </path>
+                        </svg>
+                        <?php echo ($lang == 'ar' ? 'أحدث الحملات (كل الصفحات)' : 'Recent Campaigns (All Pages)'); ?>
+                    </h2>
+                </div>
+
+                <?php
+                $stmt = $pdo->prepare("SELECT c.*, p.page_name, p.picture_url as page_pic FROM campaigns c 
+                                        JOIN fb_pages p ON c.page_id = p.id 
+                                        WHERE c.user_id = ? 
+                                        ORDER BY c.created_at DESC LIMIT 10");
+                $stmt->execute([$user_id]);
+                $global_campaigns = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                if (count($global_campaigns) > 0):
+                    ?>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <?php foreach ($global_campaigns as $camp): ?>
+                            <div class="glass-card p-4 rounded-2xl border border-white/5 hover:border-indigo-500/30 transition-all group relative"
+                                id="camp-card-<?php echo $camp['id']; ?>">
+                                <div class="flex items-center gap-3 mb-3">
+                                    <img src="<?php echo htmlspecialchars($camp['page_pic'] ?: '../assets/img/page_default.png'); ?>"
+                                        class="w-6 h-6 rounded-md object-cover border border-white/10" alt="">
+                                    <span
+                                        class="text-[10px] font-bold text-gray-400 truncate"><?php echo htmlspecialchars($camp['page_name']); ?></span>
+                                </div>
+
+                                <h3 class="text-sm font-bold text-white truncate mb-1"
+                                    title="<?php echo htmlspecialchars($camp['name']); ?>">
+                                    <?php echo htmlspecialchars($camp['name']); ?>
+                                </h3>
+
+                                <div class="flex items-center justify-between mb-3">
+                                    <span
+                                        class="text-[9px] text-gray-500"><?php echo date('M d, H:i', strtotime($camp['created_at'])); ?></span>
+                                    <?php
+                                    $s_colors = [
+                                        'running' => 'text-green-400',
+                                        'completed' => 'text-blue-400',
+                                        'paused' => 'text-yellow-400',
+                                        'draft' => 'text-gray-400'
+                                    ];
+                                    $c = $s_colors[$camp['status']] ?? 'text-gray-400';
+                                    ?>
+                                    <span
+                                        class="text-[9px] font-bold uppercase <?php echo $c; ?>"><?php echo $camp['status']; ?></span>
+                                </div>
+
+                                <div class="text-[11px] text-gray-400 bg-black/20 p-2 rounded-lg line-clamp-2 border border-white/5 mb-3 italic"
+                                    id="camp-msg-<?php echo $camp['id']; ?>">
+                                    "<?php echo htmlspecialchars($camp['message_text']); ?>"
+                                </div>
+
+                                <div class="flex items-center gap-2 pt-3 border-t border-white/5">
+                                    <a href="campaign_runner.php?id=<?php echo $camp['id']; ?>"
+                                        class="flex-1 text-center py-1.5 bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white rounded-lg text-[10px] font-bold transition-all border border-indigo-500/20">
+                                        <?php echo ($lang == 'ar' ? 'فتح' : 'Open'); ?>
+                                    </a>
+                                    <button onclick="editCampMessage(<?php echo $camp['id']; ?>)"
+                                        class="p-1.5 text-gray-500 hover:text-white transition-all">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                                            </path>
+                                        </svg>
+                                    </button>
+                                    <button onclick="deleteCampaign(<?php echo $camp['id']; ?>)"
+                                        class="p-1.5 text-red-500/30 hover:text-red-500 transition-all">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                            </path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php else: ?>
+                    <div class="glass-card p-8 rounded-2xl border border-white/5 border-dashed text-center">
+                        <p class="text-xs text-gray-500 italic">
+                            <?php echo ($lang == 'ar' ? 'لا توجد حملات منشأة بعد' : 'No campaigns created yet'); ?></p>
+                    </div>
+                <?php endif; ?>
+            </div>
         <?php else: ?>
 
             <!-- Header Card: Info & Controls -->
@@ -811,6 +904,149 @@ require_once __DIR__ . '/../includes/header.php';
                         </div>
                     <?php endif; ?>
                 <?php endif; // End check for showSelector ?>
+
+                <?php if (!$showSelector && $page): ?>
+                    <!-- CAMPAIGN HISTORY CARD (NEW) -->
+                    <div class="mt-8">
+                        <div class="flex items-center justify-between mb-6">
+                            <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                                <svg class="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <?php echo ($lang == 'ar' ? 'سجل حملات هذه الصفحة' : 'Campaign History for this Page'); ?>
+                            </h2>
+                        </div>
+
+                        <?php
+                        $stmt = $pdo->prepare("SELECT * FROM campaigns WHERE page_id = ? AND user_id = ? ORDER BY created_at DESC LIMIT 10");
+                        $stmt->execute([$page['id'], $user_id]);
+                        $page_campaigns = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                        if (count($page_campaigns) > 0):
+                            ?>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <?php foreach ($page_campaigns as $camp): ?>
+                                    <div class="glass-card p-5 rounded-2xl border border-white/5 hover:border-indigo-500/30 transition-all group relative overflow-hidden"
+                                        id="camp-card-<?php echo $camp['id']; ?>">
+                                        <!-- Status Badge -->
+                                        <div class="absolute top-4 right-4">
+                                            <?php
+                                            $status_colors = [
+                                                'running' => 'bg-green-500/10 text-green-400 border-green-500/20',
+                                                'completed' => 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+                                                'paused' => 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
+                                                'draft' => 'bg-gray-500/10 text-gray-400 border-gray-500/20'
+                                            ];
+                                            $s_class = $status_colors[$camp['status']] ?? $status_colors['draft'];
+                                            ?>
+                                            <span
+                                                class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border <?php echo $s_class; ?>">
+                                                <?php echo $camp['status']; ?>
+                                            </span>
+                                        </div>
+
+                                        <div class="flex items-start gap-4">
+                                            <div
+                                                class="w-12 h-12 rounded-xl bg-indigo-600/10 flex items-center justify-center text-indigo-500 shrink-0">
+                                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
+                                                    </path>
+                                                </svg>
+                                            </div>
+                                            <div class="min-w-0 flex-1">
+                                                <h3 class="text-white font-bold truncate pr-16"
+                                                    title="<?php echo htmlspecialchars($camp['name']); ?>">
+                                                    <?php echo htmlspecialchars($camp['name']); ?>
+                                                </h3>
+                                                <p class="text-[10px] text-gray-500 mt-0.5">
+                                                    <?php echo date('M d, Y H:i', strtotime($camp['created_at'])); ?>
+                                                </p>
+
+                                                <div class="mt-3 bg-black/20 rounded-lg p-3 border border-white/5">
+                                                    <div class="text-xs text-gray-400 line-clamp-2 italic"
+                                                        id="camp-msg-<?php echo $camp['id']; ?>">
+                                                        "<?php echo htmlspecialchars($camp['message_text']); ?>"
+                                                    </div>
+                                                </div>
+
+                                                <!-- Stats Mini -->
+                                                <div class="flex items-center gap-4 mt-4">
+                                                    <div class="text-center">
+                                                        <div class="text-[10px] text-gray-500 uppercase font-bold">
+                                                            <?php echo __('sent'); ?>
+                                                        </div>
+                                                        <div class="text-sm font-bold text-green-400">
+                                                            <?php echo $camp['sent_count']; ?>
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-center">
+                                                        <div class="text-[10px] text-gray-500 uppercase font-bold">
+                                                            <?php echo __('failed'); ?>
+                                                        </div>
+                                                        <div class="text-sm font-bold text-red-400">
+                                                            <?php echo $camp['failed_count']; ?>
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-center">
+                                                        <div class="text-[10px] text-gray-500 uppercase font-bold">
+                                                            <?php echo __('total'); ?>
+                                                        </div>
+                                                        <div class="text-sm font-bold text-indigo-400">
+                                                            <?php echo $camp['total_leads']; ?>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Actions -->
+                                                <div class="flex items-center gap-2 mt-4 pt-4 border-t border-white/5">
+                                                    <a href="campaign_runner.php?id=<?php echo $camp['id']; ?>"
+                                                        class="flex-1 flex justify-center items-center py-1.5 bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white rounded-lg text-[10px] font-bold transition-all border border-indigo-500/20">
+                                                        <?php echo ($lang == 'ar' ? 'فتح المحرر' : 'Open Runner'); ?>
+                                                    </a>
+                                                    <button onclick="editCampMessage(<?php echo $camp['id']; ?>)"
+                                                        class="p-1.5 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all"
+                                                        title="<?php echo __('edit'); ?>">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                                                            </path>
+                                                        </svg>
+                                                    </button>
+                                                    <a href="campaign_reports.php?id=<?php echo $camp['id']; ?>"
+                                                        class="p-1.5 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all"
+                                                        title="<?php echo __('reports'); ?>">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                                            </path>
+                                                        </svg>
+                                                    </a>
+                                                    <button onclick="deleteCampaign(<?php echo $camp['id']; ?>)"
+                                                        class="p-1.5 text-red-500/50 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+                                                        title="<?php echo __('delete'); ?>">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                                            </path>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php else: ?>
+                            <div class="glass-card p-10 rounded-2xl border border-white/5 border-dashed text-center">
+                                <p class="text-sm text-gray-500 italic">
+                                    <?php echo ($lang == 'ar' ? 'لا توجد حملات سابقة لهذه الصفحة' : 'No previous campaigns for this page'); ?>
+                                </p>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -1430,6 +1666,59 @@ require_once __DIR__ . '/../includes/header.php';
                         // Hide clear button
                         document.getElementById('btn-clear-selection').style.display = 'none';
                     }
+                }
+
+                // --- CAMPAIGN MANAGEMENT LOGIC ---
+                async function deleteCampaign(campId) {
+                    if (!confirm('<?php echo ($lang == 'ar' ? "هل أنت متأكد من حذف هذه الحملة؟ سيتم حذف جميع سجلات الإرسال المرتبطة بها." : "Are you sure you want to delete this campaign? All associated sending records will be removed."); ?>')) return;
+
+                    try {
+                        const fd = new FormData();
+                        fd.append('action', 'delete');
+                        fd.append('campaign_id', campId);
+
+                        const res = await fetch('ajax_campaign_actions.php', { method: 'POST', body: fd });
+                        const data = await res.json();
+
+                        if (data.status === 'success') {
+                            const card = document.getElementById('camp-card-' + campId);
+                            if (card) {
+                                card.style.opacity = '0';
+                                card.style.transform = 'scale(0.9)';
+                                setTimeout(() => card.remove(), 300);
+                            }
+                        } else {
+                            alert(data.message);
+                        }
+                    } catch (e) { console.error(e); alert('Failed to delete campaign'); }
+                }
+
+                async function editCampMessage(campId) {
+                    const currentMsg = document.getElementById('camp-msg-' + campId).innerText.replace(/^"|"$/g, '');
+                    const newMsg = prompt('<?php echo ($lang == 'ar' ? "تعديل محتوى الرسالة:" : "Edit Message Content:"); ?>', currentMsg);
+
+                    if (newMsg === null || newMsg === currentMsg) return;
+                    if (newMsg.trim() === '') { alert('Message cannot be empty'); return; }
+
+                    try {
+                        const fd = new FormData();
+                        fd.append('action', 'edit_message');
+                        fd.append('campaign_id', campId);
+                        fd.append('message', newMsg);
+
+                        const res = await fetch('ajax_campaign_actions.php', { method: 'POST', body: fd });
+                        const data = await res.json();
+
+                        if (data.status === 'success') {
+                            document.getElementById('camp-msg-' + campId).innerText = '"' + newMsg + '"';
+                            // Brief success glow
+                            const card = document.getElementById('camp-card-' + campId);
+                            card.classList.add('ring-2', 'ring-green-500');
+                            setTimeout(() => card.classList.remove('ring-2', 'ring-green-500'), 1500);
+                        } else {
+                            alert(data.message);
+                        }
+                    } catch (e) { console.error(e); alert('Failed to update message'); }
                 }
 
                 // Show clear button if selection > 0
