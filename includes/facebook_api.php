@@ -45,19 +45,42 @@ class FacebookAPI
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
+        // SSL Configuration: Enable verification in production, disable in development
+        $is_localhost = (strpos($url, 'localhost') !== false || strpos($url, '127.0.0.1') !== false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, !$is_localhost);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, $is_localhost ? 0 : 2);
+
         curl_setopt($ch, CURLOPT_TIMEOUT, 60); // Longer timeout for uploads
         curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
 
         $response = curl_exec($ch);
         $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curl_error = curl_error($ch);
+        $curl_errno = curl_errno($ch);
         curl_close($ch);
 
+        // Check for CURL errors (network issues, SSL problems, etc.)
+        if ($curl_errno !== 0) {
+            $error_log = "[" . date('Y-m-d H:i:s') . "] CURL Error #$curl_errno: $curl_error | URL: $url\n";
+            @file_put_contents(__DIR__ . '/fb_debug.log', $error_log, FILE_APPEND);
 
+            return [
+                'error' => "Network Error: $curl_error",
+                'code' => $curl_errno,
+                'type' => 'CURL_ERROR',
+                'full' => ['curl_error' => $curl_error, 'curl_errno' => $curl_errno]
+            ];
+        }
 
         $data = json_decode($response, true);
         if ($http_code >= 400 || (isset($data['error']) && !empty($data['error']))) {
             $error_msg = $data['error']['message'] ?? 'API Error';
+
+            // Log the error for debugging
+            $error_log = "[" . date('Y-m-d H:i:s') . "] FB API Error: $error_msg | HTTP: $http_code | URL: $url\n";
+            @file_put_contents(__DIR__ . '/fb_debug.log', $error_log, FILE_APPEND);
+
             return [
                 'error' => $error_msg,
                 'code' => $data['error']['code'] ?? $http_code,
