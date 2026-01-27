@@ -37,6 +37,12 @@ function sendJson($data)
     exit;
 }
 
+// Helper to log transactions
+function logTransaction($msg)
+{
+    file_put_contents(__DIR__ . '/transaction_log.txt', date('[Y-m-d H:i:s] ') . $msg . "\n", FILE_APPEND);
+}
+
 if (!isLoggedIn()) {
     sendJson(['status' => 'error', 'message' => 'Unauthorized']);
 }
@@ -77,9 +83,15 @@ try {
     // Simple template replacement
     $message = str_replace('{{name}}', $item['fb_user_name'] ?? 'User', $message);
 
+    logTransaction("Processing QID: {$queue_id} | Page: {$item['fb_page_id']} | Token: " . substr($item['page_access_token'], 0, 10) . "...");
+
     // 3. Send via FB API
     $fb = new FacebookAPI();
+    // Attempt standard send first (try to deduce best method)
+    // Note: The FacebookAPI class might default to MESSAGE_TAG. We should check that.
     $response = $fb->sendMessage($item['fb_page_id'], $item['page_access_token'], $item['fb_user_id'], $message, $item['image_url']);
+
+    logTransaction("FB Response for QID {$queue_id}: " . json_encode($response));
 
     // 4. Handle Result
     if (isset($response['error'])) {
