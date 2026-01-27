@@ -158,7 +158,7 @@ require_once 'includes/header.php';
                     <div
                         class="absolute -inset-4 bg-gradient-to-tr from-indigo-500 to-purple-600 rounded-[2.5rem] blur-2xl opacity-20 group-hover:opacity-30 transition duration-1000">
                     </div>
-                    <div class="relative rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl">
+                    <div class="relative rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl animate-float">
                         <?php
                         $about_img = getSetting('about_image');
                         $about_img_url = !empty($about_img) ? 'uploads/' . $about_img : 'assets/img/about-default.png';
@@ -270,56 +270,112 @@ require_once 'includes/header.php';
 </section>
 
 <!-- Features Section -->
-<section id="features" class="py-24 relative">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-16">
-            <h2 class="text-3xl md:text-5xl font-bold mb-4"><?php echo __('features_title'); ?></h2>
-            <div class="w-24 h-1 bg-indigo-500 mx-auto rounded-full"></div>
+<section id="features" class="py-24 relative overflow-hidden">
+    <!-- Background Flair -->
+    <div class="absolute top-1/2 left-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-[100px] -translate-x-1/2"></div>
+    <div
+        class="absolute bottom-0 right-0 w-80 h-80 bg-purple-600/5 rounded-full blur-[120px] translate-x-1/3 translate-y-1/3">
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="text-center mb-20 animate-fade-in">
+            <h2 class="text-4xl md:text-6xl font-black text-white mb-6 tracking-tight">
+                <?php echo __('features_title'); ?>
+            </h2>
+            <div
+                class="w-24 h-2 bg-gradient-to-r from-indigo-500 to-purple-600 mx-auto rounded-full shadow-lg shadow-indigo-500/20">
+            </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
             <!-- Feature 1 -->
-            <div
-                class="glass-card p-8 rounded-3xl hover:bg-white/5 transition-all duration-300 group border border-white/5 hover:border-indigo-500/30 flex flex-col items-center text-center">
+            <div class="group relative animate-fade-in" style="animation-delay: 100ms;">
                 <div
-                    class="w-16 h-16 bg-indigo-500/10 rounded-2xl flex items-center justify-center mb-6 text-indigo-400 group-hover:scale-110 transition-transform duration-300">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="<?php echo getSetting('feature_1_icon', 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'); ?>">
-                        </path>
-                    </svg>
+                    class="absolute -inset-1 bg-gradient-to-br from-indigo-500 to-transparent rounded-[2.5rem] blur opacity-0 group-hover:opacity-20 transition duration-500">
                 </div>
-                <h3 class="text-xl font-bold mb-3"><?php echo __('feature_1_title'); ?></h3>
-                <p class="text-gray-400 leading-relaxed"><?php echo __('feature_1_desc'); ?></p>
+                <div
+                    class="relative glass-card p-10 rounded-[2.5rem] border border-white/5 hover:border-indigo-500/30 transition-all duration-500 h-full flex flex-col items-center text-center overflow-hidden">
+
+                    <div class="w-24 h-24 relative mb-8 group/icon">
+                        <div
+                            class="absolute inset-0 bg-indigo-500/20 rounded-2xl blur-xl group-hover/icon:blur-2xl transition-all">
+                        </div>
+                        <div
+                            class="relative w-full h-full bg-gradient-to-br from-indigo-500/20 to-indigo-600/5 border border-white/10 rounded-2xl flex items-center justify-center text-indigo-400 group-hover/icon:scale-110 group-hover/icon:rotate-3 transition-all duration-500 shadow-2xl animate-float">
+                            <svg class="w-12 h-12 drop-shadow-[0_0_10px_rgba(99,102,241,0.5)]" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="<?php echo getSetting('feature_1_icon', 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'); ?>">
+                                </path>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <h3
+                        class="text-2xl font-black text-white mb-4 tracking-tight group-hover:text-indigo-300 transition-colors">
+                        <?php echo __('feature_1_title'); ?>
+                    </h3>
+                    <p class="text-gray-400 leading-relaxed text-lg">
+                        <?php echo __('feature_1_desc'); ?>
+                    </p>
+                </div>
             </div>
 
             <!-- Feature 2 -->
-            <div
-                class="glass-card p-8 rounded-3xl hover:bg-white/5 transition-all duration-300 group border border-white/5 hover:border-purple-500/30 flex flex-col items-center text-center">
+            <div class="group relative animate-fade-in" style="animation-delay: 300ms;">
                 <div
-                    class="w-16 h-16 bg-purple-500/10 rounded-2xl flex items-center justify-center mb-6 text-purple-400 group-hover:scale-110 transition-transform duration-300">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="<?php echo getSetting('feature_2_icon', 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z'); ?>">
-                        </path>
-                    </svg>
+                    class="absolute -inset-1 bg-gradient-to-br from-purple-500 to-transparent rounded-[2.5rem] blur opacity-0 group-hover:opacity-20 transition duration-500">
                 </div>
-                <h3 class="text-xl font-bold mb-3"><?php echo __('feature_2_title'); ?></h3>
-                <p class="text-gray-400 leading-relaxed"><?php echo __('feature_2_desc'); ?></p>
+                <div
+                    class="relative glass-card p-10 rounded-[2.5rem] border border-white/5 hover:border-purple-500/30 transition-all duration-500 h-full flex flex-col items-center text-center overflow-hidden">
+
+                    <div class="w-24 h-24 relative mb-8 group/icon">
+                        <div class="absolute inset-0 bg-purple-500/20 rounded-2xl blur-xl group-hover/icon:blur-2xl transition-all"></div>
+                        <div class="relative w-full h-full bg-gradient-to-br from-purple-500/20 to-purple-600/5 border border-white/10 rounded-2xl flex items-center justify-center text-purple-400 group-hover/icon:scale-110 group-hover/icon:-rotate-3 transition-all duration-500 shadow-2xl animate-float" style="animation-delay: 1s;">
+                            <svg class="w-12 h-12 drop-shadow-[0_0_10px_rgba(168,85,247,0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="<?php echo getSetting('feature_2_icon', 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z'); ?>">
+                                </path>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <h3
+                        class="text-2xl font-black text-white mb-4 tracking-tight group-hover:text-purple-300 transition-colors">
+                        <?php echo __('feature_2_title'); ?>
+                    </h3>
+                    <p class="text-gray-400 leading-relaxed text-lg">
+                        <?php echo __('feature_2_desc'); ?>
+                    </p>
+                </div>
             </div>
 
             <!-- Feature 3 -->
-            <div
-                class="glass-card p-8 rounded-3xl hover:bg-white/5 transition-all duration-300 group border border-white/5 hover:border-pink-500/30 flex flex-col items-center text-center">
+            <div class="group relative animate-fade-in" style="animation-delay: 500ms;">
                 <div
-                    class="w-16 h-16 bg-pink-500/10 rounded-2xl flex items-center justify-center mb-6 text-pink-400 group-hover:scale-110 transition-transform duration-300">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="<?php echo getSetting('feature_3_icon', 'M13 10V3L4 14h7v7l9-11h-7z'); ?>"></path>
-                    </svg>
+                    class="absolute -inset-1 bg-gradient-to-br from-pink-500 to-transparent rounded-[2.5rem] blur opacity-0 group-hover:opacity-20 transition duration-500">
                 </div>
-                <h3 class="text-xl font-bold mb-3"><?php echo __('feature_3_title'); ?></h3>
-                <p class="text-gray-400 leading-relaxed"><?php echo __('feature_3_desc'); ?></p>
+                <div
+                    class="relative glass-card p-10 rounded-[2.5rem] border border-white/5 hover:border-pink-500/30 transition-all duration-500 h-full flex flex-col items-center text-center overflow-hidden">
+
+                    <div class="w-24 h-24 relative mb-8 group/icon">
+                        <div class="absolute inset-0 bg-pink-500/20 rounded-2xl blur-xl group-hover/icon:blur-2xl transition-all"></div>
+                        <div class="relative w-full h-full bg-gradient-to-br from-pink-500/20 to-pink-600/5 border border-white/10 rounded-2xl flex items-center justify-center text-pink-400 group-hover/icon:scale-110 group-hover/icon:rotate-3 transition-all duration-500 shadow-2xl animate-float" style="animation-delay: 2s;">
+                            <svg class="w-12 h-12 drop-shadow-[0_0_10px_rgba(236,72,153,0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="<?php echo getSetting('feature_3_icon', 'M13 10V3L4 14h7v7l9-11h-7z'); ?>"></path>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <h3
+                        class="text-2xl font-black text-white mb-4 tracking-tight group-hover:text-pink-300 transition-colors">
+                        <?php echo __('feature_3_title'); ?>
+                    </h3>
+                    <p class="text-gray-400 leading-relaxed text-lg">
+                        <?php echo __('feature_3_desc'); ?>
+                    </p>
+                </div>
             </div>
         </div>
     </div>
