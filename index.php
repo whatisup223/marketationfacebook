@@ -161,7 +161,7 @@ require_once 'includes/header.php';
                     <div class="relative rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl">
                         <?php
                         $about_img = getSetting('about_image');
-                        $about_img_url = !empty($about_img) ? 'uploads/' . $about_img : 'https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&q=80&w=1000';
+                        $about_img_url = !empty($about_img) ? 'uploads/' . $about_img : 'assets/img/about-default.png';
                         ?>
                         <img src="<?php echo $about_img_url; ?>" alt="About Us"
                             class="w-full h-full object-cover transform hover:scale-105 transition duration-700">
@@ -650,7 +650,8 @@ if (!empty($portfolioItems)):
                                 <?php echo getSetting('tool_f1_t_' . $lang) ?: __('tool_feature_1'); ?>
                             </h4>
                             <p class="text-sm text-gray-400">
-                                <?php echo getSetting('tool_f1_d_' . $lang) ?: __('tool_feature_1_desc'); ?></p>
+                                <?php echo getSetting('tool_f1_d_' . $lang) ?: __('tool_feature_1_desc'); ?>
+                            </p>
                         </div>
                     </div>
 
@@ -670,7 +671,8 @@ if (!empty($portfolioItems)):
                                 <?php echo getSetting('tool_f2_t_' . $lang) ?: __('tool_feature_2'); ?>
                             </h4>
                             <p class="text-sm text-gray-400">
-                                <?php echo getSetting('tool_f2_d_' . $lang) ?: __('tool_feature_2_desc'); ?></p>
+                                <?php echo getSetting('tool_f2_d_' . $lang) ?: __('tool_feature_2_desc'); ?>
+                            </p>
                         </div>
                     </div>
 
@@ -690,7 +692,8 @@ if (!empty($portfolioItems)):
                                 <?php echo getSetting('tool_f3_t_' . $lang) ?: __('tool_feature_3'); ?>
                             </h4>
                             <p class="text-sm text-gray-400">
-                                <?php echo getSetting('tool_f3_d_' . $lang) ?: __('tool_feature_3_desc'); ?></p>
+                                <?php echo getSetting('tool_f3_d_' . $lang) ?: __('tool_feature_3_desc'); ?>
+                            </p>
                         </div>
                     </div>
                 </div>
