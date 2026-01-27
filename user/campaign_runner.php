@@ -906,7 +906,18 @@ require_once __DIR__ . '/../includes/header.php';
                 method: 'POST',
                 body: formData
             });
-            const data = await res.json();
+
+            const rawText = await res.text();
+            let data;
+            try {
+                data = JSON.parse(rawText);
+            } catch (parseError) {
+                console.error("CRITICAL: Server returned invalid JSON. Raw Output:", rawText);
+                // Force a 'fatal' status to stop the loop clearly
+                data = { status: 'stopped', error: 'Server Error: check console' };
+                // Update UI to warn user
+                timerDiv.innerHTML = '<span class="text-red-500 font-bold uppercase tracking-wider">SERVER ERROR (CHECK CONSOLE)</span>';
+            }
 
             if (data.status === 'batch_processed' || data.status === 'waiting_retry') {
                 // Update UI for processed items
