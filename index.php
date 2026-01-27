@@ -177,8 +177,12 @@ require_once 'includes/header.php';
                                     </svg>
                                 </div>
                                 <div>
-                                    <p class="text-white font-bold text-sm"><?php echo __('hero_badge'); ?></p>
-                                    <p class="text-gray-400 text-xs"><?php echo __('fast_secure'); ?></p>
+                                    <p class="text-white font-bold text-sm">
+                                        <?php echo getSetting('about_floating_top_' . $lang, __('hero_badge')); ?>
+                                    </p>
+                                    <p class="text-gray-400 text-xs">
+                                        <?php echo getSetting('about_floating_main_' . $lang, __('fast_secure')); ?>
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -191,51 +195,68 @@ require_once 'includes/header.php';
                         class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 mb-6">
                         <span class="w-2 h-2 rounded-full bg-indigo-500 animate-ping"></span>
                         <span
-                            class="text-indigo-300 text-xs font-bold uppercase tracking-widest"><?php echo __('about_us'); ?></span>
+                            class="text-indigo-300 text-xs font-bold uppercase tracking-widest"><?php echo getSetting('about_title_' . $lang, __('about_us')); ?></span>
                     </div>
                     <h2 class="text-4xl md:text-5xl font-black text-white mb-8 leading-tight">
-                        <?php echo __('about_subtitle'); ?>
+                        <?php echo getSetting('about_subtitle_' . $lang, __('about_subtitle')); ?>
                     </h2>
                     <p class="text-lg text-gray-400 leading-relaxed mb-10">
-                        <?php echo __('about_desc'); ?>
+                        <?php echo getSetting('about_desc_' . $lang, __('about_desc')); ?>
                     </p>
 
-                    <ul class="space-y-4 mb-10">
-                        <li class="flex items-center gap-4 text-white font-medium">
-                            <span
-                                class="w-6 h-6 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
-                                        d="M5 13l4 4L19 7"></path>
-                                </svg>
-                            </span>
-                            <?php echo __('feature_1_title'); ?>
-                        </li>
-                        <li class="flex items-center gap-4 text-white font-medium">
-                            <span
-                                class="w-6 h-6 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
-                                        d="M5 13l4 4L19 7"></path>
-                                </svg>
-                            </span>
-                            <?php echo __('feature_2_title'); ?>
-                        </li>
-                        <li class="flex items-center gap-4 text-white font-medium">
-                            <span
-                                class="w-6 h-6 rounded-full bg-pink-500/20 flex items-center justify-center text-pink-400">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
-                                        d="M5 13l4 4L19 7"></path>
-                                </svg>
-                            </span>
-                            <?php echo __('feature_3_title'); ?>
-                        </li>
-                    </ul>
+                    <!-- Mission & Vision -->
+                    <?php
+                    $mission = getSetting('mission_' . $lang);
+                    $vision = getSetting('vision_' . $lang);
+                    if ($mission || $vision):
+                        ?>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
+                            <?php if ($mission): ?>
+                                <div
+                                    class="glass-card p-5 rounded-2xl border border-white/5 bg-indigo-500/5 hover:bg-indigo-500/10 transition-colors">
+                                    <h3 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                                        <span class="p-1.5 rounded-lg bg-indigo-500/20 text-indigo-400">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                            </svg>
+                                        </span>
+                                        <?php echo $lang === 'ar' ? 'رسالتنا' : 'Our Mission'; ?>
+                                    </h3>
+                                    <p class="text-sm text-gray-400 leading-relaxed">
+                                        <?php echo $mission; ?>
+                                    </p>
+                                </div>
+                            <?php endif; ?>
 
-                    <a href="#features"
+                            <?php if ($vision): ?>
+                                <div
+                                    class="glass-card p-5 rounded-2xl border border-white/5 bg-purple-500/5 hover:bg-purple-500/10 transition-colors">
+                                    <h3 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                                        <span class="p-1.5 rounded-lg bg-purple-500/20 text-purple-400">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                                </path>
+                                            </svg>
+                                        </span>
+                                        <?php echo $lang === 'ar' ? 'رؤيتنا' : 'Our Vision'; ?>
+                                    </h3>
+                                    <p class="text-sm text-gray-400 leading-relaxed">
+                                        <?php echo $vision; ?>
+                                    </p>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
+
+
+
+                    <a href="<?php echo getSetting('about_btn_url', '#features'); ?>"
                         class="inline-flex items-center justify-center px-8 py-4 bg-white/5 hover:bg-white/10 text-white font-bold rounded-2xl border border-white/10 transition-all duration-300 gap-3 group/link">
-                        <span><?php echo __('about_btn'); ?></span>
+                        <span><?php echo getSetting('about_btn_' . $lang, __('about_btn')); ?></span>
                         <svg class="w-5 h-5 group-hover/link:translate-x-1 transition-transform" fill="none"
                             stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -985,7 +1006,7 @@ if (!empty($pricingPlans)):
                     </p>
 
                     <div class="flex flex-col sm:flex-row items-center justify-center gap-6">
-                        <a href="register.php"
+                        <a href="<?php echo getSetting('cta_btn_url', '#register'); ?>"
                             class="group w-full sm:w-auto px-12 py-5 bg-white text-gray-900 font-black rounded-2xl shadow-2xl hover:bg-gray-100 transition-all duration-300 hover:scale-105 flex items-center justify-center gap-3">
                             <span><?php echo __('cta_button'); ?></span>
                             <svg class="w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none"
@@ -993,10 +1014,6 @@ if (!empty($pricingPlans)):
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
                                     d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
                             </svg>
-                        </a>
-                        <a href="login.php"
-                            class="w-full sm:w-auto px-12 py-5 bg-white/5 hover:bg-white/10 text-white font-bold rounded-2xl border border-white/10 transition-all duration-300 flex items-center justify-center backdrop-blur-md">
-                            <?php echo __('login'); ?>
                         </a>
                     </div>
                 </div>

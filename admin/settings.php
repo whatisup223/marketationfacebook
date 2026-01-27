@@ -438,295 +438,216 @@ require_once __DIR__ . '/../includes/header.php';
                 value="<?php echo htmlspecialchars($active_tab); ?>">
 
             <!-- Site Info Tab -->
-            <div id="site-tab" class="tab-content glass-card p-6 md:p-8 rounded-2xl">
-                <div class="grid md:grid-cols-2 gap-6">
-                    <div class="space-y-4">
-                        <h3 class="text-lg font-bold text-white mb-4 flex items-center">
-                            <span class="w-2 h-6 bg-indigo-500 rounded-full mr-3"></span>
-                            <?php echo __('site_info'); ?>
-                        </h3>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label
-                                    class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('site_logo'); ?></label>
-                                <input type="file" name="site_logo" class="setting-input text-xs">
+            <div id="site-tab" class="tab-content hidden space-y-6">
+
+                <!-- 1. Brand Identity -->
+                <div class="glass-card p-6 md:p-8 rounded-2xl border border-white/5">
+                    <h3 class="text-lg font-bold text-white mb-6 flex items-center">
+                        <span class="w-2 h-6 bg-indigo-500 rounded-full mr-3"></span>
+                        <?php echo __('site_logo') . ' & ' . __('site_favicon'); ?>
+                    </h3>
+
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <!-- Logo -->
+                        <div class="space-y-4">
+                            <label
+                                class="block text-gray-400 text-sm font-medium mb-1"><?php echo __('site_logo'); ?></label>
+                            <div
+                                class="relative group p-4 bg-gray-900 rounded-xl border border-gray-700/50 flex items-center justify-center">
                                 <?php if (!empty($settings['site_logo'])): ?>
-                                    <div class="flex items-center mt-2 gap-2">
-                                        <img src="../uploads/<?php echo $settings['site_logo']; ?>" class="h-10 rounded">
-                                        <button type="submit" name="delete_site_logo"
-                                            class="p-2 bg-red-500/20 hover:bg-red-500/40 text-red-500 rounded-lg transition-colors border border-red-500/20"
-                                            title="<?php echo __('delete'); ?>">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                                                </path>
-                                            </svg>
-                                        </button>
-                                    </div>
+                                    <img src="../uploads/<?php echo $settings['site_logo']; ?>" class="h-12 object-contain">
+                                    <button type="submit" name="delete_site_logo"
+                                        class="absolute -top-2 -right-2 p-1.5 bg-red-600 rounded-full text-white shadow-md hover:bg-red-500 transition-colors">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                    </button>
+                                <?php else: ?>
+                                    <span class="text-gray-600 text-xs italic">No logo set</span>
                                 <?php endif; ?>
                             </div>
-                            <div>
-                                <label
-                                    class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('site_favicon'); ?></label>
-                                <input type="file" name="site_favicon" class="setting-input text-xs">
+                            <input type="file" name="site_logo"
+                                class="setting-input text-xs w-full file:bg-indigo-600 file:border-none file:text-white file:rounded-lg file:px-2 file:py-1 file:mr-2 file:cursor-pointer">
+                        </div>
+
+                        <!-- Favicon -->
+                        <div class="space-y-4">
+                            <label
+                                class="block text-gray-400 text-sm font-medium mb-1"><?php echo __('site_favicon'); ?></label>
+                            <div
+                                class="relative group p-4 bg-gray-900 rounded-xl border border-gray-700/50 flex items-center justify-center">
                                 <?php if (!empty($settings['site_favicon'])): ?>
-                                    <div class="flex items-center mt-2 gap-2">
-                                        <img src="../uploads/<?php echo $settings['site_favicon']; ?>" class="h-8 rounded">
-                                        <button type="submit" name="delete_site_favicon"
-                                            class="p-2 bg-red-500/20 hover:bg-red-500/40 text-red-500 rounded-lg transition-colors border border-red-500/20"
-                                            title="<?php echo __('delete'); ?>">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                                                </path>
-                                            </svg>
-                                        </button>
-                                    </div>
+                                    <img src="../uploads/<?php echo $settings['site_favicon']; ?>"
+                                        class="h-8 object-contain">
+                                    <button type="submit" name="delete_site_favicon"
+                                        class="absolute -top-2 -right-2 p-1.5 bg-red-600 rounded-full text-white shadow-md hover:bg-red-500 transition-colors">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                    </button>
+                                <?php else: ?>
+                                    <span class="text-gray-600 text-xs italic">No favicon</span>
                                 <?php endif; ?>
                             </div>
-                        </div>
-                        <div>
-                            <label
-                                class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('site_name_ar'); ?></label>
-                            <input type="text" name="site_name_ar"
-                                value="<?php echo $settings['site_name_ar'] ?? 'الصراف الذكي'; ?>"
-                                class="setting-input">
-                        </div>
-                        <div>
-                            <label
-                                class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('site_name_en'); ?></label>
-                            <input type="text" name="site_name_en"
-                                value="<?php echo $settings['site_name_en'] ?? 'SmartExchange'; ?>"
-                                class="setting-input">
-                        </div>
-                        <div>
-                            <label
-                                class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('footer_description_ar'); ?></label>
-                            <textarea name="footer_description_ar" rows="2"
-                                class="setting-input"><?php echo $settings['footer_description_ar'] ?? ''; ?></textarea>
-                        </div>
-                        <div>
-                            <label
-                                class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('footer_description_en'); ?></label>
-                            <textarea name="footer_description_en" rows="2"
-                                class="setting-input"><?php echo $settings['footer_description_en'] ?? ''; ?></textarea>
-                        </div>
-                        <div>
-                            <label
-                                class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('contact_email'); ?></label>
-                            <input type="email" name="contact_email"
-                                value="<?php echo $settings['contact_email'] ?? 'admin@example.com'; ?>"
-                                class="setting-input">
-                        </div>
-                        <div>
-                            <label
-                                class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('contact_form_email'); ?></label>
-                            <input type="email" name="contact_form_email"
-                                value="<?php echo $settings['contact_form_email'] ?? ($settings['contact_email'] ?? ''); ?>"
-                                class="setting-input">
+                            <input type="file" name="site_favicon"
+                                class="setting-input text-xs w-full file:bg-indigo-600 file:border-none file:text-white file:rounded-lg file:px-2 file:py-1 file:mr-2 file:cursor-pointer">
                         </div>
                     </div>
-                    <div class="space-y-4">
-                        <h3 class="text-lg font-bold text-white mb-4 flex items-center opacity-0">...</h3>
-                        <div>
-                            <label
-                                class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('maintenance_mode'); ?></label>
-                            <select name="maintenance_mode" class="setting-input">
-                                <option value="0" <?php echo ($settings['maintenance_mode'] ?? '0') == '0' ? 'selected' : ''; ?>><?php echo __('off_live'); ?>
-                                </option>
-                                <option value="1" <?php echo ($settings['maintenance_mode'] ?? '0') == '1' ? 'selected' : ''; ?>><?php echo __('on_maintenance'); ?></option>
-                            </select>
-                        </div>
+                </div>
 
-                        <!-- Maintenance Messages -->
-                        <div x-show="document.querySelector('select[name=maintenance_mode]').value == '1'"
-                            class="space-y-4 pt-2 border-t border-gray-700/50 mt-2 mb-4">
+                <!-- 2. Site Content -->
+                <div class="grid lg:grid-cols-2 gap-6">
+                    <!-- Arabic -->
+                    <div class="glass-card p-6 md:p-8 rounded-2xl border border-white/5">
+                        <h3 class="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                            <span class="w-1.5 h-6 bg-emerald-500 rounded-full"></span>
+                            <?php echo __('site_info'); ?> <span
+                                class="text-xs bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded border border-emerald-500/20">AR</span>
+                        </h3>
+                        <div class="space-y-4">
                             <div>
-                                <label class="block text-gray-400 text-sm font-medium mb-2">
-                                    <?php echo __('maintenance_mode') . ' (' . __('arabic') . ')'; ?>
-                                </label>
-                                <textarea name="maintenance_message_ar" rows="3" class="setting-input"
-                                    placeholder="<?php echo __('maintenance_placeholder'); ?>"><?php echo $settings['maintenance_message_ar'] ?? ''; ?></textarea>
+                                <label
+                                    class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('site_name_ar'); ?></label>
+                                <input type="text" name="site_name_ar"
+                                    value="<?php echo $settings['site_name_ar'] ?? 'الصراف الذكي'; ?>"
+                                    class="setting-input">
                             </div>
                             <div>
-                                <label class="block text-gray-400 text-sm font-medium mb-2">
-                                    <?php echo __('maintenance_mode') . ' (' . __('english') . ')'; ?>
-                                </label>
-                                <textarea name="maintenance_message_en" rows="3" class="setting-input"
-                                    placeholder="<?php echo __('maintenance_placeholder'); ?>"><?php echo $settings['maintenance_message_en'] ?? ''; ?></textarea>
+                                <label
+                                    class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('footer_description_ar'); ?></label>
+                                <textarea name="footer_description_ar" rows="3"
+                                    class="setting-input"><?php echo $settings['footer_description_ar'] ?? ''; ?></textarea>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="flex items-center gap-3 p-4 bg-indigo-500/5 rounded-xl border border-indigo-500/10">
-                            <input type="hidden" name="enable_scroll_top" value="0">
-                            <input type="checkbox" name="enable_scroll_top" value="1" id="enable_scroll_top" <?php echo ($settings['enable_scroll_top'] ?? '1') == '1' ? 'checked' : ''; ?>
-                                class="w-5 h-5 rounded border-gray-700 bg-gray-800 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-gray-900">
-                            <label for="enable_scroll_top"
-                                class="text-gray-300 text-sm font-medium cursor-pointer selection:none select-none"><?php echo __('enable_scroll_top'); ?></label>
+                    <!-- English -->
+                    <div class="glass-card p-6 md:p-8 rounded-2xl border border-white/5">
+                        <h3 class="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                            <span class="w-1.5 h-6 bg-indigo-500 rounded-full"></span>
+                            <?php echo __('site_info'); ?> <span
+                                class="text-xs bg-indigo-500/10 text-indigo-400 px-2 py-1 rounded border border-indigo-500/20">EN</span>
+                        </h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label
+                                    class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('site_name_en'); ?></label>
+                                <input type="text" name="site_name_en"
+                                    value="<?php echo $settings['site_name_en'] ?? 'SmartExchange'; ?>"
+                                    class="setting-input">
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('footer_description_en'); ?></label>
+                                <textarea name="footer_description_en" rows="3"
+                                    class="setting-input"><?php echo $settings['footer_description_en'] ?? ''; ?></textarea>
+                            </div>
                         </div>
-                        <div>
-                            <textarea name="announcement" rows="3"
-                                class="setting-input"><?php echo $settings['announcement'] ?? ''; ?></textarea>
+                    </div>
+                </div>
+
+                <!-- 3. Contact & System -->
+                <div class="grid lg:grid-cols-2 gap-6">
+                    <!-- Contact Emails -->
+                    <div class="glass-card p-6 md:p-8 rounded-2xl border border-white/5">
+                        <h3 class="text-lg font-bold text-white mb-6 flex items-center">
+                            <span class="w-2 h-6 bg-pink-500 rounded-full mr-3"></span>
+                            <?php echo __('contact_info'); ?>
+                        </h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label
+                                    class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('contact_email'); ?></label>
+                                <div class="relative">
+                                    <span class="absolute left-4 top-3 text-gray-500">@</span>
+                                    <input type="email" name="contact_email"
+                                        value="<?php echo $settings['contact_email'] ?? 'admin@example.com'; ?>"
+                                        class="setting-input pl-10">
+                                </div>
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('contact_form_email'); ?></label>
+                                <div class="relative">
+                                    <span class="absolute left-4 top-3 text-gray-500">@</span>
+                                    <input type="email" name="contact_form_email"
+                                        value="<?php echo $settings['contact_form_email'] ?? ($settings['contact_email'] ?? ''); ?>"
+                                        class="setting-input pl-10">
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <label class="block text-gray-400 text-sm font-medium mb-2">
-                                <?php echo __('sim_title'); ?>
-                            </label>
-                            <input type="number" name="exchange_timer"
-                                value="<?php echo $settings['exchange_timer'] ?? '30'; ?>" class="setting-input" min="1"
-                                max="120">
+                    </div>
+
+                    <!-- System Modes -->
+                    <div class="glass-card p-6 md:p-8 rounded-2xl border border-white/5">
+                        <h3 class="text-lg font-bold text-white mb-6 flex items-center">
+                            <span class="w-2 h-6 bg-red-500 rounded-full mr-3"></span>
+                            <?php echo __('system_maintenance'); ?>
+                        </h3>
+                        <div class="space-y-5">
+                            <div>
+                                <label
+                                    class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('maintenance_mode'); ?></label>
+                                <select name="maintenance_mode" class="setting-input bg-gray-900 appearance-none">
+                                    <option value="0" <?php echo ($settings['maintenance_mode'] ?? '0') == '0' ? 'selected' : ''; ?>><?php echo __('off_live'); ?></option>
+                                    <option value="1" <?php echo ($settings['maintenance_mode'] ?? '0') == '1' ? 'selected' : ''; ?>><?php echo __('on_maintenance'); ?></option>
+                                </select>
+                            </div>
+
+                            <!-- Maintenance Messages -->
+                            <div x-show="document.querySelector('select[name=maintenance_mode]').value == '1'"
+                                class="space-y-4 pt-4 border-t border-white/5">
+                                <div>
+                                    <label
+                                        class="block text-gray-400 text-xs font-bold uppercase mb-1"><?php echo __('maintenance_mode') . ' (' . __('arabic') . ')'; ?></label>
+                                    <textarea name="maintenance_message_ar" rows="2"
+                                        class="setting-input text-sm"><?php echo $settings['maintenance_message_ar'] ?? ''; ?></textarea>
+                                </div>
+                                <div>
+                                    <label
+                                        class="block text-gray-400 text-xs font-bold uppercase mb-1"><?php echo __('maintenance_mode') . ' (' . __('english') . ')'; ?></label>
+                                    <textarea name="maintenance_message_en" rows="2"
+                                        class="setting-input text-sm"><?php echo $settings['maintenance_message_en'] ?? ''; ?></textarea>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-3">
+                                <input type="hidden" name="enable_scroll_top" value="0">
+                                <label class="flex items-center gap-3 cursor-pointer group">
+                                    <div class="relative">
+                                        <input type="checkbox" name="enable_scroll_top" value="1" <?php echo ($settings['enable_scroll_top'] ?? '1') == '1' ? 'checked' : ''; ?>
+                                            class="peer sr-only">
+                                        <div
+                                            class="w-10 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600">
+                                        </div>
+                                    </div>
+                                    <span
+                                        class="text-sm font-medium text-gray-300 group-hover:text-white transition-colors"><?php echo __('enable_scroll_top'); ?></span>
+                                </label>
+                            </div>
+
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Hero Section Tab -->
-            <div id="hero-tab" class="tab-content hidden glass-card p-6 md:p-8 rounded-2xl">
-                <div class="grid md:grid-cols-2 gap-8">
-                    <div class="space-y-4">
-                        <h3 class="text-lg font-bold text-white mb-4 flex items-center">
-                            <span class="w-2 h-6 bg-purple-500 rounded-full mr-3"></span>
-                            <?php echo __('hero_section'); ?> (AR)
-                        </h3>
-                        <div>
-                            <label
-                                class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('hero_title_ar'); ?></label>
-                            <input type="text" name="hero_title_ar"
-                                value="<?php echo $settings['hero_title_ar'] ?? ''; ?>" class="setting-input">
-                        </div>
+            <div id="hero-tab" class="tab-content hidden space-y-6">
 
-                        <div>
-                            <label class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('hero_badge'); ?>
-                                (AR)</label>
-                            <input type="text" name="hero_badge_ar"
-                                value="<?php echo $settings['hero_badge_ar'] ?? ''; ?>" class="setting-input"
-                                placeholder="مثلاً: الأداة رقم #1 للتسويق">
-                        </div>
-                        <div>
-                            <label
-                                class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('hero_feature_ar'); ?>
-                                (AR)</label>
-                            <input type="text" name="hero_feature_ar"
-                                value="<?php echo $settings['hero_feature_ar'] ?? ''; ?>" class="setting-input"
-                                placeholder="مثلاً: دقة تصل إلى 99%">
-                        </div>
-                        <div>
-                            <label
-                                class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('hero_subtitle_ar'); ?></label>
-                            <textarea name="hero_subtitle_ar" rows="3"
-                                class="setting-input"><?php echo $settings['hero_subtitle_ar'] ?? ''; ?></textarea>
-                        </div>
-                    </div>
-                    <div class="space-y-4">
-                        <h3 class="text-lg font-bold text-white mb-4 flex items-center">
-                            <span class="w-2 h-6 bg-purple-400 rounded-full mr-3"></span>
-                            <?php echo __('hero_section'); ?> (EN)
-                        </h3>
-                        <div>
-                            <label
-                                class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('hero_title_en'); ?></label>
-                            <input type="text" name="hero_title_en"
-                                value="<?php echo $settings['hero_title_en'] ?? ''; ?>" class="setting-input">
-                        </div>
-
-                        <div>
-                            <label class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('hero_badge'); ?>
-                                (EN)</label>
-                            <input type="text" name="hero_badge_en"
-                                value="<?php echo $settings['hero_badge_en'] ?? ''; ?>" class="setting-input"
-                                placeholder="e.g. #1 Marketing Tool">
-                        </div>
-                        <div>
-                            <label
-                                class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('hero_feature_en'); ?>
-                                (EN)</label>
-                            <input type="text" name="hero_feature_en"
-                                value="<?php echo $settings['hero_feature_en'] ?? ''; ?>" class="setting-input"
-                                placeholder="e.g. 99% Accuracy">
-                        </div>
-                        <div>
-                            <label
-                                class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('hero_subtitle_en'); ?></label>
-                            <textarea name="hero_subtitle_en" rows="3"
-                                class="setting-input"><?php echo $settings['hero_subtitle_en'] ?? ''; ?></textarea>
-                        </div>
-
-                    </div>
-                </div>
-
-                <!-- Hero Image Management Section -->
-                <div class="mt-12 pt-12 border-t border-white/5">
+                <!-- 1. Media & Badge Settings -->
+                <div class="glass-card p-6 md:p-8 rounded-2xl border border-white/5">
                     <h3 class="text-lg font-bold text-white mb-6 flex items-center">
-                        <span class="w-2 h-6 bg-indigo-500 rounded-full mr-3"></span>
+                        <span class="w-2 h-6 bg-purple-500 rounded-full mr-3"></span>
                         <?php echo __('hero_image_settings'); ?>
                     </h3>
 
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                        <!-- Arabic Badge Text -->
-                        <div class="space-y-4 p-6 bg-white/5 rounded-3xl border border-white/10">
-                            <h4
-                                class="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
-                                <span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
-                                <?php echo __('floating_badge'); ?> (AR)
-                            </h4>
-                            <div>
-                                <label
-                                    class="block text-gray-400 text-[10px] font-bold uppercase mb-2"><?php echo __('top_text_feature'); ?></label>
-                                <input type="text" name="hero_floating_top_ar"
-                                    value="<?php echo $settings['hero_floating_top_ar'] ?? ''; ?>"
-                                    class="setting-input text-sm" placeholder="مثلاً: دقة تصل إلى 99%">
-                            </div>
-                            <div>
-                                <label
-                                    class="block text-gray-400 text-[10px] font-bold uppercase mb-2"><?php echo __('main_text_badge'); ?></label>
-                                <input type="text" name="hero_floating_main_ar"
-                                    value="<?php echo $settings['hero_floating_main_ar'] ?? ''; ?>"
-                                    class="setting-input text-sm" placeholder="الأداة رقم #1 للتسويق">
-                            </div>
-                        </div>
-
-                        <!-- English Badge Text -->
-                        <div class="space-y-4 p-6 bg-white/5 rounded-3xl border border-white/10">
-                            <h4
-                                class="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
-                                <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
-                                <?php echo __('floating_badge'); ?> (EN)
-                            </h4>
-                            <div>
-                                <label
-                                    class="block text-gray-400 text-[10px] font-bold uppercase mb-2"><?php echo __('top_text_feature'); ?></label>
-                                <input type="text" name="hero_floating_top_en"
-                                    value="<?php echo $settings['hero_floating_top_en'] ?? ''; ?>"
-                                    class="setting-input text-sm" placeholder="e.g. 99% Accuracy">
-                            </div>
-                            <div>
-                                <label
-                                    class="block text-gray-400 text-[10px] font-bold uppercase mb-2"><?php echo __('main_text_badge'); ?></label>
-                                <input type="text" name="hero_floating_main_en"
-                                    value="<?php echo $settings['hero_floating_main_en'] ?? ''; ?>"
-                                    class="setting-input text-sm" placeholder="The #1 Tool for Marketing">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="p-6 bg-white/5 rounded-3xl border border-white/10 max-w-4xl">
-                        <div class="flex flex-col md:flex-row items-center gap-12">
-                            <div class="flex-1 space-y-4">
-                                <p class="text-sm text-gray-400 leading-relaxed">
-                                    <?php echo __('hero_image_desc'); ?>
-                                </p>
-                                <div class="relative">
-                                    <input type="file" name="hero_image" id="hero_image_input" class="hidden"
-                                        accept="image/*">
-                                    <label for="hero_image_input"
-                                        class="w-full h-12 flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-2xl cursor-pointer transition-all shadow-lg shadow-indigo-600/20 active:scale-95">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
-                                            </path>
-                                        </svg>
-                                        <?php echo __('upload_image'); ?>
-                                    </label>
-                                </div>
+                    <div class="grid lg:grid-cols-3 gap-8">
+                        <!-- Hero Image -->
+                        <div class="lg:col-span-1 space-y-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <label class="block text-gray-400 text-sm font-medium">Hero Image</label>
                             </div>
 
                             <div class="relative group">
@@ -735,25 +656,167 @@ require_once __DIR__ . '/../includes/header.php';
                                 $h_img_url = !empty($h_img) ? '../uploads/' . $h_img : 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=400';
                                 ?>
                                 <div
-                                    class="w-48 h-32 rounded-2xl overflow-hidden border border-white/10 shadow-xl group-hover:scale-105 transition-transform duration-500 bg-gray-900 flex items-center justify-center relative">
-                                    <img src="<?php echo $h_img_url; ?>" class="w-full h-full object-cover"
-                                        id="hero_image_preview">
-                                    <div id="hero_upload_loader"
-                                        class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center">
-                                        <div
-                                            class="animate-spin rounded-full h-8 w-8 border-4 border-indigo-500 border-t-transparent shadow-lg shadow-indigo-500/20">
-                                        </div>
+                                    class="w-full h-48 rounded-2xl bg-gray-900 border border-gray-700/50 flex items-center justify-center overflow-hidden">
+                                    <img src="<?php echo $h_img_url; ?>" class="w-full h-full object-cover">
+
+                                    <!-- Overlay Actions -->
+                                    <div
+                                        class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center gap-3">
+                                        <label
+                                            class="cursor-pointer p-2 bg-indigo-600 rounded-lg hover:bg-indigo-500 text-white transition-colors"
+                                            title="<?php echo __('upload_image'); ?>">
+                                            <input type="file" name="hero_image" class="hidden" accept="image/*">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12">
+                                                </path>
+                                            </svg>
+                                        </label>
+                                        <?php if (!empty($h_img)): ?>
+                                            <button type="submit" name="delete_hero_image"
+                                                class="p-2 bg-red-600 rounded-lg hover:bg-red-500 text-white transition-colors"
+                                                title="<?php echo __('delete'); ?>">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                                    </path>
+                                                </svg>
+                                            </button>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
-                                <?php if (!empty($h_img)): ?>
-                                    <button type="submit" name="delete_hero_image"
-                                        class="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-red-600 text-white flex items-center justify-center shadow-lg hover:bg-red-500 hover:scale-110 transition-all border-2 border-slate-900">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            </div>
+                        </div>
+
+                        <!-- Badges -->
+                        <div class="lg:col-span-2 grid md:grid-cols-2 gap-6">
+                            <!-- AR -->
+                            <div class="p-5 bg-white/5 rounded-2xl border border-white/10">
+                                <h4
+                                    class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                    <img src="https://flagcdn.com/w20/sa.png"
+                                        class="w-4 rounded-sm grayscale opacity-50">
+                                    <?php echo __('floating_badge'); ?> (AR)
+                                </h4>
+                                <div class="space-y-3">
+                                    <div>
+                                        <label
+                                            class="block text-gray-500 text-[10px] font-bold uppercase mb-1"><?php echo __('top_text_feature'); ?></label>
+                                        <input type="text" name="hero_floating_top_ar"
+                                            value="<?php echo $settings['hero_floating_top_ar'] ?? ''; ?>"
+                                            class="setting-input text-sm" placeholder="مثلاً: دقة تصل إلى 99%">
+                                    </div>
+                                    <div>
+                                        <label
+                                            class="block text-gray-500 text-[10px] font-bold uppercase mb-1"><?php echo __('main_text_badge'); ?></label>
+                                        <input type="text" name="hero_floating_main_ar"
+                                            value="<?php echo $settings['hero_floating_main_ar'] ?? ''; ?>"
+                                            class="setting-input text-sm" placeholder="الأداة رقم #1 للتسويق">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- EN -->
+                            <div class="p-5 bg-white/5 rounded-2xl border border-white/10">
+                                <h4
+                                    class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                    <img src="https://flagcdn.com/w20/us.png"
+                                        class="w-4 rounded-sm grayscale opacity-50">
+                                    <?php echo __('floating_badge'); ?> (EN)
+                                </h4>
+                                <div class="space-y-3">
+                                    <div>
+                                        <label
+                                            class="block text-gray-500 text-[10px] font-bold uppercase mb-1"><?php echo __('top_text_feature'); ?></label>
+                                        <input type="text" name="hero_floating_top_en"
+                                            value="<?php echo $settings['hero_floating_top_en'] ?? ''; ?>"
+                                            class="setting-input text-sm" placeholder="e.g. 99% Accuracy">
+                                    </div>
+                                    <div>
+                                        <label
+                                            class="block text-gray-500 text-[10px] font-bold uppercase mb-1"><?php echo __('main_text_badge'); ?></label>
+                                        <input type="text" name="hero_floating_main_en"
+                                            value="<?php echo $settings['hero_floating_main_en'] ?? ''; ?>"
+                                            class="setting-input text-sm" placeholder="The #1 Tool for Marketing">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Content Settings -->
+                <div class="grid lg:grid-cols-2 gap-6">
+                    <!-- Arabic -->
+                    <div class="glass-card p-6 md:p-8 rounded-2xl border border-white/5">
+                        <h3 class="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                            <span class="w-1.5 h-6 bg-emerald-500 rounded-full"></span>
+                            <?php echo __('hero_section'); ?> <span
+                                class="text-xs bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded border border-emerald-500/20">AR</span>
+                        </h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label
+                                    class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('hero_title_ar'); ?></label>
+                                <input type="text" name="hero_title_ar"
+                                    value="<?php echo $settings['hero_title_ar'] ?? ''; ?>" class="setting-input">
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('hero_subtitle_ar'); ?></label>
+                                <textarea name="hero_subtitle_ar" rows="3"
+                                    class="setting-input"><?php echo $settings['hero_subtitle_ar'] ?? ''; ?></textarea>
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('hero_feature_ar'); ?></label>
+                                <div class="relative">
+                                    <input type="text" name="hero_feature_ar"
+                                        value="<?php echo $settings['hero_feature_ar'] ?? ''; ?>"
+                                        class="setting-input pl-10" placeholder="مثلاً: دقة تصل إلى 99%">
+                                    <span class="absolute left-3 top-3 text-gray-500"><svg class="w-5 h-5" fill="none"
+                                            stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M6 18L18 6M6 6l12 12"></path>
-                                        </svg>
-                                    </button>
-                                <?php endif; ?>
+                                                d="M5 13l4 4L19 7"></path>
+                                        </svg></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- English -->
+                    <div class="glass-card p-6 md:p-8 rounded-2xl border border-white/5">
+                        <h3 class="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                            <span class="w-1.5 h-6 bg-indigo-500 rounded-full"></span>
+                            <?php echo __('hero_section'); ?> <span
+                                class="text-xs bg-indigo-500/10 text-indigo-400 px-2 py-1 rounded border border-indigo-500/20">EN</span>
+                        </h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label
+                                    class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('hero_title_en'); ?></label>
+                                <input type="text" name="hero_title_en"
+                                    value="<?php echo $settings['hero_title_en'] ?? ''; ?>" class="setting-input">
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('hero_subtitle_en'); ?></label>
+                                <textarea name="hero_subtitle_en" rows="3"
+                                    class="setting-input"><?php echo $settings['hero_subtitle_en'] ?? ''; ?></textarea>
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('hero_feature_en'); ?></label>
+                                <div class="relative">
+                                    <input type="text" name="hero_feature_en"
+                                        value="<?php echo $settings['hero_feature_en'] ?? ''; ?>"
+                                        class="setting-input pl-10" placeholder="e.g. 99% Accuracy">
+                                    <span class="absolute left-3 top-3 text-gray-500"><svg class="w-5 h-5" fill="none"
+                                            stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M5 13l4 4L19 7"></path>
+                                        </svg></span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -761,118 +824,248 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
 
             <!-- About Us Tab -->
-            <div id="about-tab" class="tab-content hidden glass-card p-6 md:p-8 rounded-2xl">
-                <div class="grid md:grid-cols-2 gap-8">
-                    <div class="space-y-4">
-                        <h3 class="text-lg font-bold text-white mb-4 flex items-center">
-                            <span class="w-2 h-6 bg-blue-500 rounded-full mr-3"></span>
-                            <?php echo __('about_section'); ?> (AR)
-                        </h3>
-                        <div>
+            <!-- About Us Tab -->
+            <div id="about-tab" class="tab-content hidden space-y-6">
+
+                <!-- 1. Media & Badge Settings -->
+                <div class="glass-card p-6 md:p-8 rounded-2xl border border-white/5">
+                    <h3 class="text-lg font-bold text-white mb-6 flex items-center">
+                        <span class="w-2 h-6 bg-blue-500 rounded-full mr-3"></span>
+                        <?php echo __('image') . ' & ' . __('floating_badge'); ?>
+                    </h3>
+
+                    <div class="grid lg:grid-cols-3 gap-8">
+                        <!-- Main Image -->
+                        <div class="lg:col-span-1 space-y-4">
                             <label
                                 class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('about_image'); ?></label>
-                            <input type="file" name="about_image" class="setting-input text-xs mb-2">
-                            <?php if (!empty($settings['about_image'])): ?>
-                                <div class="relative group/img inline-block mb-4">
-                                    <img src="../uploads/<?php echo $settings['about_image']; ?>"
-                                        class="h-32 rounded-xl border border-white/10 shadow-lg">
-                                    <button type="submit" name="delete_about_image"
-                                        class="absolute -top-2 -right-2 p-1.5 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-colors">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+                            <!-- Image Preview & Upload -->
+                            <div class="relative group">
+                                <div
+                                    class="w-full h-48 rounded-xl bg-gray-900 border border-gray-700/50 flex items-center justify-center overflow-hidden">
+                                    <?php if (!empty($settings['about_image'])): ?>
+                                        <img src="../uploads/<?php echo $settings['about_image']; ?>"
+                                            class="w-full h-full object-cover">
+                                    <?php else: ?>
+                                        <svg class="w-12 h-12 text-gray-700" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M6 18L18 6M6 6l12 12"></path>
+                                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                            </path>
                                         </svg>
-                                    </button>
+                                    <?php endif; ?>
+
+                                    <!-- Overlay Actions -->
+                                    <div
+                                        class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center gap-3">
+                                        <label
+                                            class="cursor-pointer p-2 bg-indigo-600 rounded-lg hover:bg-indigo-500 text-white transition-colors"
+                                            title="<?php echo __('upload_image'); ?>">
+                                            <input type="file" name="about_image" class="hidden" accept="image/*">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12">
+                                                </path>
+                                            </svg>
+                                        </label>
+                                        <?php if (!empty($settings['about_image'])): ?>
+                                            <button type="submit" name="delete_about_image"
+                                                class="p-2 bg-red-600 rounded-lg hover:bg-red-500 text-white transition-colors"
+                                                title="<?php echo __('delete'); ?>">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                                    </path>
+                                                </svg>
+                                            </button>
+                                        <?php endif; ?>
+                                    </div>
                                 </div>
-                            <?php endif; ?>
+                                <p class="text-xs text-gray-500 mt-2 text-center">Recommended: 800x600px</p>
+                            </div>
                         </div>
-                        <div>
-                            <label class="block text-gray-400 text-sm font-medium mb-2">
-                                <?php echo __('about_title_ar'); ?>
-                            </label>
-                            <input type="text" name="about_title_ar"
-                                value="<?php echo $settings['about_title_ar'] ?? ''; ?>" class="setting-input"
-                                placeholder="من نحن">
-                        </div>
-                        <div>
-                            <label
-                                class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('about_subtitle_ar'); ?></label>
-                            <input type="text" name="about_subtitle_ar"
-                                value="<?php echo $settings['about_subtitle_ar'] ?? ''; ?>" class="setting-input"
-                                placeholder="شريكك الذكي في عالم التسويق الرقمي">
-                        </div>
-                        <div>
-                            <label
-                                class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('about_desc_ar'); ?></label>
-                            <textarea name="about_desc_ar" rows="3"
-                                class="setting-input"><?php echo $settings['about_desc_ar'] ?? ''; ?></textarea>
-                        </div>
-                        <div>
-                            <label class="block text-gray-400 text-sm font-medium mb-2">
-                                <?php echo __('about_btn_ar'); ?>
-                            </label>
-                            <input type="text" name="about_btn_ar"
-                                value="<?php echo $settings['about_btn_ar'] ?? ''; ?>" class="setting-input"
-                                placeholder="عرض الكل">
-                        </div>
-                        <div>
-                            <label
-                                class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('mission_ar'); ?></label>
-                            <textarea name="mission_ar" rows="2"
-                                class="setting-input"><?php echo $settings['mission_ar'] ?? ''; ?></textarea>
-                        </div>
-                        <div>
-                            <label
-                                class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('vision_ar'); ?></label>
-                            <textarea name="vision_ar" rows="2"
-                                class="setting-input"><?php echo $settings['vision_ar'] ?? ''; ?></textarea>
+
+                        <!-- Badges -->
+                        <div class="lg:col-span-2 grid md:grid-cols-2 gap-6">
+                            <!-- AR Badge -->
+                            <div class="p-5 bg-white/5 rounded-2xl border border-white/10">
+                                <h4
+                                    class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                    <img src="https://flagcdn.com/w20/sa.png"
+                                        class="w-4 rounded-sm grayscale opacity-50">
+                                    <?php echo __('floating_badge'); ?> (AR)
+                                </h4>
+                                <div class="space-y-3">
+                                    <div>
+                                        <label
+                                            class="block text-gray-500 text-[10px] font-bold uppercase mb-1"><?php echo __('top_text_feature'); ?></label>
+                                        <input type="text" name="about_floating_top_ar"
+                                            value="<?php echo $settings['about_floating_top_ar'] ?? ''; ?>"
+                                            class="setting-input text-sm" placeholder="مثلاً: الخيار الأفضل">
+                                    </div>
+                                    <div>
+                                        <label
+                                            class="block text-gray-500 text-[10px] font-bold uppercase mb-1"><?php echo __('main_text_badge'); ?></label>
+                                        <input type="text" name="about_floating_main_ar"
+                                            value="<?php echo $settings['about_floating_main_ar'] ?? ''; ?>"
+                                            class="setting-input text-sm" placeholder="سريع وآمن">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- EN Badge -->
+                            <div class="p-5 bg-white/5 rounded-2xl border border-white/10">
+                                <h4
+                                    class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                    <img src="https://flagcdn.com/w20/us.png"
+                                        class="w-4 rounded-sm grayscale opacity-50">
+                                    <?php echo __('floating_badge'); ?> (EN)
+                                </h4>
+                                <div class="space-y-3">
+                                    <div>
+                                        <label
+                                            class="block text-gray-500 text-[10px] font-bold uppercase mb-1"><?php echo __('top_text_feature'); ?></label>
+                                        <input type="text" name="about_floating_top_en"
+                                            value="<?php echo $settings['about_floating_top_en'] ?? ''; ?>"
+                                            class="setting-input text-sm" placeholder="e.g. Best Choice">
+                                    </div>
+                                    <div>
+                                        <label
+                                            class="block text-gray-500 text-[10px] font-bold uppercase mb-1"><?php echo __('main_text_badge'); ?></label>
+                                        <input type="text" name="about_floating_main_en"
+                                            value="<?php echo $settings['about_floating_main_en'] ?? ''; ?>"
+                                            class="setting-input text-sm" placeholder="Fast & Secure">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="space-y-4">
-                        <h3 class="text-lg font-bold text-white mb-4 flex items-center">
-                            <span class="w-2 h-6 bg-blue-400 rounded-full mr-3"></span>
-                            <?php echo __('about_section'); ?> (EN)
+                </div>
+
+                <!-- 2. Content Settings -->
+                <div class="grid lg:grid-cols-2 gap-6">
+                    <!-- Arabic Content -->
+                    <div class="glass-card p-6 md:p-8 rounded-2xl border border-white/5">
+                        <h3 class="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                            <span class="w-1.5 h-6 bg-emerald-500 rounded-full"></span>
+                            <?php echo __('about_section'); ?>
+                            <span
+                                class="text-xs bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded border border-emerald-500/20">AR</span>
                         </h3>
-                        <div>
-                            <label class="block text-gray-400 text-sm font-medium mb-2">
-                                <?php echo __('about_title_en'); ?>
+
+                        <div class="space-y-4">
+                            <div>
+                                <label
+                                    class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('about_title_ar'); ?></label>
+                                <input type="text" name="about_title_ar"
+                                    value="<?php echo $settings['about_title_ar'] ?? ''; ?>" class="setting-input"
+                                    placeholder="من نحن">
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('about_subtitle_ar'); ?></label>
+                                <textarea name="about_subtitle_ar" rows="2" class="setting-input"
+                                    placeholder="شريكك الذكي في عالم التسويق الرقمي"><?php echo $settings['about_subtitle_ar'] ?? ''; ?></textarea>
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('about_desc_ar'); ?></label>
+                                <textarea name="about_desc_ar" rows="4"
+                                    class="setting-input"><?php echo $settings['about_desc_ar'] ?? ''; ?></textarea>
+                            </div>
+                            <div class="pt-4 border-t border-white/5">
+                                <label
+                                    class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('mission_ar'); ?></label>
+                                <textarea name="mission_ar" rows="2"
+                                    class="setting-input"><?php echo $settings['mission_ar'] ?? ''; ?></textarea>
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('vision_ar'); ?></label>
+                                <textarea name="vision_ar" rows="2"
+                                    class="setting-input"><?php echo $settings['vision_ar'] ?? ''; ?></textarea>
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('about_btn_ar'); ?></label>
+                                <input type="text" name="about_btn_ar"
+                                    value="<?php echo $settings['about_btn_ar'] ?? ''; ?>" class="setting-input"
+                                    placeholder="عرض الكل">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- English Content -->
+                    <div class="glass-card p-6 md:p-8 rounded-2xl border border-white/5">
+                        <h3 class="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                            <span class="w-1.5 h-6 bg-indigo-500 rounded-full"></span>
+                            <?php echo __('about_section'); ?>
+                            <span
+                                class="text-xs bg-indigo-500/10 text-indigo-400 px-2 py-1 rounded border border-indigo-500/20">EN</span>
+                        </h3>
+
+                        <div class="space-y-4">
+                            <div>
+                                <label
+                                    class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('about_title_en'); ?></label>
+                                <input type="text" name="about_title_en"
+                                    value="<?php echo $settings['about_title_en'] ?? ''; ?>" class="setting-input"
+                                    placeholder="About Us">
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('about_subtitle_en'); ?></label>
+                                <textarea name="about_subtitle_en" rows="2" class="setting-input"
+                                    placeholder="Your Smart Partner..."><?php echo $settings['about_subtitle_en'] ?? ''; ?></textarea>
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('about_desc_en'); ?></label>
+                                <textarea name="about_desc_en" rows="4"
+                                    class="setting-input"><?php echo $settings['about_desc_en'] ?? ''; ?></textarea>
+                            </div>
+                            <div class="pt-4 border-t border-white/5">
+                                <label
+                                    class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('mission_en'); ?></label>
+                                <textarea name="mission_en" rows="2"
+                                    class="setting-input"><?php echo $settings['mission_en'] ?? ''; ?></textarea>
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('vision_en'); ?></label>
+                                <textarea name="vision_en" rows="2"
+                                    class="setting-input"><?php echo $settings['vision_en'] ?? ''; ?></textarea>
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('about_btn_en'); ?></label>
+                                <input type="text" name="about_btn_en"
+                                    value="<?php echo $settings['about_btn_en'] ?? ''; ?>" class="setting-input"
+                                    placeholder="View All">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Button Action URL -->
+                <div
+                    class="glass-card p-6 rounded-2xl border border-white/5 bg-gradient-to-r from-indigo-900/10 to-purple-900/10">
+                    <div class="flex flex-col md:flex-row gap-6 items-center">
+                        <div class="flex-1 w-full">
+                            <label class="block text-indigo-300 text-sm font-bold mb-2 flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1">
+                                    </path>
+                                </svg>
+                                <?php echo __('button_url'); ?> (Target)
                             </label>
-                            <input type="text" name="about_title_en"
-                                value="<?php echo $settings['about_title_en'] ?? ''; ?>" class="setting-input"
-                                placeholder="About Us">
-                        </div>
-                        <div>
-                            <label
-                                class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('about_subtitle_en'); ?></label>
-                            <input type="text" name="about_subtitle_en"
-                                value="<?php echo $settings['about_subtitle_en'] ?? ''; ?>" class="setting-input"
-                                placeholder="Your Smart Partner...">
-                        </div>
-                        <div>
-                            <label
-                                class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('about_desc_en'); ?></label>
-                            <textarea name="about_desc_en" rows="3"
-                                class="setting-input"><?php echo $settings['about_desc_en'] ?? ''; ?></textarea>
-                        </div>
-                        <div>
-                            <label class="block text-gray-400 text-sm font-medium mb-2">
-                                <?php echo __('about_btn_en'); ?>
-                            </label>
-                            <input type="text" name="about_btn_en"
-                                value="<?php echo $settings['about_btn_en'] ?? ''; ?>" class="setting-input"
-                                placeholder="View All">
-                        </div>
-                        <div>
-                            <label
-                                class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('mission_en'); ?></label>
-                            <textarea name="mission_en" rows="2"
-                                class="setting-input"><?php echo $settings['mission_en'] ?? ''; ?></textarea>
-                        </div>
-                        <div>
-                            <label
-                                class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('vision_en'); ?></label>
-                            <textarea name="vision_en" rows="2"
-                                class="setting-input"><?php echo $settings['vision_en'] ?? ''; ?></textarea>
+                            <input type="text" name="about_btn_url"
+                                value="<?php echo $settings['about_btn_url'] ?? ''; ?>"
+                                class="setting-input font-mono text-sm"
+                                placeholder="<?php echo __('about_btn_url_placeholder'); ?>">
+                            <p class="text-xs text-gray-500 mt-2"><?php echo __('about_btn_url_hint'); ?></p>
                         </div>
                     </div>
                 </div>
@@ -1214,6 +1407,15 @@ require_once __DIR__ . '/../includes/header.php';
                                 </div>
                                 <div>
                                     <label
+                                        class="block text-gray-500 text-xs font-bold mb-1 uppercase"><?php echo __('service_url'); ?></label>
+                                    <input type="text" name="service_<?php echo $i; ?>_url"
+                                        value="<?php echo $settings['service_' . $i . '_url'] ?? ''; ?>"
+                                        class="setting-input mb-4 text-xs font-mono text-indigo-300"
+                                        placeholder="# or https://...">
+                                </div>
+
+                                <div>
+                                    <label
                                         class="block text-gray-500 text-xs font-bold mb-1 uppercase"><?php echo __('arabic'); ?></label>
                                     <input type="text" name="service_<?php echo $i; ?>_title_ar"
                                         value="<?php echo $settings['service_' . $i . '_title_ar'] ?? ''; ?>"
@@ -1498,8 +1700,15 @@ require_once __DIR__ . '/../includes/header.php';
                             <textarea name="cta_subtitle_en" rows="2" class="setting-input"
                                 placeholder="Subtitle"><?php echo $settings['cta_subtitle_en'] ?? ''; ?></textarea>
                             <input type="text" name="cta_button_en"
-                                value="<?php echo $settings['cta_button_en'] ?? ''; ?>" class="setting-input"
+                                value="<?php echo $settings['cta_button_en'] ?? ''; ?>" class="setting-input mb-4"
                                 placeholder="Button Text">
+                            <div>
+                                <label
+                                    class="block text-gray-400 text-[10px] font-bold uppercase mb-2"><?php echo __('cta_btn_id'); ?></label>
+                                <input type="text" name="cta_btn_url"
+                                    value="<?php echo $settings['cta_btn_url'] ?? ''; ?>" class="setting-input text-sm"
+                                    placeholder="e.g. #register, #contact">
+                            </div>
                         </div>
                     </div>
                 </div>
