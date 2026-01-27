@@ -77,7 +77,8 @@ require_once __DIR__ . '/../includes/header.php';
                     <div>
                         <h1 class="text-xl font-bold text-white"><?php echo htmlspecialchars($ticket['subject']); ?>
                         </h1>
-                        <p class="text-xs text-gray-500">#<?php echo $ticket['id']; ?> •
+                        <p class="text-xs text-gray-500"><?php echo __('ticket_no'); ?><?php echo $ticket['id']; ?> •
+                            <?php echo __('created_on'); ?>
                             <?php echo date('M d, Y h:i A', strtotime($ticket['created_at'])); ?>
                         </p>
                     </div>
@@ -121,7 +122,7 @@ require_once __DIR__ . '/../includes/header.php';
                                             </path>
                                         </svg>
                                     <?php else: ?>
-                                        <span class="text-sm font-bold">ME</span>
+                                        <span class="text-[10px] font-bold"><?php echo __('me'); ?></span>
                                     <?php endif; ?>
                                 </div>
 

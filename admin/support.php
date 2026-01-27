@@ -8,10 +8,19 @@ if (!isAdmin()) {
 
 $pdo = getDB();
 
+// Handle Delete Ticket
+if (isset($_POST['delete_ticket'])) {
+    $tid = $_POST['ticket_id'] ?? 0;
+    $stmt = $pdo->prepare("DELETE FROM support_tickets WHERE id = ?");
+    $stmt->execute([$tid]);
+    header("Location: support.php?deleted=1");
+    exit;
+}
+
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
-<div class="flex min-h-screen pt-4">
+<div class="flex min-h-screen pt-4" x-data="{ showDeleteModal: false, ticketToDelete: null }">
     <!-- Sidebar -->
     <?php require_once __DIR__ . '/../includes/admin_sidebar.php'; ?>
 
@@ -95,18 +104,24 @@ require_once __DIR__ . '/../includes/header.php';
                                         </span>
                                     </td>
                                     <td class="px-6 py-5 text-sm text-gray-500">
+                                        <div class="text-[10px] text-gray-600 uppercase font-bold mb-1"><?php echo __('last_update'); ?>:</div>
                                         <?php echo date('M d, H:i', strtotime($ticket['updated_at'])); ?>
                                     </td>
                                     <td class="px-6 py-5">
-                                        <a href="view_ticket.php?id=<?php echo $ticket['id']; ?>"
-                                            class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-4 py-2 rounded-xl transition-all shadow-lg shadow-indigo-500/20">
-                                            <span><?php echo __('view_details'); ?></span>
-                                            <svg class="w-4 h-4 rtl:rotate-180" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M9 5l7 7-7 7" />
-                                            </svg>
-                                        </a>
+                                        <div class="flex items-center gap-2">
+                                            <a href="view_ticket.php?id=<?php echo $ticket['id']; ?>"
+                                                class="inline-flex items-center gap-2 bg-indigo-600/10 hover:bg-indigo-600 text-indigo-500 hover:text-white text-xs px-4 py-2 rounded-xl border border-indigo-500/20 transition-all font-bold">
+                                                <span><?php echo __('view'); ?></span>
+                                            </a>
+                                            <button @click="ticketToDelete = <?php echo $ticket['id']; ?>; showDeleteModal = true"
+                                                class="p-2 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-xl transition-all border border-red-500/20"
+                                                title="<?php echo __('delete'); ?>">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -125,6 +140,46 @@ require_once __DIR__ . '/../includes/header.php';
                         <?php endif; ?>
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div x-show="showDeleteModal"
+        class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+        x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" style="display: none;">
+
+        <div class="glass-card w-full max-w-md rounded-[2.5rem] p-8 border border-white/10 shadow-2xl transform transition-all"
+            @click.away="showDeleteModal = false" x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+            x-transition:enter-end="opacity-100 scale-100 translate-y-0">
+
+            <div
+                class="w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center text-red-500 mx-auto mb-6 border border-red-500/20">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+            </div>
+
+            <h3 class="text-xl font-bold text-white text-center mb-2"><?php echo __('confirm_delete'); ?></h3>
+            <p class="text-gray-400 text-center text-sm mb-8 leading-relaxed"><?php echo __('confirm_delete_ticket'); ?>
+            </p>
+
+            <div class="flex gap-4">
+                <button @click="showDeleteModal = false"
+                    class="flex-1 py-4 rounded-2xl bg-white/5 border border-white/10 text-sm font-bold text-gray-400 hover:bg-white/10 hover:text-white transition-all">
+                    <?php echo __('cancel'); ?>
+                </button>
+                <form method="POST" class="flex-1">
+                    <input type="hidden" name="ticket_id" :value="ticketToDelete">
+                    <button type="submit" name="delete_ticket"
+                        class="w-full py-4 rounded-2xl bg-red-600 hover:bg-red-500 text-white text-sm font-bold shadow-xl shadow-red-500/20 transition-all hover:-translate-y-1">
+                        <?php echo __('confirm_delete'); ?>
+                    </button>
+                </form>
             </div>
         </div>
     </div>

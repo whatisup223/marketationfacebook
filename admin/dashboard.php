@@ -32,11 +32,12 @@ require_once __DIR__ . '/../includes/header.php';
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             <!-- Active Subscriptions -->
             <div class="glass-card p-6 rounded-2xl border-l-4 border-indigo-500">
-                <div class="text-gray-400 text-sm font-medium uppercase mb-1">Active Subscriptions</div>
+                <div class="text-gray-400 text-sm font-medium uppercase mb-1"><?php echo __('active_subscriptions'); ?>
+                </div>
                 <div class="text-3xl font-bold text-indigo-400">
                     <?php echo $stats['active_subs']; ?>
                 </div>
-                <div class="text-xs text-gray-500 mt-2">Paid & Trial Users</div>
+                <div class="text-xs text-gray-500 mt-2"><?php echo __('paid_trial_users'); ?></div>
             </div>
 
             <!-- Total Users -->
@@ -45,50 +46,52 @@ require_once __DIR__ . '/../includes/header.php';
                 <div class="text-3xl font-bold text-white">
                     <?php echo $stats['users']; ?>
                 </div>
-                <div class="text-xs text-gray-500 mt-2">Registered Members</div>
+                <div class="text-xs text-gray-500 mt-2"><?php echo __('registered_members'); ?></div>
             </div>
 
             <!-- FB Accounts -->
             <div class="glass-card p-6 rounded-2xl border-l-4 border-blue-400">
-                <div class="text-gray-400 text-sm font-medium uppercase mb-1">Connected FB Accounts</div>
+                <div class="text-gray-400 text-sm font-medium uppercase mb-1"><?php echo __('connected_fb_accounts'); ?>
+                </div>
                 <div class="text-3xl font-bold text-blue-400">
                     <?php echo $stats['fb_accounts']; ?>
                 </div>
-                <div class="text-xs text-gray-500 mt-2">Total Linked Profiles</div>
+                <div class="text-xs text-gray-500 mt-2"><?php echo __('total_linked_profiles'); ?></div>
             </div>
 
             <!-- Campaigns Run -->
             <div class="glass-card p-6 rounded-2xl border-l-4 border-purple-500">
-                <div class="text-gray-400 text-sm font-medium uppercase mb-1">Campaigns Launched</div>
+                <div class="text-gray-400 text-sm font-medium uppercase mb-1"><?php echo __('campaigns_launched'); ?>
+                </div>
                 <div class="text-3xl font-bold text-purple-400">
                     <?php echo $stats['campaigns']; ?>
                 </div>
-                <div class="text-xs text-gray-500 mt-2">Active Automation</div>
+                <div class="text-xs text-gray-500 mt-2"><?php echo __('active_automation'); ?></div>
             </div>
 
             <!-- Open Tickets -->
             <div class="glass-card p-6 rounded-2xl border-l-4 border-yellow-500">
-                <div class="text-gray-400 text-sm font-medium uppercase mb-1">Open Tickets</div>
+                <div class="text-gray-400 text-sm font-medium uppercase mb-1"><?php echo __('open_tickets'); ?></div>
                 <div class="text-3xl font-bold text-yellow-400">
                     <?php echo $stats['support_open']; ?>
                 </div>
-                <div class="text-xs text-gray-500 mt-2">Needs Attention</div>
+                <div class="text-xs text-gray-500 mt-2"><?php echo __('needs_attention'); ?></div>
             </div>
         </div>
 
         <!-- Recent Campaigns (instead of Exchanges) -->
         <div class="glass-card rounded-2xl p-6 overflow-hidden mb-8">
-            <h2 class="text-xl font-bold mb-4">Recent Campaigns</h2>
+            <h2 class="text-xl font-bold mb-4"><?php echo __('recent_campaigns'); ?></h2>
             <div class="overflow-x-auto">
                 <table class="w-full text-left">
                     <thead>
                         <tr class="text-gray-400 border-b border-gray-700/50">
-                            <th class="pb-3 pl-2">ID</th>
-                            <th class="pb-3">User</th>
-                            <th class="pb-3">Campaign Name</th>
-                            <th class="pb-3">Leads</th>
-                            <th class="pb-3">Status</th>
-                            <th class="pb-3">Date</th>
+                            <th class="pb-3 pl-2"><?php echo __('id'); ?></th>
+                            <th class="pb-3"><?php echo __('user'); ?></th>
+                            <th class="pb-3"><?php echo __('campaign_name'); ?></th>
+                            <th class="pb-3"><?php echo __('leads'); ?></th>
+                            <th class="pb-3"><?php echo __('status'); ?></th>
+                            <th class="pb-3"><?php echo __('date'); ?></th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-800">
@@ -103,7 +106,7 @@ require_once __DIR__ . '/../includes/header.php';
                             <tr class="hover:bg-gray-800/30 transition-colors">
                                 <td class="py-4 pl-2 font-mono text-sm text-gray-500">#<?php echo $row['id']; ?></td>
                                 <td class="py-4 font-medium">
-                                    <?php echo htmlspecialchars($row['user_name'] ?? 'Unknown'); ?>
+                                    <?php echo htmlspecialchars($row['user_name'] ?? __('unknown')); ?>
                                 </td>
                                 <td class="py-4 text-white">
                                     <?php echo htmlspecialchars($row['name']); ?>
@@ -123,7 +126,7 @@ require_once __DIR__ . '/../includes/header.php';
                                     else
                                         echo 'bg-gray-500/20 text-gray-400';
                                     ?>">
-                                        <?php echo ucfirst($row['status']); ?>
+                                        <?php echo __('status_' . $row['status']); ?>
                                     </span>
                                 </td>
                                 <td class="py-4 text-gray-500 text-sm">
@@ -134,22 +137,22 @@ require_once __DIR__ . '/../includes/header.php';
                     </tbody>
                 </table>
                 <?php if ($stmt->rowCount() == 0): ?>
-                    <p class="text-center text-gray-500 py-4">No campaigns found yet.</p>
+                    <p class="text-center text-gray-500 py-4"><?php echo __('no_campaigns_found'); ?></p>
                 <?php endif; ?>
             </div>
         </div>
 
         <!-- Recent Users -->
         <div class="glass-card rounded-2xl p-6 overflow-hidden">
-            <h2 class="text-xl font-bold mb-4">Newest Users</h2>
+            <h2 class="text-xl font-bold mb-4"><?php echo __('newest_users'); ?></h2>
             <div class="overflow-x-auto">
                 <table class="w-full text-left">
                     <thead>
                         <tr class="text-gray-400 border-b border-gray-700/50">
-                            <th class="pb-3 pl-2">User</th>
-                            <th class="pb-3">Email</th>
-                            <th class="pb-3">Joined</th>
-                            <th class="pb-3">Action</th>
+                            <th class="pb-3 pl-2"><?php echo __('user'); ?></th>
+                            <th class="pb-3"><?php echo __('email'); ?></th>
+                            <th class="pb-3"><?php echo __('joined'); ?></th>
+                            <th class="pb-3"><?php echo __('actions'); ?></th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-800">
@@ -165,7 +168,7 @@ require_once __DIR__ . '/../includes/header.php';
                                 </td>
                                 <td class="py-3">
                                     <a href="users.php?edit=<?php echo $u['id']; ?>"
-                                        class="text-indigo-400 hover:text-white text-sm">Manage</a>
+                                        class="text-indigo-400 hover:text-white text-sm font-bold"><?php echo __('manage'); ?></a>
                                 </td>
                             </tr>
                         <?php endwhile; ?>

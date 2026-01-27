@@ -34,27 +34,27 @@ require_once __DIR__ . '/../includes/header.php';
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             <!-- Connected Accounts -->
             <div class="glass-card p-6 rounded-2xl border-l-4 border-blue-500">
-                <div class="text-gray-400 text-sm font-medium uppercase mb-1">FB Accounts</div>
+                <div class="text-gray-400 text-sm font-medium uppercase mb-1"><?php echo __('fb_accounts'); ?></div>
                 <div class="text-3xl font-bold text-blue-400">
                     <?php echo $stats['connected_accounts']; ?>
                 </div>
-                <div class="text-xs text-gray-500 mt-2">Active Linked Accounts</div>
+                <div class="text-xs text-gray-500 mt-2"><?php echo __('active_linked_accounts'); ?></div>
             </div>
 
             <!-- Profile Completion (placeholder for something useful) -->
             <div class="glass-card p-6 rounded-2xl border-l-4 border-indigo-500">
-                <div class="text-gray-400 text-sm font-medium uppercase mb-1">Account Status</div>
-                <div class="text-3xl font-bold text-white">Verified</div>
-                <div class="text-xs text-gray-500 mt-2">Active Membership</div>
+                <div class="text-gray-400 text-sm font-medium uppercase mb-1"><?php echo __('account_status'); ?></div>
+                <div class="text-3xl font-bold text-white"><?php echo __('verified'); ?></div>
+                <div class="text-xs text-gray-500 mt-2"><?php echo __('active_membership'); ?></div>
             </div>
 
             <!-- Support Tickets -->
             <div class="glass-card p-6 rounded-2xl border-l-4 border-yellow-500">
-                <div class="text-gray-400 text-sm font-medium uppercase mb-1">Support Tickets</div>
+                <div class="text-gray-400 text-sm font-medium uppercase mb-1"><?php echo __('support_tickets'); ?></div>
                 <div class="text-3xl font-bold text-yellow-500">
                     <?php echo getUserTicketUnreadCount($_SESSION['user_id']); ?>
                 </div>
-                <div class="text-xs text-gray-500 mt-2">Unread Responses</div>
+                <div class="text-xs text-gray-500 mt-2"><?php echo __('unread_responses'); ?></div>
             </div>
         </div>
 

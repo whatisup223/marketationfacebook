@@ -326,7 +326,7 @@ require_once __DIR__ . '/../includes/header.php';
                                             d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
                                         </path>
                                     </svg>
-                                    <?php echo ($lang == 'ar' ? 'تحديث المزامنة' : 'Update Sync'); ?>
+                                    <?php echo __('update_sync'); ?>
                                 </a>
                             <?php else: ?>
                                 <a href="?sync=<?php echo $acc['id']; ?>"
@@ -472,7 +472,8 @@ require_once __DIR__ . '/../includes/header.php';
                                                         class="font-bold text-white group-hover:text-indigo-400 transition-colors">
                                                         <?php echo htmlspecialchars($page['page_name']); ?>
                                                     </div>
-                                                    <div class="text-[10px] text-gray-500 font-medium">Account: <span
+                                                    <div class="text-[10px] text-gray-500 font-medium">
+                                                        <?php echo __('account_prefix'); ?><span
                                                             class="text-gray-400"><?php echo htmlspecialchars($page['account_name']); ?></span>
                                                     </div>
                                                 </div>
