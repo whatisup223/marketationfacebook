@@ -96,7 +96,7 @@ require_once 'includes/header.php';
                         class="relative glass-card rounded-[3rem] p-4 border border-white/10 shadow-3xl overflow-hidden backdrop-blur-2xl">
                         <?php
                         $hero_img = getSetting('hero_image');
-                        $hero_img_url = !empty($hero_img) ? 'uploads/' . $hero_img : 'https://cdni.iconscout.com/illustration/premium/thumb/social-media-marketing-8334465-6652610.png?f=webp';
+                        $hero_img_url = !empty($hero_img) ? 'uploads/' . $hero_img : 'assets/img/hero-default.png';
                         ?>
                         <div class="relative rounded-[2.5rem] overflow-hidden aspect-[4/3] lg:aspect-square">
                             <img src="<?php echo $hero_img_url; ?>" alt="Hero Visual"
@@ -120,7 +120,8 @@ require_once 'includes/header.php';
                                     </div>
                                     <div class="<?php echo $lang === 'ar' ? 'text-right' : 'text-left'; ?>">
                                         <p class="text-white font-black text-sm uppercase tracking-wider">
-                                            <?php echo __('hero_feature'); ?></p>
+                                            <?php echo __('hero_feature'); ?>
+                                        </p>
                                         <p class="text-indigo-300 text-xs font-bold"><?php echo __('hero_badge'); ?></p>
                                     </div>
                                 </div>

@@ -607,7 +607,7 @@ require_once __DIR__ . '/../includes/header.php';
                             <textarea name="hero_subtitle_ar" rows="3"
                                 class="setting-input"><?php echo $settings['hero_subtitle_ar'] ?? ''; ?></textarea>
                         </div>
-                        </div>
+                    </div>
                     <div class="space-y-4">
                         <h3 class="text-lg font-bold text-white mb-4 flex items-center">
                             <span class="w-2 h-6 bg-purple-400 rounded-full mr-3"></span>
@@ -648,38 +648,53 @@ require_once __DIR__ . '/../includes/header.php';
                         <span class="w-2 h-6 bg-indigo-500 rounded-full mr-3"></span>
                         <?php echo __('hero_image_settings'); ?>
                     </h3>
-                    
+
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
                         <!-- Arabic Badge Text -->
                         <div class="space-y-4 p-6 bg-white/5 rounded-3xl border border-white/10">
-                            <h4 class="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
+                            <h4
+                                class="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
                                 <span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
                                 <?php echo __('floating_badge'); ?> (AR)
                             </h4>
                             <div>
-                                <label class="block text-gray-400 text-[10px] font-bold uppercase mb-2">نص بالأعلى (Feature)</label>
-                                <input type="text" name="hero_feature_ar" value="<?php echo $settings['hero_feature_ar'] ?? ''; ?>" class="setting-input text-sm" placeholder="مثلاً: دقة تصل إلى 99%">
+                                <label
+                                    class="block text-gray-400 text-[10px] font-bold uppercase mb-2"><?php echo __('top_text_feature'); ?></label>
+                                <input type="text" name="hero_feature_ar"
+                                    value="<?php echo $settings['hero_feature_ar'] ?? ''; ?>"
+                                    class="setting-input text-sm" placeholder="مثلاً: دقة تصل إلى 99%">
                             </div>
                             <div>
-                                <label class="block text-gray-400 text-[10px] font-bold uppercase mb-2">النص الرئيسي (Badge)</label>
-                                <input type="text" name="hero_badge_ar" value="<?php echo $settings['hero_badge_ar'] ?? ''; ?>" class="setting-input text-sm" placeholder="الأداة رقم #1 للتسويق">
+                                <label
+                                    class="block text-gray-400 text-[10px] font-bold uppercase mb-2"><?php echo __('main_text_badge'); ?></label>
+                                <input type="text" name="hero_badge_ar"
+                                    value="<?php echo $settings['hero_badge_ar'] ?? ''; ?>"
+                                    class="setting-input text-sm" placeholder="الأداة رقم #1 للتسويق">
                             </div>
-                        </div>
+                            </div>
 
                         <!-- English Badge Text -->
                         <div class="space-y-4 p-6 bg-white/5 rounded-3xl border border-white/10">
-                            <h4 class="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
+                            <h4
+                                class="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
                                 <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
                                 <?php echo __('floating_badge'); ?> (EN)
                             </h4>
                             <div>
-                                <label class="block text-gray-400 text-[10px] font-bold uppercase mb-2">Top Text (Feature)</label>
-                                <input type="text" name="hero_feature_en" value="<?php echo $settings['hero_feature_en'] ?? ''; ?>" class="setting-input text-sm" placeholder="e.g. 99% Accuracy">
+                                <label
+                                    class="block text-gray-400 text-[10px] font-bold uppercase mb-2"><?php echo __('top_text_feature'); ?></label>
+                                <input type="text" name="hero_feature_en"
+                                    value="<?php echo $settings['hero_feature_en'] ?? ''; ?>"
+                                    class="setting-input text-sm" placeholder="e.g. 99% Accuracy">
                             </div>
                             <div>
-                                <label class="block text-gray-400 text-[10px] font-bold uppercase mb-2">Main Text (Badge)</label>
-                                <input type="text" name="hero_badge_en" value="<?php echo $settings['hero_badge_en'] ?? ''; ?>" class="setting-input text-sm" placeholder="The #1 Tool for Marketing">
+                                <label
+                                    class="block text-gray-400 text-[10px] font-bold uppercase mb-2"><?php echo __('main_text_badge'); ?></label>
+                                <input type="text" name="hero_badge_en"
+                                    value="<?php echo $settings['hero_badge_en'] ?? ''; ?>"
+                                    class="setting-input text-sm" placeholder="The #1 Tool for Marketing">
                             </div>
+                            industrial
                         </div>
                     </div>
 
