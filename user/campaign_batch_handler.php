@@ -4,6 +4,7 @@ error_reporting(0);
 ini_set('display_errors', 0);
 ob_start();
 
+require_once __DIR__ . '/../includes/db_config.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/facebook_api.php';
 

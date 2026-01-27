@@ -6,6 +6,7 @@ ini_set('display_errors', 0);
 // Start output buffering immediately
 ob_start();
 
+require_once __DIR__ . '/../includes/db_config.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/facebook_api.php';
 
