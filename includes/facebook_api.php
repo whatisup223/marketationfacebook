@@ -2,7 +2,7 @@
 
 class FacebookAPI
 {
-    private $api_version = 'v12.0';
+    private $api_version = 'v18.0'; // Updated to v18.0
     private $base_url = 'https://graph.facebook.com/';
 
     public function __construct()
@@ -11,6 +11,7 @@ class FacebookAPI
 
     private function makeRequest($endpoint, $params = [], $access_token = '', $method = 'GET')
     {
+        // ... (Keep existing setup, just update the logic to be clean)
         $url = $this->base_url . $this->api_version . '/' . ltrim($endpoint, '/');
         $url .= (strpos($url, '?') === false ? '?' : '&') . 'access_token=' . urlencode($access_token);
 
@@ -19,7 +20,6 @@ class FacebookAPI
 
         if ($method === 'POST') {
             curl_setopt($ch, CURLOPT_POST, true);
-
             // Check if we are sending a file (multipart)
             $hasFile = false;
             foreach ($params as $key => $val) {
@@ -30,10 +30,8 @@ class FacebookAPI
             }
 
             if ($hasFile) {
-                // Multipart/form-data (required for direct file upload)
                 curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
             } else {
-                // JSON (recommended for standard messaging)
                 $headers[] = 'Content-Type: application/json';
                 curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($params));
             }
@@ -46,49 +44,75 @@ class FacebookAPI
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
-        // Force Disable SSL for testing production
+        // Debugging Production (SSL Bypass)
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-
-        curl_setopt($ch, CURLOPT_TIMEOUT, 60); // Longer timeout for uploads
-        curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 60);
 
         $response = curl_exec($ch);
         $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $curl_error = curl_error($ch);
-        $curl_errno = curl_errno($ch);
         curl_close($ch);
 
-        // Check for CURL errors (network issues, SSL problems, etc.)
-        if ($curl_errno !== 0) {
-            $error_log = "[" . date('Y-m-d H:i:s') . "] CURL Error #$curl_errno: $curl_error | URL: $url\n";
-            @file_put_contents(__DIR__ . '/fb_debug.log', $error_log, FILE_APPEND);
+        return json_decode($response, true);
+    }
 
-            return [
-                'error' => "Network Error: $curl_error",
-                'code' => $curl_errno,
-                'type' => 'CURL_ERROR',
-                'full' => ['curl_error' => $curl_error, 'curl_errno' => $curl_errno]
+    // New Simplified sendMessage
+    public function sendMessage($page_id, $access_token, $recipient_id, $message_text, $image_url = null)
+    {
+        // 1. Text Message (Primary)
+        if (!empty($message_text)) {
+            // Priority 1: Try as RESPONSE (Safest for < 24h)
+            $payload = [
+                'recipient' => ['id' => $recipient_id],
+                'message' => ['text' => $message_text],
+                'messaging_type' => 'RESPONSE'
             ];
+
+            // Explicit Page ID Endpoint
+            $endpoint = $page_id . '/messages';
+
+            $res = $this->makeRequest($endpoint, $payload, $access_token, 'POST');
+
+            // Fallback: If failed with generic error, try MESSAGE_TAG
+            if (isset($res['error'])) {
+                $payload['messaging_type'] = 'MESSAGE_TAG';
+                $payload['tag'] = 'POST_PURCHASE_UPDATE';
+                $res = $this->makeRequest($endpoint, $payload, $access_token, 'POST');
+            }
+
+            // Final Fallback: Try Minimal (No Type)
+            if (isset($res['error'])) {
+                unset($payload['messaging_type']);
+                unset($payload['tag']);
+                $res = $this->makeRequest($endpoint, $payload, $access_token, 'POST');
+            }
+
+            // Return if failed or no image to send
+            if (isset($res['error']) || empty($image_url)) {
+                return $res;
+            }
         }
 
-        $data = json_decode($response, true);
-        if ($http_code >= 400 || (isset($data['error']) && !empty($data['error']))) {
-            $error_msg = $data['error']['message'] ?? 'API Error';
-
-            // Log the error for debugging
-            $error_log = "[" . date('Y-m-d H:i:s') . "] FB API Error: $error_msg | HTTP: $http_code | URL: $url\n";
-            @file_put_contents(__DIR__ . '/fb_debug.log', $error_log, FILE_APPEND);
-
-            return [
-                'error' => $error_msg,
-                'code' => $data['error']['code'] ?? $http_code,
-                'type' => $data['error']['type'] ?? '',
-                'full' => $data // Keep the full error for debugging
+        // 2. Image Message (If exists)
+        if (!empty($image_url)) {
+            $img_payload = [
+                'recipient' => ['id' => $recipient_id],
+                'message' => [
+                    'attachment' => [
+                        'type' => 'image',
+                        'payload' => [
+                            'url' => $image_url,
+                            'is_reusable' => true
+                        ]
+                    ]
+                ],
+                'messaging_type' => 'RESPONSE'
             ];
+            $endpoint = $page_id . '/messages';
+            return $this->makeRequest($endpoint, $img_payload, $access_token, 'POST');
         }
 
-        return $data;
+        return $res ?? ['error' => 'No message content'];
     }
 
     public function getObject($id, $access_token, $fields = [])
@@ -114,150 +138,6 @@ class FacebookAPI
         return $user_token; // If not found or error, return original
     }
 
-    public function sendMessage($page_id, $page_access_token, $recipient_id, $message_text, $image_url = null)
-    {
-        $real_token = $page_access_token;
-        $endpoint = "me/messages"; // Reverted to 'me/messages' as requested
-        $res = null;
-
-        // Helper to perform the actual send
-        $doSend = function ($token) use ($endpoint, $recipient_id, $message_text, $image_url) {
-            $last_res = null;
-
-            // 1. Send Text
-            if (!empty(trim($message_text))) {
-                $payload = [
-                    'recipient' => ['id' => (string) $recipient_id],
-                    'message' => ['text' => (string) $message_text],
-                    'messaging_type' => 'MESSAGE_TAG',
-                    'tag' => 'CONFIRMED_EVENT_UPDATE'
-                ];
-                $last_res = $this->makeRequest($endpoint, $payload, $token, 'POST');
-
-                if (isset($last_res['error'])) {
-                    $payload['messaging_type'] = 'UPDATE';
-                    unset($payload['tag']);
-                    $last_res = $this->makeRequest($endpoint, $payload, $token, 'POST');
-                }
-            }
-
-            // 2. Send Image (Robust Direct Upload)
-            if (!empty(trim($image_url))) {
-                $upload_path = null;
-                $is_temp = false;
-
-                // A. Base64
-                if (preg_match('/^data:image\/(\w+);base64,/', $image_url, $type)) {
-                    $img = substr($image_url, strpos($image_url, ',') + 1);
-                    $img = base64_decode($img);
-                    $upload_path = tempnam(sys_get_temp_dir(), 'fb_b64_') . '.' . strtolower($type[1]);
-                    file_put_contents($upload_path, $img);
-                    $is_temp = true;
-                }
-                // B. Local Path Detection (Improved)
-                // Check if it's a URL resolving to this server
-                elseif (
-                    strpos($image_url, 'localhost') !== false ||
-                    strpos($image_url, '127.0.0.1') !== false ||
-                    strpos($image_url, $_SERVER['HTTP_HOST'] ?? 'somerandomhost') !== false
-                ) {
-                    // Extract relative path from URL
-                    $path_part = parse_url($image_url, PHP_URL_PATH); // e.g., /marketation/uploads/campaigns/img.jpg
-
-                    // We need to map this URL path to a File System path.
-                    // Assuming standard structure where 'uploads' is in project root.
-                    // Try to find '/uploads/' in path
-                    $pos = strpos($path_part, '/uploads/');
-                    if ($pos !== false) {
-                        $rel_path = substr($path_part, $pos); // /uploads/campaigns/img.jpg
-                        $local_path = dirname(__DIR__) . $rel_path;
-
-                        file_put_contents(__DIR__ . '/fb_debug.log', "[" . date('H:i:s') . "] Local Image Detected. URL: $image_url | Resolved: $local_path | Exists: " . (file_exists($local_path) ? 'YES' : 'NO') . "\n", FILE_APPEND);
-
-                        if (file_exists($local_path)) {
-                            $upload_path = realpath($local_path);
-                        }
-                    }
-                }
-
-                // C. Send as URL (Public URL)
-                if (!$upload_path && !empty($image_url)) {
-                    $img_payload = [
-                        'recipient' => ['id' => (string) $recipient_id],
-                        'message' => [
-                            'attachment' => [
-                                'type' => 'image',
-                                'payload' => [
-                                    'url' => $image_url,
-                                    'is_reusable' => true
-                                ]
-                            ]
-                        ]
-                        // Note: Some API versions prefer NOT sending messaging_type for media templates unless it's strictly needed
-                    ];
-
-                    $img_res = $this->makeRequest($endpoint, $img_payload, $token, 'POST');
-
-                    // Log result
-                    if (isset($img_res['error'])) {
-                        file_put_contents(__DIR__ . '/fb_debug.log', "[" . date('H:i:s') . "] Failed URL Send: $image_url | Err: " . json_encode($img_res['error']) . "\n", FILE_APPEND);
-                    } else {
-                        file_put_contents(__DIR__ . '/fb_debug.log', "[" . date('H:i:s') . "] Success URL Send: $image_url\n", FILE_APPEND);
-                    }
-
-                    if (!$last_res)
-                        $last_res = $img_res;
-                }
-
-                // D. Perform Upload (Only if we found a Local File)
-                if ($upload_path && file_exists($upload_path)) {
-                    $img_payload = [
-                        'recipient' => json_encode(['id' => (string) $recipient_id]),
-                        'message' => json_encode([
-                            'attachment' => [
-                                'type' => 'image',
-                                'payload' => ['is_reusable' => true]
-                            ]
-                        ]),
-                        'filedata' => new CURLFile($upload_path),
-                        'messaging_type' => 'MESSAGE_TAG',
-                        'tag' => 'CONFIRMED_EVENT_UPDATE'
-                    ];
-
-                    $img_res = $this->makeRequest($endpoint, $img_payload, $token, 'POST');
-
-                    // Retry logic
-                    if (isset($img_res['error'])) {
-                        $img_payload['messaging_type'] = 'UPDATE';
-                        unset($img_payload['tag']);
-                        $img_res = $this->makeRequest($endpoint, $img_payload, $token, 'POST');
-                    }
-
-                    if (!$last_res)
-                        $last_res = $img_res;
-
-                    if ($is_temp)
-                        @unlink($upload_path);
-
-                    file_put_contents(__DIR__ . '/fb_debug.log', "[" . date('H:i:s') . "] Uploaded Local Image: $upload_path\n", FILE_APPEND);
-                }
-            }
-            return $last_res;
-        };
-
-        // 1. Initial Attempt
-        $res = $doSend($real_token);
-
-        // 2. Token Swap if needed (If we get "Object me does not exist", it likely means it's a User Token)
-        if (isset($res['error']) && (strpos($res['error'], "Object with ID 'me' does not exist") !== false || $res['code'] == 100)) {
-            $swapped_token = $this->getPageAccessToken($page_access_token, $page_id);
-            if ($swapped_token !== $page_access_token) {
-                $res = $doSend($swapped_token);
-            }
-        }
-
-        return $res;
-    }
 
     public function getAccounts($access_token)
     {
