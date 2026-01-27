@@ -55,6 +55,9 @@ if (isset($_GET['sync'])) {
     require_once __DIR__ . '/../includes/facebook_api.php';
     $acc_id = $_GET['sync'];
 
+    // Deep Clean before sync: Remove any pages that might have lost their account link or are duplicates
+    $pdo->exec("DELETE t1 FROM fb_pages t1 INNER JOIN fb_pages t2 WHERE t1.id < t2.id AND t1.page_id = t2.page_id");
+
     $stmt = $pdo->prepare("SELECT * FROM fb_accounts WHERE id = ? AND user_id = ?");
     $stmt->execute([$acc_id, $user_id]);
     $account = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -65,7 +68,6 @@ if (isset($_GET['sync'])) {
 
         if (isset($response['error'])) {
             if (is_array($response['error']) || is_object($response['error'])) {
-                // Convert to string safely if needed, but usually it's a string here if simplified in API wrapper
                 $error_str = json_encode($response['error']);
             } else {
                 $error_str = (string) $response['error'];
@@ -83,12 +85,15 @@ if (isset($_GET['sync'])) {
             }
         } elseif (isset($response['data'])) {
             $count = 0;
+            // The UNIQUE KEY unique_page_id (page_id) ensures NO DUPLICATES are possible.
+            // ON DUPLICATE KEY UPDATE will simply refresh the data for existing pages.
             $insertPage = $pdo->prepare("INSERT INTO fb_pages (account_id, page_name, page_id, page_access_token, category, picture_url) 
                                          VALUES (?, ?, ?, ?, ?, ?)
                                          ON DUPLICATE KEY UPDATE 
                                             account_id = VALUES(account_id),
                                             page_name = VALUES(page_name), 
                                             page_access_token = VALUES(page_access_token), 
+                                            category = VALUES(category),
                                             picture_url = VALUES(picture_url)");
 
             $total_pages_found = count($response['data']);

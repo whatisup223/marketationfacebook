@@ -908,7 +908,7 @@ require_once __DIR__ . '/../includes/header.php';
             });
             const data = await res.json();
 
-            if (data.status === 'batch_processed') {
+            if (data.status === 'batch_processed' || data.status === 'waiting_retry') {
                 // Update UI for processed items
                 if (data.results && Array.isArray(data.results)) {
                     data.results.forEach(item => {
@@ -922,13 +922,23 @@ require_once __DIR__ . '/../includes/header.php';
                                         <div class="w-1.5 h-1.5 rounded-full bg-green-500"></div>
                                         <?php echo __('status_sent_small'); ?>
                                     </div>`;
-                                // Update timestamp dynamically
                                 const now = new Date();
                                 const timeString = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }) + ' ' + (now.getDate() + '/' + (now.getMonth() + 1));
                                 row.querySelector('.msg-cell').innerText = timeString;
 
                                 sentCount++;
                                 pendingCount--;
+                                const idx = queue.indexOf(item.id);
+                                if (idx > -1) queue.splice(idx, 1);
+                            } else if (item.status === 'retrying') {
+                                row.classList.remove('row-processing');
+                                row.querySelector('.status-cell').innerHTML = `
+                                    <div class="flex items-center gap-2 text-yellow-500 font-bold text-xs">
+                                        <div class="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse"></div>
+                                        <?php echo ($lang == 'ar' ? 'إعادة مطابقة' : 'Retrying'); ?>
+                                    </div>`;
+                                row.querySelector('.msg-cell').innerHTML = `<div class="text-yellow-400 text-[9px]">${item.error}</div>`;
+                                // We DON'T remove from queue or pendingCount because it's still coming back
                             } else {
                                 row.classList.remove('row-processing');
                                 row.classList.add('row-error');
@@ -940,15 +950,21 @@ require_once __DIR__ . '/../includes/header.php';
                                 row.querySelector('.msg-cell').innerHTML = `<div class="text-red-400 max-w-[200px] ml-auto overflow-hidden text-ellipsis">${item.error || 'Error'}</div>`;
                                 failedCount++;
                                 pendingCount--;
+                                const idx = queue.indexOf(item.id);
+                                if (idx > -1) queue.splice(idx, 1);
                             }
-                            // Remove from local queue array if exists
-                            const idx = queue.indexOf(item.id);
-                            if (idx > -1) queue.splice(idx, 1);
                         }
                     });
                 }
 
                 updateStats();
+
+                if (data.status === 'waiting_retry') {
+                    const waitSec = data.next_retry_in || 30;
+                    timerDiv.innerHTML = `<span class="text-yellow-400 font-bold uppercase tracking-wider">⏳ <?php echo ($lang == 'ar' ? 'انتظار إعادة المحاولة' : 'Waiting for Retry'); ?> (${waitSec}s)</span>`;
+                    setTimeout(processQueue, 5000); // Check again in 5s
+                    return;
+                }
 
                 // DRIFT CORRECTION: Ensure we adhere to exact intervals
                 const intervalInput = document.getElementById('interval');
