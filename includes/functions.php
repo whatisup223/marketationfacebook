@@ -626,6 +626,7 @@ $translations = [
         'tool_btn_text_ar' => 'نص الزر (عربي)',
         'tool_btn_text_en' => 'نص الزر (إنجليزي)',
         'tool_btn_url' => 'رابط الزر / URL',
+        'tool_features_edit' => 'تعديل مميزات الآداة (3 عناصر)',
 
         // Inbox Page
         'inbox_page_title' => 'مراسلات الصفحة',
@@ -1029,6 +1030,7 @@ $translations = [
         'tool_btn_text_ar' => 'Button Text (AR)',
         'tool_btn_text_en' => 'Button Text (EN)',
         'tool_btn_url' => 'Button URL',
+        'tool_features_edit' => 'Edit Tool Features (3 items)',
         'btn_link_account' => 'Link Account Now',
         'your_linked_accounts' => 'Your Linked Accounts',
         'btn_sync_pages' => 'Sync Pages',

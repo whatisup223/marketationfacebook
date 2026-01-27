@@ -647,9 +647,10 @@ if (!empty($portfolioItems)):
                         </div>
                         <div>
                             <h4 class="text-lg font-bold text-white mb-1 tracking-tight">
-                                <?php echo __('tool_feature_1'); ?>
+                                <?php echo getSetting('tool_f1_t_' . $lang) ?: __('tool_feature_1'); ?>
                             </h4>
-                            <p class="text-sm text-gray-400"><?php echo __('tool_feature_1_desc'); ?></p>
+                            <p class="text-sm text-gray-400">
+                                <?php echo getSetting('tool_f1_d_' . $lang) ?: __('tool_feature_1_desc'); ?></p>
                         </div>
                     </div>
 
@@ -666,9 +667,10 @@ if (!empty($portfolioItems)):
                         </div>
                         <div>
                             <h4 class="text-lg font-bold text-white mb-1 tracking-tight">
-                                <?php echo __('tool_feature_2'); ?>
+                                <?php echo getSetting('tool_f2_t_' . $lang) ?: __('tool_feature_2'); ?>
                             </h4>
-                            <p class="text-sm text-gray-400"><?php echo __('tool_feature_2_desc'); ?></p>
+                            <p class="text-sm text-gray-400">
+                                <?php echo getSetting('tool_f2_d_' . $lang) ?: __('tool_feature_2_desc'); ?></p>
                         </div>
                     </div>
 
@@ -685,9 +687,10 @@ if (!empty($portfolioItems)):
                         </div>
                         <div>
                             <h4 class="text-lg font-bold text-white mb-1 tracking-tight">
-                                <?php echo __('tool_feature_3'); ?>
+                                <?php echo getSetting('tool_f3_t_' . $lang) ?: __('tool_feature_3'); ?>
                             </h4>
-                            <p class="text-sm text-gray-400"><?php echo __('tool_feature_3_desc'); ?></p>
+                            <p class="text-sm text-gray-400">
+                                <?php echo getSetting('tool_f3_d_' . $lang) ?: __('tool_feature_3_desc'); ?></p>
                         </div>
                     </div>
                 </div>
@@ -700,7 +703,7 @@ if (!empty($portfolioItems)):
                     <div class="pt-4">
                         <a href="<?php echo htmlspecialchars($t_btn_url ?: '#'); ?>"
                             class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-black px-8 py-4 rounded-2xl shadow-xl shadow-indigo-500/20 transition-all hover:-translate-y-1">
-                                <?php echo htmlspecialchars($t_btn_text); ?>
+                            <?php echo htmlspecialchars($t_btn_text); ?>
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
