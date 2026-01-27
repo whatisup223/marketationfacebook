@@ -19,6 +19,90 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
 
 $upload_dir = __DIR__ . '/../uploads/';
 
+// Image Compression Function
+function compressAndResizeImage($source_path, $destination_path, $max_width = 1200, $quality = 85)
+{
+    // Get image info
+    $image_info = getimagesize($source_path);
+    if (!$image_info)
+        return false;
+
+    $mime_type = $image_info['mime'];
+    $width = $image_info[0];
+    $height = $image_info[1];
+
+    // Create image resource based on type
+    switch ($mime_type) {
+        case 'image/jpeg':
+        case 'image/jpg':
+            $source = imagecreatefromjpeg($source_path);
+            break;
+        case 'image/png':
+            $source = imagecreatefrompng($source_path);
+            break;
+        case 'image/gif':
+            $source = imagecreatefromgif($source_path);
+            break;
+        case 'image/webp':
+            $source = imagecreatefromwebp($source_path);
+            break;
+        default:
+            return false;
+    }
+
+    if (!$source)
+        return false;
+
+    // Calculate new dimensions
+    if ($width > $max_width) {
+        $new_width = $max_width;
+        $new_height = intval(($height / $width) * $max_width);
+    } else {
+        $new_width = $width;
+        $new_height = $height;
+    }
+
+    // Create new image
+    $destination = imagecreatetruecolor($new_width, $new_height);
+
+    // Preserve transparency for PNG and GIF
+    if ($mime_type == 'image/png' || $mime_type == 'image/gif') {
+        imagealphablending($destination, false);
+        imagesavealpha($destination, true);
+        $transparent = imagecolorallocatealpha($destination, 255, 255, 255, 127);
+        imagefilledrectangle($destination, 0, 0, $new_width, $new_height, $transparent);
+    }
+
+    // Resize
+    imagecopyresampled($destination, $source, 0, 0, 0, 0, $new_width, $new_height, $width, $height);
+
+    // Save compressed image
+    $result = false;
+    switch ($mime_type) {
+        case 'image/jpeg':
+        case 'image/jpg':
+            $result = imagejpeg($destination, $destination_path, $quality);
+            break;
+        case 'image/png':
+            // PNG quality is 0-9 (0 = no compression, 9 = max compression)
+            $png_quality = intval(9 - ($quality / 100) * 9);
+            $result = imagepng($destination, $destination_path, $png_quality);
+            break;
+        case 'image/gif':
+            $result = imagegif($destination, $destination_path);
+            break;
+        case 'image/webp':
+            $result = imagewebp($destination, $destination_path, $quality);
+            break;
+    }
+
+    // Free memory
+    imagedestroy($source);
+    imagedestroy($destination);
+
+    return $result;
+}
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Portfolio Item Management
     if (isset($_POST['add_portfolio'])) {
@@ -35,9 +119,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $content = $_POST['p_iframe_url'] ?? '';
         } else {
             if (isset($_FILES['p_image_file']) && $_FILES['p_image_file']['error'] === UPLOAD_ERR_OK) {
-                $ext = pathinfo($_FILES['p_image_file']['name'], PATHINFO_EXTENSION);
+                $ext = strtolower(pathinfo($_FILES['p_image_file']['name'], PATHINFO_EXTENSION));
                 $filename = 'portfolio_' . time() . '.' . $ext;
-                if (move_uploaded_file($_FILES['p_image_file']['tmp_name'], $upload_dir . $filename)) {
+                $temp_path = $_FILES['p_image_file']['tmp_name'];
+                $final_path = $upload_dir . $filename;
+
+                // Compress and resize image
+                if (compressAndResizeImage($temp_path, $final_path, 1200, 85)) {
+                    $content = $filename;
+                } elseif (move_uploaded_file($temp_path, $final_path)) {
+                    // Fallback if compression fails
                     $content = $filename;
                 }
             }
@@ -72,9 +163,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($type == 'iframe' && !empty($_POST['p_iframe_url'])) {
             $pdo->prepare("UPDATE portfolio_items SET content_url=? WHERE id=?")->execute([$_POST['p_iframe_url'], $id]);
         } elseif ($type == 'image' && isset($_FILES['p_image_file']) && $_FILES['p_image_file']['error'] === UPLOAD_ERR_OK) {
-            $ext = pathinfo($_FILES['p_image_file']['name'], PATHINFO_EXTENSION);
+            $ext = strtolower(pathinfo($_FILES['p_image_file']['name'], PATHINFO_EXTENSION));
             $filename = 'portfolio_' . time() . '.' . $ext;
-            if (move_uploaded_file($_FILES['p_image_file']['tmp_name'], $upload_dir . $filename)) {
+            $temp_path = $_FILES['p_image_file']['tmp_name'];
+            $final_path = $upload_dir . $filename;
+
+            // Compress and resize image
+            if (compressAndResizeImage($temp_path, $final_path, 1200, 85)) {
+                $pdo->prepare("UPDATE portfolio_items SET content_url=? WHERE id=?")->execute([$filename, $id]);
+            } elseif (move_uploaded_file($temp_path, $final_path)) {
+                // Fallback if compression fails
                 $pdo->prepare("UPDATE portfolio_items SET content_url=? WHERE id=?")->execute([$filename, $id]);
             }
         }

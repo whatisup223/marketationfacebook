@@ -573,7 +573,7 @@ require_once __DIR__ . '/../includes/header.php';
                                                 d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                                         </svg>
                                     </div>
-                                    <div class="font-bold text-white text-sm">Marketation - Page</div>
+                                    <div class="font-bold text-white text-sm">Marketation - ماركتيشن</div>
                                     <div class="text-[9px] text-gray-500 uppercase tracking-widest mt-1">Verified Business
                                     </div>
                                 </div>
@@ -616,50 +616,59 @@ require_once __DIR__ . '/../includes/header.php';
                                         <?php echo ($lang == 'ar' ? 'عرض الكل' : 'View All'); ?>
                                     </a>
                                 </div>
-                                <div class="p-4 space-y-2">
+                                <div class="p-4 space-y-2 max-h-[220px] overflow-y-auto messenger-scrollbar">
                                     <?php foreach ($page_history as $hist): ?>
-                                        <div
-                                            class="p-4 bg-white/[0.03] rounded-[1.5rem] border border-white/5 hover:bg-white/[0.07] hover:border-indigo-500/30 transition-all group flex flex-col gap-3 relative overflow-hidden shadow-lg" id="camp-card-sidebar-<?php echo $hist['id']; ?>">
-                                                        <div class="flex justify-between items-start relative z-10">
-                                                            <div class="flex flex-col min-w-0">
-                                                                <span class="text-[11px] font-bold text-white group-hover:text-indigo-400 transition-colors truncate mb-0.5"><?php echo htmlspecialchars($hist['name']); ?></span>
-                                                                <span class="text-[9px] text-gray-500 font-medium"><?php echo date('M d, H:i', strtotime($hist['created_at'])); ?></span>
-                                                            </div>
-                                                            <div class="flex items-center gap-1.5 shrink-0">
-                                                                <div class="w-1.5 h-1.5 rounded-full <?php echo $hist['status'] === 'completed' ? 'bg-green-500' : 'bg-indigo-500'; ?> shadow-[0_0_5px_rgba(99,102,241,0.5)]"></div>
-                                                                <span class="text-[9px] text-gray-400 font-black uppercase tracking-tighter"><?php echo __($hist['status'] ?: 'active'); ?></span>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="flex items-center gap-2 relative z-10">
-                                                            <a href="campaign_runner.php?id=<?php echo $hist['id']; ?>"
-                                                                class="flex-1 flex justify-center items-center py-1.5 bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white rounded-lg text-[9px] font-bold transition-all border border-indigo-500/20">
-                                                                <?php echo ($lang == 'ar' ? 'فتح' : 'Open'); ?>
-                                                            </a>
-                                                            <div class="flex items-center gap-1 shrink-0">
-                                                                <a href="create_campaign.php?id=<?php echo $hist['id']; ?>"
-                                                                    class="p-1.5 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all border border-white/5"
-                                                                    title="<?php echo __('edit'); ?>">
-                                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                                                    </svg>
-                                                                </a>
-                                                                <button onclick="window.deleteCampaign(<?php echo $hist['id']; ?>)"
-                                                                    class="p-1.5 text-red-500/50 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all border border-red-500/10"
-                                                                    title="<?php echo __('delete'); ?>">
-                                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                                                    </svg>
-                                                                </button>
-                                                            </div>
-                                                        </div>
+                                        <div class="p-4 bg-white/[0.03] rounded-[1.5rem] border border-white/5 hover:bg-white/[0.07] hover:border-indigo-500/30 transition-all group flex flex-col gap-3 relative overflow-hidden shadow-lg"
+                                            id="camp-card-sidebar-<?php echo $hist['id']; ?>">
+                                            <div class="flex justify-between items-start relative z-10">
+                                                <div class="flex flex-col min-w-0">
+                                                    <span
+                                                        class="text-[11px] font-bold text-white group-hover:text-indigo-400 transition-colors truncate mb-0.5"><?php echo htmlspecialchars($hist['name']); ?></span>
+                                                    <span
+                                                        class="text-[9px] text-gray-500 font-medium"><?php echo date('M d, H:i', strtotime($hist['created_at'])); ?></span>
+                                                </div>
+                                                <div class="flex items-center gap-1.5 shrink-0">
+                                                    <div
+                                                        class="w-1.5 h-1.5 rounded-full <?php echo $hist['status'] === 'completed' ? 'bg-green-500' : 'bg-indigo-500'; ?> shadow-[0_0_5px_rgba(99,102,241,0.5)]">
                                                     </div>
-                                            <?php endforeach; ?>
+                                                    <span
+                                                        class="text-[9px] text-gray-400 font-black uppercase tracking-tighter"><?php echo __($hist['status'] ?: 'active'); ?></span>
+                                                </div>
+                                            </div>
+
+                                            <div class="flex items-center gap-2 relative z-10">
+                                                <a href="campaign_runner.php?id=<?php echo $hist['id']; ?>"
+                                                    class="flex-1 flex justify-center items-center py-1.5 bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white rounded-lg text-[9px] font-bold transition-all border border-indigo-500/20">
+                                                    <?php echo ($lang == 'ar' ? 'فتح' : 'Open'); ?>
+                                                </a>
+                                                <div class="flex items-center gap-1 shrink-0">
+                                                    <a href="create_campaign.php?id=<?php echo $hist['id']; ?>"
+                                                        class="p-1.5 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all border border-white/5"
+                                                        title="<?php echo __('edit'); ?>">
+                                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                                                            </path>
+                                                        </svg>
+                                                    </a>
+                                                    <button onclick="window.deleteCampaign(<?php echo $hist['id']; ?>)"
+                                                        class="p-1.5 text-red-500/50 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all border border-red-500/10"
+                                                        title="<?php echo __('delete'); ?>">
+                                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                                            </path>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                            <?php endif; ?>
-                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                        <?php endif; ?>
                     </div>
+                </div>
             <?php endif; ?>
         </div>
     </div>
@@ -761,7 +770,7 @@ require_once __DIR__ . '/../includes/header.php';
 
         const btn = document.getElementById('btn-confirm-delete');
         if (!btn) return;
-        
+
         const originalText = btn.innerHTML;
         btn.disabled = true;
         btn.innerHTML = '<?php echo __('please_wait'); ?>...';
@@ -780,7 +789,7 @@ require_once __DIR__ . '/../includes/header.php';
                     '#camp-card-' + campIdToDelete,
                     '#camp-card-sidebar-' + campIdToDelete
                 ];
-                
+
                 selectors.forEach(sel => {
                     const cards = document.querySelectorAll(sel);
                     cards.forEach(card => {
@@ -789,7 +798,7 @@ require_once __DIR__ . '/../includes/header.php';
                         setTimeout(() => card.remove(), 300);
                     });
                 });
-                
+
                 window.closeDeleteModal();
             } else {
                 alert(data.message || 'Error deleting campaign');
@@ -836,11 +845,9 @@ require_once __DIR__ . '/../includes/header.php';
 <!-- Delete Confirmation Modal -->
 <div id="delete-modal"
     class="fixed inset-0 z-[110] hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div
-        class="glass-card max-w-sm w-full p-8 rounded-3xl border border-white/10 text-center relative overflow-hidden">
+    <div class="glass-card max-w-sm w-full p-8 rounded-3xl border border-white/10 text-center relative overflow-hidden">
         <div class="absolute top-0 left-0 w-full h-1 bg-red-500/50"></div>
-        <div
-            class="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center text-red-500 mx-auto mb-6">
+        <div class="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center text-red-500 mx-auto mb-6">
             <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
