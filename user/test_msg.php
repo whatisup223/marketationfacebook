@@ -15,7 +15,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $psid = $_POST['psid'];
     $message = $_POST['message'];
 
-    $url = "https://graph.facebook.com/v18.0/me/messages?access_token=" . $access_token;
+    // FIX: Using explicit Page ID instead of 'me'
+    $url = "https://graph.facebook.com/v18.0/" . $page_id . "/messages?access_token=" . $access_token;
 
     $payload = [
         'recipient' => ['id' => $psid],
@@ -40,6 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     curl_close($ch);
 
     $result .= "<h3>Test Results:</h3>";
+    $result .= "<strong>Target URL:</strong> $url<br>"; // Debug URL
     $result .= "<strong>HTTP Code:</strong> $http_code<br>";
 
     if ($curl_error) {
@@ -107,16 +109,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="container">
         <h2>🚀 API Connection Doctor</h2>
         <form method="POST">
+            <label>Page ID (Explicit):</label>
+            <input type="text" name="page_id" required placeholder="100064..."
+                value="<?php echo $_POST['page_id'] ?? ''; ?>">
+
             <label>Page Access Token:</label>
-            <input type="text" name="access_token" required placeholder="EAAG...">
+            <input type="text" name="access_token" required placeholder="EAAG..."
+                value="<?php echo $_POST['access_token'] ?? ''; ?>">
 
             <label>Recipient PSID:</label>
-            <input type="text" name="psid" required placeholder="123456789...">
+            <input type="text" name="psid" required placeholder="123456789..."
+                value="<?php echo $_POST['psid'] ?? ''; ?>">
 
             <label>Message:</label>
             <textarea name="message" required>Test Message from Debugger</textarea>
-
-            <input type="hidden" name="page_id" value="me">
 
             <button type="submit">Test Send</button>
         </form>
