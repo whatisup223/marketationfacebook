@@ -67,7 +67,7 @@ $processed_results = [];
 
 // Fetch Pending Items (respect next_retry_at)
 $qStmt = $pdo->prepare("
-    SELECT q.id as q_id, q.attempts_count, c.message_text, c.image_url, 
+    SELECT q.id as q_id, c.message_text, c.image_url, 
            l.fb_user_id, l.fb_user_name, p.page_access_token, p.page_id as fb_page_id 
     FROM campaign_queue q
     JOIN campaigns c ON q.campaign_id = c.id
