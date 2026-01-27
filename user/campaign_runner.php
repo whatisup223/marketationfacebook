@@ -977,17 +977,13 @@ require_once __DIR__ . '/../includes/header.php';
                     return;
                 }
 
-                // DRIFT CORRECTION: Ensure we adhere to exact intervals
+                // GAP Logic: Wait full interval AFTER processing
                 const intervalInput = document.getElementById('interval');
-                const desiredInterval = (parseInt(intervalInput ? intervalInput.value : <?php echo $campaign['waiting_interval'] ?? 30; ?>) || 30) * 1000;
+                const waitSeconds = parseInt(intervalInput ? intervalInput.value : <?php echo $campaign['waiting_interval'] ?? 30; ?>) || 30;
 
-                const elapsed = Date.now() - startTime;
-                const waitInterval = Math.max(0, desiredInterval - elapsed); // Subtract elapsed time
-
-                const waitSeconds = Math.ceil(waitInterval / 1000);
                 timerDiv.innerHTML = `<span class="text-blue-400 font-bold uppercase tracking-wider">⏳ <?php echo __('waiting'); ?> ${waitSeconds}<?php echo __('unit_s'); ?>...</span>`;
 
-                setTimeout(processQueue, waitInterval); // Wait adjusted time
+                setTimeout(processQueue, waitSeconds * 1000); // Simple Delay
 
             } else if (data.status === 'completed') {
                 isRunning = false;
