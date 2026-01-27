@@ -249,7 +249,7 @@ require_once __DIR__ . '/../includes/header.php';
                             <p class="text-gray-400 max-w-md mx-auto mb-8">
                                 <?php echo __('please_select_leads_first'); ?>
                             </p>
-                            <a href="page_inbox.php"
+                            <a href="page_inbox.php?page_id=<?php echo $page_id; ?>"
                                 class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg hover:shadow-indigo-500/25">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -258,6 +258,49 @@ require_once __DIR__ . '/../includes/header.php';
                                 </svg>
                                 <span><?php echo __('go_to_inbox'); ?></span>
                             </a>
+
+                            <!-- Campaign History in Empty State (NEW) -->
+                            <?php if (!empty($page_history)): ?>
+                                <div class="mt-12 w-full max-w-xl text-left border-t border-white/5 pt-8">
+                                    <div class="flex items-center justify-between mb-6">
+                                        <h3 class="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">
+                                            <?php echo ($lang == 'ar' ? 'تاريخ الحملات المستخرجة لهذه الصفحة' : 'Recent Extraction History for this Page'); ?>
+                                        </h3>
+                                        <div class="w-2 h-2 rounded-full bg-indigo-500/50 animate-pulse"></div>
+                                    </div>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <?php foreach ($page_history as $hist): ?>
+                                            <a href="page_inbox.php?page_id=<?php echo $page_id; ?>#camp-card-<?php echo $hist['id']; ?>"
+                                                class="p-4 bg-white/5 rounded-2xl border border-white/5 hover:bg-white/10 transition-all group flex flex-col gap-2 relative overflow-hidden">
+                                                <div
+                                                    class="absolute top-0 right-0 w-24 h-24 bg-indigo-600/5 blur-2xl -mr-12 -mt-12 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                </div>
+                                                <div class="flex justify-between items-start relative z-10">
+                                                    <span
+                                                        class="text-xs font-bold text-white truncate max-w-[120px]"><?php echo htmlspecialchars($hist['name']); ?></span>
+                                                    <span
+                                                        class="text-[9px] text-gray-500 font-mono"><?php echo date('d/m H:i', strtotime($hist['created_at'])); ?></span>
+                                                </div>
+                                                <div class="flex items-center justify-between mt-1 relative z-10">
+                                                    <div class="flex items-center gap-1.5">
+                                                        <div
+                                                            class="w-1.5 h-1.5 rounded-full <?php echo $hist['status'] === 'completed' ? 'bg-green-500' : 'bg-indigo-500'; ?> shadow-[0_0_5px_rgba(99,102,241,0.5)]">
+                                                        </div>
+                                                        <span
+                                                            class="text-[10px] text-gray-400 font-bold"><?php echo $hist['total_leads']; ?>
+                                                            <?php echo ($lang == 'ar' ? 'عميل' : 'leads'); ?></span>
+                                                    </div>
+                                                    <svg class="w-4 h-4 text-indigo-500 transform group-hover:translate-x-1 transition-transform rtl:group-hover:-translate-x-1"
+                                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                            d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                                                    </svg>
+                                                </div>
+                                            </a>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
                         </div>
                     <?php else: ?>
                         <div
@@ -534,7 +577,8 @@ require_once __DIR__ . '/../includes/header.php';
                                                     class="p-3 bg-white/5 rounded-2xl border border-white/5 hover:bg-white/10 transition-all group">
                                                     <div class="flex justify-between items-start mb-1">
                                                         <h4 class="text-xs font-bold text-white truncate max-w-[150px]">
-                                                            <?php echo htmlspecialchars($hist['name']); ?></h4>
+                                                            <?php echo htmlspecialchars($hist['name']); ?>
+                                                        </h4>
                                                         <span
                                                             class="text-[9px] text-gray-500 font-mono"><?php echo date('d/m H:i', strtotime($hist['created_at'])); ?></span>
                                                     </div>
