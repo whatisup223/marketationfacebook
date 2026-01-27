@@ -457,14 +457,15 @@ require_once __DIR__ . '/../includes/header.php';
                                         class="flex-1 text-center py-1.5 bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white rounded-lg text-[10px] font-bold transition-all border border-indigo-500/20">
                                         <?php echo ($lang == 'ar' ? 'فتح' : 'Open'); ?>
                                     </a>
-                                    <button onclick="editCampMessage(<?php echo $camp['id']; ?>)"
-                                        class="p-1.5 text-gray-500 hover:text-white transition-all">
+                                    <a href="create_campaign.php?id=<?php echo $camp['id']; ?>"
+                                        class="p-1.5 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all"
+                                        title="<?php echo __('edit'); ?>">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
                                             </path>
                                         </svg>
-                                    </button>
+                                    </a>
                                     <button onclick="deleteCampaign(<?php echo $camp['id']; ?>)"
                                         class="p-1.5 text-red-500/30 hover:text-red-500 transition-all">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -480,7 +481,8 @@ require_once __DIR__ . '/../includes/header.php';
                 <?php else: ?>
                     <div class="glass-card p-8 rounded-2xl border border-white/5 border-dashed text-center">
                         <p class="text-xs text-gray-500 italic">
-                            <?php echo ($lang == 'ar' ? 'لا توجد حملات منشأة بعد' : 'No campaigns created yet'); ?></p>
+                            <?php echo ($lang == 'ar' ? 'لا توجد حملات منشأة بعد' : 'No campaigns created yet'); ?>
+                        </p>
                     </div>
                 <?php endif; ?>
             </div>
@@ -1005,7 +1007,7 @@ require_once __DIR__ . '/../includes/header.php';
                                                         class="flex-1 flex justify-center items-center py-1.5 bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white rounded-lg text-[10px] font-bold transition-all border border-indigo-500/20">
                                                         <?php echo ($lang == 'ar' ? 'فتح المحرر' : 'Open Runner'); ?>
                                                     </a>
-                                                    <button onclick="editCampMessage(<?php echo $camp['id']; ?>)"
+                                                    <a href="create_campaign.php?id=<?php echo $camp['id']; ?>"
                                                         class="p-1.5 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all"
                                                         title="<?php echo __('edit'); ?>">
                                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1013,7 +1015,7 @@ require_once __DIR__ . '/../includes/header.php';
                                                                 d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
                                                             </path>
                                                         </svg>
-                                                    </button>
+                                                    </a>
                                                     <a href="campaign_reports.php?id=<?php echo $camp['id']; ?>"
                                                         class="p-1.5 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all"
                                                         title="<?php echo __('reports'); ?>">
@@ -1668,59 +1670,6 @@ require_once __DIR__ . '/../includes/header.php';
                     }
                 }
 
-                // --- CAMPAIGN MANAGEMENT LOGIC ---
-                async function deleteCampaign(campId) {
-                    if (!confirm('<?php echo ($lang == 'ar' ? "هل أنت متأكد من حذف هذه الحملة؟ سيتم حذف جميع سجلات الإرسال المرتبطة بها." : "Are you sure you want to delete this campaign? All associated sending records will be removed."); ?>')) return;
-
-                    try {
-                        const fd = new FormData();
-                        fd.append('action', 'delete');
-                        fd.append('campaign_id', campId);
-
-                        const res = await fetch('ajax_campaign_actions.php', { method: 'POST', body: fd });
-                        const data = await res.json();
-
-                        if (data.status === 'success') {
-                            const card = document.getElementById('camp-card-' + campId);
-                            if (card) {
-                                card.style.opacity = '0';
-                                card.style.transform = 'scale(0.9)';
-                                setTimeout(() => card.remove(), 300);
-                            }
-                        } else {
-                            alert(data.message);
-                        }
-                    } catch (e) { console.error(e); alert('Failed to delete campaign'); }
-                }
-
-                async function editCampMessage(campId) {
-                    const currentMsg = document.getElementById('camp-msg-' + campId).innerText.replace(/^"|"$/g, '');
-                    const newMsg = prompt('<?php echo ($lang == 'ar' ? "تعديل محتوى الرسالة:" : "Edit Message Content:"); ?>', currentMsg);
-
-                    if (newMsg === null || newMsg === currentMsg) return;
-                    if (newMsg.trim() === '') { alert('Message cannot be empty'); return; }
-
-                    try {
-                        const fd = new FormData();
-                        fd.append('action', 'edit_message');
-                        fd.append('campaign_id', campId);
-                        fd.append('message', newMsg);
-
-                        const res = await fetch('ajax_campaign_actions.php', { method: 'POST', body: fd });
-                        const data = await res.json();
-
-                        if (data.status === 'success') {
-                            document.getElementById('camp-msg-' + campId).innerText = '"' + newMsg + '"';
-                            // Brief success glow
-                            const card = document.getElementById('camp-card-' + campId);
-                            card.classList.add('ring-2', 'ring-green-500');
-                            setTimeout(() => card.classList.remove('ring-2', 'ring-green-500'), 1500);
-                        } else {
-                            alert(data.message);
-                        }
-                    } catch (e) { console.error(e); alert('Failed to update message'); }
-                }
-
                 // Show clear button if selection > 0
                 const statCheck = setInterval(() => {
                     const cnt = getStoredSelection().length;
@@ -1732,6 +1681,55 @@ require_once __DIR__ . '/../includes/header.php';
         <?php endif; ?>
 
         <script>
+            // --- CAMPAIGN MANAGEMENT LOGIC (GLOBAL) ---
+            let campIdToDelete = null;
+
+            window.deleteCampaign = function (campId) {
+                campIdToDelete = campId;
+                document.getElementById('delete-modal').classList.remove('hidden');
+            };
+
+            async function confirmDelete() {
+                if (!campIdToDelete) return;
+
+                const btn = document.getElementById('btn-confirm-delete');
+                const originalText = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<?php echo __('please_wait'); ?>...';
+
+                try {
+                    const fd = new FormData();
+                    fd.append('action', 'delete');
+                    fd.append('campaign_id', campIdToDelete);
+
+                    const res = await fetch('ajax_campaign_actions.php', { method: 'POST', body: fd });
+                    const data = await res.json();
+
+                    if (data.status === 'success') {
+                        const cards = document.querySelectorAll('#camp-card-' + campIdToDelete);
+                        cards.forEach(card => {
+                            card.style.opacity = '0';
+                            card.style.transform = 'scale(0.9)';
+                            setTimeout(() => card.remove(), 300);
+                        });
+                        closeDeleteModal();
+                    } else {
+                        alert(data.message);
+                    }
+                } catch (e) {
+                    console.error(e);
+                    alert('Failed to delete campaign');
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
+            }
+
+            function closeDeleteModal() {
+                document.getElementById('delete-modal').classList.add('hidden');
+                campIdToDelete = null;
+            }
+
             // Connection Status Auto-Check
             document.addEventListener('DOMContentLoaded', function () {
                 const badgeContainer = document.getElementById('connection-status-badge');
@@ -1742,7 +1740,8 @@ require_once __DIR__ . '/../includes/header.php';
                 async function checkStatus() {
                     try {
                         const formData = new FormData();
-                        formData.append('page_db_id', <?php echo $page['id'] ?? 0; ?>);
+                        <?php $p_id = (isset($page) && isset($page['id'])) ? $page['id'] : 0; ?>
+                        formData.append('page_db_id', <?php echo (int) $p_id; ?>);
 
                         const response = await fetch('ajax_check_status.php', {
                             method: 'POST',
@@ -1762,9 +1761,6 @@ require_once __DIR__ . '/../includes/header.php';
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                             <?php echo __('token_expired'); ?>
                         </span>`;
-
-                            // Show modal if appropriate (optional, acts as auto-prompt)
-                            // if (typeof showTokenModal === 'function') showTokenModal();
                         }
                     } catch (e) {
                         console.error("Status check failed", e);
@@ -1772,5 +1768,39 @@ require_once __DIR__ . '/../includes/header.php';
                 }
             });
         </script>
+
+        <!-- Delete Confirmation Modal (NEW) -->
+        <div id="delete-modal"
+            class="fixed inset-0 z-[110] hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div
+                class="glass-card max-w-sm w-full p-8 rounded-3xl border border-white/10 text-center relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1 bg-red-500/50"></div>
+                <div
+                    class="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center text-red-500 mx-auto mb-6">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                        </path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2">
+                    <?php echo ($lang == 'ar' ? 'حذف الحملة؟' : 'Delete Campaign?'); ?>
+                </h3>
+                <p class="text-gray-400 text-sm mb-8">
+                    <?php echo ($lang == 'ar' ? 'هل أنت متأكد من حذف هذه الحملة؟ سيتم حذف جميع سجلات الإرسال المرتبطة بها نهائياً.' : 'Are you sure you want to delete this campaign? All associated sending records will be permanently removed.'); ?>
+                </p>
+
+                <div class="flex gap-3">
+                    <button onclick="closeDeleteModal()"
+                        class="flex-1 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl font-bold transition-all border border-white/5">
+                        <?php echo ($lang == 'ar' ? 'إلغاء' : 'Cancel'); ?>
+                    </button>
+                    <button id="btn-confirm-delete" onclick="confirmDelete()"
+                        class="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold transition-all shadow-lg shadow-red-500/20">
+                        <?php echo ($lang == 'ar' ? 'تأكيد الحذف' : 'Confirm Delete'); ?>
+                    </button>
+                </div>
+            </div>
+        </div>
 
         <?php require_once __DIR__ . '/../includes/footer.php'; ?>
