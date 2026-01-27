@@ -127,11 +127,11 @@ class FacebookAPI
     public function sendMessage($page_id, $page_access_token, $recipient_id, $message_text, $image_url = null)
     {
         $real_token = $page_access_token;
-        $endpoint = "$page_id/messages";  // Use Page ID instead of 'me'
+        $endpoint = "me/messages"; // Reverted to 'me/messages' as requested
         $res = null;
 
         // Helper to perform the actual send
-        $doSend = function ($token) use ($endpoint, $recipient_id, $message_text, $image_url, $page_id) {
+        $doSend = function ($token) use ($endpoint, $recipient_id, $message_text, $image_url) {
             $last_res = null;
 
             // 1. Send Text

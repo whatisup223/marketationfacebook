@@ -1,8 +1,8 @@
 <?php
-// user/campaign_send_handler.php
-// Start output buffering immediately to catch any stray HTML/Errors
+// Start output buffering immediately to catch ANY output (including from included files)
 ob_start();
 
+// user/campaign_send_handler.php
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/facebook_api.php';
 
