@@ -582,7 +582,11 @@ if (!empty($portfolioItems)):
                     class="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-[2.5rem] blur opacity-25 group-hover:opacity-50 transition duration-1000">
                 </div>
                 <div class="relative glass-card rounded-[2.5rem] p-2 border border-white/10 overflow-hidden shadow-2xl">
-                    <img src="assets/img/platform-mockup.png" alt="Platform Mockup"
+                    <?php
+                    $t_img = getSetting('tool_image');
+                    $t_img_path = !empty($t_img) ? 'uploads/' . $t_img : 'assets/img/platform-mockup.png';
+                    ?>
+                    <img src="<?php echo $t_img_path; ?>" alt="Platform Mockup"
                         class="w-full h-auto rounded-[2rem] transform group-hover:scale-[1.02] transition-transform duration-700">
 
                     <!-- Floating Overlay Stats -->
@@ -598,7 +602,8 @@ if (!empty($portfolioItems)):
                                 </div>
                                 <div>
                                     <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
-                                        <?php echo __('status_completed'); ?></p>
+                                        <?php echo __('status_completed'); ?>
+                                    </p>
                                     <p class="text-white font-black">99.9% <?php echo __('verified'); ?></p>
                                 </div>
                             </div>
@@ -617,15 +622,15 @@ if (!empty($portfolioItems)):
                         <span class="relative inline-flex rounded-full h-3 w-3 bg-indigo-500"></span>
                     </span>
                     <span
-                        class="text-indigo-400 text-xs font-black uppercase tracking-[0.2em]"><?php echo __('extraction_tools'); ?></span>
+                        class="text-indigo-400 text-xs font-black uppercase tracking-[0.2em]"><?php echo getSetting('tool_badge_' . $lang) ?: __('extraction_tools'); ?></span>
                 </div>
 
                 <h2 class="text-4xl md:text-6xl font-black text-white leading-tight">
-                    <?php echo __('tool_showcase_title'); ?>
+                    <?php echo getSetting('tool_title_' . $lang) ?: __('tool_showcase_title'); ?>
                 </h2>
 
                 <p class="text-xl text-gray-400 leading-relaxed">
-                    <?php echo __('tool_showcase_subtitle'); ?>
+                    <?php echo getSetting('tool_subtitle_' . $lang) ?: __('tool_showcase_subtitle'); ?>
                 </p>
 
                 <!-- Features Grid -->
@@ -642,7 +647,8 @@ if (!empty($portfolioItems)):
                         </div>
                         <div>
                             <h4 class="text-lg font-bold text-white mb-1 tracking-tight">
-                                <?php echo __('tool_feature_1'); ?></h4>
+                                <?php echo __('tool_feature_1'); ?>
+                            </h4>
                             <p class="text-sm text-gray-400"><?php echo __('tool_feature_1_desc'); ?></p>
                         </div>
                     </div>
@@ -660,7 +666,8 @@ if (!empty($portfolioItems)):
                         </div>
                         <div>
                             <h4 class="text-lg font-bold text-white mb-1 tracking-tight">
-                                <?php echo __('tool_feature_2'); ?></h4>
+                                <?php echo __('tool_feature_2'); ?>
+                            </h4>
                             <p class="text-sm text-gray-400"><?php echo __('tool_feature_2_desc'); ?></p>
                         </div>
                     </div>
@@ -678,13 +685,32 @@ if (!empty($portfolioItems)):
                         </div>
                         <div>
                             <h4 class="text-lg font-bold text-white mb-1 tracking-tight">
-                                <?php echo __('tool_feature_3'); ?></h4>
+                                <?php echo __('tool_feature_3'); ?>
+                            </h4>
                             <p class="text-sm text-gray-400"><?php echo __('tool_feature_3_desc'); ?></p>
                         </div>
                     </div>
                 </div>
+
+                <?php
+                $t_btn_text = getSetting('tool_btn_text_' . $lang);
+                $t_btn_url = getSetting('tool_btn_url');
+                if ($t_btn_text):
+                    ?>
+                    <div class="pt-4">
+                        <a href="<?php echo htmlspecialchars($t_btn_url ?: '#'); ?>"
+                            class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-black px-8 py-4 rounded-2xl shadow-xl shadow-indigo-500/20 transition-all hover:-translate-y-1">
+                                <?php echo htmlspecialchars($t_btn_text); ?>
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                            </svg>
+                        </a>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
+    </div>
     </div>
 </section>
 
