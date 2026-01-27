@@ -84,165 +84,62 @@ require_once 'includes/header.php';
                 </div>
             </div>
 
-            <!-- Calculator/Tool Side -->
+            <!-- Hero Visual Side -->
             <div class="<?php echo $lang === 'ar' ? 'lg:order-1' : 'lg:order-2'; ?> perspective-1000">
                 <div class="relative group animate-float">
                     <!-- Glow effect -->
                     <div
-                        class="absolute -inset-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-[2.5rem] blur-2xl opacity-20 group-hover:opacity-40 transition duration-1000">
+                        class="absolute -inset-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-[3rem] blur-3xl opacity-20 group-hover:opacity-40 transition duration-1000">
                     </div>
 
                     <div
-                        class="relative glass-card rounded-[2.5rem] p-8 border border-white/10 shadow-3xl overflow-hidden backdrop-blur-2xl">
-                        <!-- Decorative Shapes -->
-                        <div class="absolute -top-24 -right-24 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl"></div>
+                        class="relative glass-card rounded-[3rem] p-4 border border-white/10 shadow-3xl overflow-hidden backdrop-blur-2xl">
+                        <?php
+                        $hero_img = getSetting('hero_image');
+                        $hero_img_url = !empty($hero_img) ? 'uploads/' . $hero_img : 'https://cdni.iconscout.com/illustration/premium/thumb/social-media-marketing-8334465-6652610.png?f=webp';
+                        ?>
+                        <div class="relative rounded-[2.5rem] overflow-hidden aspect-[4/3] lg:aspect-square">
+                            <img src="<?php echo $hero_img_url; ?>" alt="Hero Visual"
+                                class="w-full h-full object-cover transform group-hover:scale-110 transition duration-700">
 
-                        <!-- Calculator Header -->
-                        <div class="relative flex items-center justify-between mb-8 pb-6 border-b border-white/5">
-                            <div class="flex items-center gap-4">
-                                <div
-                                    class="w-14 h-14 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-2xl flex items-center justify-center border border-white/10">
-                                    <svg class="w-8 h-8 text-indigo-400" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                            d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z">
-                                        </path>
-                                    </svg>
-                                </div>
-                                <div class="<?php echo $lang === 'ar' ? 'text-right' : 'text-left'; ?>">
-                                    <h3 class="text-white font-bold text-xl mb-1">
-                                        <?php echo __('sim_title'); ?>
-                                    </h3>
-                                    <p class="text-sm text-gray-500">
-                                        <?php echo __('sim_desc'); ?>
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Calculator Inputs -->
-                        <div class="space-y-6 relative">
-                            <div>
-                                <div class="flex justify-between mb-3 text-sm">
-                                    <span class="text-gray-400"><?php echo __('sim_followers'); ?></span>
-                                    <span class="text-indigo-400 font-mono font-bold" id="followersVal">10,000</span>
-                                </div>
-                                <input type="range" id="followers" min="1000" max="100000" step="1000" value="10000"
-                                    class="w-full h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-                                    oninput="updateSim()">
+                            <!-- Static Overlay Elements -->
+                            <div
+                                class="absolute inset-0 bg-gradient-to-tr from-indigo-900/40 via-transparent to-purple-900/40 mix-blend-overlay">
                             </div>
 
-                            <div>
-                                <div class="flex justify-between mb-3 text-sm">
-                                    <span class="text-gray-400"><?php echo __('sim_engagement'); ?></span>
-                                    <span class="text-purple-400 font-mono font-bold" id="engagementVal">5%</span>
-                                </div>
-                                <input type="range" id="engagement" min="1" max="20" step="0.5" value="5"
-                                    class="w-full h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
-                                    oninput="updateSim()">
-                            </div>
-
-                            <!-- Mega Result -->
-                            <div class="relative mt-8 group/result">
+                            <!-- Floating Badge on Image -->
+                            <div class="absolute bottom-6 left-6 right-6">
                                 <div
-                                    class="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-3xl blur opacity-20 group-hover/result:opacity-40 transition">
-                                </div>
-                                <div
-                                    class="relative bg-black/40 rounded-3xl p-6 border border-white/5 flex flex-col items-center">
-                                    <span
-                                        class="text-xs uppercase tracking-widest text-gray-500 mb-2 font-bold"><?php echo __('sim_total_leads'); ?></span>
-                                    <div class="text-5xl font-black text-white mb-2 tracking-tighter" id="simResult">500
+                                    class="glass-card p-4 rounded-2xl flex items-center gap-4 border-white/20 backdrop-blur-md bg-white/5">
+                                    <div
+                                        class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center text-white shadow-lg">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                                        </svg>
                                     </div>
-                                    <div class="flex items-center gap-2 text-green-400 text-sm font-semibold">
-                                        <span class="relative flex h-2 w-2">
-                                            <span
-                                                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                                            <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                                        </span>
-                                        <?php echo __('sim_accuracy'); ?>
+                                    <div class="<?php echo $lang === 'ar' ? 'text-right' : 'text-left'; ?>">
+                                        <p class="text-white font-black text-sm uppercase tracking-wider">
+                                            <?php echo __('hero_feature'); ?></p>
+                                        <p class="text-indigo-300 text-xs font-bold"><?php echo __('hero_badge'); ?></p>
                                     </div>
                                 </div>
                             </div>
-
-                            <button onclick="location.href='register.php'"
-                                class="w-full py-4 rounded-2xl bg-white text-gray-900 font-extrabold hover:bg-gray-100 transition-colors shadow-lg">
-                                <?php echo __('sim_btn'); ?>
-                            </button>
                         </div>
+                    </div>
+
+                    <!-- Decorative Floating Elements -->
+                    <div
+                        class="absolute -top-6 -right-6 w-20 h-20 bg-indigo-500/20 rounded-full blur-2xl animate-pulse">
+                    </div>
+                    <div
+                        class="absolute -bottom-6 -left-6 w-24 h-24 bg-purple-500/20 rounded-full blur-2xl animate-pulse animation-delay-2000">
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
 </div>
-
-<style>
-    @keyframes blob {
-        0% {
-            transform: translate(0px, 0px) scale(1);
-        }
-
-        33% {
-            transform: translate(30px, -50px) scale(1.1);
-        }
-
-        66% {
-            transform: translate(-20px, 20px) scale(0.9);
-        }
-
-        100% {
-            transform: translate(0px, 0px) scale(1);
-        }
-    }
-
-    .animate-blob {
-        animation: blob 7s infinite;
-    }
-
-    .animation-delay-2000 {
-        animation-delay: 2s;
-    }
-
-    .animation-delay-4000 {
-        animation-delay: 4s;
-    }
-
-    @keyframes float {
-
-        0%,
-        100% {
-            transform: translateY(0px) rotate(0deg);
-        }
-
-        50% {
-            transform: translateY(-20px) rotate(1deg);
-        }
-    }
-
-    .animate-float {
-        animation: float 6s ease-in-out infinite;
-    }
-
-    .perspective-1000 {
-        perspective: 1000px;
-    }
-</style>
-
-<script>
-    function updateSim() {
-        const f = document.getElementById('followers').value;
-        const e = document.getElementById('engagement').value;
-
-        document.getElementById('followersVal').innerText = parseInt(f).toLocaleString();
-        document.getElementById('engagementVal').innerText = e + '%';
-
-        const res = Math.floor(f * (e / 100));
-        document.getElementById('simResult').innerText = res.toLocaleString();
-    }
-    // Run once on load
-    document.addEventListener('DOMContentLoaded', updateSim);
-</script>
 
 <!-- About Us Section -->
 <section id="about-us" class="py-24 relative overflow-hidden">
