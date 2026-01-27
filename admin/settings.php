@@ -656,7 +656,7 @@ require_once __DIR__ . '/../includes/header.php';
                             <div class="relative group">
                                 <?php
                                 $h_img = $settings['hero_image'] ?? '';
-                                $h_img_url = !empty($h_img) ? '../uploads/' . $h_img : 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=400';
+                                $h_img_url = !empty($h_img) ? '../uploads/' . $h_img : '../assets/img/hero-default.png';
                                 ?>
                                 <div
                                     class="w-full h-48 rounded-2xl bg-gray-900 border border-gray-700/50 flex items-center justify-center overflow-hidden">
@@ -861,17 +861,11 @@ require_once __DIR__ . '/../includes/header.php';
                             <div class="relative group">
                                 <div
                                     class="w-full h-48 rounded-xl bg-gray-900 border border-gray-700/50 flex items-center justify-center overflow-hidden">
-                                    <?php if (!empty($settings['about_image'])): ?>
-                                        <img src="../uploads/<?php echo $settings['about_image']; ?>"
-                                            class="w-full h-full object-cover">
-                                    <?php else: ?>
-                                        <svg class="w-12 h-12 text-gray-700" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
-                                            </path>
-                                        </svg>
-                                    <?php endif; ?>
+                                    <?php
+                                    $a_img = $settings['about_image'] ?? '';
+                                    $a_img_url = !empty($a_img) ? '../uploads/' . $a_img : '../assets/img/about-default.png';
+                                    ?>
+                                    <img src="<?php echo $a_img_url; ?>" class="w-full h-full object-cover">
 
                                     <!-- Overlay Actions -->
                                     <div
@@ -887,15 +881,15 @@ require_once __DIR__ . '/../includes/header.php';
                                             </svg>
                                         </label>
                                         <?php if (!empty($settings['about_image'])): ?>
-                                            <button type="submit" name="delete_about_image"
-                                                class="p-2 bg-red-600 rounded-lg hover:bg-red-500 text-white transition-colors"
-                                                title="<?php echo __('delete'); ?>">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                                                    </path>
-                                                </svg>
-                                            </button>
+                                                <button type="submit" name="delete_about_image"
+                                                    class="p-2 bg-red-600 rounded-lg hover:bg-red-500 text-white transition-colors"
+                                                    title="<?php echo __('delete'); ?>">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                                        </path>
+                                                    </svg>
+                                                </button>
                                         <?php endif; ?>
                                     </div>
                                 </div>
@@ -1150,31 +1144,31 @@ require_once __DIR__ . '/../includes/header.php';
                             ];
                             foreach ($platforms as $p => $meta):
                                 ?>
-                                <div class="group">
-                                    <div class="flex items-center justify-between mb-2 px-1">
-                                        <label
-                                            class="text-gray-400 text-xs font-bold uppercase tracking-widest flex items-center gap-2">
-                                            <span class="w-1.5 h-1.5 rounded-full"
-                                                style="background-color: <?php echo $meta['color']; ?>"></span>
-                                            <?php echo __($p); ?>
-                                        </label>
-                                        <div
-                                            class="flex items-center gap-2 opacity-40 group-hover:opacity-100 transition-all duration-300">
-                                            <input type="hidden" name="floating_<?php echo $p; ?>" value="0">
-                                            <input type="checkbox" name="floating_<?php echo $p; ?>" value="1"
-                                                id="float_<?php echo $p; ?>" <?php echo ($settings['floating_' . $p] ?? '0') == '1' ? 'checked' : ''; ?>
-                                                class="w-3.5 h-3.5 rounded border-gray-700 bg-gray-800 text-indigo-600 focus:ring-indigo-500">
-                                            <label for="float_<?php echo $p; ?>"
-                                                class="text-[9px] font-bold text-gray-500 uppercase cursor-pointer select-none">
-                                                <?php echo __('floating_button'); ?>
+                                    <div class="group">
+                                        <div class="flex items-center justify-between mb-2 px-1">
+                                            <label
+                                                class="text-gray-400 text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                                                <span class="w-1.5 h-1.5 rounded-full"
+                                                    style="background-color: <?php echo $meta['color']; ?>"></span>
+                                                <?php echo __($p); ?>
                                             </label>
+                                            <div
+                                                class="flex items-center gap-2 opacity-40 group-hover:opacity-100 transition-all duration-300">
+                                                <input type="hidden" name="floating_<?php echo $p; ?>" value="0">
+                                                <input type="checkbox" name="floating_<?php echo $p; ?>" value="1"
+                                                    id="float_<?php echo $p; ?>" <?php echo ($settings['floating_' . $p] ?? '0') == '1' ? 'checked' : ''; ?>
+                                                    class="w-3.5 h-3.5 rounded border-gray-700 bg-gray-800 text-indigo-600 focus:ring-indigo-500">
+                                                <label for="float_<?php echo $p; ?>"
+                                                    class="text-[9px] font-bold text-gray-500 uppercase cursor-pointer select-none">
+                                                    <?php echo __('floating_button'); ?>
+                                                </label>
+                                            </div>
                                         </div>
+                                        <input type="text" name="social_<?php echo $p; ?>"
+                                            value="<?php echo $settings['social_' . $p] ?? ''; ?>"
+                                            class="setting-input py-2.5 text-sm border-white/5 focus:border-white/20"
+                                            placeholder="Username or Link">
                                     </div>
-                                    <input type="text" name="social_<?php echo $p; ?>"
-                                        value="<?php echo $settings['social_' . $p] ?? ''; ?>"
-                                        class="setting-input py-2.5 text-sm border-white/5 focus:border-white/20"
-                                        placeholder="Username or Link">
-                                </div>
                             <?php endforeach; ?>
                         </div>
                     </section>
@@ -1205,14 +1199,14 @@ require_once __DIR__ . '/../includes/header.php';
                                     class="w-full h-full object-cover">
 
                                 <?php if (!empty($t_img)): ?>
-                                    <button type="submit" name="delete_tool_image"
-                                        class="absolute top-4 right-4 p-2 bg-red-600 rounded-xl text-white shadow-xl hover:bg-red-500 transition-all opacity-0 group-hover:opacity-100">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                                            </path>
-                                        </svg>
-                                    </button>
+                                        <button type="submit" name="delete_tool_image"
+                                            class="absolute top-4 right-4 p-2 bg-red-600 rounded-xl text-white shadow-xl hover:bg-red-500 transition-all opacity-0 group-hover:opacity-100">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                                </path>
+                                            </svg>
+                                        </button>
                                 <?php endif; ?>
 
                                 <!-- Loader -->
@@ -1311,41 +1305,61 @@ require_once __DIR__ . '/../includes/header.php';
                                         class="setting-input text-sm" placeholder="#register">
                                 </div>
                             </div>
-                        <!-- Features Settings -->
+                            <!-- Features Settings -->
                             <div class="pt-8 border-t border-white/5 space-y-6">
                                 <h4 class="text-white font-bold flex items-center gap-2">
-                                    <svg class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                                    <svg class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+                                        </path>
+                                    </svg>
                                     <?php echo __('tool_features_edit'); ?>
                                 </h4>
 
                                 <?php for ($i = 1; $i <= 3; $i++): ?>
-                                    <div class="p-6 bg-white/5 rounded-2xl border border-white/5 space-y-4">
-                                        <h5 class="text-xs font-black text-gray-500 uppercase tracking-widest">Feature #<?php echo $i; ?></h5>
-                                        <div class="grid md:grid-cols-2 gap-6">
-                                            <!-- AR -->
-                                            <div class="space-y-3">
-                                                <div>
-                                                    <label class="block text-gray-600 text-[10px] uppercase font-bold mb-1">العنوان (AR)</label>
-                                                    <input type="text" name="tool_f<?php echo $i; ?>_t_ar" value="<?php echo htmlspecialchars($settings['tool_f' . $i . '_t_ar'] ?? __('tool_feature_' . $i)); ?>" class="setting-input text-sm">
+                                        <div class="p-6 bg-white/5 rounded-2xl border border-white/5 space-y-4">
+                                            <h5 class="text-xs font-black text-gray-500 uppercase tracking-widest">Feature
+                                                #<?php echo $i; ?></h5>
+                                            <div class="grid md:grid-cols-2 gap-6">
+                                                <!-- AR -->
+                                                <div class="space-y-3">
+                                                    <div>
+                                                        <label
+                                                            class="block text-gray-600 text-[10px] uppercase font-bold mb-1">العنوان
+                                                            (AR)</label>
+                                                        <input type="text" name="tool_f<?php echo $i; ?>_t_ar"
+                                                            value="<?php echo htmlspecialchars($settings['tool_f' . $i . '_t_ar'] ?? __('tool_feature_' . $i)); ?>"
+                                                            class="setting-input text-sm">
+                                                    </div>
+                                                    <div>
+                                                        <label
+                                                            class="block text-gray-600 text-[10px] uppercase font-bold mb-1">الوصف
+                                                            (AR)</label>
+                                                        <textarea name="tool_f<?php echo $i; ?>_d_ar" rows="2"
+                                                            class="setting-input text-sm"><?php echo htmlspecialchars($settings['tool_f' . $i . '_d_ar'] ?? __('tool_feature_' . $i . '_desc')); ?></textarea>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <label class="block text-gray-600 text-[10px] uppercase font-bold mb-1">الوصف (AR)</label>
-                                                    <textarea name="tool_f<?php echo $i; ?>_d_ar" rows="2" class="setting-input text-sm"><?php echo htmlspecialchars($settings['tool_f' . $i . '_d_ar'] ?? __('tool_feature_' . $i . '_desc')); ?></textarea>
-                                                </div>
-                                            </div>
-                                            <!-- EN -->
-                                            <div class="space-y-3">
-                                                <div>
-                                                    <label class="block text-gray-600 text-[10px] uppercase font-bold mb-1">Title (EN)</label>
-                                                    <input type="text" name="tool_f<?php echo $i; ?>_t_en" value="<?php echo htmlspecialchars($settings['tool_f' . $i . '_t_en'] ?? ''); ?>" class="setting-input text-sm">
-                                                </div>
-                                                <div>
-                                                    <label class="block text-gray-600 text-[10px] uppercase font-bold mb-1">Description (EN)</label>
-                                                    <textarea name="tool_f<?php echo $i; ?>_d_en" rows="2" class="setting-input text-sm"><?php echo htmlspecialchars($settings['tool_f' . $i . '_d_en'] ?? ''); ?></textarea>
+                                                <!-- EN -->
+                                                <div class="space-y-3">
+                                                    <div>
+                                                        <label
+                                                            class="block text-gray-600 text-[10px] uppercase font-bold mb-1">Title
+                                                            (EN)</label>
+                                                        <input type="text" name="tool_f<?php echo $i; ?>_t_en"
+                                                            value="<?php echo htmlspecialchars($settings['tool_f' . $i . '_t_en'] ?? ''); ?>"
+                                                            class="setting-input text-sm">
+                                                    </div>
+                                                    <div>
+                                                        <label
+                                                            class="block text-gray-600 text-[10px] uppercase font-bold mb-1">Description
+                                                            (EN)</label>
+                                                        <textarea name="tool_f<?php echo $i; ?>_d_en" rows="2"
+                                                            class="setting-input text-sm"><?php echo htmlspecialchars($settings['tool_f' . $i . '_d_en'] ?? ''); ?></textarea>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
                                 <?php endfor; ?>
                             </div>
                         </div>
@@ -1414,10 +1428,10 @@ require_once __DIR__ . '/../includes/header.php';
                     </h3>
 
                     <?php if (isset($smtp_status)): ?>
-                                <div
-                                    class="mb-4 p-4 rounded-xl border <?php echo $smtp_status['success'] ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-red-500/10 border-red-500/20 text-red-400'; ?>">
-                                    <?php echo $smtp_status['message']; ?>
-                                </div>
+                            <div
+                                class="mb-4 p-4 rounded-xl border <?php echo $smtp_status['success'] ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-red-500/10 border-red-500/20 text-red-400'; ?>">
+                                <?php echo $smtp_status['message']; ?>
+                            </div>
                     <?php endif; ?>
 
                     <div class="flex flex-col md:flex-row gap-4 items-end">
@@ -1473,59 +1487,59 @@ require_once __DIR__ . '/../includes/header.php';
                     </div>
                     <div class="grid md:grid-cols-3 gap-6">
                         <?php for ($i = 1; $i <= 3; $i++): ?>
-                                    <div class="space-y-4 p-4 bg-white/5 rounded-xl border border-white/5">
-                                        <h4 class="text-indigo-400 font-bold border-b border-white/5 pb-2 mb-4">
-                                            <?php echo __('feature') . ' ' . $i; ?>
-                                        </h4>
-                                        <!-- Icon Selection -->
-                                        <div>
-                                            <label
-                                                class="block text-gray-500 text-xs font-bold mb-2 uppercase"><?php echo __('choose_icon'); ?></label>
-                                            <select name="feature_<?php echo $i; ?>_icon" class="setting-input text-sm">
-                                                <option
-                                                    value="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                                                    <?php echo ($settings['feature_' . $i . '_icon'] ?? '') == 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' ? 'selected' : ''; ?>>🏢 Office /
-                                                    Targeting</option>
-                                                <option
-                                                    value="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                                                    <?php echo ($settings['feature_' . $i . '_icon'] ?? '') == 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' ? 'selected' : ''; ?>>🔒 Security / Lock</option>
-                                                <option value="M13 10V3L4 14h7v7l9-11h-7z" <?php echo ($settings['feature_' . $i . '_icon'] ?? '') == 'M13 10V3L4 14h7v7l9-11h-7z' ? 'selected' : ''; ?>>⚡ Speed /
-                                                    Lightning</option>
-                                                <option value="M21 12a9 9 0 11-18 0 9 9 0 0118 0z M12 12a3 3 0 100-6 3 3 0 000 6z"
-                                                    <?php echo ($settings['feature_' . $i . '_icon'] ?? '') == 'M21 12a9 9 0 11-18 0 9 9 0 0118 0z M12 12a3 3 0 100-6 3 3 0 000 6z' ? 'selected' : ''; ?>>🎯 Target
-                                                </option>
-                                                <option
-                                                    value="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                                                    <?php echo ($settings['feature_' . $i . '_icon'] ?? '') == 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' ? 'selected' : ''; ?>>📊 Analytics</option>
-                                                <option value="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" <?php echo ($settings['feature_' . $i . '_icon'] ?? '') == 'M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4' ? 'selected' : ''; ?>>📥 Export / Download
-                                                </option>
-                                                <option
-                                                    value="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                                                    <?php echo ($settings['feature_' . $i . '_icon'] ?? '') == 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' ? 'selected' : ''; ?>>👥 Users</option>
-                                            </select>
-                                        </div>
-
-                                        <div>
-                                            <label
-                                                class="block text-gray-500 text-xs font-bold mb-1 uppercase"><?php echo __('arabic'); ?></label>
-                                            <input type="text" name="feature_<?php echo $i; ?>_title_ar"
-                                                value="<?php echo $settings['feature_' . $i . '_title_ar'] ?? ''; ?>"
-                                                class="setting-input mb-2" placeholder="العنوان">
-                                            <textarea name="feature_<?php echo $i; ?>_desc_ar" rows="2"
-                                                class="setting-input text-sm"
-                                                placeholder="الوصف"><?php echo $settings['feature_' . $i . '_desc_ar'] ?? ''; ?></textarea>
-                                        </div>
-                                        <div>
-                                            <label
-                                                class="block text-gray-500 text-xs font-bold mb-1 uppercase"><?php echo __('english'); ?></label>
-                                            <input type="text" name="feature_<?php echo $i; ?>_title_en"
-                                                value="<?php echo $settings['feature_' . $i . '_title_en'] ?? ''; ?>"
-                                                class="setting-input mb-2" placeholder="Title">
-                                            <textarea name="feature_<?php echo $i; ?>_desc_en" rows="2"
-                                                class="setting-input text-sm"
-                                                placeholder="Description"><?php echo $settings['feature_' . $i . '_desc_en'] ?? ''; ?></textarea>
-                                        </div>
+                                <div class="space-y-4 p-4 bg-white/5 rounded-xl border border-white/5">
+                                    <h4 class="text-indigo-400 font-bold border-b border-white/5 pb-2 mb-4">
+                                        <?php echo __('feature') . ' ' . $i; ?>
+                                    </h4>
+                                    <!-- Icon Selection -->
+                                    <div>
+                                        <label
+                                            class="block text-gray-500 text-xs font-bold mb-2 uppercase"><?php echo __('choose_icon'); ?></label>
+                                        <select name="feature_<?php echo $i; ?>_icon" class="setting-input text-sm">
+                                            <option
+                                                value="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                                                <?php echo ($settings['feature_' . $i . '_icon'] ?? '') == 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' ? 'selected' : ''; ?>>🏢 Office /
+                                                Targeting</option>
+                                            <option
+                                                value="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                                                <?php echo ($settings['feature_' . $i . '_icon'] ?? '') == 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' ? 'selected' : ''; ?>>🔒 Security / Lock</option>
+                                            <option value="M13 10V3L4 14h7v7l9-11h-7z" <?php echo ($settings['feature_' . $i . '_icon'] ?? '') == 'M13 10V3L4 14h7v7l9-11h-7z' ? 'selected' : ''; ?>>⚡ Speed /
+                                                Lightning</option>
+                                            <option value="M21 12a9 9 0 11-18 0 9 9 0 0118 0z M12 12a3 3 0 100-6 3 3 0 000 6z"
+                                                <?php echo ($settings['feature_' . $i . '_icon'] ?? '') == 'M21 12a9 9 0 11-18 0 9 9 0 0118 0z M12 12a3 3 0 100-6 3 3 0 000 6z' ? 'selected' : ''; ?>>🎯 Target
+                                            </option>
+                                            <option
+                                                value="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                                                <?php echo ($settings['feature_' . $i . '_icon'] ?? '') == 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' ? 'selected' : ''; ?>>📊 Analytics</option>
+                                            <option value="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" <?php echo ($settings['feature_' . $i . '_icon'] ?? '') == 'M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4' ? 'selected' : ''; ?>>📥 Export / Download
+                                            </option>
+                                            <option
+                                                value="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                                                <?php echo ($settings['feature_' . $i . '_icon'] ?? '') == 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' ? 'selected' : ''; ?>>👥 Users</option>
+                                        </select>
                                     </div>
+
+                                    <div>
+                                        <label
+                                            class="block text-gray-500 text-xs font-bold mb-1 uppercase"><?php echo __('arabic'); ?></label>
+                                        <input type="text" name="feature_<?php echo $i; ?>_title_ar"
+                                            value="<?php echo $settings['feature_' . $i . '_title_ar'] ?? ''; ?>"
+                                            class="setting-input mb-2" placeholder="العنوان">
+                                        <textarea name="feature_<?php echo $i; ?>_desc_ar" rows="2"
+                                            class="setting-input text-sm"
+                                            placeholder="الوصف"><?php echo $settings['feature_' . $i . '_desc_ar'] ?? ''; ?></textarea>
+                                    </div>
+                                    <div>
+                                        <label
+                                            class="block text-gray-500 text-xs font-bold mb-1 uppercase"><?php echo __('english'); ?></label>
+                                        <input type="text" name="feature_<?php echo $i; ?>_title_en"
+                                            value="<?php echo $settings['feature_' . $i . '_title_en'] ?? ''; ?>"
+                                            class="setting-input mb-2" placeholder="Title">
+                                        <textarea name="feature_<?php echo $i; ?>_desc_en" rows="2"
+                                            class="setting-input text-sm"
+                                            placeholder="Description"><?php echo $settings['feature_' . $i . '_desc_en'] ?? ''; ?></textarea>
+                                    </div>
+                                </div>
                         <?php endfor; ?>
                     </div>
                 </div>
@@ -1554,81 +1568,81 @@ require_once __DIR__ . '/../includes/header.php';
                     </div>
                     <div class="grid md:grid-cols-3 gap-6">
                         <?php for ($i = 1; $i <= 6; $i++): ?>
-                                    <div class="space-y-4 p-4 bg-white/5 rounded-xl border border-white/5">
-                                        <h4
-                                            class="text-pink-400 font-bold border-b border-white/5 pb-2 mb-4 flex justify-between items-center">
-                                            <span><?php echo __('service') . ' ' . $i; ?></span>
-                                            <label class="inline-flex items-center cursor-pointer">
-                                                <input type="hidden" name="service_<?php echo $i; ?>_featured" value="0">
-                                                <input type="checkbox" name="service_<?php echo $i; ?>_featured" value="1" <?php echo (getSetting('service_' . $i . '_featured') == '1') ? 'checked' : ''; ?>
-                                                    class="sr-only peer">
-                                                <div
-                                                    class="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-600">
-                                                </div>
-                                                <span
-                                                    class="ms-3 text-xs font-medium text-gray-500"><?php echo __('featured_service'); ?></span>
-                                            </label>
-                                        </h4>
-                                        <!-- Icon Selection -->
-                                        <div>
-                                            <label
-                                                class="block text-gray-500 text-xs font-bold mb-2 uppercase"><?php echo __('choose_icon'); ?></label>
-                                            <select name="service_<?php echo $i; ?>_icon" class="setting-input text-sm">
-                                                <option value="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" <?php echo ($settings['service_' . $i . '_icon'] ?? '') == 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z' ? 'selected' : ''; ?>>🛍️ Marketing / Shop</option>
-                                                <option value="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" <?php echo ($settings['service_' . $i . '_icon'] ?? '') == 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4' ? 'selected' : ''; ?>>
-                                                    💻 Programming / Code</option>
-                                                <option
-                                                    value="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                                                    <?php echo ($settings['service_' . $i . '_icon'] ?? '') == 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' ? 'selected' : ''; ?>>📱 Social Media / Users</option>
-                                                <option
-                                                    value="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                                                    <?php echo ($settings['service_' . $i . '_icon'] ?? '') == 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z' ? 'selected' : ''; ?>>🎨
-                                                    Design / Image</option>
-                                                <option
-                                                    value="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"
-                                                    <?php echo ($settings['service_' . $i . '_icon'] ?? '') == 'M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z' ? 'selected' : ''; ?>>📈 Growth / Chart</option>
-                                                <option
-                                                    value="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                                                    <?php echo ($settings['service_' . $i . '_icon'] ?? '') == 'M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z' ? 'selected' : ''; ?>>💡 Idea
-                                                    / Lightbulb</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label
-                                                class="block text-gray-500 text-xs font-bold mb-1 uppercase"><?php echo __('service_url'); ?></label>
-                                            <input type="text" name="service_<?php echo $i; ?>_url"
-                                                value="<?php echo $settings['service_' . $i . '_url'] ?? ''; ?>"
-                                                class="setting-input mb-4 text-xs font-mono text-indigo-300"
-                                                placeholder="# or https://...">
-                                        </div>
-
-                                        <div>
-                                            <label
-                                                class="block text-gray-500 text-xs font-bold mb-1 uppercase"><?php echo __('arabic'); ?></label>
-                                            <input type="text" name="service_<?php echo $i; ?>_title_ar"
-                                                value="<?php echo $settings['service_' . $i . '_title_ar'] ?? ''; ?>"
-                                                class="setting-input mb-2" placeholder="اسم الخدمة">
-                                            <textarea name="service_<?php echo $i; ?>_desc_ar" rows="4"
-                                                class="setting-input text-sm mb-2"
-                                                placeholder="أدخل المزايا (كل سطر يعتبر نقطة)"><?php echo $settings['service_' . $i . '_desc_ar'] ?? ''; ?></textarea>
-                                            <input type="text" name="service_<?php echo $i; ?>_btn_ar"
-                                                value="<?php echo $settings['service_' . $i . '_btn_ar'] ?? ''; ?>"
-                                                class="setting-input text-xs" placeholder="نص الزر (مثل: اشترك الآن)">
-                                        </div>
-                                        <div>
-                                            <label
-                                                class="block text-gray-500 text-xs font-bold mb-1 uppercase"><?php echo __('english'); ?></label>
-                                            <input type="text" name="service_<?php echo $i; ?>_title_en"
-                                                value="<?php echo $settings['service_' . $i . '_title_en'] ?? ''; ?>"
-                                                class="setting-input mb-2" placeholder="Service Name">
-                                            <textarea name="service_<?php echo $i; ?>_desc_en" rows="4"
-                                                class="setting-input text-sm mb-2"
-                                                placeholder="Enter features (One per line)"><?php echo $settings['service_' . $i . '_desc_en'] ?? ''; ?></textarea>
-                                            <input type="text" name="service_<?php echo $i; ?>_btn_en"
-                                                value="<?php echo $settings['service_' . $i . '_btn_en'] ?? ''; ?>"
-                                                class="setting-input text-xs" placeholder="Button Label (e.g. Get Started)">
-                                        </div>
+                                <div class="space-y-4 p-4 bg-white/5 rounded-xl border border-white/5">
+                                    <h4
+                                        class="text-pink-400 font-bold border-b border-white/5 pb-2 mb-4 flex justify-between items-center">
+                                        <span><?php echo __('service') . ' ' . $i; ?></span>
+                                        <label class="inline-flex items-center cursor-pointer">
+                                            <input type="hidden" name="service_<?php echo $i; ?>_featured" value="0">
+                                            <input type="checkbox" name="service_<?php echo $i; ?>_featured" value="1" <?php echo (getSetting('service_' . $i . '_featured') == '1') ? 'checked' : ''; ?>
+                                                class="sr-only peer">
+                                            <div
+                                                class="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-600">
+                                            </div>
+                                            <span
+                                                class="ms-3 text-xs font-medium text-gray-500"><?php echo __('featured_service'); ?></span>
+                                        </label>
+                                    </h4>
+                                    <!-- Icon Selection -->
+                                    <div>
+                                        <label
+                                            class="block text-gray-500 text-xs font-bold mb-2 uppercase"><?php echo __('choose_icon'); ?></label>
+                                        <select name="service_<?php echo $i; ?>_icon" class="setting-input text-sm">
+                                            <option value="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" <?php echo ($settings['service_' . $i . '_icon'] ?? '') == 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z' ? 'selected' : ''; ?>>🛍️ Marketing / Shop</option>
+                                            <option value="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" <?php echo ($settings['service_' . $i . '_icon'] ?? '') == 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4' ? 'selected' : ''; ?>>
+                                                💻 Programming / Code</option>
+                                            <option
+                                                value="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                                                <?php echo ($settings['service_' . $i . '_icon'] ?? '') == 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' ? 'selected' : ''; ?>>📱 Social Media / Users</option>
+                                            <option
+                                                value="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                                <?php echo ($settings['service_' . $i . '_icon'] ?? '') == 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z' ? 'selected' : ''; ?>>🎨
+                                                Design / Image</option>
+                                            <option
+                                                value="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"
+                                                <?php echo ($settings['service_' . $i . '_icon'] ?? '') == 'M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z' ? 'selected' : ''; ?>>📈 Growth / Chart</option>
+                                            <option
+                                                value="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                                                <?php echo ($settings['service_' . $i . '_icon'] ?? '') == 'M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z' ? 'selected' : ''; ?>>💡 Idea
+                                                / Lightbulb</option>
+                                        </select>
                                     </div>
+                                    <div>
+                                        <label
+                                            class="block text-gray-500 text-xs font-bold mb-1 uppercase"><?php echo __('service_url'); ?></label>
+                                        <input type="text" name="service_<?php echo $i; ?>_url"
+                                            value="<?php echo $settings['service_' . $i . '_url'] ?? ''; ?>"
+                                            class="setting-input mb-4 text-xs font-mono text-indigo-300"
+                                            placeholder="# or https://...">
+                                    </div>
+
+                                    <div>
+                                        <label
+                                            class="block text-gray-500 text-xs font-bold mb-1 uppercase"><?php echo __('arabic'); ?></label>
+                                        <input type="text" name="service_<?php echo $i; ?>_title_ar"
+                                            value="<?php echo $settings['service_' . $i . '_title_ar'] ?? ''; ?>"
+                                            class="setting-input mb-2" placeholder="اسم الخدمة">
+                                        <textarea name="service_<?php echo $i; ?>_desc_ar" rows="4"
+                                            class="setting-input text-sm mb-2"
+                                            placeholder="أدخل المزايا (كل سطر يعتبر نقطة)"><?php echo $settings['service_' . $i . '_desc_ar'] ?? ''; ?></textarea>
+                                        <input type="text" name="service_<?php echo $i; ?>_btn_ar"
+                                            value="<?php echo $settings['service_' . $i . '_btn_ar'] ?? ''; ?>"
+                                            class="setting-input text-xs" placeholder="نص الزر (مثل: اشترك الآن)">
+                                    </div>
+                                    <div>
+                                        <label
+                                            class="block text-gray-500 text-xs font-bold mb-1 uppercase"><?php echo __('english'); ?></label>
+                                        <input type="text" name="service_<?php echo $i; ?>_title_en"
+                                            value="<?php echo $settings['service_' . $i . '_title_en'] ?? ''; ?>"
+                                            class="setting-input mb-2" placeholder="Service Name">
+                                        <textarea name="service_<?php echo $i; ?>_desc_en" rows="4"
+                                            class="setting-input text-sm mb-2"
+                                            placeholder="Enter features (One per line)"><?php echo $settings['service_' . $i . '_desc_en'] ?? ''; ?></textarea>
+                                        <input type="text" name="service_<?php echo $i; ?>_btn_en"
+                                            value="<?php echo $settings['service_' . $i . '_btn_en'] ?? ''; ?>"
+                                            class="setting-input text-xs" placeholder="Button Label (e.g. Get Started)">
+                                    </div>
+                                </div>
                         <?php endfor; ?>
                     </div>
                 </div>
@@ -1659,29 +1673,29 @@ require_once __DIR__ . '/../includes/header.php';
                     </div>
                     <div class="grid md:grid-cols-3 gap-6">
                         <?php for ($i = 1; $i <= 3; $i++): ?>
-                                    <div class="space-y-4 p-4 bg-white/5 rounded-xl border border-white/5">
-                                        <h4 class="text-purple-400 font-bold border-b border-white/5 pb-2 mb-4">
-                                            <?php echo __('step') . ' ' . $i; ?>
-                                        </h4>
-                                        <div>
-                                            <label
-                                                class="block text-gray-500 text-xs font-bold mb-1 uppercase"><?php echo __('arabic'); ?></label>
-                                            <input type="text" name="step_<?php echo $i; ?>_title_ar"
-                                                value="<?php echo $settings['step_' . $i . '_title_ar'] ?? ''; ?>"
-                                                class="setting-input mb-2" placeholder="العنوان">
-                                            <textarea name="step_<?php echo $i; ?>_desc_ar" rows="2" class="setting-input text-sm"
-                                                placeholder="الوصف"><?php echo $settings['step_' . $i . '_desc_ar'] ?? ''; ?></textarea>
-                                        </div>
-                                        <div>
-                                            <label
-                                                class="block text-gray-500 text-xs font-bold mb-1 uppercase"><?php echo __('english'); ?></label>
-                                            <input type="text" name="step_<?php echo $i; ?>_title_en"
-                                                value="<?php echo $settings['step_' . $i . '_title_en'] ?? ''; ?>"
-                                                class="setting-input mb-2" placeholder="Title">
-                                            <textarea name="step_<?php echo $i; ?>_desc_en" rows="2" class="setting-input text-sm"
-                                                placeholder="Description"><?php echo $settings['step_' . $i . '_desc_en'] ?? ''; ?></textarea>
-                                        </div>
+                                <div class="space-y-4 p-4 bg-white/5 rounded-xl border border-white/5">
+                                    <h4 class="text-purple-400 font-bold border-b border-white/5 pb-2 mb-4">
+                                        <?php echo __('step') . ' ' . $i; ?>
+                                    </h4>
+                                    <div>
+                                        <label
+                                            class="block text-gray-500 text-xs font-bold mb-1 uppercase"><?php echo __('arabic'); ?></label>
+                                        <input type="text" name="step_<?php echo $i; ?>_title_ar"
+                                            value="<?php echo $settings['step_' . $i . '_title_ar'] ?? ''; ?>"
+                                            class="setting-input mb-2" placeholder="العنوان">
+                                        <textarea name="step_<?php echo $i; ?>_desc_ar" rows="2" class="setting-input text-sm"
+                                            placeholder="الوصف"><?php echo $settings['step_' . $i . '_desc_ar'] ?? ''; ?></textarea>
                                     </div>
+                                    <div>
+                                        <label
+                                            class="block text-gray-500 text-xs font-bold mb-1 uppercase"><?php echo __('english'); ?></label>
+                                        <input type="text" name="step_<?php echo $i; ?>_title_en"
+                                            value="<?php echo $settings['step_' . $i . '_title_en'] ?? ''; ?>"
+                                            class="setting-input mb-2" placeholder="Title">
+                                        <textarea name="step_<?php echo $i; ?>_desc_en" rows="2" class="setting-input text-sm"
+                                            placeholder="Description"><?php echo $settings['step_' . $i . '_desc_en'] ?? ''; ?></textarea>
+                                    </div>
+                                </div>
                         <?php endfor; ?>
                     </div>
                 </div>
@@ -1697,21 +1711,21 @@ require_once __DIR__ . '/../includes/header.php';
                         $stats = ['users', 'leads', 'satisfaction', 'support'];
                         foreach ($stats as $stat):
                             ?>
-                                    <div class="p-4 bg-white/5 rounded-xl border border-white/5">
-                                        <label
-                                            class="block text-emerald-400 text-xs font-bold mb-2 uppercase"><?php echo __('stat_' . $stat); ?></label>
-                                        <input type="text" name="stat_<?php echo $stat; ?>_value"
-                                            value="<?php echo $settings['stat_' . $stat . '_value'] ?? ''; ?>"
-                                            class="setting-input mb-2 font-mono" placeholder="5K+, 99%, etc">
-                                        <div class="space-y-2 text-xs">
-                                            <input type="text" name="stat_<?php echo $stat; ?>_ar"
-                                                value="<?php echo $settings['stat_' . $stat . '_ar'] ?? ''; ?>"
-                                                class="setting-input py-1.5" placeholder="التسمية (عربي)">
-                                            <input type="text" name="stat_<?php echo $stat; ?>_en"
-                                                value="<?php echo $settings['stat_' . $stat . '_en'] ?? ''; ?>"
-                                                class="setting-input py-1.5" placeholder="Label (English)">
-                                        </div>
+                                <div class="p-4 bg-white/5 rounded-xl border border-white/5">
+                                    <label
+                                        class="block text-emerald-400 text-xs font-bold mb-2 uppercase"><?php echo __('stat_' . $stat); ?></label>
+                                    <input type="text" name="stat_<?php echo $stat; ?>_value"
+                                        value="<?php echo $settings['stat_' . $stat . '_value'] ?? ''; ?>"
+                                        class="setting-input mb-2 font-mono" placeholder="5K+, 99%, etc">
+                                    <div class="space-y-2 text-xs">
+                                        <input type="text" name="stat_<?php echo $stat; ?>_ar"
+                                            value="<?php echo $settings['stat_' . $stat . '_ar'] ?? ''; ?>"
+                                            class="setting-input py-1.5" placeholder="التسمية (عربي)">
+                                        <input type="text" name="stat_<?php echo $stat; ?>_en"
+                                            value="<?php echo $settings['stat_' . $stat . '_en'] ?? ''; ?>"
+                                            class="setting-input py-1.5" placeholder="Label (English)">
                                     </div>
+                                </div>
                         <?php endforeach; ?>
                     </div>
                 </div>
@@ -1741,67 +1755,67 @@ require_once __DIR__ . '/../includes/header.php';
 
                     <div class="grid md:grid-cols-2 gap-6">
                         <?php for ($i = 1; $i <= 4; $i++): ?>
-                                    <div class="p-4 bg-white/5 rounded-xl border border-white/5 space-y-4">
-                                        <h4 class="text-indigo-400 font-bold border-b border-white/5 pb-2 mb-2 text-sm uppercase">
-                                            <?php echo __('testimonial') . ' ' . $i; ?>
-                                        </h4>
-                                        <div class="grid grid-cols-2 gap-4">
-                                            <div class="space-y-3">
-                                                <h5 class="text-[10px] text-gray-500 font-black uppercase">
-                                                    <?php echo __('arabic'); ?>
-                                                </h5>
-                                                <textarea name="testimonial_<?php echo $i; ?>_content_ar" rows="3"
-                                                    class="setting-input text-xs"
-                                                    placeholder="نص الرأي"><?php echo $settings['testimonial_' . $i . '_content_ar'] ?? ''; ?></textarea>
-                                                <input type="text" name="testimonial_<?php echo $i; ?>_author_ar"
-                                                    value="<?php echo $settings['testimonial_' . $i . '_author_ar'] ?? ''; ?>"
-                                                    class="setting-input text-xs" placeholder="اسم العميل">
-                                            </div>
-                                            <div class="space-y-3">
-                                                <h5 class="text-[10px] text-gray-500 font-black uppercase">
-                                                    <?php echo __('english'); ?>
-                                                </h5>
-                                                <textarea name="testimonial_<?php echo $i; ?>_content_en" rows="3"
-                                                    class="setting-input text-xs"
-                                                    placeholder="Testimonial Content"><?php echo $settings['testimonial_' . $i . '_content_en'] ?? ''; ?></textarea>
-                                                <input type="text" name="testimonial_<?php echo $i; ?>_author_en"
-                                                    value="<?php echo $settings['testimonial_' . $i . '_author_en'] ?? ''; ?>"
-                                                    class="setting-input text-xs" placeholder="Author Name">
-                                            </div>
+                                <div class="p-4 bg-white/5 rounded-xl border border-white/5 space-y-4">
+                                    <h4 class="text-indigo-400 font-bold border-b border-white/5 pb-2 mb-2 text-sm uppercase">
+                                        <?php echo __('testimonial') . ' ' . $i; ?>
+                                    </h4>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div class="space-y-3">
+                                            <h5 class="text-[10px] text-gray-500 font-black uppercase">
+                                                <?php echo __('arabic'); ?>
+                                            </h5>
+                                            <textarea name="testimonial_<?php echo $i; ?>_content_ar" rows="3"
+                                                class="setting-input text-xs"
+                                                placeholder="نص الرأي"><?php echo $settings['testimonial_' . $i . '_content_ar'] ?? ''; ?></textarea>
+                                            <input type="text" name="testimonial_<?php echo $i; ?>_author_ar"
+                                                value="<?php echo $settings['testimonial_' . $i . '_author_ar'] ?? ''; ?>"
+                                                class="setting-input text-xs" placeholder="اسم العميل">
                                         </div>
-                                        <!-- Avatar Upload -->
-                                        <div class="pt-4 border-t border-white/5">
-                                            <label
-                                                class="block text-[10px] text-gray-500 font-black uppercase mb-3"><?php echo __('testimonial_image'); ?></label>
-                                            <div class="flex items-center gap-4">
-                                                <div
-                                                    class="w-12 h-12 rounded-xl bg-white/5 border border-white/5 overflow-hidden flex-shrink-0">
-                                                    <?php if (!empty($settings['testimonial_' . $i . '_image'])): ?>
-                                                                <img src="../uploads/<?php echo $settings['testimonial_' . $i . '_image']; ?>"
-                                                                    class="w-full h-full object-cover">
-                                                    <?php else: ?>
-                                                                <div class="w-full h-full flex items-center justify-center text-gray-600">
-                                                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z">
-                                                                        </path>
-                                                                    </svg>
-                                                                </div>
-                                                    <?php endif; ?>
-                                                </div>
-                                                <div class="flex-1 space-y-2">
-                                                    <input type="file" name="testimonial_<?php echo $i; ?>_image" accept="image/*"
-                                                        class="w-full text-[10px] text-gray-500 file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-[10px] file:font-semibold file:bg-indigo-600/20 file:text-indigo-400 hover:file:bg-indigo-600/30">
-                                                    <?php if (!empty($settings['testimonial_' . $i . '_image'])): ?>
-                                                                <button type="submit" name="delete_testimonial_<?php echo $i; ?>_image"
-                                                                    class="text-[10px] text-red-400 hover:text-red-300 font-bold underline transition-colors">
-                                                                    Delete Image
-                                                                </button>
-                                                    <?php endif; ?>
-                                                </div>
+                                        <div class="space-y-3">
+                                            <h5 class="text-[10px] text-gray-500 font-black uppercase">
+                                                <?php echo __('english'); ?>
+                                            </h5>
+                                            <textarea name="testimonial_<?php echo $i; ?>_content_en" rows="3"
+                                                class="setting-input text-xs"
+                                                placeholder="Testimonial Content"><?php echo $settings['testimonial_' . $i . '_content_en'] ?? ''; ?></textarea>
+                                            <input type="text" name="testimonial_<?php echo $i; ?>_author_en"
+                                                value="<?php echo $settings['testimonial_' . $i . '_author_en'] ?? ''; ?>"
+                                                class="setting-input text-xs" placeholder="Author Name">
+                                        </div>
+                                    </div>
+                                    <!-- Avatar Upload -->
+                                    <div class="pt-4 border-t border-white/5">
+                                        <label
+                                            class="block text-[10px] text-gray-500 font-black uppercase mb-3"><?php echo __('testimonial_image'); ?></label>
+                                        <div class="flex items-center gap-4">
+                                            <div
+                                                class="w-12 h-12 rounded-xl bg-white/5 border border-white/5 overflow-hidden flex-shrink-0">
+                                                <?php if (!empty($settings['testimonial_' . $i . '_image'])): ?>
+                                                        <img src="../uploads/<?php echo $settings['testimonial_' . $i . '_image']; ?>"
+                                                            class="w-full h-full object-cover">
+                                                <?php else: ?>
+                                                        <div class="w-full h-full flex items-center justify-center text-gray-600">
+                                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z">
+                                                                </path>
+                                                            </svg>
+                                                        </div>
+                                                <?php endif; ?>
+                                            </div>
+                                            <div class="flex-1 space-y-2">
+                                                <input type="file" name="testimonial_<?php echo $i; ?>_image" accept="image/*"
+                                                    class="w-full text-[10px] text-gray-500 file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-[10px] file:font-semibold file:bg-indigo-600/20 file:text-indigo-400 hover:file:bg-indigo-600/30">
+                                                <?php if (!empty($settings['testimonial_' . $i . '_image'])): ?>
+                                                        <button type="submit" name="delete_testimonial_<?php echo $i; ?>_image"
+                                                            class="text-[10px] text-red-400 hover:text-red-300 font-bold underline transition-colors">
+                                                            Delete Image
+                                                        </button>
+                                                <?php endif; ?>
                                             </div>
                                         </div>
                                     </div>
+                                </div>
                         <?php endfor; ?>
                     </div>
                 </div>
@@ -1831,33 +1845,33 @@ require_once __DIR__ . '/../includes/header.php';
 
                     <div class="space-y-6">
                         <?php for ($i = 1; $i <= 5; $i++): ?>
-                                    <div class="p-4 bg-white/5 rounded-xl border border-white/5 space-y-4">
-                                        <h4 class="text-yellow-400 font-bold border-b border-white/5 pb-2 mb-2 text-sm uppercase">
-                                            <?php echo __('faq') . ' ' . $i; ?>
-                                        </h4>
-                                        <div class="grid md:grid-cols-2 gap-6">
-                                            <div class="space-y-3">
-                                                <h5 class="text-[10px] text-gray-500 font-black uppercase">
-                                                    <?php echo __('arabic'); ?>
-                                                </h5>
-                                                <input type="text" name="faq_<?php echo $i; ?>_q_ar"
-                                                    value="<?php echo $settings['faq_' . $i . '_q_ar'] ?? ''; ?>"
-                                                    class="setting-input text-xs" placeholder="السؤال">
-                                                <textarea name="faq_<?php echo $i; ?>_a_ar" rows="2" class="setting-input text-xs"
-                                                    placeholder="الإجابة"><?php echo $settings['faq_' . $i . '_a_ar'] ?? ''; ?></textarea>
-                                            </div>
-                                            <div class="space-y-3">
-                                                <h5 class="text-[10px] text-gray-500 font-black uppercase">
-                                                    <?php echo __('english'); ?>
-                                                </h5>
-                                                <input type="text" name="faq_<?php echo $i; ?>_q_en"
-                                                    value="<?php echo $settings['faq_' . $i . '_q_en'] ?? ''; ?>"
-                                                    class="setting-input text-xs" placeholder="Question">
-                                                <textarea name="faq_<?php echo $i; ?>_a_en" rows="2" class="setting-input text-xs"
-                                                    placeholder="Answer"><?php echo $settings['faq_' . $i . '_a_en'] ?? ''; ?></textarea>
-                                            </div>
+                                <div class="p-4 bg-white/5 rounded-xl border border-white/5 space-y-4">
+                                    <h4 class="text-yellow-400 font-bold border-b border-white/5 pb-2 mb-2 text-sm uppercase">
+                                        <?php echo __('faq') . ' ' . $i; ?>
+                                    </h4>
+                                    <div class="grid md:grid-cols-2 gap-6">
+                                        <div class="space-y-3">
+                                            <h5 class="text-[10px] text-gray-500 font-black uppercase">
+                                                <?php echo __('arabic'); ?>
+                                            </h5>
+                                            <input type="text" name="faq_<?php echo $i; ?>_q_ar"
+                                                value="<?php echo $settings['faq_' . $i . '_q_ar'] ?? ''; ?>"
+                                                class="setting-input text-xs" placeholder="السؤال">
+                                            <textarea name="faq_<?php echo $i; ?>_a_ar" rows="2" class="setting-input text-xs"
+                                                placeholder="الإجابة"><?php echo $settings['faq_' . $i . '_a_ar'] ?? ''; ?></textarea>
+                                        </div>
+                                        <div class="space-y-3">
+                                            <h5 class="text-[10px] text-gray-500 font-black uppercase">
+                                                <?php echo __('english'); ?>
+                                            </h5>
+                                            <input type="text" name="faq_<?php echo $i; ?>_q_en"
+                                                value="<?php echo $settings['faq_' . $i . '_q_en'] ?? ''; ?>"
+                                                class="setting-input text-xs" placeholder="Question">
+                                            <textarea name="faq_<?php echo $i; ?>_a_en" rows="2" class="setting-input text-xs"
+                                                placeholder="Answer"><?php echo $settings['faq_' . $i . '_a_en'] ?? ''; ?></textarea>
                                         </div>
                                     </div>
+                                </div>
                         <?php endfor; ?>
                     </div>
                 </div>
@@ -2104,42 +2118,42 @@ require_once __DIR__ . '/../includes/header.php';
                                 $pStmt = $pdo->query("SELECT * FROM portfolio_items ORDER BY display_order ASC, id DESC");
                                 while ($pRow = $pStmt->fetch(PDO::FETCH_ASSOC)):
                                     ?>
-                                            <tr class="hover:bg-white/[0.02] transition-colors group">
-                                                <td class="px-4 py-4 text-gray-500 font-mono"><?php echo $pRow['display_order']; ?>
-                                                </td>
-                                                <td class="px-4 py-4">
-                                                    <div class="font-bold text-white"><?php echo $pRow['title_' . $lang]; ?></div>
-                                                    <div class="text-[10px] text-blue-400">
-                                                        <?php echo htmlspecialchars($pRow['category_' . $lang] ?? ''); ?>
-                                                    </div>
-                                                </td>
-                                                <td class="px-4 py-4">
-                                                    <span
-                                                        class="px-2 py-0.5 rounded text-[10px] uppercase font-bold <?php echo $pRow['item_type'] == 'iframe' ? 'bg-indigo-500/20 text-indigo-400' : 'bg-green-500/20 text-green-400'; ?>">
-                                                        <?php echo __($pRow['item_type']); ?>
-                                                    </span>
-                                                </td>
-                                                <td class="px-4 py-4 text-right rtl:text-left flex items-center justify-end gap-2">
-                                                    <button type="button"
-                                                        onclick='openEditPortfolio(<?php echo json_encode($pRow); ?>)'
-                                                        class="p-2 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                                d="M11 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-5M18.364 5.364a9 9 0 1112.728 12.728L5.364 18.364m12.728-12.728L5.364 5.364">
-                                                            </path>
-                                                        </svg>
-                                                    </button>
-                                                    <button type="button"
-                                                        onclick="confirmDeletePortfolio(<?php echo $pRow['id']; ?>)"
-                                                        class="p-2 text-red-500 hover:bg-red-500/20 rounded-lg transition-colors">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                                                            </path>
-                                                        </svg>
-                                                    </button>
-                                                </td>
-                                            </tr>
+                                        <tr class="hover:bg-white/[0.02] transition-colors group">
+                                            <td class="px-4 py-4 text-gray-500 font-mono"><?php echo $pRow['display_order']; ?>
+                                            </td>
+                                            <td class="px-4 py-4">
+                                                <div class="font-bold text-white"><?php echo $pRow['title_' . $lang]; ?></div>
+                                                <div class="text-[10px] text-blue-400">
+                                                    <?php echo htmlspecialchars($pRow['category_' . $lang] ?? ''); ?>
+                                                </div>
+                                            </td>
+                                            <td class="px-4 py-4">
+                                                <span
+                                                    class="px-2 py-0.5 rounded text-[10px] uppercase font-bold <?php echo $pRow['item_type'] == 'iframe' ? 'bg-indigo-500/20 text-indigo-400' : 'bg-green-500/20 text-green-400'; ?>">
+                                                    <?php echo __($pRow['item_type']); ?>
+                                                </span>
+                                            </td>
+                                            <td class="px-4 py-4 text-right rtl:text-left flex items-center justify-end gap-2">
+                                                <button type="button"
+                                                    onclick='openEditPortfolio(<?php echo json_encode($pRow); ?>)'
+                                                    class="p-2 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                            d="M11 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-5M18.364 5.364a9 9 0 1112.728 12.728L5.364 18.364m12.728-12.728L5.364 5.364">
+                                                        </path>
+                                                    </svg>
+                                                </button>
+                                                <button type="button"
+                                                    onclick="confirmDeletePortfolio(<?php echo $pRow['id']; ?>)"
+                                                    class="p-2 text-red-500 hover:bg-red-500/20 rounded-lg transition-colors">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                                        </path>
+                                                    </svg>
+                                                </button>
+                                            </td>
+                                        </tr>
                                 <?php endwhile; ?>
                             </tbody>
                         </table>
