@@ -1,5 +1,5 @@
 <?php
-// Disable output, start buffering
+// Disable Output first
 error_reporting(0);
 ini_set('display_errors', 0);
 ob_start();
@@ -10,6 +10,21 @@ require_once __DIR__ . '/../includes/facebook_api.php';
 // Prepare JSON Header
 ob_clean();
 header('Content-Type: application/json');
+
+// Setup Logging
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/debug_errors.txt');
+
+// Shutdown Handler
+register_shutdown_function(function () {
+    $error = error_get_last();
+    if ($error !== NULL && $error['type'] === E_ERROR) {
+        $logMsg = date('Y-m-d H:i:s') . " FATAL BATCH ERROR: " . $error['message'] . " in " . $error['file'] . ":" . $error['line'] . "\n";
+        file_put_contents(__DIR__ . '/debug_errors.txt', $logMsg, FILE_APPEND);
+        @ob_clean();
+        echo json_encode(['status' => 'stopped', 'error' => 'Server Fatal Error: See logs']);
+    }
+});
 
 if (!isLoggedIn()) {
     echo json_encode(['status' => 'error', 'message' => 'Unauthorized']);
@@ -34,7 +49,7 @@ $processed_results = [];
 
 try {
     // 1. Fetch Pending Items
-    // REMOVED 'attempts_count' and 'next_retry_at' columns/conditions to be safe for production
+    // NO 'attempts_count', NO 'next_retry_at' to be safe
     $qStmt = $pdo->prepare("
         SELECT q.id as q_id, c.message_text, c.image_url, 
                l.fb_user_id, l.fb_user_name, p.page_access_token, p.page_id as fb_page_id,
@@ -54,7 +69,7 @@ try {
 
     // 2. Check if empty
     if (empty($items)) {
-        // Double check if really done or just paused/stopped
+        // Double check pending count
         $stmt = $pdo->prepare("SELECT COUNT(*) FROM campaign_queue WHERE campaign_id = ? AND status IN ('pending', 'processing')");
         $stmt->execute([$campaign_id]);
         $pendingTotal = $stmt->fetchColumn();
@@ -64,8 +79,7 @@ try {
             $pdo->prepare("UPDATE campaigns SET status = 'completed' WHERE id = ?")->execute([$campaign_id]);
             echo json_encode(['status' => 'completed', 'message' => 'All messages processed']);
         } else {
-            // Pending items exist but not picked up (maybe paused campaign or limit reached?)
-            // Just say waiting
+            // Just wait (no retry logic here to avoid DB errors)
             echo json_encode([
                 'status' => 'waiting_retry',
                 'message' => 'Processing pending items...',
@@ -84,7 +98,7 @@ try {
         $message = str_replace('{{name}}', $item['fb_user_name'] ?? 'User', $message);
 
         // 4. Send API Request
-        // Use Robust Send
+        // Using updated FacebookAPI
         $response = $fb->sendMessage(
             $item['fb_page_id'],
             $item['page_access_token'],
@@ -131,11 +145,10 @@ try {
     ]);
 
 } catch (Exception $e) {
-    // Catch-all for database errors
-    ob_clean(); // Remove any HTML garbage
+    ob_clean();
     echo json_encode([
         'status' => 'stopped',
-        'error' => 'Server Error: ' . $e->getMessage()
+        'error' => 'Batch Exception: ' . $e->getMessage()
     ]);
 }
 ?>
