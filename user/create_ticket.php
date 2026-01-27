@@ -15,7 +15,6 @@ $success = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $subject = trim($_POST['subject'] ?? '');
     $message = trim($_POST['message'] ?? '');
-    $exchange_id = !empty($_POST['exchange_id']) ? (int) $_POST['exchange_id'] : null;
 
     if (empty($subject) || empty($message)) {
         $error = $lang === 'ar' ? 'الموضوع والرسالة مطلوبان' : 'Subject and message are required.';
@@ -23,9 +22,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $pdo->beginTransaction();
 
-            // Insert Ticket with campaign_id
-            $stmt = $pdo->prepare("INSERT INTO support_tickets (user_id, campaign_id, subject, status) VALUES (?, ?, ?, 'open')");
-            $stmt->execute([$user_id, $campaign_id, $subject]);
+            // Insert Simple Ticket (No relations for now)
+            $stmt = $pdo->prepare("INSERT INTO support_tickets (user_id, subject, status) VALUES (?, ?, 'open')");
+            $stmt->execute([$user_id, $subject]);
             $ticket_id = $pdo->lastInsertId();
 
             // Insert Initial Message
@@ -45,14 +44,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Fetch User's Recent Campaigns for Dropdown
-$stmt = $pdo->prepare("SELECT id, campaign_name as name, status, created_at 
-                       FROM campaigns 
-                       WHERE user_id = ? 
-                       ORDER BY created_at DESC LIMIT 20");
-$stmt->execute([$user_id]);
-$campaigns = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
@@ -62,67 +53,47 @@ require_once __DIR__ . '/../includes/header.php';
 
     <div class="flex-1 min-w-0 p-4 md:p-8">
         <div class="max-w-3xl mx-auto">
-            <h1 class="text-3xl font-bold mb-8">
-                <?php echo __('create_ticket'); ?>
-            </h1>
+            <div class="flex items-center gap-4 mb-8">
+               <a href="support.php" class="p-2 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-all">
+                    <svg class="w-5 h-5 <?php echo $lang == 'ar' ? 'rotate-180' : ''; ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+               </a>
+               <h1 class="text-3xl font-bold"><?php echo __('create_ticket'); ?></h1>
+            </div>
 
             <?php if ($error): ?>
-                <div class="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl mb-6">
-                    <?php echo $error; ?>
-                </div>
+                    <div class="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl mb-6 flex items-center gap-3">
+                        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span><?php echo $error; ?></span>
+                    </div>
             <?php endif; ?>
 
-            <div class="glass-card p-8 rounded-2xl">
+            <div class="glass-card p-8 rounded-[2rem] border border-white/10 shadow-2xl">
                 <form method="POST" class="space-y-6">
 
                     <!-- Subject -->
-                    <div>
-                        <label class="block text-gray-400 text-sm font-bold mb-2">
+                    <div class="space-y-2">
+                        <label class="block text-gray-400 text-sm font-bold ml-1">
                             <?php echo __('subject'); ?>
                         </label>
-                        <input type="text" name="subject" required
-                            class="w-full bg-gray-900/50 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-all">
-                    </div>
-
-                    <!-- Related Campaign (Optional) -->
-                    <div>
-                        <label class="block text-gray-400 text-sm font-bold mb-2">
-                            <?php echo __('related_campaign'); ?>
-                        </label>
-                        <select name="campaign_id"
-                            class="w-full bg-gray-900/50 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-all">
-                            <option value="">
-                                <?php echo __('general_inquiry'); ?>
-                            </option>
-                            <?php foreach ($campaigns as $camp): ?>
-                                <option value="<?php echo $camp['id']; ?>">
-                                    #<?php echo $camp['id']; ?> - <?php echo htmlspecialchars($camp['name']); ?>
-                                    (<?php echo $camp['status']; ?>)
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                        <p class="text-xs text-gray-500 mt-2">
-                            <?php echo __('select_campaign_hint') ?? 'Select the campaign related to this ticket (optional).'; ?>
-                        </p>
+                        <input type="text" name="subject" required placeholder="<?php echo $lang == 'ar' ? 'اكتب عنوان تذكرتك هنا...' : 'Enter your ticket subject...'; ?>"
+                            class="w-full bg-slate-900/50 border border-slate-700 rounded-2xl px-5 py-4 text-white focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all placeholder:text-gray-600 font-medium">
                     </div>
 
                     <!-- Message -->
-                    <div>
-                        <label class="block text-gray-400 text-sm font-bold mb-2">
+                    <div class="space-y-2">
+                        <label class="block text-gray-400 text-sm font-bold ml-1">
                             <?php echo __('your_message'); ?>
                         </label>
-                        <textarea name="message" rows="6" required
-                            class="w-full bg-gray-900/50 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-all"></textarea>
+                        <textarea name="message" rows="6" required placeholder="<?php echo $lang == 'ar' ? 'اشرح مشكلتك بالتفصيل هنا...' : 'Explain your issue in detail here...'; ?>"
+                            class="w-full bg-slate-900/50 border border-slate-700 rounded-2xl px-5 py-4 text-white focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all placeholder:text-gray-600 font-medium"></textarea>
                     </div>
 
                     <div class="flex justify-end gap-4 pt-4">
-                        <a href="support.php"
-                            class="px-6 py-3 rounded-xl text-gray-400 hover:text-white font-bold transition-colors">
-                            <?php echo __('cancel'); ?>
-                        </a>
                         <button type="submit"
-                            class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-xl shadow-lg shadow-indigo-500/30 font-bold transition-all">
-                            <?php echo __('submit'); ?>
+                            class="group relative bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white px-10 py-4 rounded-2xl shadow-xl shadow-indigo-500/20 font-bold transition-all hover:-translate-y-1 flex items-center gap-2 overflow-hidden">
+                            <div class="absolute inset-0 bg-white/20 blur-xl group-hover:opacity-100 opacity-0 transition-opacity duration-500"></div>
+                            <span class="relative z-10"><?php echo __('submit'); ?></span>
+                            <svg class="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                         </button>
                     </div>
 
