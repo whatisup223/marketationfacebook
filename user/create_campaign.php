@@ -13,9 +13,20 @@ $user_id = $_SESSION['user_id'];
 $pdo = getDB();
 
 // Handle PRG (Post-Redirect-Get) to avoid resubmission on refresh
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['leads']) && !isset($_POST['save_campaign'])) {
+// Handle PRG (Post-Redirect-Get) to avoid resubmission on refresh
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['leads']) || isset($_POST['ids_json'])) && !isset($_POST['save_campaign'])) {
+
+    // Handle JSON input (for large datasets bypass max_input_vars)
+    if (isset($_POST['ids_json']) && !empty($_POST['ids_json'])) {
+        $leads = json_decode($_POST['ids_json'], true);
+        if (!is_array($leads))
+            $leads = [];
+    } else {
+        $leads = $_POST['leads'] ?? [];
+    }
+
     $_SESSION['campaign_setup'] = [
-        'leads' => $_POST['leads'],
+        'leads' => $leads,
         'page_id' => $_POST['page_id']
     ];
     header("Location: create_campaign.php");
@@ -54,7 +65,13 @@ if ($edit_id) {
 // 2. Get data from session or POST (Standard flow)
 $setup = $_SESSION['campaign_setup'] ?? [];
 if (!$edit_id) {
-    $selected_leads = $_POST['leads'] ?? $setup['leads'] ?? [];
+    if (isset($_POST['ids_json']) && !empty($_POST['ids_json'])) {
+        $selected_leads = json_decode($_POST['ids_json'], true);
+        if (!is_array($selected_leads))
+            $selected_leads = [];
+    } else {
+        $selected_leads = $_POST['leads'] ?? $setup['leads'] ?? [];
+    }
     $page_id = $_POST['page_id'] ?? $setup['page_id'] ?? 0;
 }
 
@@ -107,37 +124,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_campaign'])) {
     $stmt->execute([$user_id, $page_id, $name, $text, $image_url, $initial_status, 0, $scheduled_at]); // Set total_leads to 0 initially, will update later
     $campaign_id = $pdo->lastInsertId();
 
-    // Insert into Queue (Mapping FB ID to Internal Database ID)
-    // We search across all pages owned by this user just in case, but prioritize the current page_id
-    $getLeadId = $pdo->prepare("SELECT id FROM fb_leads WHERE fb_user_id = ? AND page_id = ?");
-    $queueStmt = $pdo->prepare("INSERT INTO campaign_queue (campaign_id, lead_id, status) VALUES (?, ?, 'pending')");
+    // Increase limits for processing large batches
+    set_time_limit(0);
+    ini_set('memory_limit', '1024M');
 
+    // Insert into Queue (Optimized Bulk Insert)
+    // We assume incoming leads are Internal DB IDs (since they come from our system)
+    $queueStmt = $pdo->prepare("INSERT IGNORE INTO campaign_queue (campaign_id, lead_id, status) VALUES (?, ?, 'pending')");
+
+    $pdo->beginTransaction();
     $inserted_count = 0;
-    foreach ($selected_leads as $fb_user_id) {
-        $getLeadId->execute([(string) $fb_user_id, (int) $page['id']]); // Use $page['id'] for the page's internal ID
-        $real_id = $getLeadId->fetchColumn();
-
-        if ($real_id) {
-            $queueStmt->execute([$campaign_id, $real_id]);
+    
+    // Chunk processing to avoid memory issues and gigantic queries
+    // Although we are using prepared statements row-by-row here inside transaction for safety, 
+    // we can optimize further by multi-value insert if needed, but transaction + simple insert is usually fast enough for 10k.
+    // Let's stick to transaction to speed it up significantly compared to auto-commit.
+    
+    foreach ($selected_leads as $lead_id) {
+        if (filter_var($lead_id, FILTER_VALIDATE_INT)) {
+            $queueStmt->execute([$campaign_id, $lead_id]);
             $inserted_count++;
         }
     }
-
-    if ($inserted_count === 0) {
-        // Fallback: If no leads found by FB ID, maybe the selected_leads ARE the internal IDs?
-        // This can happen if the leads array was already processed or came from a different source.
-        foreach ($selected_leads as $potential_id) {
-            // Ensure it's a valid integer ID
-            if (filter_var($potential_id, FILTER_VALIDATE_INT)) {
-                $check = $pdo->prepare("SELECT id FROM fb_leads WHERE id = ? AND page_id = ?");
-                $check->execute([$potential_id, (int) $page['id']]);
-                if ($check->fetch()) {
-                    $queueStmt->execute([$campaign_id, $potential_id]);
-                    $inserted_count++;
-                }
-            }
-        }
-    }
+    
+    $pdo->commit();
 
     // Update campaign with actual count of queue items
     $pdo->prepare("UPDATE campaigns SET total_leads = ? WHERE id = ?")->execute([$inserted_count, $campaign_id]);
@@ -263,9 +273,9 @@ require_once __DIR__ . '/../includes/header.php';
 
                                 <form method="POST" class="space-y-6" enctype="multipart/form-data">
                                     <input type="hidden" name="page_id" value="<?php echo htmlspecialchars($page_id); ?>">
-                                    <?php foreach ($selected_leads as $l): ?>
-                                        <input type="hidden" name="leads[]" value="<?php echo htmlspecialchars($l); ?>">
-                                    <?php endforeach; ?>
+                                    
+                                    <!-- Send Leads as JSON to avoid max_input_vars limit (1000 items) -->
+                                    <input type="hidden" name="ids_json" value="<?php echo htmlspecialchars(json_encode($selected_leads)); ?>">
 
                                     <!-- Campaign Name -->
                                     <div class="relative group">
@@ -357,10 +367,10 @@ require_once __DIR__ . '/../includes/header.php';
                                         </div>
                                         <div>
                                             <p class="text-sm font-bold text-white">
-                                                    <?php echo ($lang == 'ar' ? 'إرسال فوري ومباشر' : 'Immediate Direct Sending'); ?>
+                                                <?php echo ($lang == 'ar' ? 'إرسال فوري ومباشر' : 'Immediate Direct Sending'); ?>
                                             </p>
                                             <p class="text-xs text-indigo-200">
-                          <?php echo ($lang == 'ar' ? 'سيتم بدء الإرسال فور الضغط على الزر أدناه.' : 'Sending will start immediately after clicking below.'); ?>
+                                                <?php echo ($lang == 'ar' ? 'سيتم بدء الإرسال فور الضغط على الزر أدناه.' : 'Sending will start immediately after clicking below.'); ?>
                                             </p>
                                         </div>
                                     </div>

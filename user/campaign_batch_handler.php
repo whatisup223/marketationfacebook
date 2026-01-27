@@ -63,6 +63,10 @@ if (!$camp || $camp['status'] !== 'running') {
     exit;
 }
 
+// FIX: Reset stuck 'processing' items that crashed > 15 mins ago
+// We use reserved_at since updated_at does not exist
+$pdo->exec("UPDATE campaign_queue SET status = 'pending' WHERE status = 'processing' AND (reserved_at < (NOW() - INTERVAL 15 MINUTE) OR reserved_at IS NULL) AND campaign_id = $campaign_id");
+
 $interval = (int) ($camp['waiting_interval'] ?? 30);
 $batch_size = (int) ($camp['batch_size'] ?? 1);
 
@@ -102,7 +106,13 @@ if (empty($items)) {
     exit;
 }
 
-// Process batch
+// Process batch using curl_multi for parallel execution (Non-blocking optimization)
+// This is critical for Localhost performance to prevent UI freezing
+// Process batch using curl_multi for parallel execution (Non-blocking optimization)
+$mh = curl_multi_init();
+$curl_handles = [];
+$queue_results = []; // To track aggregated status per queue_id
+
 foreach ($items as $item) {
     $queue_id = $item['q_id'];
     $message = str_replace('{{name}}', $item['fb_user_name'] ?? 'User', $item['message_text']);
@@ -110,18 +120,138 @@ foreach ($items as $item) {
     // Mark as processing
     $pdo->prepare("UPDATE campaign_queue SET status = 'processing' WHERE id = ?")->execute([$queue_id]);
 
-    $res = $fb->sendMessage($item['fb_page_id'], $item['page_access_token'], $item['fb_user_id'], $message, $item['image_url']);
+    // Initialize result tracking
+    $queue_results[$queue_id] = ['success' => false, 'errors' => []];
 
-    if (isset($res['error'])) {
-        $upd = $pdo->prepare("UPDATE campaign_queue SET status = 'failed', error_message = ? WHERE id = ?");
-        $upd->execute([$res['error'], $queue_id]);
-        $pdo->exec("UPDATE campaigns SET failed_count = failed_count + 1 WHERE id = $campaign_id");
-        $processed_results[] = ['id' => $queue_id, 'status' => 'failed', 'error' => $res['error']];
+    // 1. Prepare TEXT Request
+    if (!empty(trim($message))) {
+        $ch_text = curl_init();
+        $endpoint = $item['fb_page_id'] . '/messages';
+        $url = 'https://graph.facebook.com/v12.0/' . $endpoint . '?access_token=' . urlencode($item['page_access_token']);
+
+        $data_text = [
+            'recipient' => ['id' => $item['fb_user_id']],
+            'message' => ['text' => $message],
+            'messaging_type' => 'MESSAGE_TAG',
+            'tag' => 'POST_PURCHASE_UPDATE'
+        ];
+
+        curl_setopt($ch_text, CURLOPT_URL, $url);
+        curl_setopt($ch_text, CURLOPT_POST, 1);
+        curl_setopt($ch_text, CURLOPT_POSTFIELDS, json_encode($data_text));
+        curl_setopt($ch_text, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch_text, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+        curl_setopt($ch_text, CURLOPT_TIMEOUT, 10);
+        curl_setopt($ch_text, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch_text, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_setopt($ch_text, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4); // Force IPv4
+
+        curl_multi_add_handle($mh, $ch_text);
+        $curl_handles[$queue_id . '_txt'] = $ch_text;
+    }
+
+    // 2. Prepare IMAGE Request (if exists)
+    if (!empty($item['image_url'])) {
+        $imgUrl = $item['image_url'];
+
+        // PRODUCTION FIX: Ensure URL is absolute (Full URL)
+        // Facebook requires a public URL (http://...) to download the image.
+        if (strpos($imgUrl, 'http') !== 0) {
+            $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
+            $domain = $_SERVER['HTTP_HOST'];
+            $imgUrl = $protocol . $domain . '/' . ltrim($imgUrl, '/');
+        }
+
+        $ch_img = curl_init();
+        $endpoint = $item['fb_page_id'] . '/messages';
+        $url = 'https://graph.facebook.com/v12.0/' . $endpoint . '?access_token=' . urlencode($item['page_access_token']);
+
+        $data_img = [
+            'recipient' => ['id' => $item['fb_user_id']],
+            'message' => [
+                'attachment' => [
+                    'type' => 'image',
+                    'payload' => [
+                        'url' => $imgUrl,
+                        'is_reusable' => true
+                    ]
+                ]
+            ],
+            'messaging_type' => 'MESSAGE_TAG',
+            'tag' => 'POST_PURCHASE_UPDATE'
+        ];
+
+        curl_setopt($ch_img, CURLOPT_URL, $url);
+        curl_setopt($ch_img, CURLOPT_POST, 1);
+        curl_setopt($ch_img, CURLOPT_POSTFIELDS, json_encode($data_img));
+        curl_setopt($ch_img, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch_img, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+        curl_setopt($ch_img, CURLOPT_TIMEOUT, 10);
+        curl_setopt($ch_img, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch_img, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_setopt($ch_img, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4); // Force IPv4
+
+        curl_multi_add_handle($mh, $ch_img);
+        $curl_handles[$queue_id . '_img'] = $ch_img;
+    }
+}
+
+// Execute concurrently
+$active = null;
+do {
+    $mrc = curl_multi_exec($mh, $active);
+} while ($mrc == CURLM_CALL_MULTI_PERFORM);
+
+while ($active && $mrc == CURLM_OK) {
+    if (curl_multi_select($mh) != -1) {
+        do {
+            $mrc = curl_multi_exec($mh, $active);
+        } while ($mrc == CURLM_CALL_MULTI_PERFORM);
+    }
+}
+
+// Process Results
+foreach ($curl_handles as $key => $ch) {
+    // Extract Queue ID from key (e.g. "123_txt" -> "123")
+    $parts = explode('_', $key);
+    $q_id = $parts[0];
+
+    $response = curl_multi_getcontent($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $resArr = json_decode($response, true);
+
+    if ($httpCode == 200 && isset($resArr['recipient_id'])) {
+        $queue_results[$q_id]['success'] = true;
     } else {
-        $upd = $pdo->prepare("UPDATE campaign_queue SET status = 'sent', sent_at = NOW() WHERE id = ?");
-        $upd->execute([$queue_id]);
+        // Detailed Error Capturing for Debugging
+        if ($httpCode === 0) {
+            $curlError = curl_error($ch);
+            $errorMsg = 'Network Error: ' . ($curlError ?: 'Connection Failed');
+        } else {
+            $errorMsg = $resArr['error']['message'] ?? 'HTTP Error ' . $httpCode;
+        }
+        $queue_results[$q_id]['errors'][] = $errorMsg;
+    }
+
+    curl_multi_remove_handle($mh, $ch);
+    curl_close($ch);
+}
+
+curl_multi_close($mh);
+
+// Final DB Updates based on Aggregated Results
+foreach ($queue_results as $q_id => $res) {
+    if ($res['success']) {
+        // At least one part succeeded
+        $pdo->prepare("UPDATE campaign_queue SET status = 'sent', sent_at = NOW() WHERE id = ?")->execute([$q_id]);
         $pdo->exec("UPDATE campaigns SET sent_count = sent_count + 1 WHERE id = $campaign_id");
-        $processed_results[] = ['id' => $queue_id, 'status' => 'sent'];
+        $processed_results[] = ['id' => $q_id, 'status' => 'sent'];
+    } else {
+        // All failed
+        $errorStr = implode(' | ', array_unique($res['errors']));
+        $pdo->prepare("UPDATE campaign_queue SET status = 'failed', error_message = ? WHERE id = ?")->execute([substr($errorStr, 0, 255), $q_id]);
+        $pdo->exec("UPDATE campaigns SET failed_count = failed_count + 1 WHERE id = $campaign_id");
+        $processed_results[] = ['id' => $q_id, 'status' => 'failed', 'error' => $errorStr];
     }
 }
 

@@ -33,6 +33,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_account'])) {
     }
 }
 
+// Handle Update Token (Recovery)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_account_token'])) {
+    $acc_id_to_update = $_POST['account_id'];
+    $new_token = trim($_POST['new_access_token']);
+
+    if (!empty($acc_id_to_update) && !empty($new_token)) {
+        try {
+            $stmt = $pdo->prepare("UPDATE fb_accounts SET access_token = ?, is_active = 1 WHERE id = ? AND user_id = ?");
+            $stmt->execute([$new_token, $acc_id_to_update, $user_id]);
+            header("Location: fb_accounts.php?msg=token_updated");
+            exit;
+        } catch (PDOException $e) {
+            $error = "DB Error: " . $e->getMessage();
+        }
+    }
+}
+
 // Handle Sync Pages
 if (isset($_GET['sync'])) {
     require_once __DIR__ . '/../includes/facebook_api.php';
@@ -56,6 +73,11 @@ if (isset($_GET['sync'])) {
 
             if (strpos($error_str, 'Application request limit reached') !== false) {
                 $error = __('msg_rate_limit_error');
+            } elseif (strpos($error_str, 'Session has expired') !== false || strpos($error_str, 'Error validating access token') !== false) {
+                // Token Expired - Trigger Modal AND Mark Inactive
+                $token_error_account_id = $acc_id;
+                $pdo->prepare("UPDATE fb_accounts SET is_active = 0 WHERE id = ?")->execute([$acc_id]);
+                $error = __('token_expired_msg');
             } else {
                 $error = "FB API: " . $error_str;
             }
@@ -131,6 +153,8 @@ if (empty($message) && isset($_GET['msg'])) {
         $message = __('msg_account_linked');
     } elseif ($_GET['msg'] === 'synced' && isset($_GET['count'])) {
         $message = sprintf(__('msg_sync_success'), htmlspecialchars($_GET['count']));
+    } elseif ($_GET['msg'] === 'token_updated') {
+        $message = __('token_updated_success');
     }
 }
 
@@ -148,17 +172,36 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
             <?php
             // Dynamic Status Logic
-            $stmt_count = $pdo->prepare("SELECT COUNT(*) FROM fb_accounts WHERE user_id = ?");
+            $stmt_count = $pdo->prepare("SELECT COUNT(*) as total, SUM(is_active) as active FROM fb_accounts WHERE user_id = ?");
             $stmt_count->execute([$user_id]);
-            $has_accounts = (int) $stmt_count->fetchColumn() > 0;
+            $stats = $stmt_count->fetch(PDO::FETCH_ASSOC);
+            $total_acc = (int) $stats['total'];
+            $active_acc = (int) $stats['active'];
+
+            $status_class = 'text-red-400 bg-red-500/10 border-red-500/20';
+            $dot_class = 'bg-red-500';
+            $status_text = __('not_connected');
+
+            if ($total_acc > 0) {
+                if ($active_acc == $total_acc) {
+                    // All good
+                    $status_class = 'text-green-400 bg-green-500/10 border-green-500/20';
+                    $dot_class = 'bg-green-500 animate-pulse';
+                    $status_text = __('connected');
+                } else {
+                    // Some expired
+                    $status_class = 'text-orange-400 bg-orange-500/10 border-orange-500/20';
+                    $dot_class = 'bg-orange-500 animate-pulse';
+                    $status_text = __('token_expired');
+                }
+            }
             ?>
             <div
-                class="flex items-center gap-2 text-xs font-bold <?php echo $has_accounts ? 'text-green-400 bg-green-500/10 border-green-500/20' : 'text-red-400 bg-red-500/10 border-red-500/20'; ?> px-4 py-2 rounded-xl border">
-                <div
-                    class="w-2 h-2 rounded-full <?php echo $has_accounts ? 'bg-green-500 animate-pulse' : 'bg-red-500'; ?>">
+                class="flex items-center gap-2 text-xs font-bold <?php echo $status_class; ?> px-4 py-2 rounded-xl border">
+                <div class="w-2 h-2 rounded-full <?php echo $dot_class; ?>">
                 </div>
                 <?php echo __('api_status'); ?>: <span
-                    class="uppercase tracking-wide"><?php echo $has_accounts ? __('connected') : __('not_connected'); ?></span>
+                    class="uppercase tracking-wide"><?php echo $status_text; ?></span>
             </div>
         </div>
 
@@ -240,8 +283,22 @@ require_once __DIR__ . '/../includes/header.php';
                                 <div class="flex items-center gap-3">
                                     <p class="text-xs text-gray-500 font-mono"><?php echo __('fb_id_label'); ?>: <span
                                             class="text-gray-400"><?php echo $acc['fb_id'] ?: __('no_data'); ?></span></p>
-                                    <span
-                                        class="text-[10px] text-indigo-400 font-bold bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20 uppercase"><?php echo __('active'); ?></span>
+                                    <div id="account-status-badge-<?php echo $acc['id']; ?>"
+                                        data-acc-id="<?php echo $acc['id']; ?>" class="account-status-container">
+                                        <?php if ($acc['is_active']): ?>
+                                            <span
+                                                class="text-[10px] text-indigo-400 font-bold bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20 uppercase"><?php echo __('active'); ?></span>
+                                        <?php else: ?>
+                                            <span
+                                                class="text-[10px] text-red-400 font-bold bg-red-500/10 px-2 py-0.5 rounded border border-red-500/20 uppercase flex items-center gap-1">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                </svg>
+                                                <?php echo __('token_expired'); ?>
+                                            </span>
+                                        <?php endif; ?>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -439,7 +496,97 @@ require_once __DIR__ . '/../includes/header.php';
     }
 </script>
 
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const badges = document.querySelectorAll('.account-status-container');
+        badges.forEach(badge => {
+            checkAccountStatus(badge);
+        });
+
+        async function checkAccountStatus(badge) {
+            const accId = badge.getAttribute('data-acc-id');
+            if (!accId) return;
+
+            try {
+                const formData = new FormData();
+                formData.append('account_id', accId);
+
+                const response = await fetch('ajax_check_status.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (data.status === 'active') {
+                    badge.innerHTML = `<span class="text-[10px] text-indigo-400 font-bold bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20 uppercase"><?php echo __('active'); ?></span>`;
+                } else if (data.status === 'expired') {
+                    badge.innerHTML = `
+                        <span class="text-[10px] text-red-400 font-bold bg-red-500/10 px-2 py-0.5 rounded border border-red-500/20 uppercase flex items-center gap-1">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <?php echo __('token_expired'); ?>
+                        </span>`;
+                }
+            } catch (e) {
+                console.error('Check failed for account ' + accId, e);
+            }
+        }
+    });
+</script>
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
+<!-- Token Update Modal -->
+<?php if (isset($token_error_account_id)): ?>
+    <div id="token-modal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+        <div
+            class="glass-card w-full max-w-lg rounded-3xl p-8 border border-red-500/30 relative overflow-hidden shadow-2xl shadow-red-500/20">
+            <!-- Background Glow -->
+            <div
+                class="absolute top-0 right-0 w-64 h-64 bg-red-500/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none">
+            </div>
+
+            <div class="relative z-10">
+                <div class="w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center mb-6 text-red-500 mx-auto">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                        </path>
+                    </svg>
+                </div>
+
+                <h3 class="text-2xl font-bold text-white text-center mb-2"><?php echo __('token_expired_title'); ?></h3>
+                <p class="text-gray-400 text-center mb-8 text-sm leading-relaxed">
+                    <?php echo __('token_expired_msg'); ?>
+                </p>
+
+                <form method="POST" class="space-y-4">
+                    <input type="hidden" name="update_account_token" value="1">
+                    <input type="hidden" name="account_id" value="<?php echo htmlspecialchars($token_error_account_id); ?>">
+
+                    <div>
+                        <label
+                            class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2"><?php echo __('new_token_placeholder'); ?></label>
+                        <textarea name="new_access_token" rows="3"
+                            class="w-full bg-black/40 border border-red-500/30 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-red-500/50 transition-all font-mono text-xs"
+                            required></textarea>
+                    </div>
+
+                    <div class="flex gap-3 pt-2">
+                        <a href="fb_accounts.php"
+                            class="flex-1 px-4 py-3 bg-gray-700/50 hover:bg-gray-700 text-white rounded-xl font-bold text-center transition-all text-sm flex items-center justify-center">
+                            <?php echo __('cancel'); ?>
+                        </a>
+                        <button type="submit"
+                            class="flex-2 w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-red-600/20 transition-all transform active:scale-95 text-sm">
+                            <?php echo __('update_token_btn'); ?>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+<?php endif; ?>
+
 </div>
 </div>
 

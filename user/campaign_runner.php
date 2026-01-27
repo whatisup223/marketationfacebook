@@ -12,6 +12,9 @@ if (!isLoggedIn()) {
     exit;
 }
 
+// Release session lock to prevent blocking parallel requests (Crucial for Localhost/Single Thread)
+session_write_close();
+
 $user_id = $_SESSION['user_id'];
 $pdo = getDB();
 $campaign_id = $_GET['id'] ?? 0;
@@ -25,28 +28,26 @@ if (!$campaign) {
     die(__('campaign_not_found'));
 }
 
-// Fetch Queue Items
+// OPTIMIZED: Use cached counters for instant page load
+// The aggregate SUM query on campaign_queue is too slow for large datasets
+$total = (int) ($campaign['total_leads'] ?? 0);
+$sent = (int) ($campaign['sent_count'] ?? 0);
+$failed = (int) ($campaign['failed_count'] ?? 0);
+$pending = max(0, $total - ($sent + $failed));
+
+// OPTIMIZED: Fetch ONLY current page rows
+$per_page = 50;
+$page_num = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+$offset = ($page_num - 1) * $per_page;
+$total_pages = ceil($total / $per_page);
+
 $qStmt = $pdo->prepare("SELECT q.*, l.fb_user_name, l.fb_user_id 
                         FROM campaign_queue q 
                         JOIN fb_leads l ON q.lead_id = l.id 
                         WHERE q.campaign_id = ? 
-                        ORDER BY q.id ASC");
+                        ORDER BY q.id ASC LIMIT $per_page OFFSET $offset");
 $qStmt->execute([$campaign_id]);
 $queue_items = $qStmt->fetchAll(PDO::FETCH_ASSOC);
-
-$total = count($queue_items);
-$sent = 0;
-$failed = 0;
-$pending = 0;
-
-foreach ($queue_items as $item) {
-    if ($item['status'] == 'sent')
-        $sent++;
-    elseif ($item['status'] == 'failed')
-        $failed++;
-    else
-        $pending++;
-}
 
 // Check Schedule
 $scheduled_time = strtotime($campaign['scheduled_at']);
@@ -213,7 +214,7 @@ require_once __DIR__ . '/../includes/header.php';
                                 class="text-[8px] text-gray-500 uppercase font-black tracking-widest leading-none mb-1"><?php echo __('batch_size'); ?></span>
                             <div class="flex items-center gap-1">
                                 <input type="number" id="batch_size"
-                                    value="<?php echo intval($campaign['batch_size'] ?? 1); ?>" min="1" max="50"
+                                    value="<?php echo intval($campaign['batch_size'] ?? 10); ?>" min="1" max="50"
                                     step="1"
                                     class="w-10 bg-transparent text-white font-black text-sm focus:outline-none p-0 h-4 selection:bg-green-500">
                                 <span
@@ -386,9 +387,10 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
             </div>
 
-            <div class="overflow-x-auto messenger-scrollbar">
+            <div class="overflow-x-auto overflow-y-auto max-h-[500px] messenger-scrollbar">
                 <table class="w-full text-left">
-                    <thead class="bg-black/20 text-gray-500 text-[10px] uppercase font-black tracking-[0.2em]">
+                    <thead
+                        class="bg-gray-900 text-gray-500 text-[10px] uppercase font-black tracking-[0.2em] sticky top-0 z-10 shadow-lg">
                         <tr>
                             <th class="px-8 py-4"><?php echo __('status'); ?></th>
                             <th class="px-8 py-4"><?php echo __('lead_info'); ?></th>
@@ -396,7 +398,11 @@ require_once __DIR__ . '/../includes/header.php';
                         </tr>
                     </thead>
                     <tbody id="queue-body" class="divide-y divide-white/5">
-                        <?php if (empty($queue_items)): ?>
+                        <?php
+                        // Pagination verified via SQL LIMIT/OFFSET earlier.
+                        // $queue_items now contains ONLY the 50 items for this page.
+                        
+                        if (empty($queue_items)): ?>
                             <tr>
                                 <td colspan="3" class="px-8 py-20 text-center">
                                     <div class="text-gray-600 mb-2 italic"><?php echo __('empty_queue_title'); ?></div>
@@ -447,6 +453,27 @@ require_once __DIR__ . '/../includes/header.php';
                     </tbody>
                 </table>
             </div>
+
+            <!-- Fixed Pagination Footer -->
+            <?php if ($total_pages > 1): ?>
+                <div class="px-8 py-4 bg-white/5 border-t border-white/5 backdrop-blur-xl">
+                    <div class="flex items-center justify-between">
+                        <div class="text-xs text-gray-500">
+                            <?php echo __('page'); ?>     <?php echo $page_num; ?> / <?php echo $total_pages; ?>
+                        </div>
+                        <div class="flex gap-2">
+                            <?php if ($page_num > 1): ?>
+                                <a href="?id=<?php echo $campaign_id; ?>&page=<?php echo $page_num - 1; ?>"
+                                    class="px-3 py-1 bg-white/10 rounded hover:bg-white/20 text-xs text-white transition-colors border border-white/5"><?php echo __('prev'); ?></a>
+                            <?php endif; ?>
+                            <?php if ($page_num < $total_pages): ?>
+                                <a href="?id=<?php echo $campaign_id; ?>&page=<?php echo $page_num + 1; ?>"
+                                    class="px-3 py-1 bg-white/10 rounded hover:bg-white/20 text-xs text-white transition-colors border border-white/5"><?php echo __('next'); ?></a>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>
@@ -855,7 +882,7 @@ require_once __DIR__ . '/../includes/header.php';
             })
             .catch(err => console.error("Monitor Error", err));
 
-        setTimeout(monitorLoop, 3000);
+        setTimeout(monitorLoop, 500);
     }
 
     async function processQueue() {
@@ -868,6 +895,8 @@ require_once __DIR__ . '/../includes/header.php';
         if (timerDiv.innerText.indexOf('Starts in') === -1 && timerDiv.innerText.indexOf('Saving') === -1) {
             timerDiv.innerHTML = '<span class="animate-pulse text-indigo-400 font-bold uppercase tracking-wider"><?php echo __('sending_batch'); ?> (' + currentBatchSize + ')</span>';
         }
+
+        const startTime = Date.now(); // Start timer
 
         try {
             const formData = new FormData();
@@ -921,12 +950,17 @@ require_once __DIR__ . '/../includes/header.php';
 
                 updateStats();
 
-                // IMPORTANT: Wait for the configured interval before next batch
+                // DRIFT CORRECTION: Ensure we adhere to exact intervals
                 const intervalInput = document.getElementById('interval');
-                const waitInterval = (parseInt(intervalInput ? intervalInput.value : <?php echo $campaign['waiting_interval'] ?? 30; ?>) || 30) * 1000;
-                const waitSeconds = Math.floor(waitInterval / 1000);
+                const desiredInterval = (parseInt(intervalInput ? intervalInput.value : <?php echo $campaign['waiting_interval'] ?? 30; ?>) || 30) * 1000;
+
+                const elapsed = Date.now() - startTime;
+                const waitInterval = Math.max(0, desiredInterval - elapsed); // Subtract elapsed time
+
+                const waitSeconds = Math.ceil(waitInterval / 1000);
                 timerDiv.innerHTML = `<span class="text-blue-400 font-bold uppercase tracking-wider">⏳ <?php echo __('waiting'); ?> ${waitSeconds}<?php echo __('unit_s'); ?>...</span>`;
-                setTimeout(processQueue, waitInterval); // Wait before next batch
+
+                setTimeout(processQueue, waitInterval); // Wait adjusted time
 
             } else if (data.status === 'completed') {
                 isRunning = false;

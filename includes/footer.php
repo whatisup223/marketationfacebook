@@ -115,7 +115,7 @@
                     <span class="text-gray-400 font-mono"><?php echo getSetting('contact_phone'); ?></span>
                 <?php endif; ?>
                 <?php
-                $c_address = getSetting('contact_address');
+                $c_address = ($lang == 'ar') ? getSetting('contact_address_ar') : getSetting('contact_address_en');
                 if (empty($c_address)) {
                     $c_address = ($lang == 'ar') ? 'جمهورية مصر العربية' : 'Arab Republic of Egypt';
                 }
@@ -125,16 +125,16 @@
         </div>
 
         <div class="border-t border-gray-800 pt-8 flex flex-col items-center justify-center text-sm text-gray-500">
-            <p class="mb-4 dir-ltr flex items-center justify-center gap-2">
+            <p class="mb-4 dir-ltr flex flex-wrap items-center justify-center gap-2">
                 <?php if ($lang === 'ar'): ?>
                     جميع الحقوق محفوظة لـ <strong class="text-white"><?php echo __('site_name'); ?></strong>
                     <span title="Verified System"
-                        class="text-blue-500 bg-blue-500/10 rounded-full px-2 py-0.5 text-[10px] items-center gap-1 border border-blue-500/20 hidden md:inline-flex">
+                        class="text-blue-500 bg-blue-500/10 rounded-full px-2 py-0.5 text-[10px] inline-flex items-center gap-1 border border-blue-500/20">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
-                        Verified
+                        <?php echo __('verified'); ?>
                     </span>
                     <?php echo date('Y'); ?> صنع بكل <span class="text-red-500">❤️</span> بواسطة <a
                         href="https://facebook.com/marketati0n/" target="_blank"
@@ -142,12 +142,12 @@
                 <?php else: ?>
                     All rights reserved <strong class="text-white"><?php echo __('site_name'); ?></strong>
                     <span title="Verified System"
-                        class="text-blue-500 bg-blue-500/10 rounded-full px-2 py-0.5 text-[10px] items-center gap-1 border border-blue-500/20 hidden md:inline-flex">
+                        class="text-blue-500 bg-blue-500/10 rounded-full px-2 py-0.5 text-[10px] inline-flex items-center gap-1 border border-blue-500/20">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
-                        Verified
+                        <?php echo __('verified'); ?>
                     </span>
                     <?php echo date('Y'); ?> Made with <span class="text-red-500">❤️</span> by <a
                         href="https://facebook.com/marketati0n/" target="_blank"

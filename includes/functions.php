@@ -33,6 +33,7 @@ $translations = [
         'view_pricing' => 'باقات الاشتراك',
         'footer_desc' => 'أقوى أداة لاستخراج واستهداف بيانات العملاء من فيسبوك.',
         'copyright' => 'جميع الحقوق محفوظة',
+        'verified' => 'موثق',
 
         // Modules
         'extraction_tools' => 'أدوات الاستخراج',
@@ -351,6 +352,7 @@ $translations = [
         'api_status' => 'حالة الاتصال',
         'connected' => 'متصل',
         'not_connected' => 'غير متصل',
+        'token_expired' => 'الرموز منتهية',
         'manage_profiles' => 'إدارة الحسابات الشخصية',
         // Facebook Accounts (User Section)
         'link_new_account' => 'ربط حساب جديد',
@@ -589,6 +591,16 @@ $translations = [
         'unit_msg' => 'رسالة',
         'lbl_retry_delay' => 'تأخير المحاولة',
         'lbl_retry_count' => 'عدد المحاولات',
+        'prev' => 'السابق',
+        'next' => 'التالي',
+        'showing_page' => 'عرض الصفحة',
+        'of' => 'من',
+        'clear' => 'مسح التحديد',
+        'clear_selection_confirm' => 'هل أنت متأكد من إلغاء تحديد جميع العملاء؟',
+        'select_all_global' => 'تحديد الكل (من كل الصفحات)',
+        'all_leads_selected_success' => 'تم تحديد %s عميل بنجاح!',
+        'all' => 'الكل',
+        'please_wait' => 'يرجى الانتظار...',
     ],
     'en' => [
         'site_name' => 'Marketation Extractor',
@@ -605,6 +617,7 @@ $translations = [
         'view_pricing' => 'Pricing',
         'footer_desc' => 'The most powerful tool for extracting and targeting customer data from Facebook.',
         'copyright' => 'All Rights Reserved',
+        'verified' => 'Verified',
 
         // Modules
         'extraction_tools' => 'Extraction Tools',
@@ -876,6 +889,7 @@ $translations = [
         'api_status' => 'API Status',
         'connected' => 'Connected',
         'not_connected' => 'Not Connected',
+        'token_expired' => 'Token Expired',
         'manage_profiles' => 'Manage Profiles',
         // Facebook Accounts (User Section)
         'link_new_account' => 'Link New Account',
@@ -1129,6 +1143,16 @@ $translations = [
         'manual_cron_title' => 'Manual Cron Job Setup (cPanel)',
         'manual_cron_desc' => 'Prefer manual setup? Copy this command to your hosting cPanel to run every minute:',
         'click_to_copy' => 'Click to Copy',
+        'prev' => 'Previous',
+        'next' => 'Next',
+        'showing_page' => 'Showing Page',
+        'of' => 'of',
+        'clear' => 'Clear Selection',
+        'clear_selection_confirm' => 'Are you sure you want to clear all selected leads?',
+        'select_all_global' => 'Select All (From All Pages)',
+        'all_leads_selected_success' => 'Selected %s leads successfully!',
+        'all' => 'All',
+        'please_wait' => 'Please wait...',
     ],
 ];
 

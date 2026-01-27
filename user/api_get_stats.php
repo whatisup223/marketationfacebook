@@ -11,6 +11,9 @@ if (!isLoggedIn()) {
     exit;
 }
 
+// Release session lock to prevent blocking parallel requests (Vital for real-time stats)
+session_write_close();
+
 $pdo = getDB();
 $campaign_id = $_GET['id'] ?? 0;
 
@@ -19,23 +22,25 @@ if (!$campaign_id) {
     exit;
 }
 
-// Get basic campaign status
-$stmt = $pdo->prepare("SELECT status FROM campaigns WHERE id = ?");
+// OPTIMIZED: Get stats directly from campaigns table (O(1)) instead of counting queue rows (O(N))
+// This provides instant updates without heavy DB load
+$stmt = $pdo->prepare("SELECT status, sent_count, failed_count, total_leads FROM campaigns WHERE id = ?");
 $stmt->execute([$campaign_id]);
-$status = $stmt->fetchColumn();
+$campaign = $stmt->fetch(PDO::FETCH_ASSOC);
 
-// Get queue stats
-$qCount = $pdo->prepare("SELECT 
-    COUNT(CASE WHEN status='sent' THEN 1 END) as sent,
-    COUNT(CASE WHEN status='failed' THEN 1 END) as failed,
-    COUNT(CASE WHEN status='pending' THEN 1 END) as pending
-    FROM campaign_queue WHERE campaign_id = ?");
-$qCount->execute([$campaign_id]);
-$stats = $qCount->fetch(PDO::FETCH_ASSOC);
+if (!$campaign) {
+    echo json_encode(['status' => 'error', 'message' => 'Campaign not found']);
+    exit;
+}
+
+$sent = (int) $campaign['sent_count'];
+$failed = (int) $campaign['failed_count'];
+$total = (int) $campaign['total_leads'];
+$pending = max(0, $total - ($sent + $failed)); // Calculated, or we could store it too
 
 echo json_encode([
-    'status' => $status,
-    'sent' => $stats['sent'],
-    'failed' => $stats['failed'],
-    'pending' => $stats['pending']
+    'status' => $campaign['status'],
+    'sent' => $sent,
+    'failed' => $failed,
+    'pending' => $pending
 ]);

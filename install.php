@@ -145,7 +145,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             picture_url TEXT,
             category VARCHAR(100),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (account_id) REFERENCES fb_accounts(id) ON DELETE CASCADE
+            FOREIGN KEY (account_id) REFERENCES fb_accounts(id) ON DELETE CASCADE,
+            UNIQUE KEY `unique_page_id` (`page_id`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
         // 6. Facebook Leads (Customers who messaged the page)

@@ -69,6 +69,15 @@ class FacebookAPI
         return $data;
     }
 
+    public function getObject($id, $access_token, $fields = [])
+    {
+        $params = [];
+        if (!empty($fields)) {
+            $params['fields'] = is_array($fields) ? implode(',', $fields) : $fields;
+        }
+        return $this->makeRequest($id, $params, $access_token);
+    }
+
     // NEW: Function to get real Page Token
     public function getPageAccessToken($user_token, $page_id)
     {
