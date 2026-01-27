@@ -50,6 +50,13 @@ if (isLoggedIn()) {
         $stmt->execute([$_SESSION['user_id']]);
         $current_user = $stmt->fetch(PDO::FETCH_ASSOC);
 
+        if (!$current_user) {
+            // User was deleted but session persists
+            session_destroy();
+            header("Location: " . $prefix . "login.php");
+            exit;
+        }
+
         // --- AUTO-TRIGGER LOGIC START ---
         // This makes the site 'alive'. Every page load checks for due campaigns.
         try {
@@ -144,9 +151,9 @@ if (isLoggedIn()) {
                 extend: {
                     fontFamily: {
                         <?php if ($lang === 'ar'): ?>
-                                                    sans: ['IBM Plex Sans Arabic', 'sans-serif'],
+                                                        sans: ['IBM Plex Sans Arabic', 'sans-serif'],
                         <?php else: ?>
-                                                    sans: ['Outfit', 'sans-serif'],
+                                                        sans: ['Outfit', 'sans-serif'],
                         <?php endif; ?>
                     },
                     colors: {
