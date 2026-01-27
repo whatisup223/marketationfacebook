@@ -756,92 +756,94 @@ require_once __DIR__ . '/../includes/header.php';
 
             <!-- Contact Tab -->
             <div id="contact-tab" class="tab-content hidden glass-card p-6 md:p-8 rounded-2xl">
-                <div class="grid md:grid-cols-2 gap-8">
-                    <div class="space-y-4">
-                        <h3 class="text-lg font-bold text-white mb-4 flex items-center">
+                <div class="space-y-12">
+                    <!-- Contact Info Section -->
+                    <section>
+                        <h3 class="text-xl font-bold text-white mb-8 flex items-center">
                             <span class="w-2 h-6 bg-pink-500 rounded-full mr-3"></span>
                             <?php echo __('contact_info_settings'); ?>
                         </h3>
-                        <div>
-                            <label
-                                class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('contact_phone'); ?></label>
-                            <input type="text" name="contact_phone"
-                                value="<?php echo $settings['contact_phone'] ?? ''; ?>" class="setting-input">
+                        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div>
+                                <label
+                                    class="block text-gray-400 text-sm font-medium mb-3 uppercase tracking-wider opacity-60 text-[11px] font-bold">
+                                    <?php echo __('contact_phone'); ?>
+                                </label>
+                                <input type="text" name="contact_phone"
+                                    value="<?php echo $settings['contact_phone'] ?? ''; ?>" class="setting-input"
+                                    placeholder="+20...">
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-gray-400 text-sm font-medium mb-3 uppercase tracking-wider opacity-60 text-[11px] font-bold">
+                                    <?php echo __('contact_address_ar'); ?>
+                                </label>
+                                <input type="text" name="contact_address_ar"
+                                    value="<?php echo $settings['contact_address_ar'] ?? ''; ?>" class="setting-input">
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-gray-400 text-sm font-medium mb-3 uppercase tracking-wider opacity-60 text-[11px] font-bold">
+                                    <?php echo __('contact_address_en'); ?>
+                                </label>
+                                <input type="text" name="contact_address_en"
+                                    value="<?php echo $settings['contact_address_en'] ?? ''; ?>" class="setting-input">
+                            </div>
                         </div>
-                        <div>
-                            <label
-                                class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('contact_address_ar'); ?></label>
-                            <input type="text" name="contact_address_ar"
-                                value="<?php echo $settings['contact_address_ar'] ?? ''; ?>" class="setting-input">
-                        </div>
-                        <div>
-                            <label
-                                class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('contact_address_en'); ?></label>
-                            <input type="text" name="contact_address_en"
-                                value="<?php echo $settings['contact_address_en'] ?? ''; ?>" class="setting-input">
-                        </div>
-                    </div>
-                    <div class="space-y-4">
-                        <h3 class="text-lg font-bold text-white mb-4 flex items-center">
-                            <span class="w-2 h-6 bg-pink-400 rounded-full mr-3"></span>
+                    </section>
+
+                    <!-- Divider -->
+                    <div class="h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent w-full"></div>
+
+                    <!-- Social Links Section -->
+                    <section>
+                        <h3 class="text-xl font-bold text-white mb-8 flex items-center">
+                            <span class="w-2 h-6 bg-indigo-500 rounded-full mr-3"></span>
                             <?php echo __('social_links'); ?>
                         </h3>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label
-                                    class="block text-gray-500 text-xs font-medium mb-1 uppercase"><?php echo __('facebook'); ?></label>
-                                <input type="text" name="social_facebook"
-                                    value="<?php echo $settings['social_facebook'] ?? ''; ?>"
-                                    class="setting-input py-2">
-                            </div>
-                            <div>
-                                <label
-                                    class="block text-gray-500 text-xs font-medium mb-1 uppercase"><?php echo __('twitter'); ?></label>
-                                <input type="text" name="social_twitter"
-                                    value="<?php echo $settings['social_twitter'] ?? ''; ?>" class="setting-input py-2">
-                            </div>
-                            <div>
-                                <label
-                                    class="block text-gray-500 text-xs font-medium mb-1 uppercase"><?php echo __('instagram'); ?></label>
-                                <input type="text" name="social_instagram"
-                                    value="<?php echo $settings['social_instagram'] ?? ''; ?>"
-                                    class="setting-input py-2">
-                            </div>
-                            <div>
-                                <label
-                                    class="block text-gray-500 text-xs font-medium mb-1 uppercase"><?php echo __('telegram'); ?></label>
-                                <input type="text" name="social_telegram"
-                                    value="<?php echo $settings['social_telegram'] ?? ''; ?>"
-                                    class="setting-input py-2">
-                            </div>
-                            <div>
-                                <label
-                                    class="block text-gray-500 text-xs font-medium mb-1 uppercase"><?php echo __('whatsapp'); ?></label>
-                                <input type="text" name="social_whatsapp"
-                                    value="<?php echo $settings['social_whatsapp'] ?? ''; ?>"
-                                    class="setting-input py-2">
-                            </div>
-                            <div>
-                                <label
-                                    class="block text-gray-500 text-xs font-medium mb-1 uppercase"><?php echo __('youtube'); ?></label>
-                                <input type="text" name="social_youtube"
-                                    value="<?php echo $settings['social_youtube'] ?? ''; ?>" class="setting-input py-2">
-                            </div>
-                            <div>
-                                <label
-                                    class="block text-gray-500 text-xs font-medium mb-1 uppercase"><?php echo __('linkedin'); ?></label>
-                                <input type="text" name="social_linkedin"
-                                    value="<?php echo $settings['social_linkedin'] ?? ''; ?>"
-                                    class="setting-input py-2">
-                            </div>
-                            <div>
-                                <label
-                                    class="block text-gray-500 text-xs font-medium mb-1 uppercase"><?php echo __('tiktok'); ?></label>
-                                <input type="text" name="social_tiktok"
-                                    value="<?php echo $settings['social_tiktok'] ?? ''; ?>" class="setting-input py-2">
-                            </div>
+                        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
+                            <?php
+                            $platforms = [
+                                'facebook' => ['color' => '#1877F2'],
+                                'messenger' => ['color' => '#00B2FF'],
+                                'twitter' => ['color' => '#000000'],
+                                'instagram' => ['color' => '#E4405F'],
+                                'telegram' => ['color' => '#26A5E4'],
+                                'whatsapp' => ['color' => '#25D366'],
+                                'youtube' => ['color' => '#FF0000'],
+                                'linkedin' => ['color' => '#0A66C2'],
+                                'tiktok' => ['color' => '#000000']
+                            ];
+                            foreach ($platforms as $p => $meta):
+                                ?>
+                                <div class="group">
+                                    <div class="flex items-center justify-between mb-2 px-1">
+                                        <label
+                                            class="text-gray-400 text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                                            <span class="w-1.5 h-1.5 rounded-full"
+                                                style="background-color: <?php echo $meta['color']; ?>"></span>
+                                            <?php echo __($p); ?>
+                                        </label>
+                                        <div
+                                            class="flex items-center gap-2 opacity-40 group-hover:opacity-100 transition-all duration-300">
+                                            <input type="hidden" name="floating_<?php echo $p; ?>" value="0">
+                                            <input type="checkbox" name="floating_<?php echo $p; ?>" value="1"
+                                                id="float_<?php echo $p; ?>" <?php echo ($settings['floating_' . $p] ?? '0') == '1' ? 'checked' : ''; ?>
+                                                class="w-3.5 h-3.5 rounded border-gray-700 bg-gray-800 text-indigo-600 focus:ring-indigo-500">
+                                            <label for="float_<?php echo $p; ?>"
+                                                class="text-[9px] font-bold text-gray-500 uppercase cursor-pointer select-none">
+                                                <?php echo __('floating_button'); ?>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <input type="text" name="social_<?php echo $p; ?>"
+                                        value="<?php echo $settings['social_' . $p] ?? ''; ?>"
+                                        class="setting-input py-2.5 text-sm border-white/5 focus:border-white/20"
+                                        placeholder="Username or Link">
+                                </div>
+                            <?php endforeach; ?>
                         </div>
-                    </div>
+                    </section>
                 </div>
             </div>
 

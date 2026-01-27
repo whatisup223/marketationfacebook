@@ -451,6 +451,8 @@ $translations = [
         'unknown' => 'غير معروف',
         'leads' => 'العملاء المستهدفين',
         'no_campaigns_found' => 'لم يتم العثور على حملات حتى الآن.',
+        'messenger' => 'ماسينجر',
+        'floating_button' => 'أيقونة عائمة',
 
         // Misc
         'notifications_muted_msg' => 'تم كتم الإشعارات',
@@ -1191,6 +1193,8 @@ $translations = [
         'unknown' => 'Unknown',
         'leads' => 'Leads',
         'no_campaigns_found' => 'No campaigns found yet.',
+        'messenger' => 'Messenger',
+        'floating_button' => 'Floating Icon',
         'user' => 'User',
         'status' => 'Status',
         'account_status' => 'Account Status',
