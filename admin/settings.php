@@ -657,7 +657,20 @@ require_once __DIR__ . '/../includes/header.php';
                                 ?>
                                 <div
                                     class="w-full h-48 rounded-2xl bg-gray-900 border border-gray-700/50 flex items-center justify-center overflow-hidden">
-                                    <img src="<?php echo $h_img_url; ?>" class="w-full h-full object-cover">
+                                    <img id="hero_image_preview" src="<?php echo $h_img_url; ?>"
+                                        class="w-full h-full object-cover transition-all duration-700">
+
+                                    <!-- Animated Loader Overlay -->
+                                    <div id="hero_upload_loader"
+                                        class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-10 transition-all">
+                                        <div class="flex flex-col items-center gap-3">
+                                            <div
+                                                class="w-10 h-10 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin">
+                                            </div>
+                                            <span
+                                                class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest animate-pulse"><?php echo __('uploading'); ?>...</span>
+                                        </div>
+                                    </div>
 
                                     <!-- Overlay Actions -->
                                     <div
@@ -665,7 +678,8 @@ require_once __DIR__ . '/../includes/header.php';
                                         <label
                                             class="cursor-pointer p-2 bg-indigo-600 rounded-lg hover:bg-indigo-500 text-white transition-colors"
                                             title="<?php echo __('upload_image'); ?>">
-                                            <input type="file" name="hero_image" class="hidden" accept="image/*">
+                                            <input type="file" name="hero_image" id="hero_image_input" class="hidden"
+                                                accept="image/*">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12">
@@ -1961,37 +1975,42 @@ require_once __DIR__ . '/../includes/header.php';
 
             <script>
                 // Hero Image Upload Preview & Loader
-                document.getElementById('hero_image_input').addEventListener('change', function (e) {
-                    const file = e.target.files[0];
-                    if (file) {
-                        const reader = new FileReader();
-                        const loader = document.getElementById('hero_upload_loader');
-                        const preview = document.getElementById('hero_image_preview');
+                const heroInput = document.getElementById('hero_image_input');
+                if (heroInput) {
+                    heroInput.addEventListener('change', function (e) {
+                        const file = e.target.files[0];
+                        if (file) {
+                            const reader = new FileReader();
+                            const loader = document.getElementById('hero_upload_loader');
+                            const preview = document.getElementById('hero_image_preview');
 
-                        // Show loader
-                        loader.classList.remove('hidden');
-                        preview.style.filter = 'blur(4px)';
+                            if (loader) loader.classList.remove('hidden');
+                            if (preview) preview.style.filter = 'blur(4px)';
 
-                        reader.onload = function (event) {
-                            // Simulate short delay for premium feel
-                            setTimeout(() => {
-                                preview.src = event.target.result;
-                                loader.classList.add('hidden');
-                                preview.style.filter = 'none';
-                            }, 800);
-                        };
-                        reader.readAsDataURL(file);
-                    }
-                });
+                            reader.onload = function (event) {
+                                setTimeout(() => {
+                                    if (preview) preview.src = event.target.result;
+                                    if (loader) loader.classList.add('hidden');
+                                    if (preview) preview.style.filter = 'none';
+                                }, 800);
+                            };
+                            reader.readAsDataURL(file);
+                        }
+                    });
+                }
 
                 // Ensure loader shows on form submit if a file is selected
-                document.querySelector('form').addEventListener('submit', function () {
-                    const input = document.getElementById('hero_image_input');
-                    if (input.files.length > 0) {
-                        document.getElementById('hero_upload_loader').classList.remove('hidden');
-                        document.getElementById('hero_image_preview').style.filter = 'blur(4px)';
-                    }
-                });
+                const mainForm = document.querySelector('form');
+                if (mainForm && heroInput) {
+                    mainForm.addEventListener('submit', function () {
+                        if (heroInput.files.length > 0) {
+                            const loader = document.getElementById('hero_upload_loader');
+                            const preview = document.getElementById('hero_image_preview');
+                            if (loader) loader.classList.remove('hidden');
+                            if (preview) preview.style.filter = 'blur(4px)';
+                        }
+                    });
+                }
             </script>
             <script>
                 function togglePortfolioType(val, prefix = 'p') {
