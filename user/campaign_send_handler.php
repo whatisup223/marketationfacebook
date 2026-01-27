@@ -49,13 +49,11 @@ try {
     $item = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$item) {
-        echo json_encode(['status' => 'error', 'message' => 'Queue item not found or access denied.']);
-        exit;
+        sendJson(['status' => 'error', 'message' => 'Queue item not found or access denied.']);
     }
 
     if ($item['q_status'] == 'sent') {
-        echo json_encode(['status' => 'skipped', 'message' => 'Already sent', 'q_id' => $queue_id]);
-        exit;
+        sendJson(['status' => 'skipped', 'message' => 'Already sent', 'q_id' => $queue_id]);
     }
 
     // 2. Prepare Message
@@ -75,7 +73,7 @@ try {
 
         $pdo->exec("UPDATE campaigns SET failed_count = failed_count + 1 WHERE id = " . $item['c_id']);
 
-        echo json_encode([
+        sendJson([
             'status' => 'error',
             'message' => $response['error'],
             'q_id' => $queue_id
@@ -87,9 +85,9 @@ try {
 
         $pdo->exec("UPDATE campaigns SET sent_count = sent_count + 1 WHERE id = " . $item['c_id']);
 
-        echo json_encode(['status' => 'success', 'q_id' => $queue_id]);
+        sendJson(['status' => 'success', 'q_id' => $queue_id]);
     }
 
 } catch (Exception $e) {
-    echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+    sendJson(['status' => 'error', 'message' => $e->getMessage()]);
 }
