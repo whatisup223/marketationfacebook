@@ -14,8 +14,7 @@ require_once __DIR__ . '/../includes/facebook_api.php';
 register_shutdown_function(function () {
     $error = error_get_last();
     if ($error !== NULL && $error['type'] === E_ERROR) {
-        $logMsg = date('Y-m-d H:i:s') . " FATAL BATCH ERROR: " . $error['message'] . " in " . $error['file'] . ":" . $error['line'] . "\n";
-        file_put_contents(__DIR__ . '/debug_errors.txt', $logMsg, FILE_APPEND);
+        // Log removed for production clean-up
         @ob_clean();
         echo json_encode(['status' => 'stopped', 'error' => 'Fatal Server Error']);
     }

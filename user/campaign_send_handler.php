@@ -22,10 +22,9 @@ ini_set('error_log', __DIR__ . '/debug_errors.txt');
 register_shutdown_function(function () {
     $error = error_get_last();
     if ($error !== NULL && $error['type'] === E_ERROR) {
-        $logMsg = date('Y-m-d H:i:s') . " FATAL: " . $error['message'] . " in " . $error['file'] . ":" . $error['line'] . "\n";
-        file_put_contents(__DIR__ . '/debug_errors.txt', $logMsg, FILE_APPEND);
-        ob_clean();
-        echo json_encode(['status' => 'error', 'message' => 'Fatal Server Error. Check transaction log for details.']);
+        // Log removed for production clean-up
+        @ob_clean();
+        echo json_encode(['status' => 'error', 'message' => 'Fatal Server Error.']);
         exit;
     }
 });
@@ -38,10 +37,11 @@ function sendJson($data)
     exit;
 }
 
-// Helper: Log Transactions
+// Log function silenced for cleanup (Empty Stub)
 function logTransaction($msg)
 {
-    file_put_contents(__DIR__ . '/transaction_log.txt', date('[Y-m-d H:i:s] ') . $msg . "\n", FILE_APPEND);
+    // No-op
+    return;
 }
 
 try {
