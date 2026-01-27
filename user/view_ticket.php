@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reply'])) {
         $stmt->execute([$ticket_id]);
 
         // Notify Admins
-        notifyAdmins('new_reply_ticket', json_encode(['key' => 'user_replied_fmt', 'params' => [$ticket['subject']]]), "admin/view_ticket.php?id=$ticket_id");
+        notifyAdmins(__('new_ticket') . " #$ticket_id", __('ticket_created_by') . " " . $_SESSION['user_name'], "admin/view_ticket.php?id=$ticket_id");
 
         header("Location: view_ticket.php?id=$ticket_id");
         exit;
@@ -78,7 +78,8 @@ require_once __DIR__ . '/../includes/header.php';
                         <h1 class="text-xl font-bold text-white"><?php echo htmlspecialchars($ticket['subject']); ?>
                         </h1>
                         <p class="text-xs text-gray-500">#<?php echo $ticket['id']; ?> •
-                            <?php echo date('M d, Y h:i A', strtotime($ticket['created_at'])); ?></p>
+                            <?php echo date('M d, Y h:i A', strtotime($ticket['created_at'])); ?>
+                        </p>
                     </div>
                 </div>
                 <span class="px-4 py-1.5 rounded-xl text-xs font-bold uppercase shadow-lg shadow-indigo-500/10

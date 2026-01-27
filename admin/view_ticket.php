@@ -114,8 +114,10 @@ require_once __DIR__ . '/../includes/header.php';
                                     <?php echo __('status_' . $ticket['status']); ?>
                                 </span>
                             </div>
-                            <p class="text-xs text-gray-500">Ticket #<?php echo $ticket['id']; ?> • Created on
-                                <?php echo date('M d, Y', strtotime($ticket['created_at'])); ?></p>
+                            <p class="text-xs text-gray-500"><?php echo __('ticket_id'); ?>
+                                #<?php echo $ticket['id']; ?> •
+                                <?php echo date('M d, Y', strtotime($ticket['created_at'])); ?>
+                            </p>
                         </div>
 
                         <!-- Admin Actions -->
@@ -163,7 +165,8 @@ require_once __DIR__ . '/../includes/header.php';
                                                 </path>
                                             </svg>
                                         <?php else: ?>
-                                            <span class="text-xs font-bold">USR</span>
+                                            <span
+                                                class="text-xs font-bold"><?php echo mb_substr($ticket['user_name'], 0, 3, 'UTF-8'); ?></span>
                                         <?php endif; ?>
                                     </div>
 
@@ -186,7 +189,7 @@ require_once __DIR__ . '/../includes/header.php';
                     <!-- Reply Area -->
                     <div class="p-6 border-t border-white/5 bg-black/20">
                         <form method="POST" class="flex gap-4">
-                            <textarea name="message" rows="1" required placeholder="<?php echo __('write_reply'); ?>..."
+                            <textarea name="message" rows="1" required placeholder="<?php echo __('write_reply'); ?>"
                                 class="flex-1 bg-slate-900 border border-slate-700 rounded-2xl px-5 py-4 text-white focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all resize-none font-medium"></textarea>
                             <button type="submit" name="reply"
                                 class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 rounded-2xl font-bold shadow-xl shadow-indigo-500/20 transition-all flex items-center justify-center hover:-translate-y-1 active:scale-95">
@@ -205,7 +208,8 @@ require_once __DIR__ . '/../includes/header.php';
             <div class="lg:col-span-1 space-y-6">
                 <div class="glass-card p-6 rounded-3xl border border-white/10 shadow-xl">
                     <h3 class="text-gray-500 text-[10px] font-bold uppercase tracking-widest mb-6 px-1">
-                        <?php echo __('user_info'); ?></h3>
+                        <?php echo __('user_info'); ?>
+                    </h3>
 
                     <div class="flex flex-col items-center text-center space-y-4">
                         <div class="w-20 h-20 rounded-[2rem] bg-slate-800 p-1 border-2 border-indigo-500/30">
@@ -222,9 +226,11 @@ require_once __DIR__ . '/../includes/header.php';
 
                         <div>
                             <h4 class="text-white font-bold text-lg mb-1">
-                                <?php echo htmlspecialchars($ticket['user_name']); ?></h4>
+                                <?php echo htmlspecialchars($ticket['user_name']); ?>
+                            </h4>
                             <p class="text-xs text-gray-500 font-medium">
-                                <?php echo htmlspecialchars($ticket['email']); ?></p>
+                                <?php echo htmlspecialchars($ticket['email']); ?>
+                            </p>
                         </div>
 
                         <a href="users.php?search=<?php echo urlencode($ticket['email']); ?>"
