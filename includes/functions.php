@@ -45,6 +45,7 @@ $translations = [
         'manage_messages' => 'إدارة الرسائل',
         'add_account' => 'إضافة حساب',
         'total_leads' => 'إجمالي العملاء',
+        'total' => 'الإجمالي',
         'active_tasks' => 'مهام جارية',
 
         // Statuses
@@ -180,7 +181,9 @@ $translations = [
         'controls' => 'التحكم',
         'queue' => 'طابور الإرسال',
         'ready_msg' => 'جاهز للإطلاق...',
-        'completed' => 'مكتمل!',
+        'completed' => 'مكتمل',
+        'running' => 'جارية',
+        'draft' => 'مسودة',
         'sending' => 'جاري الإرسال...',
         'paused' => 'متوقف مؤقتاً',
         'error_network' => 'خطأ في الشبكة',
@@ -629,6 +632,7 @@ $translations = [
         'manage_messages' => 'Message Management',
         'add_account' => 'Add Account',
         'total_leads' => 'Total Leads',
+        'total' => 'Total',
         'active_tasks' => 'Active Tasks',
 
         // Statuses
@@ -817,6 +821,10 @@ $translations = [
         'ready_msg' => 'Ready to Launch...',
         'queue' => 'Queue',
         'campaign_not_found' => 'Campaign not found.',
+        'completed' => 'Completed',
+        'running' => 'Running',
+        'paused' => 'Paused',
+        'draft' => 'Draft',
         'campaign_label' => 'Campaign:',
         'empty_queue_title' => 'Queue is empty or completed.',
         'empty_queue_desc' => 'Try re-scanning the page if this is unexpected.',

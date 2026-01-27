@@ -741,6 +741,18 @@ require_once __DIR__ . '/../includes/header.php';
                                 <span class="whitespace-nowrap"><?php echo __('inbox_leads'); ?></span>
                             </h2>
 
+                            <!-- Direct Link to Campaigns (NEW) -->
+                            <a href="create_campaign.php<?php echo $page ? '?page_id=' . $page['id'] : ''; ?>"
+                                class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-white/5 text-gray-400 border border-white/10 text-xs font-bold hover:bg-white/10 hover:text-white transition-all w-full sm:w-auto mt-2 sm:mt-0 group">
+                                <svg class="w-3.5 h-3.5 text-indigo-400 group-hover:scale-110 transition-transform"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z">
+                                    </path>
+                                </svg>
+                                <?php echo ($lang == 'ar' ? 'إدارة الحملات' : 'Manage Campaigns'); ?>
+                            </a>
+
                             <!-- Global Select Action -->
                             <button type="button" onclick="selectAllGlobal(<?php echo $page['id']; ?>)"
                                 class="inline-flex items-center justify-center gap-1 px-4 py-2 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-xs font-bold hover:bg-indigo-500 hover:text-white transition-all w-full sm:w-auto mt-2 sm:mt-0">
@@ -769,18 +781,24 @@ require_once __DIR__ . '/../includes/header.php';
 
                             <form action="create_campaign.php" method="POST" id="campaign-form" class="w-full sm:w-auto">
                                 <input type="hidden" name="page_id" value="<?php echo $page['id']; ?>">
-                                <button type="submit"
-                                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2.5 rounded-xl shadow-lg shadow-indigo-600/20 transition-all transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 h-full min-h-[42px]"
-                                    id="create-btn" disabled>
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M12 4v16m8-8H4">
-                                        </path>
-                                    </svg>
-                                    <span class="whitespace-nowrap"><?php echo __('create_campaign'); ?></span>
-                                    <span id="selected-count"
-                                        class="bg-black/30 text-white text-[10px] px-2 py-0.5 rounded-full font-mono min-w-[20px] text-center">0</span>
-                                </button>
+                                <div class="flex flex-col gap-2">
+                                    <button type="submit"
+                                        class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2.5 rounded-xl shadow-lg shadow-indigo-600/20 transition-all transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 h-full min-h-[42px]"
+                                        id="create-btn" disabled>
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 4v16m8-8H4">
+                                            </path>
+                                        </svg>
+                                        <span class="whitespace-nowrap"><?php echo __('create_campaign'); ?></span>
+                                        <span id="selected-count"
+                                            class="bg-black/30 text-white text-[10px] px-2 py-0.5 rounded-full font-mono min-w-[20px] text-center">0</span>
+                                    </button>
+                                    <a href="create_campaign.php?page_id=<?php echo $page['id']; ?>"
+                                        class="text-[10px] text-gray-500 hover:text-indigo-400 text-center font-bold transition-all uppercase tracking-wider">
+                                        <?php echo ($lang == 'ar' ? 'عرض تاريخ حملات الصفحة' : 'View Page Campaign History'); ?>
+                                    </a>
+                                </div>
                             </form>
                         </div>
                     </div>
@@ -944,7 +962,7 @@ require_once __DIR__ . '/../includes/header.php';
                                             ?>
                                             <span
                                                 class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border <?php echo $s_class; ?>">
-                                                <?php echo $camp['status']; ?>
+                                                <?php echo __($camp['status'] ?: 'draft'); ?>
                                             </span>
                                         </div>
 
@@ -1025,7 +1043,7 @@ require_once __DIR__ . '/../includes/header.php';
                                                             </path>
                                                         </svg>
                                                     </a>
-                                                    <button onclick="deleteCampaign(<?php echo $camp['id']; ?>)"
+                                                    <button onclick="window.deleteCampaign(<?php echo $camp['id']; ?>)"
                                                         class="p-1.5 text-red-500/50 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
                                                         title="<?php echo __('delete'); ?>">
                                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1712,7 +1730,7 @@ require_once __DIR__ . '/../includes/header.php';
                             card.style.transform = 'scale(0.9)';
                             setTimeout(() => card.remove(), 300);
                         });
-                        closeDeleteModal();
+                        window.closeDeleteModal();
                     } else {
                         alert(data.message);
                     }
@@ -1725,11 +1743,14 @@ require_once __DIR__ . '/../includes/header.php';
                 }
             }
 
-            function closeDeleteModal() {
+            window.confirmDelete = confirmDelete;
+
+            window.closeDeleteModal = function () {
                 document.getElementById('delete-modal').classList.add('hidden');
                 campIdToDelete = null;
-            }
-
+            };
+        </script>
+        <script>
             // Connection Status Auto-Check
             document.addEventListener('DOMContentLoaded', function () {
                 const badgeContainer = document.getElementById('connection-status-badge');
@@ -1791,11 +1812,11 @@ require_once __DIR__ . '/../includes/header.php';
                 </p>
 
                 <div class="flex gap-3">
-                    <button onclick="closeDeleteModal()"
+                    <button onclick="window.closeDeleteModal()"
                         class="flex-1 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl font-bold transition-all border border-white/5">
                         <?php echo ($lang == 'ar' ? 'إلغاء' : 'Cancel'); ?>
                     </button>
-                    <button id="btn-confirm-delete" onclick="confirmDelete()"
+                    <button id="btn-confirm-delete" onclick="window.confirmDelete()"
                         class="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold transition-all shadow-lg shadow-red-500/20">
                         <?php echo ($lang == 'ar' ? 'تأكيد الحذف' : 'Confirm Delete'); ?>
                     </button>
