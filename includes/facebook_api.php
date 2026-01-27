@@ -46,10 +46,19 @@ class FacebookAPI
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
-        // SSL Configuration: Enable verification in production, disable in development
-        $is_localhost = (strpos($url, 'localhost') !== false || strpos($url, '127.0.0.1') !== false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, !$is_localhost);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, $is_localhost ? 0 : 2);
+        // Smart SSL Configuration: Auto-detect environment
+        // Development (localhost): SSL verification disabled (fixes Windows certificate issues)
+        // Production: SSL verification enabled (secure)
+        $is_dev = (
+            (isset($_SERVER['HTTP_HOST']) && (
+                strpos($_SERVER['HTTP_HOST'], 'localhost') !== false ||
+                strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false
+            )) ||
+            (php_sapi_name() === 'cli-server') // PHP built-in server
+        );
+
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, !$is_dev);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, $is_dev ? 0 : 2);
 
         curl_setopt($ch, CURLOPT_TIMEOUT, 60); // Longer timeout for uploads
         curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
@@ -365,8 +374,7 @@ class FacebookAPI
 
     public function getObjectMetadata($id_or_url, $access_token)
     {
-        $res = $this->makeRequest("", [
-            'id' => $id_or_url,
+        $res = $this->makeRequest($id_or_url, [
             'fields' => 'id,name'
         ], $access_token);
 
