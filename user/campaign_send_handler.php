@@ -5,9 +5,17 @@ require_once __DIR__ . '/../includes/facebook_api.php';
 
 header('Content-Type: application/json');
 
-// Disable error display in JSON output to prevent parse errors
+// Comprehensive error handling to prevent HTML errors in JSON
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/../includes/php_errors.log');
+
+// Catch all errors and convert to JSON
+set_error_handler(function ($errno, $errstr, $errfile, $errline) {
+    error_log("PHP Error [$errno]: $errstr in $errfile:$errline");
+    echo json_encode(['status' => 'error', 'message' => "Server Error: $errstr"]);
+    exit;
+});
 
 if (!isLoggedIn()) {
     echo json_encode(['status' => 'error', 'message' => 'Unauthorized']);
