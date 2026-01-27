@@ -12,18 +12,25 @@ try {
     echo "Starting migration 009...<br>";
 
     // 1. Update 'exchanges' table (Payment methods columns)
-    try {
-        $pdo->query("SELECT payment_method_send_id FROM exchanges LIMIT 1");
-        echo " - Columns already exist in 'exchanges' table.<br>";
-    } catch (Exception $e) {
-        $pdo->exec("
-            ALTER TABLE exchanges 
-            ADD COLUMN payment_method_send_id INT NULL AFTER currency_to_id,
-            ADD COLUMN payment_method_receive_id INT NULL AFTER payment_method_send_id,
-            ADD CONSTRAINT fk_payment_method_send FOREIGN KEY (payment_method_send_id) REFERENCES payment_methods(id) ON DELETE SET NULL,
-            ADD CONSTRAINT fk_payment_method_receive FOREIGN KEY (payment_method_receive_id) REFERENCES payment_methods(id) ON DELETE SET NULL
-        ");
-        echo " - Updated 'exchanges' table with payment method columns. <span style='color:green'>Done</span><br>";
+    // Check if table exists first!
+    $tableCheck = $pdo->query("SHOW TABLES LIKE 'exchanges'")->fetch();
+
+    if ($tableCheck) {
+        try {
+            $pdo->query("SELECT payment_method_send_id FROM exchanges LIMIT 1");
+            echo " - Columns already exist in 'exchanges' table.<br>";
+        } catch (Exception $e) {
+            $pdo->exec("
+                ALTER TABLE exchanges 
+                ADD COLUMN payment_method_send_id INT NULL AFTER currency_to_id,
+                ADD COLUMN payment_method_receive_id INT NULL AFTER payment_method_send_id,
+                ADD CONSTRAINT fk_payment_method_send FOREIGN KEY (payment_method_send_id) REFERENCES payment_methods(id) ON DELETE SET NULL,
+                ADD CONSTRAINT fk_payment_method_receive FOREIGN KEY (payment_method_receive_id) REFERENCES payment_methods(id) ON DELETE SET NULL
+            ");
+            echo " - Updated 'exchanges' table with payment method columns. <span style='color:green'>Done</span><br>";
+        }
+    } else {
+        echo " - Table 'exchanges' does not exist. Skipping update for this table.<br>";
     }
 
     // 2. Cleanup 'currencies' table (Remove wallet_info)
