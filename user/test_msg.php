@@ -21,8 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $payload = [
         'recipient' => ['id' => $psid],
         'message' => ['text' => $message],
-        'messaging_type' => 'MESSAGE_TAG',
-        'tag' => 'POST_PURCHASE_UPDATE'
+        'messaging_type' => 'RESPONSE'
     ];
 
     $ch = curl_init($url);
@@ -131,6 +130,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <?php echo $result; ?>
         </div>
     </div>
-</body>
-
-</html>
+</body></html>
