@@ -120,9 +120,11 @@ require_once 'includes/header.php';
                                     </div>
                                     <div class="<?php echo $lang === 'ar' ? 'text-right' : 'text-left'; ?>">
                                         <p class="text-white font-black text-sm uppercase tracking-wider">
-                                            <?php echo __('hero_feature'); ?>
+                                            <?php echo getSetting('hero_floating_top_' . $lang, __('hero_feature')); ?>
                                         </p>
-                                        <p class="text-indigo-300 text-xs font-bold"><?php echo __('hero_badge'); ?></p>
+                                        <p class="text-indigo-300 text-xs font-bold">
+                                            <?php echo getSetting('hero_floating_main_' . $lang, __('hero_badge')); ?>
+                                        </p>
                                     </div>
                                 </div>
                             </div>
