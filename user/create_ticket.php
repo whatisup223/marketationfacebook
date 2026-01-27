@@ -23,9 +23,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $pdo->beginTransaction();
 
-            // Insert Ticket with exchange_id
-            $stmt = $pdo->prepare("INSERT INTO support_tickets (user_id, exchange_id, subject, status) VALUES (?, ?, ?, 'open')");
-            $stmt->execute([$user_id, $exchange_id, $subject]);
+            // Insert Ticket with campaign_id
+            $stmt = $pdo->prepare("INSERT INTO support_tickets (user_id, campaign_id, subject, status) VALUES (?, ?, ?, 'open')");
+            $stmt->execute([$user_id, $campaign_id, $subject]);
             $ticket_id = $pdo->lastInsertId();
 
             // Insert Initial Message
@@ -45,14 +45,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Fetch User's Recent Exchanges for Dropdown
-$stmt = $pdo->prepare("SELECT e.id, e.amount_send, c.symbol, e.status, e.created_at 
-                       FROM exchanges e 
-                       LEFT JOIN currencies c ON e.currency_from_id = c.id 
-                       WHERE e.user_id = ? 
-                       ORDER BY e.created_at DESC LIMIT 20");
+// Fetch User's Recent Campaigns for Dropdown
+$stmt = $pdo->prepare("SELECT id, campaign_name as name, status, created_at 
+                       FROM campaigns 
+                       WHERE user_id = ? 
+                       ORDER BY created_at DESC LIMIT 20");
 $stmt->execute([$user_id]);
-$exchanges = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$campaigns = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 require_once __DIR__ . '/../includes/header.php';
 ?>
@@ -85,28 +84,25 @@ require_once __DIR__ . '/../includes/header.php';
                             class="w-full bg-gray-900/50 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-all">
                     </div>
 
-                    <!-- Related Exchange (Optional) -->
+                    <!-- Related Campaign (Optional) -->
                     <div>
                         <label class="block text-gray-400 text-sm font-bold mb-2">
-                            <?php echo __('related_exchange'); ?>
+                            <?php echo __('related_campaign'); ?>
                         </label>
-                        <select name="exchange_id"
+                        <select name="campaign_id"
                             class="w-full bg-gray-900/50 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-all">
                             <option value="">
                                 <?php echo __('general_inquiry'); ?>
                             </option>
-                            <?php foreach ($exchanges as $ex): ?>
-                                <option value="<?php echo $ex['id']; ?>">
-                                    #
-                                    <?php echo $ex['id']; ?> -
-                                    <?php echo $ex['amount_send'] . ' ' . $ex['symbol']; ?>
-                                    (
-                                    <?php echo __('status_' . $ex['status']); ?>)
+                            <?php foreach ($campaigns as $camp): ?>
+                                <option value="<?php echo $camp['id']; ?>">
+                                    #<?php echo $camp['id']; ?> - <?php echo htmlspecialchars($camp['name']); ?>
+                                    (<?php echo $camp['status']; ?>)
                                 </option>
                             <?php endforeach; ?>
                         </select>
                         <p class="text-xs text-gray-500 mt-2">
-                            <?php echo __('select_exchange'); ?>
+                            <?php echo __('select_campaign_hint') ?? 'Select the campaign related to this ticket (optional).'; ?>
                         </p>
                     </div>
 
