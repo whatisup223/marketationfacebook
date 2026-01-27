@@ -49,8 +49,8 @@ if ($edit_id) {
     if ($existing) {
         $page_id = $existing['page_id'];
 
-        // Load Leads from Queue
-        $stmt = $pdo->prepare("SELECT l.fb_user_id FROM campaign_queue q JOIN fb_leads l ON q.lead_id = l.id WHERE q.campaign_id = ?");
+        // Load Leads from Queue (Fetch internal IDs)
+        $stmt = $pdo->prepare("SELECT l.id FROM campaign_queue q JOIN fb_leads l ON q.lead_id = l.id WHERE q.campaign_id = ?");
         $stmt->execute([$edit_id]);
         $selected_leads = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
@@ -88,6 +88,14 @@ if (!$page) {
     $show_empty_state = true;
 }
 
+// Fetch Page Campaign History
+$page_history = [];
+if (isset($page_id) && $page_id > 0) {
+    $histStmt = $pdo->prepare("SELECT * FROM campaigns WHERE page_id = ? AND user_id = ? ORDER BY created_at DESC LIMIT 5");
+    $histStmt->execute([$page_id, $user_id]);
+    $page_history = $histStmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_campaign'])) {
     $name = trim($_POST['campaign_name']);
     $text = trim($_POST['message_text']);
@@ -117,12 +125,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_campaign'])) {
         }
     }
 
-    // Create Campaign
-    $initial_status = 'active'; // Always active
-    $stmt = $pdo->prepare("INSERT INTO campaigns (user_id, page_id, name, message_text, image_url, status, total_leads, scheduled_at) 
-                           VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-    $stmt->execute([$user_id, $page_id, $name, $text, $image_url, $initial_status, 0, $scheduled_at]); // Set total_leads to 0 initially, will update later
-    $campaign_id = $pdo->lastInsertId();
+    // Create or Update Campaign
+    if ($edit_id) {
+        $stmt = $pdo->prepare("UPDATE campaigns SET name = ?, message_text = ?, image_url = ?, scheduled_at = ? WHERE id = ? AND user_id = ?");
+        $stmt->execute([$name, $text, $image_url, $scheduled_at, $edit_id, $user_id]);
+        $campaign_id = $edit_id;
+    } else {
+        $initial_status = 'active'; // Always active for new
+        $stmt = $pdo->prepare("INSERT INTO campaigns (user_id, page_id, name, message_text, image_url, status, total_leads, scheduled_at) 
+                               VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$user_id, $page_id, $name, $text, $image_url, $initial_status, 0, $scheduled_at]);
+        $campaign_id = $pdo->lastInsertId();
+    }
 
     // Increase limits for processing large batches
     set_time_limit(0);
@@ -134,23 +148,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_campaign'])) {
 
     $pdo->beginTransaction();
     $inserted_count = 0;
-    
+
     // Chunk processing to avoid memory issues and gigantic queries
     // Although we are using prepared statements row-by-row here inside transaction for safety, 
     // we can optimize further by multi-value insert if needed, but transaction + simple insert is usually fast enough for 10k.
     // Let's stick to transaction to speed it up significantly compared to auto-commit.
-    
+
     foreach ($selected_leads as $lead_id) {
         if (filter_var($lead_id, FILTER_VALIDATE_INT)) {
             $queueStmt->execute([$campaign_id, $lead_id]);
             $inserted_count++;
         }
     }
-    
+
     $pdo->commit();
 
-    // Update campaign with actual count of queue items
-    $pdo->prepare("UPDATE campaigns SET total_leads = ? WHERE id = ?")->execute([$inserted_count, $campaign_id]);
+    // Update campaign with actual count of queue items (current total)
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM campaign_queue WHERE campaign_id = ?");
+    $stmt->execute([$campaign_id]);
+    $actual_total = $stmt->fetchColumn();
+    $pdo->prepare("UPDATE campaigns SET total_leads = ? WHERE id = ?")->execute([$actual_total, $campaign_id]);
 
     // Clear setup session
     unset($_SESSION['campaign_setup']);
@@ -273,9 +290,10 @@ require_once __DIR__ . '/../includes/header.php';
 
                                 <form method="POST" class="space-y-6" enctype="multipart/form-data">
                                     <input type="hidden" name="page_id" value="<?php echo htmlspecialchars($page_id); ?>">
-                                    
+
                                     <!-- Send Leads as JSON to avoid max_input_vars limit (1000 items) -->
-                                    <input type="hidden" name="ids_json" value="<?php echo htmlspecialchars(json_encode($selected_leads)); ?>">
+                                    <input type="hidden" name="ids_json"
+                                        value="<?php echo htmlspecialchars(json_encode($selected_leads)); ?>">
 
                                     <!-- Campaign Name -->
                                     <div class="relative group">
@@ -488,6 +506,57 @@ require_once __DIR__ . '/../includes/header.php';
                                     </p>
                                 </div>
                             </div>
+
+                            <!-- Page Campaign History Card (NEW) -->
+                            <?php if (!empty($page_history)): ?>
+                                <div class="mt-6 animate-in slide-in-from-bottom duration-700">
+                                    <div class="glass-card rounded-[2rem] border border-white/10 overflow-hidden shadow-2xl">
+                                        <div
+                                            class="bg-white/5 px-6 py-4 border-b border-white/5 flex items-center justify-between">
+                                            <div class="flex items-center gap-2">
+                                                <div class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></div>
+                                                <h3 class="text-xs font-bold text-white uppercase tracking-wider">
+                                                    <?php echo ($lang == 'ar' ? 'تاريخ حملات الصفحة' : 'Page Campaign History'); ?>
+                                                </h3>
+                                            </div>
+                                            <a href="page_inbox.php?page_id=<?php echo $page_id; ?>"
+                                                class="text-[10px] text-indigo-400 font-bold hover:text-indigo-300 transition-colors flex items-center gap-1">
+                                                <?php echo ($lang == 'ar' ? 'عرض الكل' : 'View All'); ?>
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                                                </svg>
+                                            </a>
+                                        </div>
+                                        <div class="p-4 space-y-3">
+                                            <?php foreach ($page_history as $hist): ?>
+                                                <div
+                                                    class="p-3 bg-white/5 rounded-2xl border border-white/5 hover:bg-white/10 transition-all group">
+                                                    <div class="flex justify-between items-start mb-1">
+                                                        <h4 class="text-xs font-bold text-white truncate max-w-[150px]">
+                                                            <?php echo htmlspecialchars($hist['name']); ?></h4>
+                                                        <span
+                                                            class="text-[9px] text-gray-500 font-mono"><?php echo date('d/m H:i', strtotime($hist['created_at'])); ?></span>
+                                                    </div>
+                                                    <div class="flex items-center gap-3">
+                                                        <div class="flex items-center gap-1">
+                                                            <div
+                                                                class="w-1.5 h-1.5 rounded-full <?php echo $hist['status'] === 'completed' ? 'bg-green-500' : ($hist['status'] === 'running' ? 'bg-blue-500 animate-pulse' : 'bg-gray-500'); ?>">
+                                                            </div>
+                                                            <span
+                                                                class="text-[9px] text-gray-400 font-bold uppercase"><?php echo __($hist['status']); ?></span>
+                                                        </div>
+                                                        <div class="text-[9px] text-gray-500 px-2 border-l border-white/10">
+                                                            <b class="text-indigo-400"><?php echo $hist['total_leads']; ?></b>
+                                                            <?php echo ($lang == 'ar' ? 'عميل' : 'leads'); ?>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
