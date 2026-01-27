@@ -9,9 +9,25 @@ require_once __DIR__ . '/../includes/facebook_api.php';
 ob_clean();
 header('Content-Type: application/json');
 
-// Simple Error Suppression
+// Simple Error Suppression & Logging
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/debug_errors.txt');
+
+// Custom Exception Handler to catch Fatal Errors
+function fatal_handler()
+{
+    $error = error_get_last();
+    if ($error !== NULL && $error['type'] === E_ERROR) {
+        $logMsg = date('Y-m-d H:i:s') . " FATAL: " . $error['message'] . " in " . $error['file'] . ":" . $error['line'] . "\n";
+        file_put_contents(__DIR__ . '/debug_errors.txt', $logMsg, FILE_APPEND);
+        // Attempt to return valid JSON even in death
+        ob_clean();
+        echo json_encode(['status' => 'error', 'message' => 'Fatal Server Error. Check logs.']);
+        exit;
+    }
+}
+register_shutdown_function('fatal_handler');
 
 // Helper function to send clean JSON
 function sendJson($data)
