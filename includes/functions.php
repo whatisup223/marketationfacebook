@@ -87,6 +87,15 @@ $translations = [
         'feature_3_title' => 'تصدير فوري',
         'feature_3_desc' => 'حمل البيانات بصيغة Excel أو CSV واستخدمها في حملاتك الإعلانية فوراً.',
 
+        'tool_showcase_title' => 'قوة الاستخراج في يدك',
+        'tool_showcase_subtitle' => 'منصتنا ليست مجرد برمجيات، بل هي محرك نمو متكامل يمنحك بيانات عملائك المحتملين بضغطة زر واحدة، بعيداً عن تعقيدات البرمجة التقليدية.',
+        'tool_feature_1' => 'استهداف متقدم',
+        'tool_feature_1_desc' => 'استخرج المتفاعلين من منشورات محددة أو كافة متابعي صفحات المنافسين.',
+        'tool_feature_2' => 'تجاوز الحظر',
+        'tool_feature_2_desc' => 'تقنيات محاكاة سلوك البشري لضمان أمان حساباتك بنسبة 100%.',
+        'tool_feature_3' => 'ذكاء اصطناعي',
+        'tool_feature_3_desc' => 'تصفية تلقائية للأرقام والبيانات غير الصحيحة لضمان جودة العملاء.',
+
         'how_it_works_title' => 'خطوات العمل',
         'step_1_title' => 'أضف حساب فيسبوك',
         'step_1_desc' => 'اربط حسابك بأمان لنتمكن من الوصول للصفحات العامة.',
@@ -742,6 +751,15 @@ $translations = [
         'feature_2_desc' => 'Smart simulation technology to keep your accounts safe from bans.',
         'feature_3_title' => 'Instant Export',
         'feature_3_desc' => 'Download data as Excel or CSV and use it in your campaigns immediately.',
+
+        'tool_showcase_title' => 'The Power of Extraction in Your Hands',
+        'tool_showcase_subtitle' => 'Our platform is not just software; it is an integrated growth engine that gives you your potential customers\' data with a single click, away from the complexities of traditional programming.',
+        'tool_feature_1' => 'Advanced Targeting',
+        'tool_feature_1_desc' => 'Extract engagers from specific posts or all followers of competitor pages.',
+        'tool_feature_2' => 'Anti-Ban Tech',
+        'tool_feature_2_desc' => 'Human behavior simulation techniques to ensure 100% account safety.',
+        'tool_feature_3' => 'AI Filtering',
+        'tool_feature_3_desc' => 'Automatic filtering of invalid numbers and data to ensure lead quality.',
 
         'how_it_works_title' => 'How It Works',
         'step_1_title' => 'Add Facebook Account',

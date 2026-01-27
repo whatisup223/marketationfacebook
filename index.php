@@ -566,6 +566,128 @@ if (!empty($portfolioItems)):
     </section>
 <?php endif; ?>
 
+<!-- Tool Showcase Section -->
+<section id="tool-showcase" class="py-24 relative overflow-hidden">
+    <!-- Background Decor -->
+    <div
+        class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-indigo-600/5 blur-[120px] rounded-full opacity-50">
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="grid lg:grid-cols-2 gap-16 items-center">
+
+            <!-- Left: Visual Mockup -->
+            <div class="relative group animate-fade-in order-2 lg:order-1">
+                <div
+                    class="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-[2.5rem] blur opacity-25 group-hover:opacity-50 transition duration-1000">
+                </div>
+                <div class="relative glass-card rounded-[2.5rem] p-2 border border-white/10 overflow-hidden shadow-2xl">
+                    <img src="assets/img/platform-mockup.png" alt="Platform Mockup"
+                        class="w-full h-auto rounded-[2rem] transform group-hover:scale-[1.02] transition-transform duration-700">
+
+                    <!-- Floating Overlay Stats -->
+                    <div class="absolute top-8 right-8 animate-float">
+                        <div class="glass-card p-4 rounded-2xl border-white/20 backdrop-blur-xl bg-white/10 shadow-xl">
+                            <div class="flex items-center gap-3">
+                                <div
+                                    class="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center text-green-400">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+                                        <?php echo __('status_completed'); ?></p>
+                                    <p class="text-white font-black">99.9% <?php echo __('verified'); ?></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Content -->
+            <div class="space-y-8 order-1 lg:order-2">
+                <div
+                    class="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20">
+                    <span class="relative flex h-3 w-3">
+                        <span
+                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-indigo-500"></span>
+                    </span>
+                    <span
+                        class="text-indigo-400 text-xs font-black uppercase tracking-[0.2em]"><?php echo __('extraction_tools'); ?></span>
+                </div>
+
+                <h2 class="text-4xl md:text-6xl font-black text-white leading-tight">
+                    <?php echo __('tool_showcase_title'); ?>
+                </h2>
+
+                <p class="text-xl text-gray-400 leading-relaxed">
+                    <?php echo __('tool_showcase_subtitle'); ?>
+                </p>
+
+                <!-- Features Grid -->
+                <div class="grid gap-6">
+                    <!-- Item 1 -->
+                    <div
+                        class="flex items-start gap-5 p-6 rounded-3xl bg-white/5 border border-white/5 hover:border-indigo-500/20 transition-all group/item">
+                        <div
+                            class="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 group-hover/item:bg-indigo-500 group-hover/item:text-white transition-all">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-bold text-white mb-1 tracking-tight">
+                                <?php echo __('tool_feature_1'); ?></h4>
+                            <p class="text-sm text-gray-400"><?php echo __('tool_feature_1_desc'); ?></p>
+                        </div>
+                    </div>
+
+                    <!-- Item 2 -->
+                    <div
+                        class="flex items-start gap-5 p-6 rounded-3xl bg-white/5 border border-white/5 hover:border-purple-500/20 transition-all group/item">
+                        <div
+                            class="w-12 h-12 rounded-2xl bg-purple-500/10 flex items-center justify-center text-purple-400 group-hover/item:bg-purple-500 group-hover/item:text-white transition-all">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
+                                </path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-bold text-white mb-1 tracking-tight">
+                                <?php echo __('tool_feature_2'); ?></h4>
+                            <p class="text-sm text-gray-400"><?php echo __('tool_feature_2_desc'); ?></p>
+                        </div>
+                    </div>
+
+                    <!-- Item 3 -->
+                    <div
+                        class="flex items-start gap-5 p-6 rounded-3xl bg-white/5 border border-white/5 hover:border-blue-500/20 transition-all group/item">
+                        <div
+                            class="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-400 group-hover/item:bg-blue-500 group-hover/item:text-white transition-all">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                                </path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-bold text-white mb-1 tracking-tight">
+                                <?php echo __('tool_feature_3'); ?></h4>
+                            <p class="text-sm text-gray-400"><?php echo __('tool_feature_3_desc'); ?></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
 <!-- Pricing Section -->
 <?php
 $pricingPlans = [];
