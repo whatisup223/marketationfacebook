@@ -55,8 +55,12 @@ if (isset($_GET['sync'])) {
     require_once __DIR__ . '/../includes/facebook_api.php';
     $acc_id = $_GET['sync'];
 
-    // Deep Clean before sync: Remove any pages that might have lost their account link or are duplicates
-    $pdo->exec("DELETE t1 FROM fb_pages t1 INNER JOIN fb_pages t2 WHERE t1.id < t2.id AND t1.page_id = t2.page_id");
+    // Aggressive Deep Clean: Fix IDs and remove ANY existing duplicates before fetching new data
+    $pdo->exec("UPDATE fb_pages SET page_id = TRIM(page_id)");
+    // Remove duplicates based on page_id, keeping only the most recent one (highest ID)
+    $pdo->exec("DELETE FROM fb_pages WHERE id NOT IN (SELECT max_id FROM (SELECT MAX(id) as max_id FROM fb_pages GROUP BY page_id) as t)");
+
+    // Ensure the account actually belongs to the user
 
     $stmt = $pdo->prepare("SELECT * FROM fb_accounts WHERE id = ? AND user_id = ?");
     $stmt->execute([$acc_id, $user_id]);
@@ -111,7 +115,7 @@ if (isset($_GET['sync'])) {
                     $result = $insertPage->execute([
                         $acc_id,
                         $page['name'] ?? 'Unknown Page',
-                        $page['id'],
+                        trim($page['id']),
                         $page['access_token'],
                         $page['category'] ?? 'General',
                         $picture
@@ -308,15 +312,33 @@ require_once __DIR__ . '/../includes/header.php';
                             </div>
                         </div>
                         <div class="flex items-center gap-3 self-end sm:self-auto">
-                            <a href="?sync=<?php echo $acc['id']; ?>"
-                                class="px-5 py-2.5 bg-white/5 hover:bg-white/10 text-white rounded-2xl text-xs font-bold transition-all flex items-center gap-2 border border-white/5">
-                                <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
-                                    </path>
-                                </svg>
-                                <?php echo __('btn_sync_pages'); ?>
-                            </a>
+                            <?php
+                            // Check if this account has pages already
+                            $stmt_pcheck = $pdo->prepare("SELECT COUNT(*) FROM fb_pages WHERE account_id = ?");
+                            $stmt_pcheck->execute([$acc['id']]);
+                            $has_pages = $stmt_pcheck->fetchColumn() > 0;
+
+                            if ($has_pages): ?>
+                                <a href="?sync=<?php echo $acc['id']; ?>"
+                                    class="px-5 py-2.5 bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-400 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 border border-indigo-500/20 shadow-lg shadow-indigo-500/5">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                                        </path>
+                                    </svg>
+                                    <?php echo ($lang == 'ar' ? 'تحديث المزامنة' : 'Update Sync'); ?>
+                                </a>
+                            <?php else: ?>
+                                <a href="?sync=<?php echo $acc['id']; ?>"
+                                    class="px-5 py-2.5 bg-white/5 hover:bg-white/10 text-white rounded-2xl text-xs font-bold transition-all flex items-center gap-2 border border-white/5">
+                                    <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                                        </path>
+                                    </svg>
+                                    <?php echo __('btn_sync_pages'); ?>
+                                </a>
+                            <?php endif; ?>
                             <a href="?delete=<?php echo $acc['id']; ?>"
                                 onclick="return confirm('<?php echo __('confirm_delete_account'); ?>');"
                                 class="p-2.5 text-red-400 hover:bg-red-500/10 rounded-2xl transition-colors border border-transparent hover:border-red-500/20">
@@ -409,9 +431,12 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
                 <?php
                 $pdo->exec("SET NAMES utf8mb4");
+                // Use GROUP BY to ensure UI never shows duplicates even if DB constraints were somehow bypassed
                 $stmt = $pdo->prepare("SELECT p.*, a.fb_name as account_name FROM fb_pages p 
                                         JOIN fb_accounts a ON p.account_id = a.id 
-                                        WHERE a.user_id = ? ORDER BY p.created_at DESC");
+                                        WHERE a.user_id = ? 
+                                        GROUP BY p.page_id 
+                                        ORDER BY p.created_at DESC");
                 $stmt->execute([$user_id]);
                 $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 

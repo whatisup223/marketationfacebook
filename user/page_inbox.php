@@ -29,10 +29,12 @@ if ($page_id) {
 
 if (!$page) {
     $showSelector = true;
-    // Fetch all available pages for selection
+    // Fetch all available pages for selection (Unique by page_id)
     $stmt = $pdo->prepare("SELECT p.* FROM fb_pages p 
                            JOIN fb_accounts a ON p.account_id = a.id 
-                           WHERE a.user_id = ? ORDER BY p.page_name ASC");
+                           WHERE a.user_id = ? 
+                           GROUP BY p.page_id 
+                           ORDER BY p.page_name ASC");
     $stmt->execute([$user_id]);
     $user_pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
@@ -897,547 +899,547 @@ require_once __DIR__ . '/../includes/header.php';
                 }
 
                 // --- UI HELPERS ---
-                    const ui = {
-                        btnLimit: document.getElementById('btn-mode-limit'),
-                        btnAll: document.getElementById('btn-mode-all'),
-                        inputLimit: document.getElementById('scan_limit'),
-                        inputGoal: document.getElementById('scan_goal'),
-                        goalWrapper: document.getElementById('goal-wrapper'),
-                        inputDelay: document.getElementById('scan_delay'),
-                        btnPlay: document.getElementById('btn-play'),
-                        btnPause: document.getElementById('btn-pause'),
-                        btnStop: document.getElementById('btn-stop'),
-                        textPlay: document.getElementById('text-play'),
+                const ui = {
+                    btnLimit: document.getElementById('btn-mode-limit'),
+                    btnAll: document.getElementById('btn-mode-all'),
+                    inputLimit: document.getElementById('scan_limit'),
+                    inputGoal: document.getElementById('scan_goal'),
+                    goalWrapper: document.getElementById('goal-wrapper'),
+                    inputDelay: document.getElementById('scan_delay'),
+                    btnPlay: document.getElementById('btn-play'),
+                    btnPause: document.getElementById('btn-pause'),
+                    btnStop: document.getElementById('btn-stop'),
+                    textPlay: document.getElementById('text-play'),
 
-                        statusText: document.getElementById('status-text'),
-                        statusDot: document.getElementById('status-dot'),
-                        progressCount: document.getElementById('progress-count'),
-                        progressBar: document.getElementById('progress-bar'),
+                    statusText: document.getElementById('status-text'),
+                    statusDot: document.getElementById('status-dot'),
+                    progressCount: document.getElementById('progress-count'),
+                    progressBar: document.getElementById('progress-bar'),
 
-                        tbody: document.getElementById('leads-tbody'),
-                        noLeadsRow: document.getElementById('no-leads-row')
-                    };
+                    tbody: document.getElementById('leads-tbody'),
+                    noLeadsRow: document.getElementById('no-leads-row')
+                };
 
-                    // Add listeners to save on change
-                    if (ui.inputLimit && ui.inputGoal && ui.inputDelay) {
-                        [ui.inputLimit, ui.inputGoal, ui.inputDelay].forEach(input => {
-                            input.addEventListener('change', saveSettings);
-                            input.addEventListener('input', saveSettings);
-                        });
+                // Add listeners to save on change
+                if (ui.inputLimit && ui.inputGoal && ui.inputDelay) {
+                    [ui.inputLimit, ui.inputGoal, ui.inputDelay].forEach(input => {
+                        input.addEventListener('change', saveSettings);
+                        input.addEventListener('input', saveSettings);
+                    });
+                }
+
+                // Initialize settings on load
+                loadSettings();
+
+                function setMode(mode) {
+                    if (state.isRunning) return;
+
+                    state.scanMode = mode;
+                    if (mode === 'limit') {
+                        ui.btnLimit.classList.replace('text-gray-400', 'text-white');
+                        ui.btnLimit.classList.add('bg-indigo-600', 'shadow-lg');
+                        ui.btnAll.classList.remove('bg-indigo-600', 'shadow-lg', 'text-white');
+                        ui.btnAll.classList.add('text-gray-400');
+
+                        ui.goalWrapper.classList.remove('hidden');
+                    } else {
+                        ui.btnAll.classList.replace('text-gray-400', 'text-white');
+                        ui.btnAll.classList.add('bg-indigo-600', 'shadow-lg');
+                        ui.btnLimit.classList.remove('bg-indigo-600', 'shadow-lg', 'text-white');
+                        ui.btnLimit.classList.add('text-gray-400');
+
+                        ui.goalWrapper.classList.add('hidden');
+                    }
+                    saveSettings();
+                }
+
+                // --- SCAN LOGIC ---
+                async function startScan() {
+                    if (state.isRunning && !state.isPaused) return;
+
+                    if (state.isPaused) {
+                        resumeScan();
+                        return;
                     }
 
-                    // Initialize settings on load
-                    loadSettings();
+                    // INIT
+                    state.isRunning = true;
+                    state.isPaused = false;
+                    state.processed = 0;
+                    state.nextCursor = null;
+                    state.limit = parseInt(ui.inputLimit.value) || 50;
+                    state.totalGoal = parseInt(ui.inputGoal.value) || 100;
+                    state.delay = parseInt(ui.inputDelay.value) || 0;
 
-                        function setMode(mode) {
-                            if (state.isRunning) return;
+                    updateUI('running');
+                    scanLoop();
+                }
 
-                            state.scanMode = mode;
-                            if (mode === 'limit') {
-                                ui.btnLimit.classList.replace('text-gray-400', 'text-white');
-                                ui.btnLimit.classList.add('bg-indigo-600', 'shadow-lg');
-                                ui.btnAll.classList.remove('bg-indigo-600', 'shadow-lg', 'text-white');
-                                ui.btnAll.classList.add('text-gray-400');
+                function pauseScan() {
+                    state.isPaused = true;
+                    updateUI('paused');
+                }
 
-                                ui.goalWrapper.classList.remove('hidden');
-                            } else {
-                                ui.btnAll.classList.replace('text-gray-400', 'text-white');
-                                ui.btnAll.classList.add('bg-indigo-600', 'shadow-lg');
-                                ui.btnLimit.classList.remove('bg-indigo-600', 'shadow-lg', 'text-white');
-                                ui.btnLimit.classList.add('text-gray-400');
+                function resumeScan() {
+                    state.isPaused = false;
+                    updateUI('running');
+                    scanLoop();
+                }
 
-                                ui.goalWrapper.classList.add('hidden');
-                            }
-                            saveSettings();
+                function stopScan() {
+                    state.isRunning = false;
+                    state.isPaused = false;
+                    updateUI('stopped');
+                }
+
+                async function scanLoop() {
+                    while (state.isRunning && !state.isPaused) {
+
+                        // Check if we reached the goal in limit mode
+                        if (state.scanMode === 'limit' && state.processed >= state.totalGoal) {
+                            finishScan();
+                            break;
                         }
 
-                        // --- SCAN LOGIC ---
-                        async function startScan() {
-                            if (state.isRunning && !state.isPaused) return;
-
-                            if (state.isPaused) {
-                                resumeScan();
-                                return;
-                            }
-
-                            // INIT
-                            state.isRunning = true;
-                            state.isPaused = false;
-                            state.processed = 0;
-                            state.nextCursor = null;
-                            state.limit = parseInt(ui.inputLimit.value) || 50;
-                            state.totalGoal = parseInt(ui.inputGoal.value) || 100;
-                            state.delay = parseInt(ui.inputDelay.value) || 0;
-
-                            updateUI('running');
-                            scanLoop();
+                        // Determine Batch Size
+                        let currentBatch = state.limit;
+                        if (state.scanMode === 'limit') {
+                            currentBatch = Math.min(state.limit, state.totalGoal - state.processed);
                         }
 
-                        function pauseScan() {
-                            state.isPaused = true;
-                            updateUI('paused');
-                        }
+                        // Status: Scanning (Batch Size)
+                        ui.statusText.innerText = `<?php echo __('status_scanning'); ?>`.replace('%s', currentBatch);
+                        ui.progressBar.classList.add('animate-pulse');
 
-                        function resumeScan() {
-                            state.isPaused = false;
-                            updateUI('running');
-                            scanLoop();
-                        }
+                        try {
+                            const formData = new FormData();
+                            formData.append('ajax_scan', '1');
+                            formData.append('limit', currentBatch);
+                            if (state.nextCursor) formData.append('after_cursor', state.nextCursor);
 
-                        function stopScan() {
-                            state.isRunning = false;
-                            state.isPaused = false;
-                            updateUI('stopped');
-                        }
+                            const response = await fetch('page_inbox.php?page_id=<?php echo $page['id']; ?>', {
+                                method: 'POST',
+                                body: formData
+                            });
 
-                        async function scanLoop() {
-                            while (state.isRunning && !state.isPaused) {
+                            const data = await response.json();
 
-                                // Check if we reached the goal in limit mode
-                                if (state.scanMode === 'limit' && state.processed >= state.totalGoal) {
-                                    finishScan();
-                                    break;
-                                }
-
-                                // Determine Batch Size
-                                let currentBatch = state.limit;
-                                if (state.scanMode === 'limit') {
-                                    currentBatch = Math.min(state.limit, state.totalGoal - state.processed);
-                                }
-
-                                // Status: Scanning (Batch Size)
-                                ui.statusText.innerText = `<?php echo __('status_scanning'); ?>`.replace('%s', currentBatch);
-                                ui.progressBar.classList.add('animate-pulse');
-
-                                try {
-                                    const formData = new FormData();
-                                    formData.append('ajax_scan', '1');
-                                    formData.append('limit', currentBatch);
-                                    if (state.nextCursor) formData.append('after_cursor', state.nextCursor);
-
-                                    const response = await fetch('page_inbox.php?page_id=<?php echo $page['id']; ?>', {
-                                        method: 'POST',
-                                        body: formData
-                                    });
-
-                                    const data = await response.json();
-
-                                    if (data.status === 'error') {
-                                        // Check for Token Errors
-                                        let msg = JSON.stringify(data.message).toLowerCase();
-                                        if (msg.includes('session has expired') || msg.includes('oauth') || msg.includes('access token') || msg.includes('code: 190')) {
-                                            stopScan();
-                                            showTokenModal();
-                                            return; // Stop loop
-                                        }
-
-                                        alert('Scan Error: ' + data.message);
-                                        stopScan();
-                                        break;
-                                    }
-
-                                    if (data.html) {
-                                        if (ui.noLeadsRow) ui.noLeadsRow.remove();
-                                        ui.tbody.insertAdjacentHTML('afterbegin', data.html); // Add new leads to top
-
-                                        // PERFORMANCE: Keep DOM light by removing excess rows
-                                        // This simulates "real-time pagination" where only recent items are visible
-                                        const maxRows = 50;
-                                        const renderedRows = ui.tbody.children;
-                                        while (renderedRows.length > maxRows) {
-                                            renderedRows[renderedRows.length - 1].remove();
-                                        }
-
-                                        // Apply search filter to new rows
-                                        if (typeof filterLeads === 'function') filterLeads();
-                                    }
-
-                                    state.processed += data.count;
-                                    ui.progressCount.innerText = state.processed;
-                                    ui.progressCount.classList.remove('hidden');
-
-                                    // Status: Processed X leads (Translated)
-                                    ui.statusText.innerText = `<?php echo __('status_processed'); ?>`.replace('%s', state.processed);
-
-                                    // Progress Bar Update
-                                    if (state.scanMode === 'limit') {
-                                        let pct = Math.min(100, (state.processed / state.totalGoal) * 100);
-                                        ui.progressBar.style.width = pct + '%';
-                                    } else {
-                                        ui.progressBar.style.width = '100%';
-                                    }
-
-                                    if (data.next_cursor && (state.scanMode === 'all' || state.processed < state.totalGoal)) {
-                                        state.nextCursor = data.next_cursor;
-                                    } else {
-                                        finishScan();
-                                        break;
-                                    }
-
-                                    // Delay / Anti-Ban
-                                    if (state.delay > 0 && state.isRunning && !state.isPaused) {
-                                        ui.statusText.innerText = `<?php echo __('status_sleeping'); ?>`.replace('%s', state.delay);
-                                        await new Promise(r => setTimeout(r, state.delay * 1000));
-                                    }
-
-                                } catch (e) {
-                                    console.error(e);
-                                    alert('Network Error');
+                            if (data.status === 'error') {
+                                // Check for Token Errors
+                                let msg = JSON.stringify(data.message).toLowerCase();
+                                if (msg.includes('session has expired') || msg.includes('oauth') || msg.includes('access token') || msg.includes('code: 190')) {
                                     stopScan();
-                                    break;
+                                    showTokenModal();
+                                    return; // Stop loop
                                 }
+
+                                alert('Scan Error: ' + data.message);
+                                stopScan();
+                                break;
                             }
-                        }
 
-                        function finishScan() {
-                            state.isRunning = false;
-                            state.isPaused = false;
-                            updateUI('finished');
-                            ui.statusText.innerText = `<?php echo __('status_finished'); ?>`;
-                            // Reload to apply pagination logic
-                            setTimeout(() => {
-                                window.location.reload();
-                            }, 1000);
-                        }
+                            if (data.html) {
+                                if (ui.noLeadsRow) ui.noLeadsRow.remove();
+                                ui.tbody.insertAdjacentHTML('afterbegin', data.html); // Add new leads to top
 
-                        function updateUI(status) {
-                            if (status === 'running') {
-                                ui.btnPlay.classList.add('hidden');
-                                ui.btnPause.classList.remove('hidden');
-                                ui.btnStop.disabled = false;
-                                ui.btnPause.disabled = false;
-
-                                ui.statusDot.classList.replace('bg-gray-600', 'bg-green-500');
-                                ui.statusDot.classList.add('animate-ping');
-
-                                ui.inputLimit.disabled = true;
-                                ui.inputGoal.disabled = true;
-                                ui.inputDelay.disabled = true;
-                            }
-                            else if (status === 'paused') {
-                                ui.btnPlay.classList.remove('hidden');
-                                ui.btnPause.classList.add('hidden');
-                                ui.textPlay.innerText = `<?php echo __('btn_resume'); ?>`;
-
-                                ui.statusDot.classList.replace('bg-green-500', 'bg-yellow-500');
-                                ui.statusDot.classList.remove('animate-ping');
-                                ui.statusText.innerText = `<?php echo __('status_paused'); ?>`;
-                            }
-                            else if (status === 'stopped' || status === 'finished') {
-                                ui.btnPlay.classList.remove('hidden');
-                                ui.btnPause.classList.add('hidden');
-                                ui.textPlay.innerText = `<?php echo __('btn_start'); ?>`;
-                                ui.btnStop.disabled = true;
-
-                                ui.statusDot.className = 'w-2 h-2 rounded-full bg-gray-600';
-                                ui.progressBar.classList.remove('animate-pulse');
-                                if (status === 'stopped') ui.progressBar.style.width = '0';
-
-                                ui.inputLimit.disabled = false;
-                                ui.inputGoal.disabled = false;
-                                ui.inputDelay.disabled = false;
-                            }
-                        }
-
-                        // --- CHECKBOX LOGIC ---
-                        // --- PERSISTENT SELECTION LOGIC ---
-                        // Uses sessionStorage to keep track of selected IDs across pagination
-                        const PAGE_KEY = 'selected_leads_<?php echo $page['id']; ?>';
-                        const selectAll = document.getElementById('select-all');
-
-                        // Helper to get/set Storage
-                        function getStoredSelection() {
-                            const stored = sessionStorage.getItem(PAGE_KEY);
-                            return stored ? JSON.parse(stored) : [];
-                        }
-
-                        function saveSelection(ids) {
-                            sessionStorage.setItem(PAGE_KEY, JSON.stringify(ids));
-                            updateUIStats(ids.length);
-                        }
-
-                        function updateUIStats(count) {
-                            const countSpan = document.getElementById('selected-count');
-                            const createBtn = document.getElementById('create-btn');
-
-                            if (countSpan) countSpan.innerText = count;
-                            if (createBtn) createBtn.disabled = count === 0;
-
-                            // Check "Select All" checkbox state if all currently visible are selected
-                            if (selectAll) {
-                                const allVisible = Array.from(document.querySelectorAll('.lead-checkbox'));
-                                if (allVisible.length > 0) {
-                                    const allChecked = allVisible.every(cb => cb.checked);
-                                    selectAll.checked = allChecked;
+                                // PERFORMANCE: Keep DOM light by removing excess rows
+                                // This simulates "real-time pagination" where only recent items are visible
+                                const maxRows = 50;
+                                const renderedRows = ui.tbody.children;
+                                while (renderedRows.length > maxRows) {
+                                    renderedRows[renderedRows.length - 1].remove();
                                 }
+
+                                // Apply search filter to new rows
+                                if (typeof filterLeads === 'function') filterLeads();
                             }
-                        }
 
-                        // Initialize: Restore Selection
-                        function initSelection() {
-                            const selectedIds = getStoredSelection();
+                            state.processed += data.count;
+                            ui.progressCount.innerText = state.processed;
+                            ui.progressCount.classList.remove('hidden');
 
-                            // Apply to current checkboxes
-                            document.querySelectorAll('.lead-checkbox').forEach(cb => {
-                                if (selectedIds.includes(cb.value)) {
-                                    cb.checked = true;
-                                }
-                            });
+                            // Status: Processed X leads (Translated)
+                            ui.statusText.innerText = `<?php echo __('status_processed'); ?>`.replace('%s', state.processed);
 
-                            updateUIStats(selectedIds.length);
-                        }
-
-                        // Toggle Single Row
-                        function toggleRow(row) {
-                            const checkbox = row.querySelector('.lead-checkbox');
-                            if (checkbox) {
-                                // Toggle Check
-                                checkbox.checked = !checkbox.checked;
-
-                                // Update Storage
-                                let selectedIds = getStoredSelection();
-                                if (checkbox.checked) {
-                                    if (!selectedIds.includes(checkbox.value)) selectedIds.push(checkbox.value);
-                                } else {
-                                    selectedIds = selectedIds.filter(id => id !== checkbox.value);
-                                }
-                                saveSelection(selectedIds);
+                            // Progress Bar Update
+                            if (state.scanMode === 'limit') {
+                                let pct = Math.min(100, (state.processed / state.totalGoal) * 100);
+                                ui.progressBar.style.width = pct + '%';
+                            } else {
+                                ui.progressBar.style.width = '100%';
                             }
+
+                            if (data.next_cursor && (state.scanMode === 'all' || state.processed < state.totalGoal)) {
+                                state.nextCursor = data.next_cursor;
+                            } else {
+                                finishScan();
+                                break;
+                            }
+
+                            // Delay / Anti-Ban
+                            if (state.delay > 0 && state.isRunning && !state.isPaused) {
+                                ui.statusText.innerText = `<?php echo __('status_sleeping'); ?>`.replace('%s', state.delay);
+                                await new Promise(r => setTimeout(r, state.delay * 1000));
+                            }
+
+                        } catch (e) {
+                            console.error(e);
+                            alert('Network Error');
+                            stopScan();
+                            break;
                         }
+                    }
+                }
 
-                        // Handle Direct Checkbox Click (prevent bubbling double toggle)
-                        document.querySelectorAll('.lead-checkbox').forEach(cb => {
-                            cb.addEventListener('click', function (e) {
-                                e.stopPropagation(); // Stop row click
+                function finishScan() {
+                    state.isRunning = false;
+                    state.isPaused = false;
+                    updateUI('finished');
+                    ui.statusText.innerText = `<?php echo __('status_finished'); ?>`;
+                    // Reload to apply pagination logic
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                }
 
-                                let selectedIds = getStoredSelection();
-                                if (this.checked) {
-                                    if (!selectedIds.includes(this.value)) selectedIds.push(this.value);
-                                } else {
-                                    selectedIds = selectedIds.filter(id => id !== this.value);
-                                }
-                                saveSelection(selectedIds);
-                            });
+                function updateUI(status) {
+                    if (status === 'running') {
+                        ui.btnPlay.classList.add('hidden');
+                        ui.btnPause.classList.remove('hidden');
+                        ui.btnStop.disabled = false;
+                        ui.btnPause.disabled = false;
+
+                        ui.statusDot.classList.replace('bg-gray-600', 'bg-green-500');
+                        ui.statusDot.classList.add('animate-ping');
+
+                        ui.inputLimit.disabled = true;
+                        ui.inputGoal.disabled = true;
+                        ui.inputDelay.disabled = true;
+                    }
+                    else if (status === 'paused') {
+                        ui.btnPlay.classList.remove('hidden');
+                        ui.btnPause.classList.add('hidden');
+                        ui.textPlay.innerText = `<?php echo __('btn_resume'); ?>`;
+
+                        ui.statusDot.classList.replace('bg-green-500', 'bg-yellow-500');
+                        ui.statusDot.classList.remove('animate-ping');
+                        ui.statusText.innerText = `<?php echo __('status_paused'); ?>`;
+                    }
+                    else if (status === 'stopped' || status === 'finished') {
+                        ui.btnPlay.classList.remove('hidden');
+                        ui.btnPause.classList.add('hidden');
+                        ui.textPlay.innerText = `<?php echo __('btn_start'); ?>`;
+                        ui.btnStop.disabled = true;
+
+                        ui.statusDot.className = 'w-2 h-2 rounded-full bg-gray-600';
+                        ui.progressBar.classList.remove('animate-pulse');
+                        if (status === 'stopped') ui.progressBar.style.width = '0';
+
+                        ui.inputLimit.disabled = false;
+                        ui.inputGoal.disabled = false;
+                        ui.inputDelay.disabled = false;
+                    }
+                }
+
+                // --- CHECKBOX LOGIC ---
+                // --- PERSISTENT SELECTION LOGIC ---
+                // Uses sessionStorage to keep track of selected IDs across pagination
+                const PAGE_KEY = 'selected_leads_<?php echo $page['id']; ?>';
+                const selectAll = document.getElementById('select-all');
+
+                // Helper to get/set Storage
+                function getStoredSelection() {
+                    const stored = sessionStorage.getItem(PAGE_KEY);
+                    return stored ? JSON.parse(stored) : [];
+                }
+
+                function saveSelection(ids) {
+                    sessionStorage.setItem(PAGE_KEY, JSON.stringify(ids));
+                    updateUIStats(ids.length);
+                }
+
+                function updateUIStats(count) {
+                    const countSpan = document.getElementById('selected-count');
+                    const createBtn = document.getElementById('create-btn');
+
+                    if (countSpan) countSpan.innerText = count;
+                    if (createBtn) createBtn.disabled = count === 0;
+
+                    // Check "Select All" checkbox state if all currently visible are selected
+                    if (selectAll) {
+                        const allVisible = Array.from(document.querySelectorAll('.lead-checkbox'));
+                        if (allVisible.length > 0) {
+                            const allChecked = allVisible.every(cb => cb.checked);
+                            selectAll.checked = allChecked;
+                        }
+                    }
+                }
+
+                // Initialize: Restore Selection
+                function initSelection() {
+                    const selectedIds = getStoredSelection();
+
+                    // Apply to current checkboxes
+                    document.querySelectorAll('.lead-checkbox').forEach(cb => {
+                        if (selectedIds.includes(cb.value)) {
+                            cb.checked = true;
+                        }
+                    });
+
+                    updateUIStats(selectedIds.length);
+                }
+
+                // Toggle Single Row
+                function toggleRow(row) {
+                    const checkbox = row.querySelector('.lead-checkbox');
+                    if (checkbox) {
+                        // Toggle Check
+                        checkbox.checked = !checkbox.checked;
+
+                        // Update Storage
+                        let selectedIds = getStoredSelection();
+                        if (checkbox.checked) {
+                            if (!selectedIds.includes(checkbox.value)) selectedIds.push(checkbox.value);
+                        } else {
+                            selectedIds = selectedIds.filter(id => id !== checkbox.value);
+                        }
+                        saveSelection(selectedIds);
+                    }
+                }
+
+                // Handle Direct Checkbox Click (prevent bubbling double toggle)
+                document.querySelectorAll('.lead-checkbox').forEach(cb => {
+                    cb.addEventListener('click', function (e) {
+                        e.stopPropagation(); // Stop row click
+
+                        let selectedIds = getStoredSelection();
+                        if (this.checked) {
+                            if (!selectedIds.includes(this.value)) selectedIds.push(this.value);
+                        } else {
+                            selectedIds = selectedIds.filter(id => id !== this.value);
+                        }
+                        saveSelection(selectedIds);
+                    });
+                });
+
+                // Select All (Visible Only)
+                if (selectAll) {
+                    selectAll.addEventListener('change', function () {
+                        const isChecked = this.checked;
+                        let selectedIds = getStoredSelection();
+                        const visibleCheckboxes = document.querySelectorAll('.lead-checkbox');
+
+                        visibleCheckboxes.forEach(cb => {
+                            cb.checked = isChecked;
+                            if (isChecked) {
+                                if (!selectedIds.includes(cb.value)) selectedIds.push(cb.value);
+                            } else {
+                                selectedIds = selectedIds.filter(id => id !== cb.value);
+                            }
                         });
 
-                        // Select All (Visible Only)
-                        if (selectAll) {
-                            selectAll.addEventListener('change', function () {
-                                const isChecked = this.checked;
-                                let selectedIds = getStoredSelection();
-                                const visibleCheckboxes = document.querySelectorAll('.lead-checkbox');
+                        saveSelection(selectedIds);
+                    });
+                }
 
-                                visibleCheckboxes.forEach(cb => {
-                                    cb.checked = isChecked;
-                                    if (isChecked) {
-                                        if (!selectedIds.includes(cb.value)) selectedIds.push(cb.value);
-                                    } else {
-                                        selectedIds = selectedIds.filter(id => id !== cb.value);
-                                    }
-                                });
+                // Handle Form Submit
+                document.getElementById('campaign-form').addEventListener('submit', function (e) {
+                    // Remove any existing hidden inputs first
+                    this.querySelectorAll('input[type="hidden"][name="leads[]"]').forEach(el => el.remove());
 
-                                saveSelection(selectedIds);
-                            });
-                        }
+                    // Add ALL selected IDs from storage via SINGLE JSON input
+                    // This prevents max_input_vars limit issues with large selections (e.g. 10k leads)
+                    const selectedIds = getStoredSelection();
 
-                        // Handle Form Submit
-                        document.getElementById('campaign-form').addEventListener('submit', function (e) {
-                            // Remove any existing hidden inputs first
-                            this.querySelectorAll('input[type="hidden"][name="leads[]"]').forEach(el => el.remove());
+                    // Remove old inputs if exist
+                    if (this.querySelector('input[name="ids_json"]')) {
+                        this.querySelector('input[name="ids_json"]').remove();
+                    }
 
-                            // Add ALL selected IDs from storage via SINGLE JSON input
-                            // This prevents max_input_vars limit issues with large selections (e.g. 10k leads)
-                            const selectedIds = getStoredSelection();
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'ids_json';
+                    input.value = JSON.stringify(selectedIds);
+                    this.appendChild(input);
 
-                            // Remove old inputs if exist
-                            if (this.querySelector('input[name="ids_json"]')) {
-                                this.querySelector('input[name="ids_json"]').remove();
-                            }
+                    // Optional: Clear selection after submit? 
+                    // Usually valid to keep until explicit clear or success
+                    // sessionStorage.removeItem(PAGE_KEY); 
+                });
 
-                            const input = document.createElement('input');
-                            input.type = 'hidden';
-                            input.name = 'ids_json';
-                            input.value = JSON.stringify(selectedIds);
-                            this.appendChild(input);
 
-                            // Optional: Clear selection after submit? 
-                            // Usually valid to keep until explicit clear or success
-                            // sessionStorage.removeItem(PAGE_KEY); 
+                // Run Init
+                initSelection();
+
+                // --- GLOBAL SELECT LOGIC ---
+                async function selectAllGlobal(pageId) {
+                    const btn = document.querySelector('[onclick^="selectAllGlobal"]');
+                    const originalText = btn ? btn.innerHTML : '';
+                    if (btn) btn.innerHTML = '<?php echo __('please_wait'); ?>';
+
+                    try {
+                        const formData = new FormData();
+                        formData.append('page_id', pageId);
+
+                        const response = await fetch('ajax_get_all_ids.php', {
+                            method: 'POST',
+                            body: formData
                         });
+                        const data = await response.json();
 
-
-                        // Run Init
-                        initSelection();
-
-                        // --- GLOBAL SELECT LOGIC ---
-                        async function selectAllGlobal(pageId) {
-                            const btn = document.querySelector('[onclick^="selectAllGlobal"]');
-                            const originalText = btn ? btn.innerHTML : '';
-                            if (btn) btn.innerHTML = '<?php echo __('please_wait'); ?>';
-
-                            try {
-                                const formData = new FormData();
-                                formData.append('page_id', pageId);
-
-                                const response = await fetch('ajax_get_all_ids.php', {
-                                    method: 'POST',
-                                    body: formData
-                                });
-                                const data = await response.json();
-
-                                if (data.status === 'success') {
-                                    // Map IDs to strings to match checkbox values
-                                    const stringIds = data.ids.map(String);
-                                    saveSelection(stringIds);
-                                    initSelection();
-                                    alert('<?php echo __('all_leads_selected_success'); ?>'.replace('%s', data.count));
-                                } else {
-                                    alert('Error: ' + data.message);
-                                }
-                            } catch (e) {
-                                console.error(e);
-                                alert('Failed to fetch all IDs');
-                            } finally {
-                                if (btn) btn.innerHTML = originalText || '<?php echo __('select_all_global'); ?>';
-                            }
+                        if (data.status === 'success') {
+                            // Map IDs to strings to match checkbox values
+                            const stringIds = data.ids.map(String);
+                            saveSelection(stringIds);
+                            initSelection();
+                            alert('<?php echo __('all_leads_selected_success'); ?>'.replace('%s', data.count));
+                        } else {
+                            alert('Error: ' + data.message);
                         }
+                    } catch (e) {
+                        console.error(e);
+                        alert('Failed to fetch all IDs');
+                    } finally {
+                        if (btn) btn.innerHTML = originalText || '<?php echo __('select_all_global'); ?>';
+                    }
+                }
 
-                        // --- SERVER-SIDE SEARCH LOGIC ---
-                        const leadSearch = document.getElementById('lead-search');
-                        let searchTimeout = null;
+                // --- SERVER-SIDE SEARCH LOGIC ---
+                const leadSearch = document.getElementById('lead-search');
+                let searchTimeout = null;
 
-                        window.filterLeads = function () {
-                            if (!leadSearch) return;
-                            const query = leadSearch.value.trim();
-                            const tbody = document.getElementById('leads-tbody');
+                window.filterLeads = function () {
+                    if (!leadSearch) return;
+                    const query = leadSearch.value.trim();
+                    const tbody = document.getElementById('leads-tbody');
 
-                            // Clear prev timer
-                            if (searchTimeout) clearTimeout(searchTimeout);
+                    // Clear prev timer
+                    if (searchTimeout) clearTimeout(searchTimeout);
 
-                            // If empty, reload to show default view or handle gracefully
-                            if (query.length === 0) {
-                                window.location.reload(); // Simple reset
-                                return;
-                            }
+                    // If empty, reload to show default view or handle gracefully
+                    if (query.length === 0) {
+                        window.location.reload(); // Simple reset
+                        return;
+                    }
 
-                            // Debounce search input (500ms)
-                            searchTimeout = setTimeout(async () => {
-                                if (query.length < 2) return; // Min 2 chars
+                    // Debounce search input (500ms)
+                    searchTimeout = setTimeout(async () => {
+                        if (query.length < 2) return; // Min 2 chars
 
-                                // Visual loading indicator
-                                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-10 text-white"><span class="animate-pulse">Searching global database...</span></td></tr>';
+                        // Visual loading indicator
+                        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-10 text-white"><span class="animate-pulse">Searching global database...</span></td></tr>';
 
-                                try {
-                                    const formData = new FormData();
-                                    formData.append('q', query);
-                                    formData.append('current_page_id', <?php echo $page ? $page['id'] : 0; ?>);
-                                    // ^ Note: current_page_id is to ensure we can keep current context if needed, 
-                                    // but User wants to search globally across pages, or just extensive search on this page?
-                                    // User said: "Search by user name or ID ... should search in ALL pages existing in leads, not just one page"
+                        try {
+                            const formData = new FormData();
+                            formData.append('q', query);
+                            formData.append('current_page_id', <?php echo $page ? $page['id'] : 0; ?>);
+                            // ^ Note: current_page_id is to ensure we can keep current context if needed, 
+                            // but User wants to search globally across pages, or just extensive search on this page?
+                            // User said: "Search by user name or ID ... should search in ALL pages existing in leads, not just one page"
 
-                                    const res = await fetch('page_inbox_search.php', { method: 'POST', body: formData });
-                                    const html = await res.text();
+                            const res = await fetch('page_inbox_search.php', { method: 'POST', body: formData });
+                            const html = await res.text();
 
-                                    if (html.trim()) {
-                                        tbody.innerHTML = html;
-                                        // Re-initialize checkboxes state
-                                        initSelection();
-                                    } else {
-                                        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-10 text-gray-400">No results found in any page.</td></tr>';
-                                    }
-
-                                } catch (err) {
-                                    console.error(err);
-                                    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-10 text-red-400">Search Error</td></tr>';
-                                }
-
-                            }, 500);
-                        };
-
-                        if (leadSearch) {
-                            leadSearch.addEventListener('input', filterLeads);
-                        }
-
-                        setMode('limit');
-
-                        // Check for cleared message to reset selection
-                        const urlParams = new URLSearchParams(window.location.search);
-                        if (urlParams.get('msg') === 'cleared') {
-                            sessionStorage.removeItem(PAGE_KEY);
-                            initSelection(); // This will clear UI
-                        }
-
-                        if (window.history.replaceState) {
-                            const url = new URL(window.location);
-                            url.searchParams.delete('msg');
-                            window.history.replaceState(null, '', url);
-                        }
-                        // --- TOKEN MODAL LOGIC ---
-                        function showTokenModal() {
-                            document.getElementById('token-modal').classList.remove('hidden');
-                        }
-
-                        async function updateToken() {
-                            const newToken = document.getElementById('new-token-input').value.trim();
-                            if (!newToken) {
-                                alert('<?php echo __('enter_valid_token'); ?>');
-                                return;
-                            }
-
-                            const btn = document.getElementById('btn-update-token');
-                            btn.disabled = true;
-                            btn.innerHTML = '<?php echo __('updating_btn'); ?>';
-
-                            try {
-                                const formData = new FormData();
-                                formData.append('action', 'update_token_page');
-                                formData.append('page_id', <?php echo $page['id']; ?>);
-                                formData.append('new_token', newToken);
-
-                                const response = await fetch('page_inbox.php', {
-                                    method: 'POST',
-                                    body: formData
-                                });
-                                const data = await response.json();
-
-                                if (data.status === 'success') {
-                                    document.getElementById('token-modal').classList.add('hidden');
-                                    alert('<?php echo __('token_updated_success'); ?>');
-                                    // Force a clean reload (GET) to avoid resubmitting old POST data
-                                    window.location.href = window.location.href;
-                                } else {
-                                    alert('Error: ' + data.message);
-                                }
-                            } catch (e) {
-                                console.error(e);
-                                alert('<?php echo __('update_token_error'); ?>');
-                            } finally {
-                                btn.disabled = false;
-                                btn.innerHTML = '<?php echo __('update_token_btn'); ?>';
-                            }
-                        }
-                        // Clear Selection Helper
-                        function clearSelection() {
-                            if (confirm('<?php echo __('clear_selection_confirm'); ?>')) {
-                                sessionStorage.removeItem(PAGE_KEY);
+                            if (html.trim()) {
+                                tbody.innerHTML = html;
+                                // Re-initialize checkboxes state
                                 initSelection();
-                                // Untick all visual
-                                document.querySelectorAll('.lead-checkbox').forEach(cb => cb.checked = false);
-                                if (selectAll) selectAll.checked = false;
-
-                                // Hide clear button
-                                document.getElementById('btn-clear-selection').style.display = 'none';
+                            } else {
+                                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-10 text-gray-400">No results found in any page.</td></tr>';
                             }
+
+                        } catch (err) {
+                            console.error(err);
+                            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-10 text-red-400">Search Error</td></tr>';
                         }
 
-                        // Show clear button if selection > 0
-                        const statCheck = setInterval(() => {
-                            const cnt = getStoredSelection().length;
-                            const btn = document.getElementById('btn-clear-selection');
-                            if (btn) btn.style.display = cnt > 0 ? 'inline-block' : 'none';
-                        }, 1000);
+                    }, 500);
+                };
 
-                    </script>
+                if (leadSearch) {
+                    leadSearch.addEventListener('input', filterLeads);
+                }
+
+                setMode('limit');
+
+                // Check for cleared message to reset selection
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('msg') === 'cleared') {
+                    sessionStorage.removeItem(PAGE_KEY);
+                    initSelection(); // This will clear UI
+                }
+
+                if (window.history.replaceState) {
+                    const url = new URL(window.location);
+                    url.searchParams.delete('msg');
+                    window.history.replaceState(null, '', url);
+                }
+                // --- TOKEN MODAL LOGIC ---
+                function showTokenModal() {
+                    document.getElementById('token-modal').classList.remove('hidden');
+                }
+
+                async function updateToken() {
+                    const newToken = document.getElementById('new-token-input').value.trim();
+                    if (!newToken) {
+                        alert('<?php echo __('enter_valid_token'); ?>');
+                        return;
+                    }
+
+                    const btn = document.getElementById('btn-update-token');
+                    btn.disabled = true;
+                    btn.innerHTML = '<?php echo __('updating_btn'); ?>';
+
+                    try {
+                        const formData = new FormData();
+                        formData.append('action', 'update_token_page');
+                        formData.append('page_id', <?php echo $page['id']; ?>);
+                        formData.append('new_token', newToken);
+
+                        const response = await fetch('page_inbox.php', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        const data = await response.json();
+
+                        if (data.status === 'success') {
+                            document.getElementById('token-modal').classList.add('hidden');
+                            alert('<?php echo __('token_updated_success'); ?>');
+                            // Force a clean reload (GET) to avoid resubmitting old POST data
+                            window.location.href = window.location.href;
+                        } else {
+                            alert('Error: ' + data.message);
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        alert('<?php echo __('update_token_error'); ?>');
+                    } finally {
+                        btn.disabled = false;
+                        btn.innerHTML = '<?php echo __('update_token_btn'); ?>';
+                    }
+                }
+                // Clear Selection Helper
+                function clearSelection() {
+                    if (confirm('<?php echo __('clear_selection_confirm'); ?>')) {
+                        sessionStorage.removeItem(PAGE_KEY);
+                        initSelection();
+                        // Untick all visual
+                        document.querySelectorAll('.lead-checkbox').forEach(cb => cb.checked = false);
+                        if (selectAll) selectAll.checked = false;
+
+                        // Hide clear button
+                        document.getElementById('btn-clear-selection').style.display = 'none';
+                    }
+                }
+
+                // Show clear button if selection > 0
+                const statCheck = setInterval(() => {
+                    const cnt = getStoredSelection().length;
+                    const btn = document.getElementById('btn-clear-selection');
+                    if (btn) btn.style.display = cnt > 0 ? 'inline-block' : 'none';
+                }, 1000);
+
+            </script>
         <?php endif; ?>
 
         <script>
