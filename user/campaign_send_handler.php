@@ -1,23 +1,47 @@
 <?php
 // user/campaign_send_handler.php
+// Start output buffering immediately to catch any stray HTML/Errors
+ob_start();
+
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/facebook_api.php';
 
 header('Content-Type: application/json');
 
-// Comprehensive error handling to prevent HTML errors in JSON
+// Comprehensive error handling
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 ini_set('error_log', __DIR__ . '/../includes/php_errors.log');
 
-// Catch all errors and convert to JSON
+// Shutdown function to catch Fatal Errors
+register_shutdown_function(function () {
+    $error = error_get_last();
+    if ($error && ($error['type'] === E_ERROR || $error['type'] === E_PARSE || $error['type'] === E_COMPILE_ERROR)) {
+        // Clean any captured HTML output
+        ob_clean();
+        http_response_code(500);
+        echo json_encode(['status' => 'error', 'message' => "Fatal Error: {$error['message']} in {$error['file']}:{$error['line']}"]);
+        exit;
+    }
+});
+
+// Custom Error Handler for non-fatal errors
 set_error_handler(function ($errno, $errstr, $errfile, $errline) {
+    // Log it
     error_log("PHP Error [$errno]: $errstr in $errfile:$errline");
+    // Don't exit, just log usually, but if it breaks logic we might want to return error.
+    // For now, let's keep logging but try to proceed unless critical.
+    // If you want to stop on warnings, uncomment next lines:
+    /*
+    ob_clean();
     echo json_encode(['status' => 'error', 'message' => "Server Error: $errstr"]);
     exit;
+    */
+    return true; // Don't execute internal PHP error handler
 });
 
 if (!isLoggedIn()) {
+    ob_clean();
     echo json_encode(['status' => 'error', 'message' => 'Unauthorized']);
     exit;
 }
@@ -28,6 +52,7 @@ $pdo = getDB();
 $queue_id = $_POST['queue_id'] ?? 0;
 
 if (!$queue_id) {
+    ob_clean();
     echo json_encode(['status' => 'error', 'message' => 'Missing Queue ID']);
     exit;
 }
