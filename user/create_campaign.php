@@ -148,26 +148,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_campaign'])) {
     set_time_limit(0);
     ini_set('memory_limit', '1024M');
 
-    // Insert into Queue (Optimized Bulk Insert)
-    // We assume incoming leads are Internal DB IDs (since they come from our system)
-    $queueStmt = $pdo->prepare("INSERT IGNORE INTO campaign_queue (campaign_id, lead_id, status) VALUES (?, ?, 'pending')");
+    // Insert into Queue (Only for NEW campaigns to prevent duplication on edit/resubmit)
+    if (!$edit_id) {
+        // We assume incoming leads are Internal DB IDs
+        $queueStmt = $pdo->prepare("INSERT IGNORE INTO campaign_queue (campaign_id, lead_id, status) VALUES (?, ?, 'pending')");
 
-    $pdo->beginTransaction();
-    $inserted_count = 0;
+        $pdo->beginTransaction();
+        $inserted_count = 0;
 
-    // Chunk processing to avoid memory issues and gigantic queries
-    // Although we are using prepared statements row-by-row here inside transaction for safety, 
-    // we can optimize further by multi-value insert if needed, but transaction + simple insert is usually fast enough for 10k.
-    // Let's stick to transaction to speed it up significantly compared to auto-commit.
-
-    foreach ($selected_leads as $lead_id) {
-        if (filter_var($lead_id, FILTER_VALIDATE_INT)) {
-            $queueStmt->execute([$campaign_id, $lead_id]);
-            $inserted_count++;
+        foreach ($selected_leads as $lead_id) {
+            if (filter_var($lead_id, FILTER_VALIDATE_INT)) {
+                $queueStmt->execute([$campaign_id, $lead_id]);
+                $inserted_count++;
+            }
         }
+        $pdo->commit();
     }
-
-    $pdo->commit();
 
     // Update campaign with actual count of queue items (current total)
     $stmt = $pdo->prepare("SELECT COUNT(*) FROM campaign_queue WHERE campaign_id = ?");
