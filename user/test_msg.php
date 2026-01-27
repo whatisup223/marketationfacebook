@@ -15,15 +15,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $psid = $_POST['psid'];
     $message = $_POST['message'];
 
-    // FIX: Using explicit Page ID instead of 'me'
+    // FIX: Using explicit Page ID
     $url = "https://graph.facebook.com/v18.0/" . $page_id . "/messages?access_token=" . $access_token;
 
-    $payload = [
+    $result .= "<h3>Test Results for Page ID: $page_id</h3>";
+
+    // --- ATTEMPT 1: Minimal Payload (Text Only) ---
+    $result .= "<h4>Attempt 1: Minimal Payload (No messaging_type)</h4>";
+    $payload1 = [
+        'recipient' => ['id' => $psid],
+        'message' => ['text' => $message]
+    ];
+    $result .= executeCurl($url, $payload1);
+
+    // --- ATTEMPT 2: Standard Response ---
+    $result .= "<h4>Attempt 2: Standard RESPONSE</h4>";
+    $payload2 = [
         'recipient' => ['id' => $psid],
         'message' => ['text' => $message],
         'messaging_type' => 'RESPONSE'
     ];
+    $result .= executeCurl($url, $payload2);
 
+    // --- ATTEMPT 3: Message Tag (Post Purchase) ---
+    $result .= "<h4>Attempt 3: MESSAGE_TAG</h4>";
+    $payload3 = [
+        'recipient' => ['id' => $psid],
+        'message' => ['text' => $message],
+        'messaging_type' => 'MESSAGE_TAG',
+        'tag' => 'POST_PURCHASE_UPDATE'
+    ];
+    $result .= executeCurl($url, $payload3);
+}
+
+function executeCurl($url, $payload)
+{
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_POST, 1);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
@@ -31,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
     // SSL Debugging
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Try disabling SSL verification temporarily
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
     curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
 
     $response = curl_exec($ch);
@@ -39,15 +65,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
 
-    $result .= "<h3>Test Results:</h3>";
-    $result .= "<strong>Target URL:</strong> $url<br>"; // Debug URL
-    $result .= "<strong>HTTP Code:</strong> $http_code<br>";
-
+    $res = "<strong>HTTP:</strong> $http_code | ";
     if ($curl_error) {
-        $result .= "<strong style='color:red'>CURL Error:</strong> $curl_error<br>";
+        $res .= "<span style='color:red'>CURL Error: $curl_error</span><br>";
     } else {
-        $result .= "<strong>Response:</strong> <pre>" . htmlspecialchars($response) . "</pre>";
+        $res .= "<strong>Response:</strong> " . htmlspecialchars($response) . "<br>";
     }
+    return $res . "<hr>";
 }
 ?>
 
@@ -57,7 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Facebook API Debugger</title>
+    <title>Facebook API Debugger (Multi-Mode)</title>
     <style>
         body {
             font-family: sans-serif;
@@ -66,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         .container {
-            max-width: 600px;
+            max-width: 800px;
             margin: 0 auto;
             background: white;
             padding: 20px;
@@ -100,13 +124,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             background: #eee;
             padding: 10px;
             overflow-x: auto;
+            white-space: pre-wrap;
+        }
+
+        h4 {
+            margin-top: 5px;
+            margin-bottom: 5px;
+            color: #1877f2;
+        }
+
+        hr {
+            border: 0;
+            border-top: 1px solid #ddd;
+            margin: 10px 0;
         }
     </style>
 </head>
 
 <body>
     <div class="container">
-        <h2>🚀 API Connection Doctor</h2>
+        <h2>🚀 API Diagnostics (3 Attempts)</h2>
         <form method="POST">
             <label>Page ID (Explicit):</label>
             <input type="text" name="page_id" required placeholder="100064..."
@@ -123,11 +160,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <label>Message:</label>
             <textarea name="message" required>Test Message from Debugger</textarea>
 
-            <button type="submit">Test Send</button>
+            <button type="submit">Start Diagnostics</button>
         </form>
 
         <div style="margin-top: 20px;">
             <?php echo $result; ?>
         </div>
     </div>
-</body></html>
+</body>
+
+</html>
