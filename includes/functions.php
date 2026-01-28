@@ -27,8 +27,22 @@ function get_flash($type)
 
 // Language Handling
 if (isset($_GET['lang'])) {
-    $_SESSION['lang'] = $_GET['lang'];
-    setcookie('lang', $_GET['lang'], time() + (86400 * 30), "/");
+    $new_lang = $_GET['lang'] === 'en' ? 'en' : 'ar';
+    $_SESSION['lang'] = $new_lang;
+    setcookie('lang', $new_lang, time() + (86400 * 30), "/");
+
+    // Sync with User DB Preferences if logged in
+    if (isset($_SESSION['user_id'])) {
+        $pdo = getDB();
+        if ($pdo) {
+            $stmt = $pdo->prepare("SELECT preferences FROM users WHERE id = ?");
+            $stmt->execute([$_SESSION['user_id']]);
+            $prefs = json_decode($stmt->fetchColumn() ?: '{}', true);
+            $prefs['lang'] = $new_lang;
+            $stmt = $pdo->prepare("UPDATE users SET preferences = ? WHERE id = ?");
+            $stmt->execute([json_encode($prefs), $_SESSION['user_id']]);
+        }
+    }
 }
 
 if (!isset($_SESSION['lang'])) {
@@ -83,6 +97,7 @@ $translations = [
         'welcome' => 'مرحباً',
         'profile' => 'الملف الشخصي',
         'settings' => 'الإعدادات',
+        'language' => 'اللغة',
         'overview' => 'نظرة عامة',
         'users' => 'المستخدمين',
         'manage_users' => 'إدارة المستخدمين',
@@ -103,6 +118,22 @@ $translations = [
         'localization_settings' => 'إعدادات اللغة والمنطقة',
         'default_site_language' => 'لغة الموقع الافتراضية',
         'default_lang_desc' => 'اللغة التي سيظهر بها الموقع للزوار الجدد الذين لم يحددوا تفضيلاتهم بعد.',
+
+        // SMTP Test
+        'smtp_test_success' => 'تم إرسال رسالة الاختبار بنجاح! تحقق من بريدك الوارد.',
+        'smtp_test_failed' => 'فشل إرسال رسالة الاختبار. تحقق من إعدادات SMTP.',
+        'smtp_settings' => 'إعدادات SMTP',
+        'smtp_configuration' => 'تكوين SMTP',
+        'smtp_host' => 'خادم SMTP',
+        'smtp_port' => 'منفذ SMTP',
+        'smtp_encryption' => 'تشفير SMTP',
+        'smtp_username' => 'اسم مستخدم SMTP',
+        'smtp_password' => 'كلمة مرور SMTP',
+        'smtp_from_name' => 'اسم المرسل',
+        'test_smtp_settings' => 'اختبار إعدادات SMTP',
+        'test_email_address' => 'عنوان بريد الاختبار',
+        'send_test_email' => 'إرسال رسالة اختبار',
+        'smtp_info_note' => 'ملاحظة: تأكد من أن بيانات SMTP صحيحة لضمان وصول الرسائل للمستخدمين.',
         'view' => 'عرض',
         'actions' => 'إجراءات',
         'download_csv' => 'تحميل CSV',
@@ -1276,6 +1307,20 @@ $translations = [
         'localization_settings' => 'Localization Settings',
         'default_site_language' => 'Default Site Language',
         'default_lang_desc' => 'The language displayed to new visitors who have not set their preference yet.',
+        'smtp_test_success' => 'Test email sent successfully! Check your inbox.',
+        'smtp_test_failed' => 'Failed to send test email. Check your SMTP settings.',
+        'smtp_settings' => 'SMTP Settings',
+        'smtp_configuration' => 'SMTP Configuration',
+        'smtp_host' => 'SMTP Host',
+        'smtp_port' => 'SMTP Port',
+        'smtp_encryption' => 'SMTP Encryption',
+        'smtp_username' => 'SMTP Username',
+        'smtp_password' => 'SMTP Password',
+        'smtp_from_name' => 'From Name',
+        'test_smtp_settings' => 'Test SMTP Settings',
+        'test_email_address' => 'Test Email Address',
+        'send_test_email' => 'Send Test Email',
+        'smtp_info_note' => 'Note: Make sure SMTP details are correct to ensure emails reach users.',
         'confirm_delete' => 'Confirm Delete',
 
         // Misc
@@ -1392,6 +1437,7 @@ $translations = [
         'stat_leads' => 'Leads Extracted',
         'stat_satisfaction' => 'Satisfaction',
         'stat_support' => '24/7 Support',
+        'language' => 'Language',
         'cta_title' => 'Ready to grow your business?',
         'cta_subtitle' => 'Start extracting leads today and leave your competitors behind.',
         'cta_button' => 'Create Free Account',

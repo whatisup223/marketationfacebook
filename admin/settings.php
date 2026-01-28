@@ -296,9 +296,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             require_once __DIR__ . '/../includes/MailService.php';
             $success = sendEmail($test_email, 'SMTP Test - ' . ($settings['site_name_ar'] ?? 'System'), '<p>This is a test email to verify your SMTP settings.</p>');
             if ($success) {
-                $smtp_status = ['success' => true, 'message' => __('smtp_test_success')];
+                $_SESSION['smtp_status'] = ['success' => true, 'message' => __('smtp_test_success')];
             } else {
-                $smtp_status = ['success' => false, 'message' => __('smtp_test_failed')];
+                $_SESSION['smtp_status'] = ['success' => false, 'message' => __('smtp_test_failed')];
             }
         }
     }

@@ -12,6 +12,28 @@ $message = get_flash('success');
 $error = get_flash('error');
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // --- Update Language ---
+    if (isset($_POST['update_language'])) {
+        $new_lang = $_POST['lang'] ?? 'ar';
+        // Fetch user data to get current preferences
+        $stmt_user = $pdo->prepare("SELECT preferences FROM users WHERE id = ?");
+        $stmt_user->execute([$user_id]);
+        $user_data = $stmt_user->fetch(PDO::FETCH_ASSOC);
+        $preferences = json_decode($user_data['preferences'] ?? '{}', true);
+        $preferences['lang'] = $new_lang;
+
+        $json_prefs = json_encode($preferences);
+        $stmt = $pdo->prepare("UPDATE users SET preferences = ? WHERE id = ?");
+        $stmt->execute([$json_prefs, $user_id]);
+
+        // Update Session & Cookie immediately
+        $_SESSION['lang'] = $new_lang;
+        setcookie('lang', $new_lang, time() + (86400 * 30), "/");
+
+        set_flash('success', __("preferences_updated"));
+        header("Location: profile.php");
+        exit;
+    }
 
     // --- 1. Security (Password) ---
     if (!empty($_POST['new_password'])) {
@@ -254,9 +276,39 @@ require_once __DIR__ . '/../includes/header.php';
                         </button>
                     </div>
                 </form>
+
+                <!-- Language Selection -->
+                <div class="mt-8 pt-8 border-t border-white/5">
+                    <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+                        </svg>
+                        <?php echo __('language'); ?>
+                    </h2>
+                    <form method="POST" class="space-y-4">
+                        <input type="hidden" name="update_language" value="1">
+                        <div>
+                            <select name="lang"
+                                class="w-full bg-gray-800/50 border border-gray-700/50 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500 transition-colors text-white font-medium cursor-pointer">
+                                <option value="ar" <?php echo ($user_prefs['lang'] ?? 'ar') == 'ar' ? 'selected' : ''; ?>>
+                                    العربية</option>
+                                <option value="en" <?php echo ($user_prefs['lang'] ?? 'ar') == 'en' ? 'selected' : ''; ?>>
+                                    English</option>
+                            </select>
+                        </div>
+                        <div class="pt-2">
+                            <button type="submit"
+                                class="w-full bg-indigo-600/10 hover:bg-indigo-600 hover:text-white text-indigo-400 border border-indigo-500/20 font-bold px-6 py-3 rounded-xl transition-all">
+                                <?php echo __('save_changes'); ?>
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
 
 
         </div>
     </div>
-</div><?php require_once __DIR__ . '/../includes/footer.php'; ?>
+</div>
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>
