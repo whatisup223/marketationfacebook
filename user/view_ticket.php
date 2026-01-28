@@ -37,8 +37,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reply'])) {
         $stmt = $pdo->prepare("UPDATE support_tickets SET status = 'open', is_read_admin = 0, updated_at = NOW() WHERE id = ?");
         $stmt->execute([$ticket_id]);
 
-        // Notify Admins
-        notifyAdmins(__('new_ticket') . " #$ticket_id", __('ticket_created_by') . " " . $_SESSION['user_name'], "admin/view_ticket.php?id=$ticket_id");
+        // Notify Admins - User replied to ticket
+        notifyAdmins('user_ticket_reply', json_encode(['key' => 'user_replied_ticket', 'params' => ["#$ticket_id", $_SESSION['user_name']]]), "admin/view_ticket.php?id=$ticket_id");
 
         header("Location: view_ticket.php?id=$ticket_id");
         exit;

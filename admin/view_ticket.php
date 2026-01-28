@@ -40,8 +40,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $pdo->prepare("UPDATE support_tickets SET status = 'answered', is_read_user = 0, updated_at = NOW() WHERE id = ?");
             $stmt->execute([$ticket_id]);
 
-            // Notify User (Internal Notification)
-            addNotification($ticket['user_id'], 'admin_response', json_encode(['key' => 'ticket_notification_fmt', 'params' => [$ticket['subject']]]), "user/view_ticket.php?id=$ticket_id");
+            // Notify User (Internal Notification) - Store ticket ID instead of subject
+            addNotification($ticket['user_id'], 'admin_response', json_encode(['key' => 'ticket_notification_fmt', 'params' => ["#$ticket_id"]]), "user/view_ticket.php?id=$ticket_id");
 
             header("Location: view_ticket.php?id=$ticket_id");
             exit;
@@ -54,8 +54,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $pdo->prepare("UPDATE support_tickets SET status = ?, updated_at = NOW() WHERE id = ?");
             $stmt->execute([$new_status, $ticket_id]);
 
-            // Notify User
-            addNotification($ticket['user_id'], 'ticket_status_updated', json_encode(['key' => 'ticket_status_change_fmt', 'params' => [$new_status], 'param_keys' => [0]]), "user/view_ticket.php?id=$ticket_id");
+            // Notify User - Store status as translation key
+            addNotification($ticket['user_id'], 'ticket_status_updated', json_encode(['key' => 'ticket_status_change_fmt', 'params' => ['status_' . $new_status], 'param_keys' => [0]]), "user/view_ticket.php?id=$ticket_id");
 
             header("Location: view_ticket.php?id=$ticket_id");
             exit;

@@ -31,8 +31,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $pdo->prepare("INSERT INTO ticket_messages (ticket_id, user_id, message, is_admin) VALUES (?, ?, ?, 0)");
             $stmt->execute([$ticket_id, $user_id, $message]);
 
-            // Notify Admins
-            notifyAdmins(__('new_ticket') . " #$ticket_id", __('ticket_created_by') . " " . $_SESSION['user_name'], "admin/view_ticket.php?id=$ticket_id");
+            // Notify Admins - Use translation keys instead of direct text
+            notifyAdmins('new_ticket', json_encode(['key' => 'new_ticket_notification', 'params' => ["#$ticket_id", $_SESSION['user_name']]]), "admin/view_ticket.php?id=$ticket_id");
 
             $pdo->commit();
             header("Location: view_ticket.php?id=$ticket_id&new=1");
