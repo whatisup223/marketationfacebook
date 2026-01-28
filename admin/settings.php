@@ -417,6 +417,9 @@ require_once __DIR__ . '/../includes/header.php';
                         <button onclick="switchTab('notifications')"
                             class="tab-btn px-5 py-2.5 rounded-xl text-sm font-bold transition-all border border-white/5"
                             data-tab="notifications"><?php echo __('notification_settings'); ?></button>
+                        <button onclick="switchTab('whatsapp')"
+                            class="tab-btn px-5 py-2.5 rounded-xl text-sm font-bold transition-all border border-white/5"
+                            data-tab="whatsapp"><?php echo __('whatsapp'); ?></button>
                     </div>
                 </div>
                 <!-- Edge Fades (Optional Visual Hint) -->
@@ -2056,6 +2059,50 @@ require_once __DIR__ . '/../includes/header.php';
                         </svg>
                         <?php echo __('security_note'); ?>: <?php echo __('forgot_password_always_active'); ?>
                     </p>
+                </div>
+            </div>
+
+            <!-- WhatsApp (Evolution API) Tab -->
+            <div id="whatsapp-tab" class="tab-content hidden space-y-6">
+                <div class="glass-card p-6 md:p-8 rounded-2xl border border-white/5">
+                    <h3 class="text-lg font-bold text-white mb-6 flex items-center">
+                        <span class="w-2 h-6 bg-green-500 rounded-full mr-3"></span>
+                        <?php echo __('wa_evo_settings'); ?>
+                    </h3>
+
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <div>
+                                <label
+                                    class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('wa_evo_url'); ?></label>
+                                <input type="url" name="wa_evolution_url"
+                                    value="<?php echo $settings['wa_evolution_url'] ?? ''; ?>"
+                                    placeholder="https://evo.yourdomain.com" class="setting-input">
+                                <p class="text-[10px] text-gray-500 mt-1"><?php echo __('wa_evo_url_hint'); ?></p>
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('wa_evo_apikey'); ?></label>
+                                <input type="text" name="wa_evolution_apikey"
+                                    value="<?php echo $settings['wa_evolution_apikey'] ?? ''; ?>"
+                                    placeholder="Global API Key" class="setting-input">
+                            </div>
+                        </div>
+                        <div class="p-6 bg-green-500/5 rounded-2xl border border-green-500/10">
+                            <h4 class="text-green-400 font-bold mb-3 flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <?php echo __('about_section'); ?>
+                            </h4>
+                            <p class="text-xs text-gray-400 leading-relaxed">
+                                هذه الإعدادات تربط المنصة بسيرفر Evolution API الخاص بك. سيتم استخدام هذه البيانات
+                                لإنشاء مثيلات (Instances) للمستخدمين تلقائياً عند قيامهم بربط حساباتهم. تأكد من صحة
+                                الرابط ومفتاح الـ API لضمان عمل النظام بشكل صحيح.
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
