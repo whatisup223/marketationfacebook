@@ -30,9 +30,9 @@ class WAUniversalSender
         }
 
         // Decode JSON fields
-        $this->campaign['numbers'] = json_decode($this->campaign['numbers'], true);
-        $this->campaign['selected_accounts'] = json_decode($this->campaign['selected_accounts'], true);
-        $this->campaign['error_log'] = json_decode($this->campaign['error_log'], true) ?: [];
+        $this->campaign['numbers'] = json_decode($this->campaign['numbers'] ?: '[]', true);
+        $this->campaign['selected_accounts'] = json_decode($this->campaign['selected_accounts'] ?: 'null', true);
+        $this->campaign['error_log'] = json_decode($this->campaign['error_log'] ?: '[]', true) ?: [];
 
         // Resume state
         $this->current_account_index = $this->campaign['current_account_index'];

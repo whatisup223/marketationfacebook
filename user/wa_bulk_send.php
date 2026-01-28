@@ -15,12 +15,17 @@ $stmt->execute([$user_id]);
 $user_settings = $stmt->fetch(PDO::FETCH_ASSOC);
 $gateway_mode = $user_settings['active_gateway'] ?? 'qr';
 
-// Fetch WhatsApp accounts for selection (only for QR mode)
+// Fetch WhatsApp accounts for selection (only for QR mode check)
 $wa_accounts = [];
-if ($gateway_mode === 'qr') {
-    $stmt = $pdo->prepare("SELECT * FROM wa_accounts WHERE user_id = ? AND status = 'connected' ORDER BY created_at DESC");
-    $stmt->execute([$user_id]);
-    $wa_accounts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$stmt = $pdo->prepare("SELECT * FROM wa_accounts WHERE user_id = ? AND status = 'connected' ORDER BY created_at DESC");
+$stmt->execute([$user_id]);
+$wa_accounts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Smart Default: If no QR accounts but Twilio is configured, switch to Twilio
+if (empty($wa_accounts) && $gateway_mode === 'qr') {
+    if (!empty($user_settings['twilio_account_sid'])) {
+        $gateway_mode = 'twilio';
+    }
 }
 
 // Handle Form Submission
@@ -30,6 +35,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['start_campaign'])) {
         if (empty($_POST['campaign_name']) || empty($_POST['message'])) {
             throw new Exception("Campaign name and message are required");
         }
+
+        // Get selected gateway mode from form
+        $gateway_mode = $_POST['gateway_mode'] ?? 'qr';
 
         // Parse numbers from textarea (one per line or comma-separated)
         $numbers_raw = $_POST['numbers'] ?? '';
@@ -113,6 +121,7 @@ require_once __DIR__ . '/../includes/header.php';
     mediaPreviewUrl: '',
     lat: '',
     lng: '',
+    gateway: '<?php echo $gateway_mode; ?>', // Initialize with PHP's gateway_mode
 
     updateMediaPreview(e) {
         if (this.mediaType.endsWith('_local')) {
@@ -138,6 +147,18 @@ require_once __DIR__ . '/../includes/header.php';
     <?php require_once __DIR__ . '/../includes/user_sidebar.php'; ?>
 
     <form method="POST" enctype="multipart/form-data" class="flex-1 min-w-0 p-4 md:p-8 relative">
+        <?php if (isset($error_message)): ?>
+            <div class="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-sm animate-fade-in">
+                <div class="flex items-center gap-3">
+                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span><?php echo htmlspecialchars($error_message); ?></span>
+                </div>
+            </div>
+        <?php endif; ?>
+
         <!-- Animated Background Blobs -->
         <div
             class="absolute top-0 -left-4 w-96 h-96 bg-green-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob pointer-events-none">
@@ -156,7 +177,8 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
 
             <!-- Minified Account Selection Card -->
-            <div class="xl:w-[450px] glass-card rounded-3xl border border-white/5 p-4 flex flex-col justify-center">
+            <div class="xl:w-[450px] glass-card rounded-3xl border border-white/5 p-4 flex flex-col justify-center"
+                x-show="gateway === 'qr'" x-transition>
                 <div class="flex items-center justify-between mb-3 px-2">
                     <h3 class="text-sm font-bold text-white flex items-center gap-2">
                         <span
@@ -215,6 +237,20 @@ require_once __DIR__ . '/../includes/header.php';
         <div class="flex flex-col lg:flex-row gap-8">
             <!-- Left Side: Config -->
             <div class="flex-1 space-y-8">
+
+                <!-- Gateway Selection Card -->
+                <div class="glass-card rounded-[2.5rem] border border-white/5 p-8">
+                    <div class="flex flex-col gap-4">
+                        <label
+                            class="text-xs font-bold text-gray-500 uppercase tracking-widest pl-2"><?php echo __('select_gateway'); ?></label>
+                        <select name="gateway_mode" x-model="gateway" @change="gateway = $event.target.value"
+                            class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white text-lg font-bold focus:outline-none focus:border-indigo-500/50 transition-all font-sans appearance-none cursor-pointer">
+                            <option value="qr" class="bg-gray-900 text-white">Evolution API (QR Scan)</option>
+                            <option value="twilio" class="bg-gray-900 text-white">Twilio API</option>
+                            <option value="meta" class="bg-gray-900 text-white">Meta Cloud API</option>
+                        </select>
+                    </div>
+                </div>
 
                 <!-- Campaign Name Card -->
                 <div class="glass-card rounded-[2.5rem] border border-white/5 p-8">

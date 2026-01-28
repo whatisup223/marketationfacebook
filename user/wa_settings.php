@@ -41,7 +41,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($external_provider === 'twilio') {
         $new_config = [
             'sid' => $_POST['twilio_sid'] ?? '',
-            'token' => $_POST['twilio_token'] ?? ''
+            'token' => $_POST['twilio_token'] ?? '',
+            'phone' => $_POST['twilio_phone'] ?? ''
         ];
     } elseif ($external_provider === 'ultramsg') {
         $new_config = [
@@ -261,6 +262,14 @@ require_once __DIR__ . '/../includes/header.php';
                                 <input type="password" name="twilio_token"
                                     value="<?php echo htmlspecialchars($config['token'] ?? ''); ?>"
                                     placeholder="••••••••"
+                                    class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white focus:outline-none focus:border-indigo-500/50 transition-all">
+                            </div>
+                            <div class="space-y-2 col-span-2">
+                                <label
+                                    class="text-xs font-black text-gray-500 uppercase tracking-widest"><?php echo __('wa_sender_phone'); ?></label>
+                                <input type="text" name="twilio_phone"
+                                    value="<?php echo htmlspecialchars($config['phone'] ?? ''); ?>"
+                                    placeholder="+1234567890"
                                     class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white focus:outline-none focus:border-indigo-500/50 transition-all">
                             </div>
                         </div>

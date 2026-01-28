@@ -295,16 +295,23 @@ require_once __DIR__ . '/../includes/header.php';
                         this.startCountdown();
                     } else {
                         console.error('Evolution API Error:', data); // Debug log
-
-                        // Show detailed error if debug info is available
-                        let errorMsg = data.message || 'Error connecting to Evolution API';
-                        if (data.debug) {
-                            console.error('Debug Info:', data.debug);
-                            errorMsg += '\n\nCheck browser console for details.';
+                        
+                        // If instance was created but QR not available, start polling
+                        if (data.debug && data.debug.instance_created && data.debug.instance_name) {
+                            console.log('Instance created, starting QR polling...');
+                            this.instanceName = data.debug.instance_name;
+                            this.startQRPolling();
+                        } else {
+                            // Show detailed error if debug info is available
+                            let errorMsg = data.message || 'Error connecting to Evolution API';
+                            if (data.debug) {
+                                console.error('Debug Info:', data.debug);
+                                errorMsg += '\n\nCheck browser console for details.';
+                            }
+                            
+                            alert(errorMsg);
+                            this.closeModal();
                         }
-
-                        alert(errorMsg);
-                        this.closeModal();
                     }
                 } catch (e) {
                     console.error('Fetch Error:', e);
@@ -366,10 +373,61 @@ require_once __DIR__ . '/../includes/header.php';
                 }, 3000);
             },
 
+            startQRPolling() {
+                // Poll for QR code every 2 seconds until we get it
+                let pollAttempts = 0;
+                const maxAttempts = 30; // 60 seconds total
+                
+                const pollInterval = setInterval(async () => {
+                    pollAttempts++;
+                    console.log(`QR Polling attempt ${pollAttempts}/${maxAttempts}...`);
+                    
+                    if (pollAttempts > maxAttempts) {
+                        clearInterval(pollInterval);
+                        this.loading = false;
+                        alert('QR code generation timeout. Please try again.');
+                        this.closeModal();
+                        return;
+                    }
+                    
+                    try {
+                        const response = await fetch('ajax_wa_accounts.php', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                            body: `action=poll_qr&instance_name=${this.instanceName}`
+                        });
+                        const data = await response.json();
+                        
+                        console.log('Poll response:', data);
+                        
+                        if (data.status === 'success' && data.qr) {
+                            clearInterval(pollInterval);
+                            this.qrCode = data.qr;
+                            this.loading = false;
+                            this.startStatusCheck();
+                            this.startCountdown();
+                            console.log('QR code received!');
+                        } else if (data.status === 'error') {
+                            clearInterval(pollInterval);
+                            this.loading = false;
+                            alert(data.message || 'Failed to get QR code');
+                            this.closeModal();
+                        }
+                        // If status is 'waiting', continue polling
+                    } catch (e) {
+                        console.error('Poll error:', e);
+                    }
+                }, 2000);
+                
+                // Store interval for cleanup
+                this.qrPollInterval = pollInterval;
+            },
+
             closeModal() {
                 this.openAddModal = false;
                 if (this.timer) clearInterval(this.timer);
                 if (this.statusInterval) clearInterval(this.statusInterval);
+                if (this.qrPollInterval) clearInterval(this.qrPollInterval);
             }
         }
     }
