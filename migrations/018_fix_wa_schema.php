@@ -23,11 +23,24 @@ function migrate_018_up($pdo)
         error_log("Migrate 018 (wa_campaigns) Warning: " . $e->getMessage());
     }
 
-    // 2. Ensure user_wa_settings has 'external_config'
+    // 2. Ensure user_wa_settings exists and has 'external_config'
     try {
+        // Create table logic if not exists (Best to be explicit here)
+        $sql = "CREATE TABLE IF NOT EXISTS `user_wa_settings` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY,
+            `user_id` INT NOT NULL UNIQUE,
+            `active_gateway` ENUM('qr', 'external') DEFAULT 'qr',
+            `external_provider` VARCHAR(50) DEFAULT 'meta',
+            `external_config` TEXT DEFAULT NULL,
+            `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+        $pdo->exec($sql);
+
+        // Check for 'external_config' column specifically (for existing older tables)
         $stmt = $pdo->query("SHOW COLUMNS FROM user_wa_settings LIKE 'external_config'");
         if ($stmt->rowCount() == 0) {
-            // If table exists but column missing
             $pdo->exec("ALTER TABLE user_wa_settings ADD COLUMN `external_config` TEXT DEFAULT NULL AFTER `external_provider`");
         }
     } catch (PDOException $e) {
