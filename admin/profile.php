@@ -8,8 +8,8 @@ if (!isAdmin()) {
 
 $pdo = getDB();
 $user_id = $_SESSION['user_id'];
-$message = '';
-$error = '';
+$message = get_flash('success');
+$error = get_flash('error');
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
@@ -22,13 +22,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $hash = password_hash($password, PASSWORD_DEFAULT);
             $stmt = $pdo->prepare("UPDATE users SET password = ? WHERE id = ?");
             if ($stmt->execute([$hash, $user_id])) {
-                $message = __("password_updated");
+                set_flash('success', __("password_updated"));
             } else {
-                $error = __("failed_update_password");
+                set_flash('error', __("failed_update_password"));
             }
         } else {
-            $error = __("passwords_not_match");
+            set_flash('error', __("passwords_not_match"));
         }
+        header("Location: profile.php");
+        exit;
     }
 
     // --- 2. Personal Details (Name, Username, Phone) ---
@@ -41,17 +43,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE username = ? AND id != ?");
         $stmt->execute([$username, $user_id]);
         if ($stmt->fetchColumn() > 0) {
-            $error = __("username_exists");
+            set_flash('error', __("username_exists"));
         } else {
             $stmt = $pdo->prepare("UPDATE users SET name = ?, username = ?, phone = ? WHERE id = ?");
             if ($stmt->execute([$name, $username, $phone, $user_id])) {
                 $_SESSION['name'] = $name;
                 $_SESSION['user_name'] = $username;
-                $message = !empty($message) ? $message : __("profile_updated");
+                set_flash('success', __("profile_updated"));
             } else {
-                $error = "Failed to update profile";
+                set_flash('error', "Failed to update profile");
             }
         }
+        header("Location: profile.php");
+        exit;
     }
 
     // --- 3. Avatar Handling ---
@@ -64,7 +68,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
         $stmt = $pdo->prepare("UPDATE users SET avatar = NULL WHERE id = ?");
         $stmt->execute([$user_id]);
-        $message = __("avatar_updated");
+        set_flash('success', __("avatar_updated"));
+        header("Location: profile.php");
+        exit;
     }
 
     if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] == 0) {
@@ -85,9 +91,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if (move_uploaded_file($_FILES['avatar']['tmp_name'], __DIR__ . '/../' . $new_name)) {
                 $stmt = $pdo->prepare("UPDATE users SET avatar = ? WHERE id = ?");
                 $stmt->execute([$new_name, $user_id]);
-                $message = __("avatar_updated");
+                set_flash('success', __("avatar_updated"));
             }
         }
+        header("Location: profile.php");
+        exit;
     }
 }
 

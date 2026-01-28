@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/includes/functions.php';
 
-$error = '';
+$error = get_flash('error');
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $name = trim($_POST['name'] ?? '');
     $username = trim($_POST['username'] ?? '');
@@ -11,9 +11,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $confirm_password = $_POST['confirm_password'] ?? '';
 
     if (empty($name) || empty($username) || empty($email) || empty($password)) {
-        $error = __('fill_all_fields');
+        set_flash('error', __('fill_all_fields'));
+        header("Location: register.php");
+        exit;
     } elseif ($password !== $confirm_password) {
-        $error = __('pass_match_error');
+        set_flash('error', __('pass_match_error'));
+        header("Location: register.php");
+        exit;
     } else {
         $pdo = getDB();
         if ($pdo) {
@@ -25,10 +29,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE email = ?");
                 $stmt->execute([$email]);
                 if ($stmt->fetchColumn() > 0) {
-                    $error = __('email_exists');
+                    set_flash('error', __('email_exists'));
                 } else {
-                    $error = __('username_exists');
+                    set_flash('error', __('username_exists'));
                 }
+                header("Location: register.php");
+                exit;
             } else {
                 $hashed_password = password_hash($password, PASSWORD_DEFAULT);
                 $stmt = $pdo->prepare("INSERT INTO users (name, username, email, phone, password, role) VALUES (?, ?, ?, ?, ?, 'user')");
@@ -81,11 +87,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     }
                     exit;
                 } else {
-                    $error = __('registration_failed');
+                    set_flash('error', __('registration_failed'));
+                    header("Location: register.php");
+                    exit;
                 }
             }
         } else {
-            $error = __('database_error');
+            set_flash('error', __('database_error'));
+            header("Location: register.php");
+            exit;
         }
     }
 }

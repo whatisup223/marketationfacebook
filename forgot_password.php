@@ -1,8 +1,8 @@
 <?php
 require_once __DIR__ . '/includes/functions.php';
 
-$message = '';
-$error = '';
+$message = get_flash('success');
+$error = get_flash('error');
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = $_POST['email'];
@@ -33,19 +33,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $tpl = getEmailTemplate('forgot_password', $data);
 
                 if (sendEmail($email, $tpl['subject'], $tpl['body'])) {
-                    $message = __('reset_link_sent');
+                    set_flash('success', __('reset_link_sent'));
                 } else {
-                    $error = __('email_send_failed');
+                    set_flash('error', __('email_send_failed'));
                 }
             } else {
-                $error = __('system_error');
+                set_flash('error', __('system_error'));
             }
         } catch (Exception $e) {
-            $error = __('error_prefix') . $e->getMessage();
+            set_flash('error', __('error_prefix') . $e->getMessage());
         }
     } else {
-        $error = __('email_not_found');
+        set_flash('error', __('email_not_found'));
     }
+    header("Location: forgot_password.php");
+    exit;
 }
 
 require_once __DIR__ . '/includes/header.php';

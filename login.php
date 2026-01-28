@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/includes/functions.php';
 
-$error = '';
+$error = get_flash('error');
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $login_input = trim($_POST['email']); // Check for both email and username
     $password = $_POST['password'];
@@ -30,11 +30,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
             exit;
         } else {
-            $error = __('invalid_credentials');
+            set_flash('error', __('invalid_credentials'));
         }
     } else {
-        $error = __('database_error');
+        set_flash('error', __('database_error'));
     }
+    header("Location: login.php");
+    exit;
 }
 
 require_once __DIR__ . '/includes/header.php';

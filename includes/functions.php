@@ -5,6 +5,26 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// Flash Messages Helper
+function set_flash($type, $message)
+{
+    if (!isset($_SESSION['flash'])) {
+        $_SESSION['flash'] = [];
+    }
+    $_SESSION['flash'][$type] = $message;
+}
+
+function get_flash($type)
+{
+    if (isset($_SESSION['flash'][$type])) {
+        $message = $_SESSION['flash'][$type];
+        unset($_SESSION['flash'][$type]);
+        return $message;
+    }
+    return null;
+}
+
+
 // Language Handling
 if (isset($_GET['lang'])) {
     $_SESSION['lang'] = $_GET['lang'];
