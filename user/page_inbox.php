@@ -69,6 +69,11 @@ if (isset($_POST['ajax_scan'])) {
         $limit = intval($_POST['limit'] ?? 50);
         $after = $_POST['after_cursor'] ?? null;
 
+        // If no cursor provided, try to resume from DB
+        if (!$after && !empty($page['last_cursor'])) {
+            $after = $page['last_cursor'];
+        }
+
         // Log start for debug
         // error_log("Scanning inbox for page {$page['page_id']} - Limit: $limit - After: $after");
 
@@ -146,6 +151,12 @@ if (isset($_POST['ajax_scan'])) {
         }
 
         $next_cursor = $conversations['paging']['cursors']['after'] ?? null;
+
+        // Save progress (Cursor) to DB to allow resuming later
+        if ($next_cursor) {
+            $upd = $pdo->prepare("UPDATE fb_pages SET last_cursor = ? WHERE id = ?");
+            $upd->execute([$next_cursor, $page['id']]);
+        }
 
         echo json_encode([
             'status' => 'ok',
