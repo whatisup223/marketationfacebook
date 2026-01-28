@@ -63,32 +63,32 @@ require_once __DIR__ . '/../includes/header.php';
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <?php foreach ($wa_accounts as $acc): ?>
-                            <label class="relative group cursor-pointer">
-                                <input type="checkbox" value="<?php echo $acc['id']; ?>" x-model="selectedAccounts"
-                                    class="peer hidden">
-                                <div
-                                    class="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 peer-checked:border-green-500/50 peer-checked:bg-green-500/5 transition-all duration-300">
+                                <label class="relative group cursor-pointer">
+                                    <input type="checkbox" value="<?php echo $acc['id']; ?>" x-model="selectedAccounts"
+                                        class="peer hidden">
                                     <div
-                                        class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 group-hover:scale-110 transition-transform">
-                                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                                            <path
-                                                d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
-                                        </svg>
+                                        class="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 peer-checked:border-green-500/50 peer-checked:bg-green-500/5 transition-all duration-300">
+                                        <div
+                                            class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 group-hover:scale-110 transition-transform">
+                                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                                <path
+                                                    d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+                                            </svg>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-white font-bold truncate"><?php echo $acc['name']; ?></p>
+                                            <p class="text-gray-500 text-xs truncate">+<?php echo $acc['phone']; ?></p>
+                                        </div>
+                                        <div
+                                            class="w-5 h-5 rounded-full border-2 border-white/20 peer-checked:border-green-500 peer-checked:bg-green-500 flex items-center justify-center transition-all">
+                                            <svg class="w-3 h-3 text-white opacity-0 peer-checked:opacity-100" fill="none"
+                                                stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                                                    d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        </div>
                                     </div>
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-white font-bold truncate"><?php echo $acc['name']; ?></p>
-                                        <p class="text-gray-500 text-xs truncate">+<?php echo $acc['phone']; ?></p>
-                                    </div>
-                                    <div
-                                        class="w-5 h-5 rounded-full border-2 border-white/20 peer-checked:border-green-500 peer-checked:bg-green-500 flex items-center justify-center transition-all">
-                                        <svg class="w-3 h-3 text-white opacity-0 peer-checked:opacity-100" fill="none"
-                                            stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
-                                                d="M5 13l4 4L19 7" />
-                                        </svg>
-                                    </div>
-                                </div>
-                            </label>
+                                </label>
                         <?php endforeach; ?>
                     </div>
                 </div>
@@ -214,24 +214,31 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
 
             <!-- Right Side: Live Preview (Col 4) -->
-            <div class="hidden xl:block xl:col-span-4 sticky top-8 h-fit animate-fade-in"
-                style="animation-delay: 200ms;">
+            <div class="col-span-1 xl:col-span-4 sticky top-8 h-fit animate-fade-in" style="animation-delay: 200ms;">
                 <div
-                    class="relative w-full max-w-[340px] mx-auto aspect-[9/18.5] bg-black rounded-[3rem] border-[8px] border-zinc-800 shadow-2xl overflow-hidden">
+                    class="relative w-full max-w-[340px] mx-auto aspect-[9/18.5] bg-[#ece5dd] rounded-[3rem] border-[12px] border-zinc-900 shadow-2xl overflow-hidden ring-1 ring-white/10">
                     <!-- WhatsApp Header Mockup -->
-                    <div class="bg-[#075E54] p-4 pt-8 flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-full bg-zinc-200 overflow-hidden">
-                            <img src="https://ui-avatars.com/api/?name=User&background=random"
+                    <div class="bg-[#075E54] p-4 pt-10 flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-zinc-200 overflow-hidden shrink-0">
+                            <img src="<?php echo $prefix; ?>assets/images/logo_icon.png"
+                                onerror="this.src='https://ui-avatars.com/api/?name=M&background=075E54&color=fff'"
                                 class="w-full h-full object-cover">
                         </div>
-                        <div class="flex-1">
-                            <p class="text-white text-xs font-bold leading-tight">Customer</p>
-                            <p class="text-white/70 text-[10px]">online</p>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-1">
+                                <p class="text-white text-[11px] font-bold leading-tight truncate">ماركتيشن -
+                                    Marketation</p>
+                                <svg class="w-3 h-3 text-[#25D366] shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                        d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                                </svg>
+                            </div>
+                            <p class="text-white/70 text-[9px]">online</p>
                         </div>
-                        <div class="flex gap-2">
-                            <div class="w-1 h-1 rounded-full bg-white/80"></div>
-                            <div class="w-1 h-1 rounded-full bg-white/80"></div>
-                            <div class="w-1 h-1 rounded-full bg-white/80"></div>
+                        <div class="flex gap-1">
+                            <div class="w-0.5 h-0.5 rounded-full bg-white/80"></div>
+                            <div class="w-0.5 h-0.5 rounded-full bg-white/80"></div>
+                            <div class="w-0.5 h-0.5 rounded-full bg-white/80"></div>
                         </div>
                     </div>
 
@@ -241,47 +248,53 @@ require_once __DIR__ . '/../includes/header.php';
                     </div>
 
                     <!-- Preview Bubbles -->
-                    <div class="p-4 pt-10 space-y-4 h-full overflow-y-auto">
+                    <div class="p-4 pt-10 space-y-4 h-[calc(100%-80px)] overflow-y-auto custom-scrollbar">
                         <div class="flex justify-end animate-fade-in" x-show="message.length > 0">
-                            <div class="bg-[#dcf8c6] p-3 rounded-lg rounded-tr-none shadow-sm max-w-[85%] relative">
-                                <p class="text-zinc-800 text-xs whitespace-pre-wrap" x-text="message"></p>
+                            <div
+                                class="bg-[#dcf8c6] p-2.5 rounded-lg rounded-tr-none shadow-sm max-w-[85%] relative border border-black/5">
+                                <p class="text-zinc-800 text-[11px] leading-relaxed whitespace-pre-wrap"
+                                    x-text="message"></p>
                                 <div class="flex justify-end items-center gap-1 mt-1">
-                                    <span class="text-[9px] text-zinc-500">10:45 AM</span>
-                                    <svg class="w-3 h-3 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
+                                    <span class="text-[8px] text-zinc-500">10:45 AM</span>
+                                    <svg class="w-2.5 h-2.5 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
                                         <path d="M0 0h24v24H0z" fill="none" />
                                         <path
                                             d="M18 7l-1.41-1.41-6.34 6.34 1.41 1.41L18 7zm4.24-4.24l-1.41-1.41L9 13.17 5.17 9.34 3.76 10.75 9 16l13.24-13.24zM1 10.5L2.5 9l5.5 5.5L6.5 16 1 10.5z" />
                                     </svg>
                                 </div>
                                 <!-- Tail -->
-                                <div class="absolute -right-2 top-0 w-3 h-3 bg-[#dcf8c6]"
+                                <div class="absolute -right-1.5 top-0 w-2 h-2 bg-[#dcf8c6]"
                                     style="clip-path: polygon(0 0, 0% 100%, 100% 0);"></div>
                             </div>
                         </div>
-                        <div x-show="message.length === 0" class="text-center mt-20 italic text-zinc-400 text-xs">
+                        <div x-show="message.length === 0"
+                            class="text-center mt-20 italic text-zinc-400 text-[10px] p-6">
                             <?php echo __('wa_msg_placeholder'); ?>
                         </div>
                     </div>
 
                     <!-- Bottom Input Mockup -->
-                    <div class="absolute bottom-0 inset-x-0 p-3 bg-zinc-100 flex items-center gap-2">
+                    <div
+                        class="absolute bottom-0 inset-x-0 p-3 bg-[#f0f0f0] border-t border-zinc-200 flex items-center gap-2">
                         <div
-                            class="flex-1 bg-white rounded-full px-4 py-2 flex items-center gap-2 shadow-sm border border-zinc-200">
-                            <div class="text-zinc-300"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                    <path
-                                        d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z" />
-                                    <path d="M8 11h3v3h2v-3h3v-2h-3V6h-2v3H8z" />
-                                </svg></div>
-                            <div class="flex-1 text-[10px] text-zinc-400">Type a message</div>
-                            <div class="text-zinc-300"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                    <path
-                                        d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z" />
-                                    <path d="M12 17.5l-2.5-2.5h2V10h1v5h2zM15 8H9v1h6V8z" />
-                                </svg></div>
+                            class="flex-1 bg-white rounded-full px-4 py-1.5 flex items-center gap-2 shadow-sm border border-zinc-200">
+                            <div class="text-zinc-400">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <div class="flex-1 text-[9px] text-zinc-400">Type a message</div>
+                            <div class="text-zinc-400">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                                </svg>
+                            </div>
                         </div>
                         <div
-                            class="w-10 h-10 rounded-full bg-[#075E54] flex items-center justify-center text-white shadow-md">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            class="w-9 h-9 rounded-full bg-[#128C7E] flex items-center justify-center text-white shadow-md">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                                 <path
                                     d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
                                 <path
@@ -291,7 +304,7 @@ require_once __DIR__ . '/../includes/header.php';
                     </div>
                 </div>
 
-                <div class="mt-6 glass-card p-6 rounded-3xl border border-white/5 bg-white/5">
+                <div class="mt-6 glass-card p-6 rounded-3xl border border-white/5 bg-white/5 mb-20">
                     <h5 class="text-white font-bold mb-3 text-sm flex items-center gap-2">
                         <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
