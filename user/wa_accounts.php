@@ -10,9 +10,16 @@ $user_id = $_SESSION['user_id'];
 $pdo = getDB();
 
 // Fetch Real Accounts
-$stmt = $pdo->prepare("SELECT * FROM wa_accounts WHERE user_id = ? ORDER BY created_at DESC");
-$stmt->execute([$user_id]);
-$wa_accounts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+try {
+    $stmt = $pdo->prepare("SELECT * FROM wa_accounts WHERE user_id = ? ORDER BY created_at DESC");
+    $stmt->execute([$user_id]);
+    $wa_accounts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    // If table doesn't exist or other DB error, prevent crash
+    error_log("Database Error in wa_accounts.php: " . $e->getMessage());
+    $wa_accounts = []; // Default to empty state
+    // Optional: display user friendly error or check if table exists
+}
 
 require_once __DIR__ . '/../includes/header.php';
 ?>
@@ -295,7 +302,7 @@ require_once __DIR__ . '/../includes/header.php';
                         this.startCountdown();
                     } else {
                         console.error('Evolution API Error:', data); // Debug log
-                        
+
                         // If instance was created but QR not available, start polling
                         if (data.debug && data.debug.instance_created && data.debug.instance_name) {
                             console.log('Instance created, starting QR polling...');
@@ -308,7 +315,7 @@ require_once __DIR__ . '/../includes/header.php';
                                 console.error('Debug Info:', data.debug);
                                 errorMsg += '\n\nCheck browser console for details.';
                             }
-                            
+
                             alert(errorMsg);
                             this.closeModal();
                         }
@@ -377,11 +384,11 @@ require_once __DIR__ . '/../includes/header.php';
                 // Poll for QR code every 2 seconds until we get it
                 let pollAttempts = 0;
                 const maxAttempts = 30; // 60 seconds total
-                
+
                 const pollInterval = setInterval(async () => {
                     pollAttempts++;
                     console.log(`QR Polling attempt ${pollAttempts}/${maxAttempts}...`);
-                    
+
                     if (pollAttempts > maxAttempts) {
                         clearInterval(pollInterval);
                         this.loading = false;
@@ -389,7 +396,7 @@ require_once __DIR__ . '/../includes/header.php';
                         this.closeModal();
                         return;
                     }
-                    
+
                     try {
                         const response = await fetch('ajax_wa_accounts.php', {
                             method: 'POST',
@@ -397,9 +404,9 @@ require_once __DIR__ . '/../includes/header.php';
                             body: `action=poll_qr&instance_name=${this.instanceName}`
                         });
                         const data = await response.json();
-                        
+
                         console.log('Poll response:', data);
-                        
+
                         if (data.status === 'success' && data.qr) {
                             clearInterval(pollInterval);
                             this.qrCode = data.qr;
@@ -418,7 +425,7 @@ require_once __DIR__ . '/../includes/header.php';
                         console.error('Poll error:', e);
                     }
                 }, 2000);
-                
+
                 // Store interval for cleanup
                 this.qrPollInterval = pollInterval;
             },
