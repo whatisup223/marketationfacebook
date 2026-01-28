@@ -155,6 +155,18 @@ $translations = [
 
 
         // Auth & Profile
+        'welcome_back' => 'مرحباً بعودتك',
+        'login_continue' => 'سجل الدخول للمتابعة إلى',
+        'email_or_username' => 'البريد الإلكتروني أو اسم المستخدم',
+        'email_or_username_placeholder' => 'اسم المستخدم أو البريد الإلكتروني',
+        'forgot_password_title' => 'نسيت كلمة المرور؟',
+        'dont_have_account' => 'ليس لديك حساب؟',
+        'join_message' => 'انضم إلينا اليوم وابدأ رحلتك',
+        'name' => 'الاسم',
+        'already_have_account' => 'لديك حساب بالفعل؟',
+        'forgot_password_desc' => 'أدخل بريدك الإلكتروني لاستعادة كلمة المرور.',
+        'send_reset_link' => 'إرسال رابط الاستعادة',
+        'remember_password' => 'تذكرت كلمة المرور؟',
         'email' => 'البريد الإلكتروني',
         'password' => 'كلمة المرور',
         'confirm_password' => 'تأكيد كلمة المرور',
@@ -936,6 +948,18 @@ $translations = [
 
 
         // Auth & Profile
+        'welcome_back' => 'Welcome Back',
+        'login_continue' => 'Sign in to continue to',
+        'email_or_username' => 'Email or Username',
+        'email_or_username_placeholder' => 'Username or Email',
+        'forgot_password_title' => 'Forgot Password?',
+        'dont_have_account' => "Don't have an account?",
+        'join_message' => 'Join us today and start your journey',
+        'name' => 'Name',
+        'already_have_account' => 'Already have an account?',
+        'forgot_password_desc' => 'Enter your email to reset your password.',
+        'send_reset_link' => 'Send Reset Link',
+        'remember_password' => 'Remembered your password?',
         'email' => 'Email',
         'password' => 'Password',
         'confirm_password' => 'Confirm Password',
