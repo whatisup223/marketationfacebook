@@ -37,6 +37,40 @@ $pending = max(0, $total - ($sent + $failed));
 // Check if running
 $is_running = $campaign['status'] === 'running';
 
+// --- Prepare Queue Items (Pagination) ---
+$numbers = json_decode($campaign['numbers'], true) ?: [];
+$page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+$per_page = 50;
+$total_items = count($numbers);
+$total_pages = ceil($total_items / $per_page);
+$offset = ($page - 1) * $per_page;
+$current_slice = array_slice($numbers, $offset, $per_page);
+
+$queue_items = [];
+$current_index = $campaign['current_number_index'];
+
+foreach ($current_slice as $idx => $phone) {
+    // Calculate global index
+    $global_index = $offset + $idx;
+
+    // Determine status
+    $status = 'pending';
+    if ($global_index < $current_index) {
+        $status = 'sent';
+        // Ideally checking specific failed log would be better, but index-based is good approximation for now
+    }
+
+    // Check error log for failed numbers if available (Optional enhancement)
+    // $campaign['error_log'] is JSON array of errors.
+
+    $queue_items[] = [
+        'id' => $global_index,
+        'phone' => $phone,
+        'status' => $status,
+        'sent_at' => ($status == 'sent') ? 'Done' : null
+    ];
+}
+
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
@@ -271,6 +305,95 @@ require_once __DIR__ . '/../includes/header.php';
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- Queue Table -->
+        <div class="bg-gray-900/40 rounded-3xl border border-white/5 overflow-hidden shadow-2xl mb-10">
+            <div class="px-8 py-5 border-b border-white/5 bg-white/5 flex justify-between items-center flex-wrap gap-4">
+                <h2 class="text-lg font-bold text-white"><?php echo __('queue_list'); ?></h2>
+                <div class="flex items-center gap-3">
+                    <span class="text-xs text-gray-500 font-mono">Page: #<?php echo $page; ?></span>
+                    <div class="w-px h-4 bg-gray-700"></div>
+                    <span class="text-xs text-gray-400"><?php echo __('total_messages'); ?>:
+                        <b><?php echo $total_items; ?></b></span>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto overflow-y-auto max-h-[500px] messenger-scrollbar">
+                <table class="w-full text-left">
+                    <thead
+                        class="bg-gray-900 text-gray-500 text-[10px] uppercase font-black tracking-[0.2em] sticky top-0 z-10 shadow-lg">
+                        <tr>
+                            <th class="px-8 py-4"><?php echo __('status'); ?></th>
+                            <th class="px-8 py-4"><?php echo __('lead_info'); ?></th>
+                            <th class="px-8 py-4 text-right"><?php echo __('last_update'); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody id="queue-body" class="divide-y divide-white/5">
+                        <?php if (empty($queue_items)): ?>
+                            <tr>
+                                <td colspan="3" class="px-8 py-20 text-center">
+                                    <div class="text-gray-600 mb-2 italic"><?php echo __('empty_queue_title'); ?></div>
+                                    <div class="text-xs text-gray-700"><?php echo __('empty_queue_desc'); ?></div>
+                                </td>
+                            </tr>
+                        <?php endif; ?>
+                        <?php foreach ($queue_items as $item): ?>
+                            <tr id="row-<?php echo $item['id']; ?>"
+                                class="task-row status-transition hover:bg-white/5 transition-all"
+                                data-id="<?php echo $item['id']; ?>" data-status="<?php echo $item['status']; ?>">
+                                <td class="px-8 py-5 status-cell">
+                                    <?php if ($item['status'] == 'sent'): ?>
+                                        <div class="flex items-center gap-2 text-green-500 font-bold text-xs">
+                                            <div class="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                                            <?php echo __('status_sent_small'); ?>
+                                        </div>
+                                    <?php elseif ($item['status'] == 'failed'): ?>
+                                        <div class="flex items-center gap-2 text-red-500 font-bold text-xs">
+                                            <div class="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+                                            <?php echo __('status_failed_small'); ?>
+                                        </div>
+                                    <?php else: ?>
+                                        <div class="flex items-center gap-2 text-gray-500 font-bold text-xs">
+                                            <div class="w-1.5 h-1.5 rounded-full bg-gray-700"></div>
+                                            <?php echo __('status_pending_small'); ?>
+                                        </div>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="px-8 py-5">
+                                    <div class="text-sm font-bold text-white font-mono">
+                                        <?php echo htmlspecialchars($item['phone']); ?>
+                                    </div>
+                                </td>
+                                <td class="px-8 py-5 text-right msg-cell font-mono text-[10px] text-gray-500">
+                                    <?php echo $item['sent_at'] ? $item['sent_at'] : '--:--'; ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Fixed Pagination Footer -->
+            <?php if ($total_pages > 1): ?>
+                <div class="px-8 py-4 bg-white/5 border-t border-white/5 backdrop-blur-xl">
+                    <div class="flex items-center justify-between">
+                        <div class="text-xs text-gray-500">
+                            <?php echo __('page'); ?>     <?php echo $page; ?> / <?php echo $total_pages; ?>
+                        </div>
+                        <div class="flex gap-2">
+                            <?php if ($page > 1): ?>
+                                <a href="?id=<?php echo $campaign_id; ?>&page=<?php echo $page - 1; ?>"
+                                    class="px-3 py-1 bg-white/10 rounded hover:bg-white/20 text-xs text-white transition-colors border border-white/5"><?php echo __('prev'); ?></a>
+                            <?php endif; ?>
+                            <?php if ($page < $total_pages): ?>
+                                <a href="?id=<?php echo $campaign_id; ?>&page=<?php echo $page + 1; ?>"
+                                    class="px-3 py-1 bg-white/10 rounded hover:bg-white/20 text-xs text-white transition-colors border border-white/5"><?php echo __('next'); ?></a>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            <?php endif; ?>
         </div>
 
         <!-- Campaign Details -->

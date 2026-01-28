@@ -494,6 +494,18 @@ $translations = [
         'starts_in' => 'يبدأ خلال:',
 
 
+        'wa_get_started' => 'ابدأ الآن',
+        'delay_min' => 'الحد الأدنى للتأخير',
+        'delay_max' => 'الحد الأقصى للتأخير',
+        'queue_list' => 'قائمة الانتظار',
+        'lead_info' => 'الرقم',
+        'last_update' => 'الحالة',
+        'status_sent_small' => 'تم الإرسال',
+        'status_failed_small' => 'فشل',
+        'status_pending_small' => 'قيد الانتظار',
+        'empty_queue_title' => 'القائمة فارغة',
+        'empty_queue_desc' => 'لا توجد أرقام في الانتظار حالياً.',
+
         // Contact
         'contact_us' => 'اتصل بنا',
         'contact_subtitle' => 'لديك استفسار؟ فريقنا جاهز للرد عليك في أسرع وقت ممكن.',
@@ -1490,6 +1502,18 @@ $translations = [
         'confirm_delete' => 'Confirm Delete',
 
         // Misc
+        'wa_get_started' => 'Get Started',
+        'delay_min' => 'Min Delay',
+        'delay_max' => 'Max Delay',
+        'queue_list' => 'Queue List',
+        'lead_info' => 'Recipient',
+        'last_update' => 'Status',
+        'status_sent_small' => 'SENT',
+        'status_failed_small' => 'FAILED',
+        'status_pending_small' => 'PENDING',
+        'empty_queue_title' => 'Queue is Empty',
+        'empty_queue_desc' => 'No numbers currently in queue.',
+
         'notifications_muted_msg' => 'Notifications muted',
         'unmute_notifications' => 'Unmute Notifications',
         'mute_notifications' => 'Mute Notifications',
