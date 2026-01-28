@@ -163,9 +163,9 @@ if (isLoggedIn()) {
                 extend: {
                     fontFamily: {
                         <?php if ($lang === 'ar'): ?>
-                                                                            sans: ['IBM Plex Sans Arabic', 'sans-serif'],
+                                                                                sans: ['IBM Plex Sans Arabic', 'sans-serif'],
                         <?php else: ?>
-                                                                            sans: ['Outfit', 'sans-serif'],
+                                                                                sans: ['Outfit', 'sans-serif'],
                         <?php endif; ?>
                     },
                     colors: {
@@ -366,7 +366,8 @@ if (isLoggedIn()) {
     x-data="{ 
         scrolled: false, 
         mobileMenu: false
-     }" @scroll.window="scrolled = (window.pageYOffset > 20)">
+     }" :class="{ 'overflow-hidden': mobileMenu }" @keydown.escape.window="mobileMenu = false"
+    @scroll.window="scrolled = (window.pageYOffset > 20)">
     <!-- Background -->
     <div class="fixed inset-0 -z-10 overflow-hidden">
         <div class="g-blob"></div>
@@ -681,10 +682,10 @@ if (isLoggedIn()) {
         <!-- Drawer -->
         <div class="fixed inset-y-0 right-0 z-[60] w-full overflow-y-auto bg-gray-900 px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-white/10 rtl:right-auto rtl:left-0 transition-transform"
             x-show="mobileMenu" x-transition:enter="transform transition ease-in-out duration-300 sm:duration-500"
-            x-transition:enter-start="ltr:translate-x-full rtl:-translate-x-full" x-transition:enter-end="translate-x-0"
+            x-transition:enter-start="translate-x-full rtl:-translate-x-full" x-transition:enter-end="translate-x-0"
             x-transition:leave="transform transition ease-in-out duration-300 sm:duration-500"
             x-transition:leave-start="translate-x-0"
-            x-transition:leave-end="ltr:translate-x-full rtl:-translate-x-full">
+            x-transition:leave-end="translate-x-full rtl:-translate-x-full">
 
             <div class="flex items-center justify-between">
                 <a href="<?php echo $prefix; ?>index.php"
