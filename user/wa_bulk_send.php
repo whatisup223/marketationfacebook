@@ -25,10 +25,78 @@ if ($gateway_mode === 'qr') {
 
 // Handle Form Submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['start_campaign'])) {
-    // Logic for saving campaign would go here
-    // For now, we redirect to prevent resubmission
-    header("Location: wa_bulk_send.php?success=1");
-    exit;
+    try {
+        // Validate required fields
+        if (empty($_POST['campaign_name']) || empty($_POST['message'])) {
+            throw new Exception("Campaign name and message are required");
+        }
+
+        // Parse numbers from textarea (one per line or comma-separated)
+        $numbers_raw = $_POST['numbers'] ?? '';
+        $numbers = array_filter(array_map('trim', preg_split('/[\r\n,]+/', $numbers_raw)));
+
+        if (empty($numbers)) {
+            throw new Exception("Please provide at least one phone number");
+        }
+
+        // Handle file upload for local media
+        $media_file_path = null;
+        if (isset($_FILES['media_file']) && $_FILES['media_file']['error'] === UPLOAD_ERR_OK) {
+            $upload_dir = __DIR__ . '/../uploads/wa_media/';
+            if (!is_dir($upload_dir)) {
+                mkdir($upload_dir, 0755, true);
+            }
+
+            $file_extension = pathinfo($_FILES['media_file']['name'], PATHINFO_EXTENSION);
+            $file_name = uniqid('wa_media_') . '.' . $file_extension;
+            $media_file_path = 'uploads/wa_media/' . $file_name;
+
+            if (!move_uploaded_file($_FILES['media_file']['tmp_name'], __DIR__ . '/../' . $media_file_path)) {
+                throw new Exception("Failed to upload media file");
+            }
+        }
+
+        // Prepare selected accounts (for QR mode)
+        $selected_accounts = null;
+        if ($gateway_mode === 'qr' && isset($_POST['selected_accounts'])) {
+            $selected_accounts = json_encode($_POST['selected_accounts']);
+        }
+
+        // Insert campaign into database
+        $stmt = $pdo->prepare("
+            INSERT INTO wa_campaigns (
+                user_id, campaign_name, gateway_mode, selected_accounts,
+                message, media_type, media_url, media_file_path,
+                numbers, delay_min, delay_max, switch_every,
+                total_count, status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+        ");
+
+        $stmt->execute([
+            $user_id,
+            $_POST['campaign_name'],
+            $gateway_mode,
+            $selected_accounts,
+            $_POST['message'],
+            $_POST['media_type'] ?? 'text',
+            $_POST['media_url'] ?? null,
+            $media_file_path,
+            json_encode($numbers),
+            $_POST['delay_min'] ?? 10,
+            $_POST['delay_max'] ?? 25,
+            $_POST['switch_every'] ?? null,
+            count($numbers)
+        ]);
+
+        $campaign_id = $pdo->lastInsertId();
+
+        // Redirect to campaign runner
+        header("Location: wa_campaign_runner.php?id=$campaign_id");
+        exit;
+
+    } catch (Exception $e) {
+        $error_message = $e->getMessage();
+    }
 }
 
 require_once __DIR__ . '/../includes/header.php';
@@ -114,8 +182,8 @@ require_once __DIR__ . '/../includes/header.php';
                         <?php endif; ?>
                         <?php foreach ($wa_accounts as $acc): ?>
                             <label class="relative cursor-pointer">
-                                <input type="checkbox" value="<?php echo $acc['id']; ?>" x-model="selectedAccounts"
-                                    class="peer hidden">
+                                <input type="checkbox" name="selected_accounts[]" value="<?php echo $acc['id']; ?>"
+                                    x-model="selectedAccounts" class="peer hidden">
                                 <div
                                     class="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10 peer-checked:border-green-500/50 peer-checked:bg-green-500/10 transition-all">
                                     <div class="w-6 h-6 rounded-lg bg-gray-800 flex items-center justify-center text-gray-400">
@@ -209,7 +277,8 @@ require_once __DIR__ . '/../includes/header.php';
                     </div>
 
                     <div x-show="importMode === 'paste'" class="animate-fade-in">
-                        <textarea x-model="numbers" rows="6" placeholder="<?php echo __('wa_numbers_placeholder'); ?>"
+                        <textarea x-model="numbers" name="numbers" rows="6"
+                            placeholder="<?php echo __('wa_numbers_placeholder'); ?>"
                             class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white focus:outline-none focus:border-indigo-500/50 transition-all font-mono text-sm"></textarea>
                         <p class="mt-2 text-xs text-gray-500"><?php echo __('wa_numbers_hint'); ?></p>
                     </div>
