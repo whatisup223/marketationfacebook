@@ -79,15 +79,22 @@ if (isLoggedIn()) {
     <?php
     $site_name = __('site_name');
     $site_desc = __('footer_description');
+
+    // Fallback if footer_description is not set in settings but exists in translations as footer_desc
+    if ($site_desc === 'footer_description') {
+        $site_desc = __('footer_desc');
+    }
+
     $current_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
     $site_logo = getSetting('site_logo');
     $site_favicon = getSetting('site_favicon');
+    $hero_image = getSetting('hero_image');
 
     // Get protocol and host
     $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http");
     $host = $_SERVER['HTTP_HOST'];
 
-    // Get the base path (e.g., /ouf/ or /)
+    // Get the base path
     $script_path = $_SERVER['SCRIPT_NAME'];
     $base_path = preg_replace('~/(admin|user)/.*$~', '/', $script_path);
     if ($base_path === $script_path) {
@@ -95,25 +102,28 @@ if (isLoggedIn()) {
     }
     $base_url = $protocol . "://" . $host . rtrim($base_path, '/') . '/';
 
-    $full_logo_url = '';
-    if ($site_logo) {
-        $full_logo_url = $base_url . 'uploads/' . $site_logo;
+    // Image for social sharing
+    $share_image = '';
+    if ($hero_image) {
+        $share_image = $base_url . 'uploads/' . $hero_image;
+    } elseif ($site_logo) {
+        $share_image = $base_url . 'uploads/' . $site_logo;
     }
     ?>
     <title><?php echo $site_name; ?></title>
     <meta name="description" content="<?php echo $site_desc; ?>">
 
-    <?php if ($site_favicon): ?>
-        <link rel="icon" type="image/png" href="<?php echo $base_url; ?>uploads/<?php echo $site_favicon; ?>">
-    <?php endif; ?>
-
-    <!-- Open Graph / Facebook -->
+    <!-- Open Graph / Facebook / WhatsApp -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="<?php echo $current_url; ?>">
     <meta property="og:title" content="<?php echo $site_name; ?>">
     <meta property="og:description" content="<?php echo $site_desc; ?>">
-    <?php if ($full_logo_url): ?>
-        <meta property="og:image" content="<?php echo $full_logo_url; ?>">
+    <meta property="og:site_name" content="<?php echo $site_name; ?>">
+    <?php if ($share_image): ?>
+        <meta property="og:image" content="<?php echo $share_image; ?>">
+        <meta property="og:image:secure_url" content="<?php echo $share_image; ?>">
+        <meta property="og:image:type" content="image/png">
+        <meta itemprop="image" content="<?php echo $share_image; ?>">
     <?php endif; ?>
 
     <!-- Twitter -->
@@ -121,12 +131,14 @@ if (isLoggedIn()) {
     <meta property="twitter:url" content="<?php echo $current_url; ?>">
     <meta property="twitter:title" content="<?php echo $site_name; ?>">
     <meta property="twitter:description" content="<?php echo $site_desc; ?>">
-    <?php if ($full_logo_url): ?>
-        <meta property="twitter:image" content="<?php echo $full_logo_url; ?>">
+    <?php if ($share_image): ?>
+        <meta property="twitter:image" content="<?php echo $share_image; ?>">
     <?php endif; ?>
 
-    <!-- Meta Tags for WhatsApp/Social Display -->
+    <!-- Additional Meta Tags -->
     <meta name="theme-color" content="#6366f1">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="<?php echo $site_name; ?>">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
@@ -151,9 +163,9 @@ if (isLoggedIn()) {
                 extend: {
                     fontFamily: {
                         <?php if ($lang === 'ar'): ?>
-                                                                    sans: ['IBM Plex Sans Arabic', 'sans-serif'],
+                                                                        sans: ['IBM Plex Sans Arabic', 'sans-serif'],
                         <?php else: ?>
-                                                                    sans: ['Outfit', 'sans-serif'],
+                                                                        sans: ['Outfit', 'sans-serif'],
                         <?php endif; ?>
                     },
                     colors: {
@@ -163,7 +175,7 @@ if (isLoggedIn()) {
                     }
                 }
             }
-    }
+        }
     </script>
     <style>
         /* Base (Dark Mode Always) */
@@ -730,12 +742,16 @@ if (isLoggedIn()) {
                         </p>
                     </div>
                 </div>
-                
+
                 <div class="mt-4 mb-2">
                     <a href="?<?php echo htmlspecialchars(http_build_query(array_merge($_GET, ['lang' => ($lang === 'ar' ? 'en' : 'ar')]))); ?>"
-                       class="flex items-center justify-center w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-2.5 rounded-xl transition-all border border-gray-700 group">
-                       <svg class="w-5 h-5 text-gray-400 group-hover:text-white transition-colors <?php echo $lang === 'ar' ? 'ml-2' : 'mr-2'; ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" /></svg>
-                       <span><?php echo $lang === 'ar' ? 'English' : 'عربي'; ?></span>
+                        class="flex items-center justify-center w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-2.5 rounded-xl transition-all border border-gray-700 group">
+                        <svg class="w-5 h-5 text-gray-400 group-hover:text-white transition-colors <?php echo $lang === 'ar' ? 'ml-2' : 'mr-2'; ?>"
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+                        </svg>
+                        <span><?php echo $lang === 'ar' ? 'English' : 'عربي'; ?></span>
                     </a>
                 </div>
             <?php endif; ?>
