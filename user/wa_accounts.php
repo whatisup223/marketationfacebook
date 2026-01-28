@@ -50,7 +50,7 @@ require_once __DIR__ . '/../includes/header.php';
                         class="text-green-300 text-xs font-bold uppercase tracking-widest"><?php echo __('whatsapp'); ?></span>
                 </div>
 
-                <button @click="startLinking()"
+                <button type="button" @click="startLinking()"
                     class="flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white px-6 py-3 rounded-2xl font-bold transition-all shadow-lg shadow-indigo-600/20 group">
                     <svg class="w-5 h-5 group-hover:rotate-90 transition-transform" fill="none" stroke="currentColor"
                         viewBox="0 0 24 24">
@@ -85,7 +85,7 @@ require_once __DIR__ . '/../includes/header.php';
                             </div>
                             <h3 class="text-2xl font-bold text-white mb-2"><?php echo __('wa_no_accounts'); ?></h3>
                             <p class="text-gray-400 mb-8 max-w-sm"><?php echo __('wa_no_accounts_desc'); ?></p>
-                            <button @click="startLinking()"
+                            <button type="button" @click="startLinking()"
                                 class="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white px-10 py-4 rounded-2xl font-black transition-all shadow-xl hover:scale-105 active:scale-95">
                                 <?php echo __('wa_get_started'); ?>
                             </button>
@@ -120,7 +120,7 @@ require_once __DIR__ . '/../includes/header.php';
                                 </p>
                             </div>
                             <div class="flex gap-3">
-                                <button onclick="deleteWAAccount(<?php echo $acc['id']; ?>)"
+                                <button type="button" onclick="deleteWAAccount(<?php echo $acc['id']; ?>)"
                                     class="flex-1 py-2 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all text-xs font-bold border border-red-500/20">
                                     <?php echo __('delete'); ?>
                                 </button>
