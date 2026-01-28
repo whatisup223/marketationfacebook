@@ -151,9 +151,9 @@ if (isLoggedIn()) {
                 extend: {
                     fontFamily: {
                         <?php if ($lang === 'ar'): ?>
-                                                        sans: ['IBM Plex Sans Arabic', 'sans-serif'],
+                                                            sans: ['IBM Plex Sans Arabic', 'sans-serif'],
                         <?php else: ?>
-                                                        sans: ['Outfit', 'sans-serif'],
+                                                            sans: ['Outfit', 'sans-serif'],
                         <?php endif; ?>
                     },
                     colors: {
@@ -717,7 +717,14 @@ if (isLoggedIn()) {
                         <p class="text-sm font-bold text-white truncate">
                             <?php echo htmlspecialchars($current_user['name']); ?>
                         </p>
-                        <p class="text-xs text-gray-500 truncate"><?php echo htmlspecialchars($current_user['email']); ?>
+                        <p class="text-xs text-gray-500 truncate" dir="ltr">
+                            <?php
+                            if (!empty($current_user['username'])) {
+                                echo '@' . htmlspecialchars($current_user['username']);
+                            } else {
+                                echo htmlspecialchars($current_user['email']);
+                            }
+                            ?>
                         </p>
                     </div>
                 </div>

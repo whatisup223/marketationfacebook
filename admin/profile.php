@@ -12,7 +12,8 @@ $message = '';
 $error = '';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Check if Password Update
+
+    // --- 1. Security (Password) ---
     if (!empty($_POST['new_password'])) {
         $password = $_POST['new_password'];
         $confirm = $_POST['confirm_password'];
@@ -30,30 +31,42 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
-    // Check Name Update
-    if (isset($_POST['name'])) {
-        $name = strip_tags($_POST['name']);
-        $stmt = $pdo->prepare("UPDATE users SET name = ? WHERE id = ?");
-        if ($stmt->execute([$name, $user_id])) {
-            $_SESSION['name'] = $name; // Update session
-            $message = $message ?: __("profile_updated");
+    // --- 2. Personal Details (Name, Username, Phone) ---
+    if (isset($_POST['update_profile'])) {
+        $name = trim(strip_tags($_POST['name']));
+        $username = trim(strip_tags($_POST['username']));
+        $phone = trim(strip_tags($_POST['phone']));
+
+        // Check availability of username (exclude current user)
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE username = ? AND id != ?");
+        $stmt->execute([$username, $user_id]);
+        if ($stmt->fetchColumn() > 0) {
+            $error = __("username_exists");
+        } else {
+            $stmt = $pdo->prepare("UPDATE users SET name = ?, username = ?, phone = ? WHERE id = ?");
+            if ($stmt->execute([$name, $username, $phone, $user_id])) {
+                $_SESSION['name'] = $name;
+                $_SESSION['user_name'] = $username;
+                $message = !empty($message) ? $message : __("profile_updated");
+            } else {
+                $error = "Failed to update profile";
+            }
         }
     }
 
-    // Handle Avatar Deletion
+    // --- 3. Avatar Handling ---
     if (isset($_POST['delete_avatar'])) {
         $stmt = $pdo->prepare("SELECT avatar FROM users WHERE id = ?");
         $stmt->execute([$user_id]);
         $old_avatar = $stmt->fetchColumn();
         if ($old_avatar && file_exists(__DIR__ . '/../' . $old_avatar)) {
-            unlink(__DIR__ . '/../' . $old_avatar);
+            @unlink(__DIR__ . '/../' . $old_avatar);
         }
         $stmt = $pdo->prepare("UPDATE users SET avatar = NULL WHERE id = ?");
         $stmt->execute([$user_id]);
         $message = __("avatar_updated");
     }
 
-    // Handle Avatar Upload
     if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] == 0) {
         $allowed = ['jpg', 'jpeg', 'png', 'webp'];
         $filename = $_FILES['avatar']['name'];
@@ -62,7 +75,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if (in_array($ext, $allowed)) {
             $new_name = 'uploads/avatars/avatar_' . $user_id . '_' . time() . '.' . $ext;
 
-            // Delete old avatar
             $stmt = $pdo->prepare("SELECT avatar FROM users WHERE id = ?");
             $stmt->execute([$user_id]);
             $old_avatar = $stmt->fetchColumn();
@@ -120,6 +132,8 @@ require_once __DIR__ . '/../includes/header.php';
                     <?php echo __('personal_details'); ?>
                 </h2>
                 <form method="POST" enctype="multipart/form-data" class="space-y-6">
+                    <input type="hidden" name="update_profile" value="1">
+
                     <div class="flex flex-col items-center mb-6">
                         <div class="relative group">
                             <?php if ($user['avatar']): ?>
@@ -136,11 +150,9 @@ require_once __DIR__ . '/../includes/header.php';
                             <?php else: ?>
                                 <div
                                     class="w-32 h-32 rounded-3xl bg-indigo-500/10 flex items-center justify-center border-4 border-dashed border-indigo-500/30">
-                                    <svg class="w-12 h-12 text-indigo-400/50" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                    </svg>
+                                    <span class="text-4xl font-bold text-indigo-400">
+                                        <?php echo mb_substr($user['name'], 0, 1, 'UTF-8'); ?>
+                                    </span>
                                 </div>
                             <?php endif; ?>
                         </div>
@@ -156,14 +168,36 @@ require_once __DIR__ . '/../includes/header.php';
                     </div>
 
                     <div>
-                        <label class="block text-gray-400 text-sm font-medium mb-2">
+                        <label
+                            class="block text-gray-400 text-sm font-medium mb-2 uppercase tracking-wide text-xs ml-1">
                             <?php echo __('display_name'); ?>
                         </label>
-                        <input type="text" name="name" value="<?php echo htmlspecialchars($user['name']); ?>"
-                            class="w-full bg-gray-900/50 border border-gray-700/50 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500 transition-colors text-white">
+                        <input type="text" name="name" value="<?php echo htmlspecialchars($user['name']); ?>" required
+                            class="w-full bg-gray-900/50 border border-gray-700/50 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500 transition-colors text-white font-medium">
                     </div>
+
                     <div>
-                        <label class="block text-gray-400 text-sm font-medium mb-2">
+                        <label
+                            class="block text-gray-400 text-sm font-medium mb-2 uppercase tracking-wide text-xs ml-1">
+                            <?php echo __('username'); ?>
+                        </label>
+                        <input type="text" name="username"
+                            value="<?php echo htmlspecialchars($user['username'] ?? ''); ?>" required
+                            class="w-full bg-gray-900/50 border border-gray-700/50 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500 transition-colors text-white font-medium">
+                    </div>
+
+                    <div>
+                        <label
+                            class="block text-gray-400 text-sm font-medium mb-2 uppercase tracking-wide text-xs ml-1">
+                            <?php echo __('phone'); ?>
+                        </label>
+                        <input type="text" name="phone" value="<?php echo htmlspecialchars($user['phone'] ?? ''); ?>"
+                            class="w-full bg-gray-900/50 border border-gray-700/50 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500 transition-colors text-white font-medium">
+                    </div>
+
+                    <div>
+                        <label
+                            class="block text-gray-400 text-sm font-medium mb-2 uppercase tracking-wide text-xs ml-1">
                             <?php echo __('email_readonly'); ?>
                         </label>
                         <input type="email" value="<?php echo htmlspecialchars($user['email']); ?>"
@@ -189,14 +223,16 @@ require_once __DIR__ . '/../includes/header.php';
                 </h2>
                 <form method="POST" class="space-y-6">
                     <div>
-                        <label class="block text-gray-400 text-sm font-medium mb-2">
+                        <label
+                            class="block text-gray-400 text-sm font-medium mb-2 uppercase tracking-wide text-xs ml-1">
                             <?php echo __('new_password'); ?>
                         </label>
                         <input type="password" name="new_password"
                             class="w-full bg-gray-900/50 border border-gray-700/50 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500 transition-colors text-white">
                     </div>
                     <div>
-                        <label class="block text-gray-400 text-sm font-medium mb-2">
+                        <label
+                            class="block text-gray-400 text-sm font-medium mb-2 uppercase tracking-wide text-xs ml-1">
                             <?php echo __('confirm_password'); ?>
                         </label>
                         <input type="password" name="confirm_password"

@@ -16,6 +16,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['role'] = $user['role'];
             $_SESSION['name'] = $user['name'];
+            $_SESSION['user_name'] = $user['username'] ?? ''; // Store username
 
             // Check if there's a pending exchange or redirect URL
             if (!empty($_SESSION['redirect_after_login'])) {
@@ -39,56 +40,97 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 require_once __DIR__ . '/includes/header.php';
 ?>
 
-<div class="flex items-center justify-center min-h-[80vh] px-4">
-    <div class="glass-card w-full max-w-md p-8 rounded-3xl relative overflow-hidden" data-aos="zoom-in">
-        <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-indigo-500 opacity-20 blur-3xl">
-        </div>
-        <div class="absolute bottom-0 left-0 -ml-16 -mb-16 w-64 h-64 rounded-full bg-pink-500 opacity-20 blur-3xl">
-        </div>
+<div class="flex items-center justify-center min-h-[90vh] px-4 py-12 relative overflow-hidden">
+    <!-- Animated Blobs -->
+    <div
+        class="absolute -top-40 -left-40 w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob">
+    </div>
+    <div
+        class="absolute top-40 -right-20 w-80 h-80 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000">
+    </div>
+    <div
+        class="absolute -bottom-20 left-40 w-80 h-80 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000">
+    </div>
 
-        <h2 class="text-3xl font-bold text-center mb-2">
-            <?php echo __('welcome_back'); ?>
-        </h2>
-        <p class="text-center text-gray-400 mb-8">
-            <?php echo __('login_continue'); ?>
-            <?php echo __('site_name'); ?>
-        </p>
+    <div class="glass-card w-full max-w-md p-8 rounded-[2.5rem] relative overflow-hidden shadow-2xl border border-white/10 backdrop-blur-xl z-20"
+        data-aos="zoom-in">
+
+        <div class="text-center mb-10">
+            <h2 class="text-3xl font-black text-white mb-2 tracking-tight">
+                <?php echo __('welcome_back'); ?> 👋
+            </h2>
+            <p class="text-gray-400">
+                <?php echo __('login_continue'); ?> <span
+                    class="text-indigo-400 font-bold"><?php echo __('site_name'); ?></span>
+            </p>
+        </div>
 
         <?php if ($error): ?>
-            <div class="bg-red-500/20 text-red-300 p-3 rounded-xl mb-6 text-sm text-center border border-red-500/30">
-                <?php echo $error; ?>
+            <div
+                class="bg-red-500/10 border border-red-500/20 text-red-200 p-4 rounded-2xl mb-8 flex items-center gap-3 animate-headShake">
+                <svg class="w-6 h-6 shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span class="font-medium"><?php echo $error; ?></span>
             </div>
         <?php endif; ?>
 
-        <form method="POST" class="space-y-6 relative z-10">
+        <form method="POST" class="space-y-6">
             <div>
-                <label class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('email'); ?></label>
-                <input type="email" name="email"
-                    class="w-full bg-gray-900/50 border border-gray-700/50 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500 transition-colors text-white"
-                    placeholder="you@example.com" required>
+                <label
+                    class="block text-gray-300 text-xs font-bold uppercase tracking-wider mb-2 ml-1"><?php echo __('email'); ?></label>
+                <div class="relative group">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-gray-500 group-focus-within:text-indigo-400 transition-colors"
+                            fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                        </svg>
+                    </div>
+                    <input type="email" name="email"
+                        class="w-full bg-black/20 border border-white/10 rounded-2xl pl-12 pr-4 py-4 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-medium"
+                        placeholder="you@company.com" required>
+                </div>
             </div>
+
             <div>
-                <label class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('password'); ?></label>
-                <input type="password" name="password"
-                    class="w-full bg-gray-900/50 border border-gray-700/50 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500 transition-colors text-white"
-                    placeholder="••••••••" required>
-                <div class="flex justify-end mt-2">
+                <div class="flex justify-between items-center mb-2 ml-1">
+                    <label
+                        class="block text-gray-300 text-xs font-bold uppercase tracking-wider"><?php echo __('password'); ?></label>
                     <a href="forgot_password.php"
-                        class="text-sm text-gray-400 hover:text-indigo-400"><?php echo __('forgot_password_title'); ?></a>
+                        class="text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors">
+                        <?php echo __('forgot_password_title'); ?>
+                    </a>
+                </div>
+                <div class="relative group">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-gray-500 group-focus-within:text-indigo-400 transition-colors"
+                            fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                    </div>
+                    <input type="password" name="password"
+                        class="w-full bg-black/20 border border-white/10 rounded-2xl pl-12 pr-4 py-4 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-medium"
+                        placeholder="••••••••" required>
                 </div>
             </div>
 
             <button type="submit"
-                class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-indigo-900/40 transition-all transform hover:-translate-y-1">
+                class="w-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:via-purple-500 hover:to-pink-500 text-white font-black py-4 rounded-2xl shadow-xl shadow-indigo-900/40 transition-all transform hover:scale-[1.02] active:scale-95 text-lg tracking-wide mt-2">
                 <?php echo __('login'); ?>
             </button>
 
-            <p class="text-center text-gray-500 text-sm mt-4">
-                <?php echo __('dont_have_account'); ?> <a href="register.php"
-                    class="text-indigo-400 hover:text-white transition-colors">
-                    <?php echo __('register'); ?>
-                </a>
-            </p>
+            <div class="text-center pt-2">
+                <p class="text-gray-400">
+                    <?php echo __('dont_have_account'); ?>
+                    <a href="register.php"
+                        class="text-white hover:text-indigo-400 font-bold transition-colors ml-1 underline decoration-indigo-500/30">
+                        <?php echo __('register'); ?>
+                    </a>
+                </p>
+            </div>
         </form>
     </div>
 </div>
