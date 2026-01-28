@@ -111,7 +111,18 @@
             <div x-show="waOpen" x-transition:enter="transition ease-out duration-100"
                 x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
                 class="pl-4 rtl:pl-0 rtl:pr-4 space-y-1">
-                <p class="px-4 py-2 text-xs text-gray-500 italic"><?php echo __('coming_soon') ?? 'Soon...'; ?></p>
+                <a href="wa_accounts.php"
+                    class="block px-4 py-2.5 <?php echo basename($_SERVER['PHP_SELF']) == 'wa_accounts.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> rounded-lg text-sm font-medium transition-colors mb-1">
+                    <?php echo __('wa_accounts'); ?>
+                </a>
+                <a href="wa_bulk_send.php"
+                    class="block px-4 py-2.5 <?php echo basename($_SERVER['PHP_SELF']) == 'wa_bulk_send.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> rounded-lg text-sm font-medium transition-colors mb-1">
+                    <?php echo __('wa_bulk_send'); ?>
+                </a>
+                <a href="wa_settings.php"
+                    class="block px-4 py-2.5 <?php echo basename($_SERVER['PHP_SELF']) == 'wa_settings.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> rounded-lg text-sm font-medium transition-colors mb-1">
+                    <?php echo __('wa_settings'); ?>
+                </a>
             </div>
         </div>
 
