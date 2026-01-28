@@ -15,7 +15,7 @@ $stats = [
     'fb_accounts' => $pdo->query("SELECT COUNT(*) FROM fb_accounts WHERE is_active=1")->fetchColumn(),
     'campaigns' => $pdo->query("SELECT COUNT(*) FROM campaigns")->fetchColumn(),
     'support_open' => $pdo->query("SELECT COUNT(*) FROM support_tickets WHERE status='open'")->fetchColumn(),
-    'total_leads' => $pdo->query("SELECT COALESCE(SUM(total_leads), 0) FROM campaigns")->fetchColumn(),
+    'total_leads' => $pdo->query("SELECT COUNT(*) FROM fb_leads")->fetchColumn(), // Count all extracted leads
 ];
 
 require_once __DIR__ . '/../includes/header.php';
@@ -85,7 +85,8 @@ require_once __DIR__ . '/../includes/header.php';
                     </div>
                     <!-- Stats -->
                     <div class="text-gray-400 text-xs font-bold uppercase mb-2 tracking-wider">
-                        <?php echo __('active_subscriptions'); ?></div>
+                        <?php echo __('active_subscriptions'); ?>
+                    </div>
                     <div
                         class="text-4xl font-black text-white mb-2 bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-500">
                         <?php echo $stats['active_subs']; ?>
@@ -123,7 +124,8 @@ require_once __DIR__ . '/../includes/header.php';
                         </span>
                     </div>
                     <div class="text-gray-400 text-xs font-bold uppercase mb-2 tracking-wider">
-                        <?php echo __('users'); ?></div>
+                        <?php echo __('users'); ?>
+                    </div>
                     <div class="text-4xl font-black text-white mb-2">
                         <?php echo $stats['users']; ?>
                     </div>
@@ -160,7 +162,8 @@ require_once __DIR__ . '/../includes/header.php';
                         </span>
                     </div>
                     <div class="text-gray-400 text-xs font-bold uppercase mb-2 tracking-wider">
-                        <?php echo __('connected_fb_accounts'); ?></div>
+                        <?php echo __('connected_fb_accounts'); ?>
+                    </div>
                     <div class="text-4xl font-black text-white mb-2">
                         <?php echo $stats['fb_accounts']; ?>
                     </div>
@@ -197,7 +200,8 @@ require_once __DIR__ . '/../includes/header.php';
                         </span>
                     </div>
                     <div class="text-gray-400 text-xs font-bold uppercase mb-2 tracking-wider">
-                        <?php echo __('campaigns_launched'); ?></div>
+                        <?php echo __('campaigns_launched'); ?>
+                    </div>
                     <div class="text-4xl font-black text-white mb-2">
                         <?php echo $stats['campaigns']; ?>
                     </div>
@@ -235,7 +239,8 @@ require_once __DIR__ . '/../includes/header.php';
                         </span>
                     </div>
                     <div class="text-gray-400 text-xs font-bold uppercase mb-2 tracking-wider">
-                        <?php echo __('open_tickets'); ?></div>
+                        <?php echo __('open_tickets'); ?>
+                    </div>
                     <div class="text-4xl font-black text-white mb-2">
                         <?php echo $stats['support_open']; ?>
                     </div>
@@ -273,7 +278,8 @@ require_once __DIR__ . '/../includes/header.php';
                         </span>
                     </div>
                     <div class="text-gray-400 text-xs font-bold uppercase mb-2 tracking-wider">
-                        <?php echo __('total_leads_extracted'); ?></div>
+                        <?php echo __('total_leads_extracted'); ?>
+                    </div>
                     <div class="text-4xl font-black text-white mb-2">
                         <?php echo number_format($stats['total_leads']); ?>
                     </div>
@@ -316,7 +322,8 @@ require_once __DIR__ . '/../includes/header.php';
                             </th>
                             <th class="pb-4 text-xs font-bold uppercase tracking-wider"><?php echo __('user'); ?></th>
                             <th class="pb-4 text-xs font-bold uppercase tracking-wider">
-                                <?php echo __('campaign_name'); ?></th>
+                                <?php echo __('campaign_name'); ?>
+                            </th>
                             <th class="pb-4 text-xs font-bold uppercase tracking-wider"><?php echo __('leads'); ?></th>
                             <th class="pb-4 text-xs font-bold uppercase tracking-wider"><?php echo __('status'); ?></th>
                             <th class="pb-4 text-xs font-bold uppercase tracking-wider"><?php echo __('date'); ?></th>
@@ -330,20 +337,20 @@ require_once __DIR__ . '/../includes/header.php';
                                             ORDER BY c.created_at DESC LIMIT 5");
                         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)):
                             ?>
-                                <tr class="hover:bg-white/5 transition-all duration-300 group">
-                                    <td class="py-4 pl-2 font-mono text-sm text-gray-500 group-hover:text-gray-400">
-                                        #<?php echo $row['id']; ?></td>
-                                    <td class="py-4 font-semibold text-gray-300 group-hover:text-white transition-colors">
-                                        <?php echo htmlspecialchars($row['user_name'] ?? __('unknown')); ?>
-                                    </td>
-                                    <td class="py-4 text-white font-medium">
-                                        <?php echo htmlspecialchars($row['name']); ?>
-                                    </td>
-                                    <td class="py-4 text-gray-300 font-bold">
-                                        <?php echo number_format($row['total_leads']); ?>
-                                    </td>
-                                    <td class="py-4">
-                                        <span class="px-3 py-1.5 rounded-xl text-xs font-bold inline-flex items-center gap-2
+                            <tr class="hover:bg-white/5 transition-all duration-300 group">
+                                <td class="py-4 pl-2 font-mono text-sm text-gray-500 group-hover:text-gray-400">
+                                    #<?php echo $row['id']; ?></td>
+                                <td class="py-4 font-semibold text-gray-300 group-hover:text-white transition-colors">
+                                    <?php echo htmlspecialchars($row['user_name'] ?? __('unknown')); ?>
+                                </td>
+                                <td class="py-4 text-white font-medium">
+                                    <?php echo htmlspecialchars($row['name']); ?>
+                                </td>
+                                <td class="py-4 text-gray-300 font-bold">
+                                    <?php echo number_format($row['total_leads']); ?>
+                                </td>
+                                <td class="py-4">
+                                    <span class="px-3 py-1.5 rounded-xl text-xs font-bold inline-flex items-center gap-2
                                     <?php
                                     if ($row['status'] == 'completed')
                                         echo 'bg-green-500/20 text-green-400 border border-green-500/30';
@@ -354,37 +361,37 @@ require_once __DIR__ . '/../includes/header.php';
                                     else
                                         echo 'bg-gray-500/20 text-gray-400 border border-gray-500/30';
                                     ?>">
-                                            <span class="w-1.5 h-1.5 rounded-full <?php
-                                            if ($row['status'] == 'completed')
-                                                echo 'bg-green-400';
-                                            elseif ($row['status'] == 'running')
-                                                echo 'bg-blue-400';
-                                            elseif ($row['status'] == 'scheduled')
-                                                echo 'bg-yellow-400';
-                                            else
-                                                echo 'bg-gray-400';
-                                            ?>"></span>
-                                            <?php echo __('status_' . $row['status']); ?>
-                                        </span>
-                                    </td>
-                                    <td class="py-4 text-gray-500 text-sm font-medium">
-                                        <?php echo date('M d, H:i', strtotime($row['created_at'])); ?>
-                                    </td>
-                                </tr>
+                                        <span class="w-1.5 h-1.5 rounded-full <?php
+                                        if ($row['status'] == 'completed')
+                                            echo 'bg-green-400';
+                                        elseif ($row['status'] == 'running')
+                                            echo 'bg-blue-400';
+                                        elseif ($row['status'] == 'scheduled')
+                                            echo 'bg-yellow-400';
+                                        else
+                                            echo 'bg-gray-400';
+                                        ?>"></span>
+                                        <?php echo __('status_' . $row['status']); ?>
+                                    </span>
+                                </td>
+                                <td class="py-4 text-gray-500 text-sm font-medium">
+                                    <?php echo date('M d, H:i', strtotime($row['created_at'])); ?>
+                                </td>
+                            </tr>
                         <?php endwhile; ?>
                     </tbody>
                 </table>
                 <?php if ($stmt->rowCount() == 0): ?>
-                        <div class="text-center py-12">
-                            <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-800/50 flex items-center justify-center">
-                                <svg class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4">
-                                    </path>
-                                </svg>
-                            </div>
-                            <p class="text-gray-500 font-medium"><?php echo __('no_campaigns_found'); ?></p>
+                    <div class="text-center py-12">
+                        <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-800/50 flex items-center justify-center">
+                            <svg class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4">
+                                </path>
+                            </svg>
                         </div>
+                        <p class="text-gray-500 font-medium"><?php echo __('no_campaigns_found'); ?></p>
+                    </div>
                 <?php endif; ?>
             </div>
         </div>
@@ -426,28 +433,30 @@ require_once __DIR__ . '/../includes/header.php';
                         $stmtUsers = $pdo->query("SELECT * FROM users WHERE role='user' ORDER BY created_at DESC LIMIT 5");
                         while ($u = $stmtUsers->fetch(PDO::FETCH_ASSOC)):
                             ?>
-                                <tr class="hover:bg-white/5 transition-all duration-300 group">
-                                    <td class="py-4 pl-2 font-semibold text-gray-300 group-hover:text-white transition-colors">
-                                        <?php echo htmlspecialchars($u['name']); ?></td>
-                                    <td class="py-4 text-gray-400 text-sm font-medium">
-                                        <?php echo htmlspecialchars($u['email']); ?></td>
-                                    <td class="py-4 text-gray-500 text-sm font-medium">
-                                        <?php echo date('M d, Y', strtotime($u['created_at'])); ?>
-                                    </td>
-                                    <td class="py-4">
-                                        <a href="users.php?edit=<?php echo $u['id']; ?>"
-                                            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 hover:text-indigo-300 text-sm font-bold border border-indigo-500/20 hover:border-indigo-500/30 transition-all duration-300">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
-                                                </path>
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                            </svg>
-                                            <?php echo __('manage'); ?>
-                                        </a>
-                                    </td>
-                                </tr>
+                            <tr class="hover:bg-white/5 transition-all duration-300 group">
+                                <td class="py-4 pl-2 font-semibold text-gray-300 group-hover:text-white transition-colors">
+                                    <?php echo htmlspecialchars($u['name']); ?>
+                                </td>
+                                <td class="py-4 text-gray-400 text-sm font-medium">
+                                    <?php echo htmlspecialchars($u['email']); ?>
+                                </td>
+                                <td class="py-4 text-gray-500 text-sm font-medium">
+                                    <?php echo date('M d, Y', strtotime($u['created_at'])); ?>
+                                </td>
+                                <td class="py-4">
+                                    <a href="users.php?edit=<?php echo $u['id']; ?>"
+                                        class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 hover:text-indigo-300 text-sm font-bold border border-indigo-500/20 hover:border-indigo-500/30 transition-all duration-300">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
+                                            </path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        </svg>
+                                        <?php echo __('manage'); ?>
+                                    </a>
+                                </td>
+                            </tr>
                         <?php endwhile; ?>
                     </tbody>
                 </table>

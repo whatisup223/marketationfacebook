@@ -13,7 +13,7 @@ $pdo = getDB();
 $stats = [
     'connected_accounts' => $pdo->query("SELECT COUNT(*) FROM fb_accounts WHERE user_id = $user_id AND is_active=1")->fetchColumn(),
     'campaigns' => $pdo->query("SELECT COUNT(*) FROM campaigns WHERE user_id = $user_id")->fetchColumn(),
-    'total_leads' => $pdo->query("SELECT COALESCE(SUM(total_leads), 0) FROM campaigns WHERE user_id = $user_id")->fetchColumn(),
+    'total_leads' => $pdo->query("SELECT COUNT(*) FROM fb_leads l JOIN fb_pages p ON l.page_id = p.id JOIN fb_accounts a ON p.account_id = a.id WHERE a.user_id = $user_id")->fetchColumn(),
     'active_campaigns' => $pdo->query("SELECT COUNT(*) FROM campaigns WHERE user_id = $user_id AND status='running'")->fetchColumn(),
     'support_tickets' => getUserTicketUnreadCount($_SESSION['user_id']),
 ];

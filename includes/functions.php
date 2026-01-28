@@ -501,6 +501,7 @@ $translations = [
         'total_campaigns' => 'إجمالي الحملات',
         'all_time_campaigns' => 'جميع الحملات',
         'currently_running' => 'قيد التشغيل حالياً',
+        'active_linked_accounts' => 'الحسابات النشطة المرتبطة',
         'active_campaigns' => 'الحملات النشطة',
 
         // Profile Page
@@ -1223,6 +1224,7 @@ $translations = [
         'total_campaigns' => 'Total Campaigns',
         'all_time_campaigns' => 'All Time Campaigns',
         'currently_running' => 'Currently Running',
+        'active_linked_accounts' => 'Active Linked Accounts',
         'active_campaigns' => 'Active Campaigns',
 
         // Profile Page
