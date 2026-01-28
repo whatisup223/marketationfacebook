@@ -285,6 +285,8 @@ require_once __DIR__ . '/../includes/header.php';
                     });
                     const data = await response.json();
 
+                    console.log('Evolution API Response:', data); // Debug log
+
                     if (data.status === 'success') {
                         this.qrCode = data.qr;
                         this.instanceName = data.instance_name;
@@ -292,11 +294,20 @@ require_once __DIR__ . '/../includes/header.php';
                         this.startStatusCheck();
                         this.startCountdown();
                     } else {
-                        alert(data.message || 'Error connecting to Evolution API');
+                        console.error('Evolution API Error:', data); // Debug log
+
+                        // Show detailed error if debug info is available
+                        let errorMsg = data.message || 'Error connecting to Evolution API';
+                        if (data.debug) {
+                            console.error('Debug Info:', data.debug);
+                            errorMsg += '\n\nCheck browser console for details.';
+                        }
+
+                        alert(errorMsg);
                         this.closeModal();
                     }
                 } catch (e) {
-                    console.error(e);
+                    console.error('Fetch Error:', e);
                     alert('Connection failed');
                     this.closeModal();
                 }

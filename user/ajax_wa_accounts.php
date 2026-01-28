@@ -30,12 +30,14 @@ switch ($action) {
     case 'init_instance':
         $instance_name = 'user_' . $user_id . '_' . time();
 
-        // 1. Create Instance
+        // 1. Create Instance with Evolution API v2 structure
         $ch = curl_init($evo_url . '/instance/create');
+
+        // Evolution API v2 expects this structure
         $payload = json_encode([
             'instanceName' => $instance_name,
-            'token' => bin2hex(random_bytes(16)),
-            'qrcode' => true
+            'qrcode' => true,
+            'integration' => 'WHATSAPP-BAILEYS'
         ]);
 
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -90,11 +92,58 @@ switch ($action) {
 
         // Check for successful creation
         if ($http_code >= 200 && $http_code < 300) {
-            // Evolution API might return different structures
+            // Instance created successfully
+            // Now immediately call /instance/connect to trigger QR generation
+            error_log("Instance created: $instance_name, now connecting...");
+
+            // Evolution API v2 requires POST to /instance/connect to start the connection
+            $ch_connect = curl_init($evo_url . '/instance/connect/' . $instance_name);
+            curl_setopt($ch_connect, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch_connect, CURLOPT_CUSTOMREQUEST, 'POST'); // Changed to POST
+            curl_setopt($ch_connect, CURLOPT_HTTPHEADER, [
+                'Content-Type: application/json',
+                'apikey: ' . $evo_key
+            ]);
+            curl_setopt($ch_connect, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch_connect, CURLOPT_SSL_VERIFYHOST, false);
+            $connect_response = curl_exec($ch_connect);
+            $connect_http_code = curl_getinfo($ch_connect, CURLINFO_HTTP_CODE);
+            curl_close($ch_connect);
+
+            error_log("Connect response (HTTP $connect_http_code): $connect_response");
+
+            $connect_data = json_decode($connect_response, true);
+
+            // Now try to extract QR from connect response first, then fallback to create response
             $qr_base64 = null;
 
-            // Try different possible response structures
-            if (isset($data['qrcode']['base64'])) {
+            // Try different possible response structures from CONNECT endpoint
+            // Structure 1: connect_data.qrcode.base64
+            if (isset($connect_data['qrcode']['base64'])) {
+                $qr_base64 = $connect_data['qrcode']['base64'];
+            }
+            // Structure 2: connect_data.qrcode.code
+            elseif (isset($connect_data['qrcode']['code'])) {
+                $qr_base64 = $connect_data['qrcode']['code'];
+            }
+            // Structure 3: connect_data.qr
+            elseif (isset($connect_data['qr'])) {
+                $qr_base64 = $connect_data['qr'];
+            }
+            // Structure 4: connect_data.base64
+            elseif (isset($connect_data['base64'])) {
+                $qr_base64 = $connect_data['base64'];
+            }
+            // Structure 5: connect_data.qrcode (direct string)
+            elseif (isset($connect_data['qrcode']) && is_string($connect_data['qrcode'])) {
+                $qr_base64 = $connect_data['qrcode'];
+            }
+            // Structure 6: connect_data.pairingCode
+            elseif (isset($connect_data['pairingCode'])) {
+                $qr_base64 = $connect_data['pairingCode'];
+            }
+            // Fallback: Try original create response
+            elseif (isset($data['qrcode']['base64'])) {
                 $qr_base64 = $data['qrcode']['base64'];
             } elseif (isset($data['qrcode']['code'])) {
                 $qr_base64 = $data['qrcode']['code'];
@@ -102,6 +151,14 @@ switch ($action) {
                 $qr_base64 = $data['qr'];
             } elseif (isset($data['base64'])) {
                 $qr_base64 = $data['base64'];
+            } elseif (isset($data['qrcode']) && is_string($data['qrcode'])) {
+                $qr_base64 = $data['qrcode'];
+            } elseif (isset($data['instance']['qrcode'])) {
+                if (is_array($data['instance']['qrcode'])) {
+                    $qr_base64 = $data['instance']['qrcode']['base64'] ?? $data['instance']['qrcode']['code'] ?? null;
+                } else {
+                    $qr_base64 = $data['instance']['qrcode'];
+                }
             }
 
             if ($qr_base64) {
@@ -115,8 +172,12 @@ switch ($action) {
                     'instance_name' => $instance_name
                 ]);
             } else {
-                // Instance created but no QR code yet, try to fetch it
-                sleep(1); // Give Evolution API time to generate QR
+                // Instance created but no QR code in initial response
+                // Try multiple methods to get QR code
+                error_log("Attempting to fetch QR code via alternative methods for: $instance_name");
+
+                // Method 1: Try /instance/connect endpoint
+                sleep(2); // Give Evolution API more time
 
                 $ch = curl_init($evo_url . '/instance/connect/' . $instance_name);
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -124,10 +185,21 @@ switch ($action) {
                 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
                 curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
                 $qr_response = curl_exec($ch);
+                $qr_http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
                 curl_close($ch);
 
+                error_log("Connect endpoint response (HTTP $qr_http_code): $qr_response");
+
                 $qr_data = json_decode($qr_response, true);
-                $qr_base64 = $qr_data['base64'] ?? $qr_data['qrcode']['base64'] ?? null;
+
+                // Try all possible structures again
+                $qr_base64 = $qr_data['base64']
+                    ?? $qr_data['qrcode']['base64']
+                    ?? $qr_data['qrcode']['code']
+                    ?? $qr_data['qr']
+                    ?? $qr_data['qrcode']
+                    ?? $qr_data['pairingCode']
+                    ?? null;
 
                 if ($qr_base64) {
                     $stmt = $pdo->prepare("INSERT INTO wa_accounts (user_id, instance_name, status) VALUES (?, ?, 'pairing')");
@@ -139,14 +211,59 @@ switch ($action) {
                         'instance_name' => $instance_name
                     ]);
                 } else {
-                    echo json_encode([
-                        'status' => 'error',
-                        'message' => 'Instance created but QR code not available',
-                        'debug' => [
-                            'response_structure' => array_keys($data),
-                            'instance_name' => $instance_name
-                        ]
-                    ]);
+                    // Method 2: Try /instance/fetchInstances
+                    $ch = curl_init($evo_url . '/instance/fetchInstances?instanceName=' . $instance_name);
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                    curl_setopt($ch, CURLOPT_HTTPHEADER, ['apikey: ' . $evo_key]);
+                    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+                    $fetch_response = curl_exec($ch);
+                    curl_close($ch);
+
+                    error_log("FetchInstances response: $fetch_response");
+
+                    $fetch_data = json_decode($fetch_response, true);
+
+                    // Check if instance exists in array
+                    if (is_array($fetch_data) && !empty($fetch_data)) {
+                        $instance_info = $fetch_data[0] ?? null;
+                        if ($instance_info) {
+                            // Instance exists, save it and let user try to connect manually
+                            $stmt = $pdo->prepare("INSERT INTO wa_accounts (user_id, instance_name, status) VALUES (?, ?, 'pairing')");
+                            $stmt->execute([$user_id, $instance_name]);
+
+                            echo json_encode([
+                                'status' => 'error',
+                                'message' => 'Instance created successfully, but QR code generation failed. Please try again or check Evolution API logs.',
+                                'debug' => [
+                                    'instance_created' => true,
+                                    'instance_name' => $instance_name,
+                                    'suggestion' => 'Try refreshing the page and connecting again'
+                                ]
+                            ]);
+                        } else {
+                            echo json_encode([
+                                'status' => 'error',
+                                'message' => 'Instance created but QR code not available. Response structure unknown.',
+                                'debug' => [
+                                    'response_structure' => array_keys($data),
+                                    'instance_name' => $instance_name,
+                                    'connect_response' => array_keys($qr_data ?? []),
+                                    'fetch_response' => is_array($fetch_data) ? 'array' : gettype($fetch_data)
+                                ]
+                            ]);
+                        }
+                    } else {
+                        echo json_encode([
+                            'status' => 'error',
+                            'message' => 'Instance created but QR code not available',
+                            'debug' => [
+                                'response_structure' => array_keys($data),
+                                'instance_name' => $instance_name,
+                                'all_attempts_failed' => true
+                            ]
+                        ]);
+                    }
                 }
             }
         } else {
