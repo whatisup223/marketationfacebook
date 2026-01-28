@@ -33,18 +33,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $tpl = getEmailTemplate('forgot_password', $data);
 
                 if (sendEmail($email, $tpl['subject'], $tpl['body'])) {
-                    $message = "We have sent a password reset link to your email.";
+                    $message = __('reset_link_sent');
                 } else {
-                    $error = "Failed to send email. Please check your SMTP settings or contact support.";
+                    $error = __('email_send_failed');
                 }
             } else {
-                $error = "System error. Please try again.";
+                $error = __('system_error');
             }
         } catch (Exception $e) {
-            $error = "Error: " . $e->getMessage();
+            $error = __('error_prefix') . $e->getMessage();
         }
     } else {
-        $error = "Email not found.";
+        $error = __('email_not_found');
     }
 }
 

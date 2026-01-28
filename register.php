@@ -81,11 +81,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     }
                     exit;
                 } else {
-                    $error = 'Registration failed. Please try again.';
+                    $error = __('registration_failed');
                 }
             }
         } else {
-            $error = 'Database Error';
+            $error = __('database_error');
         }
     }
 }

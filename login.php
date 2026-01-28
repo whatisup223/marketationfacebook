@@ -30,10 +30,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
             exit;
         } else {
-            $error = 'Invalid credentials';
+            $error = __('invalid_credentials');
         }
     } else {
-        $error = 'Database Error';
+        $error = __('database_error');
     }
 }
 
