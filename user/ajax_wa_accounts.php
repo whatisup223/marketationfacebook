@@ -7,6 +7,9 @@ if (!isLoggedIn()) {
 }
 
 $user_id = $_SESSION['user_id'];
+// Release session lock immediately to prevent blocking other page loads
+session_write_close();
+
 $pdo = getDB();
 
 try {
