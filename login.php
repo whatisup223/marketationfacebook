@@ -3,22 +3,22 @@ require_once __DIR__ . '/includes/functions.php';
 
 $error = '';
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $email = $_POST['email'];
+    $login_input = trim($_POST['email']); // Check for both email and username
     $password = $_POST['password'];
 
     $pdo = getDB();
     if ($pdo) {
-        $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
-        $stmt->execute([$email]);
+        // Query both email and username
+        $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ? OR username = ?");
+        $stmt->execute([$login_input, $login_input]);
         $user = $stmt->fetch();
 
         if ($user && password_verify($password, $user['password'])) {
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['role'] = $user['role'];
             $_SESSION['name'] = $user['name'];
-            $_SESSION['user_name'] = $user['username'] ?? ''; // Store username
+            $_SESSION['user_name'] = $user['username'] ?? '';
 
-            // Check if there's a pending exchange or redirect URL
             if (!empty($_SESSION['redirect_after_login'])) {
                 $redirect = $_SESSION['redirect_after_login'];
                 unset($_SESSION['redirect_after_login']);
@@ -79,7 +79,7 @@ require_once __DIR__ . '/includes/header.php';
         <form method="POST" class="space-y-6">
             <div>
                 <label
-                    class="block text-gray-300 text-xs font-bold uppercase tracking-wider mb-2 ml-1"><?php echo __('email'); ?></label>
+                    class="block text-gray-300 text-xs font-bold uppercase tracking-wider mb-2 ml-1"><?php echo __('email_or_username'); ?></label>
                 <div class="relative group">
                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                         <svg class="h-5 w-5 text-gray-500 group-focus-within:text-indigo-400 transition-colors"
@@ -88,9 +88,10 @@ require_once __DIR__ . '/includes/header.php';
                                 d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
                         </svg>
                     </div>
-                    <input type="email" name="email"
+                    <!-- Type text instead of email to allow username -->
+                    <input type="text" name="email"
                         class="w-full bg-black/20 border border-white/10 rounded-2xl pl-12 pr-4 py-4 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-medium"
-                        placeholder="you@company.com" required>
+                        placeholder="<?php echo __('email_or_username_placeholder'); ?>" required>
                 </div>
             </div>
 

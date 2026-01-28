@@ -110,5 +110,17 @@
                 </span>
             <?php endif; ?>
         </a>
+        </a>
+
+        <div class="pt-4 mt-4 border-t border-gray-800">
+            <a href="../logout.php"
+                class="block px-4 py-3 text-red-400 hover:bg-gray-800 hover:text-red-300 rounded-xl font-medium border border-transparent transition-colors flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                <span><?php echo __('logout'); ?></span>
+            </a>
+        </div>
     </nav>
 </aside>

@@ -151,9 +151,9 @@ if (isLoggedIn()) {
                 extend: {
                     fontFamily: {
                         <?php if ($lang === 'ar'): ?>
-                                                            sans: ['IBM Plex Sans Arabic', 'sans-serif'],
+                                                                    sans: ['IBM Plex Sans Arabic', 'sans-serif'],
                         <?php else: ?>
-                                                            sans: ['Outfit', 'sans-serif'],
+                                                                    sans: ['Outfit', 'sans-serif'],
                         <?php endif; ?>
                     },
                     colors: {
@@ -163,7 +163,7 @@ if (isLoggedIn()) {
                     }
                 }
             }
-        }
+    }
     </script>
     <style>
         /* Base (Dark Mode Always) */
@@ -717,16 +717,26 @@ if (isLoggedIn()) {
                         <p class="text-sm font-bold text-white truncate">
                             <?php echo htmlspecialchars($current_user['name']); ?>
                         </p>
-                        <p class="text-xs text-gray-500 truncate" dir="ltr">
-                            <?php
-                            if (!empty($current_user['username'])) {
-                                echo '@' . htmlspecialchars($current_user['username']);
-                            } else {
-                                echo htmlspecialchars($current_user['email']);
-                            }
-                            ?>
+                        <p class="text-xs text-gray-500 truncate">
+                            <span dir="ltr">
+                                <?php
+                                if (!empty($current_user['username'])) {
+                                    echo '@' . htmlspecialchars($current_user['username']);
+                                } else {
+                                    echo htmlspecialchars($current_user['email']);
+                                }
+                                ?>
+                            </span>
                         </p>
                     </div>
+                </div>
+                
+                <div class="mt-4 mb-2">
+                    <a href="?<?php echo htmlspecialchars(http_build_query(array_merge($_GET, ['lang' => ($lang === 'ar' ? 'en' : 'ar')]))); ?>"
+                       class="flex items-center justify-center w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-2.5 rounded-xl transition-all border border-gray-700 group">
+                       <svg class="w-5 h-5 text-gray-400 group-hover:text-white transition-colors <?php echo $lang === 'ar' ? 'ml-2' : 'mr-2'; ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" /></svg>
+                       <span><?php echo $lang === 'ar' ? 'English' : 'عربي'; ?></span>
+                    </a>
                 </div>
             <?php endif; ?>
 
@@ -886,14 +896,7 @@ if (isLoggedIn()) {
                                 class="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-red-400 hover:bg-gray-800 border border-red-500/20 text-center"><?php echo __('logout'); ?></a>
                         <?php endif; ?>
 
-                        <!-- Mobile Actions -->
-                        <div class="flex items-center justify-between mt-6">
-                            <!-- Theme Actions Removed -->
-                            <a href="?<?php echo htmlspecialchars(http_build_query(array_merge($_GET, ['lang' => ($lang === 'ar' ? 'en' : 'ar')]))); ?>"
-                                class="text-sm font-semibold leading-6 text-white bg-white/10 px-3 py-1 rounded-full">
-                                <?php echo $lang === 'ar' ? 'English' : 'عربي'; ?>
-                            </a>
-                        </div>
+
                     </div>
                 </div>
             </div>

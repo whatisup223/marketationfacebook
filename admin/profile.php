@@ -95,6 +95,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
 $stmt->execute([$user_id]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
+$user_prefs = json_decode($user['preferences'] ?? '{}', true);
 
 require_once __DIR__ . '/../includes/header.php';
 ?>
@@ -246,8 +247,8 @@ require_once __DIR__ . '/../includes/header.php';
                     </div>
                 </form>
             </div>
+
+
         </div>
     </div>
-</div>
-
-<?php require_once __DIR__ . '/../includes/footer.php'; ?>
+</div><?php require_once __DIR__ . '/../includes/footer.php'; ?>
