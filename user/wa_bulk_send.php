@@ -10,16 +10,26 @@ $user_id = $_SESSION['user_id'];
 $pdo = getDB();
 
 // Fetch current user settings
-$stmt = $pdo->prepare("SELECT * FROM user_wa_settings WHERE user_id = ?");
-$stmt->execute([$user_id]);
-$user_settings = $stmt->fetch(PDO::FETCH_ASSOC);
-$gateway_mode = $user_settings['active_gateway'] ?? 'qr';
+$user_settings = [];
+$gateway_mode = 'qr';
+try {
+    $stmt = $pdo->prepare("SELECT * FROM user_wa_settings WHERE user_id = ?");
+    $stmt->execute([$user_id]);
+    $user_settings = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
+    $gateway_mode = $user_settings['active_gateway'] ?? 'qr';
+} catch (PDOException $e) {
+    error_log("DB Error in wa_bulk_send settings: " . $e->getMessage());
+}
 
 // Fetch WhatsApp accounts for selection (only for QR mode check)
 $wa_accounts = [];
-$stmt = $pdo->prepare("SELECT * FROM wa_accounts WHERE user_id = ? AND status = 'connected' ORDER BY created_at DESC");
-$stmt->execute([$user_id]);
-$wa_accounts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+try {
+    $stmt = $pdo->prepare("SELECT * FROM wa_accounts WHERE user_id = ? AND status = 'connected' ORDER BY created_at DESC");
+    $stmt->execute([$user_id]);
+    $wa_accounts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    error_log("DB Error in wa_bulk_send accounts: " . $e->getMessage());
+}
 
 // Smart Default: If no QR accounts but Twilio is configured, switch to Twilio
 if (empty($wa_accounts) && $gateway_mode === 'qr') {
