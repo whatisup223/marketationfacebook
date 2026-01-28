@@ -28,10 +28,15 @@ function get_flash($type)
 // Language Handling
 if (isset($_GET['lang'])) {
     $_SESSION['lang'] = $_GET['lang'];
+    setcookie('lang', $_GET['lang'], time() + (86400 * 30), "/");
 }
 
 if (!isset($_SESSION['lang'])) {
-    $_SESSION['lang'] = 'ar';
+    if (isset($_COOKIE['lang'])) {
+        $_SESSION['lang'] = $_COOKIE['lang'];
+    } else {
+        $_SESSION['lang'] = getSetting('default_site_lang', 'ar');
+    }
 }
 
 $lang = $_SESSION['lang'];
@@ -93,6 +98,11 @@ $translations = [
         'saving_settings' => 'جاري حفظ الإعدادات...',
         'submit' => 'إرسال',
         'cancel' => 'إلغاء',
+
+        // Localization
+        'localization_settings' => 'إعدادات اللغة والمنطقة',
+        'default_site_language' => 'لغة الموقع الافتراضية',
+        'default_lang_desc' => 'اللغة التي سيظهر بها الموقع للزوار الجدد الذين لم يحددوا تفضيلاتهم بعد.',
         'view' => 'عرض',
         'actions' => 'إجراءات',
         'download_csv' => 'تحميل CSV',
@@ -1261,6 +1271,11 @@ $translations = [
         'admin_label' => 'Admin',
         'user_label' => 'User',
         'cancel' => 'Cancel',
+
+        // Localization
+        'localization_settings' => 'Localization Settings',
+        'default_site_language' => 'Default Site Language',
+        'default_lang_desc' => 'The language displayed to new visitors who have not set their preference yet.',
         'confirm_delete' => 'Confirm Delete',
 
         // Misc

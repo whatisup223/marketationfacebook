@@ -10,7 +10,7 @@ $pdo = getDB();
 $ticket_id = $_GET['id'] ?? 0;
 
 // Fetch Ticket + User Info
-$stmt = $pdo->prepare("SELECT t.*, u.name as user_name, u.email, u.avatar 
+$stmt = $pdo->prepare("SELECT t.*, u.name as user_name, u.email, u.avatar, u.preferences 
                        FROM support_tickets t 
                        LEFT JOIN users u ON t.user_id = u.id 
                        WHERE t.id = ?");
@@ -56,6 +56,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Notify User - Store status as translation key
             addNotification($ticket['user_id'], 'ticket_status_updated', json_encode(['key' => 'ticket_status_change_fmt', 'params' => ['status_' . $new_status], 'param_keys' => [0]]), "user/view_ticket.php?id=$ticket_id");
+
+            // Send Email to User
+            require_once __DIR__ . '/../includes/MailService.php';
+            require_once __DIR__ . '/../includes/email_templates.php';
+
+            if (!empty($ticket['email'])) {
+                $userPrefs = json_decode($ticket['preferences'] ?? '{}', true);
+                $userLang = $userPrefs['lang'] ?? 'ar';
+
+                $emailData = [
+                    'name' => $ticket['user_name'],
+                    'ticket_id' => $ticket_id,
+                    'ticket_subject' => $ticket['subject'],
+                    'status' => $new_status,
+                    'view_url' => getSetting('site_url') . "/user/view_ticket.php?id=$ticket_id"
+                ];
+                $tpl = getEmailTemplate('ticket_status_update', $emailData, $userLang);
+                sendEmail($ticket['email'], $tpl['subject'], $tpl['body']);
+            }
 
             header("Location: view_ticket.php?id=$ticket_id");
             exit;

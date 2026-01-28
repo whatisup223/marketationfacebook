@@ -73,7 +73,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             'username' => $username,
                             'login_url' => getSetting('site_url') . '/login.php'
                         ];
-                        $tpl = getEmailTemplate('welcome_user', $data);
+                        $tpl = getEmailTemplate('welcome_user', $data, $_SESSION['lang'] ?? 'ar');
                         sendEmail($email, $tpl['subject'], $tpl['body']);
                     }
                     // ---------------------------

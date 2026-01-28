@@ -20,11 +20,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             'notify_login' => isset($_POST['notify_login']) ? 1 : 0,
             'notify_new_exchange' => isset($_POST['notify_new_exchange']) ? 1 : 0,
             'notify_exchange_status' => isset($_POST['notify_exchange_status']) ? 1 : 0,
+            'lang' => $_POST['lang'] ?? 'ar'
         ];
         
         $json_prefs = json_encode($preferences);
         $stmt = $pdo->prepare("UPDATE users SET preferences = ? WHERE id = ?");
         $stmt->execute([$json_prefs, $user_id]);
+        
+        // Update Session & Cookie immediately
+        $_SESSION['lang'] = $preferences['lang'];
+        setcookie('lang', $preferences['lang'], time() + (86400 * 30), "/"); // 30 Days expiration
+        
         set_flash('success', __("preferences_updated"));
         header("Location: profile.php");
         exit;
@@ -260,6 +266,15 @@ require_once __DIR__ . '/../includes/header.php';
                     </h2>
                     <form method="POST" class="space-y-4">
                         <input type="hidden" name="update_notifications" value="1">
+                        
+                        <!-- Language Selection -->
+                        <div class="mb-6">
+                            <label class="block text-gray-400 text-sm font-medium mb-2 uppercase tracking-wide text-xs ml-1"><?php echo __('language'); ?></label>
+                            <select name="lang" class="w-full bg-gray-800/50 border border-gray-700/50 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500 transition-colors text-white font-medium cursor-pointer">
+                                <option value="ar" <?php echo ($user_prefs['lang'] ?? 'ar') == 'ar' ? 'selected' : ''; ?>>العربية</option>
+                                <option value="en" <?php echo ($user_prefs['lang'] ?? 'ar') == 'en' ? 'selected' : ''; ?>>English</option>
+                            </select>
+                        </div>
                         
                         <div class="flex items-center justify-between p-4 bg-gray-800/30 rounded-xl border border-gray-700/30 hover:border-indigo-500/30 transition-colors">
                             <div>

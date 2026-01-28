@@ -34,6 +34,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Notify Admins - Use translation keys instead of direct text
             notifyAdmins('new_ticket', json_encode(['key' => 'new_ticket_notification', 'params' => ["#$ticket_id", $_SESSION['user_name']]]), "admin/view_ticket.php?id=$ticket_id");
 
+            // Send Email to Admin
+            require_once __DIR__ . '/../includes/MailService.php';
+            require_once __DIR__ . '/../includes/email_templates.php';
+
+            $adminEmail = getSetting('contact_email');
+            if ($adminEmail) {
+                $emailData = [
+                    'ticket_id' => $ticket_id,
+                    'user_name' => $_SESSION['user_name'],
+                    'subject' => $subject,
+                    'priority' => __('normal'),
+                    'message' => $message,
+                    'admin_url' => getSetting('site_url') . "/admin/view_ticket.php?id=$ticket_id"
+                ];
+                $tpl = getEmailTemplate('new_ticket_admin', $emailData);
+                sendEmail($adminEmail, $tpl['subject'], $tpl['body']);
+            }
+
             $pdo->commit();
             header("Location: view_ticket.php?id=$ticket_id&new=1");
             exit;
