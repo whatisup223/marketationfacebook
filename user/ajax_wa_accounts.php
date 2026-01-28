@@ -45,28 +45,122 @@ switch ($action) {
             'Content-Type: application/json',
             'apikey: ' . $evo_key
         ]);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // For local/dev environments
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 
         $response = curl_exec($ch);
         $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curl_error = curl_error($ch);
         curl_close($ch);
+
+        // Log the raw response for debugging
+        error_log("Evolution API Response: " . $response);
+        error_log("HTTP Code: " . $http_code);
+        if ($curl_error) {
+            error_log("CURL Error: " . $curl_error);
+        }
 
         $data = json_decode($response, true);
 
-        if ($http_code == 201 || (isset($data['instance']) && isset($data['qrcode']))) {
-            // Success creating or getting QR
-            $qr_base64 = $data['qrcode']['base64'] ?? '';
-
-            // Log in DB (pairing state)
-            $stmt = $pdo->prepare("INSERT INTO wa_accounts (user_id, instance_name, status) VALUES (?, ?, 'pairing')");
-            $stmt->execute([$user_id, $instance_name]);
-
+        // Check for CURL errors first
+        if ($curl_error) {
             echo json_encode([
-                'status' => 'success',
-                'qr' => $qr_base64,
-                'instance_name' => $instance_name
+                'status' => 'error',
+                'message' => 'Connection error: ' . $curl_error,
+                'debug' => [
+                    'url' => $evo_url . '/instance/create',
+                    'http_code' => $http_code
+                ]
             ]);
+            break;
+        }
+
+        // Check if response is valid JSON
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Invalid API response: ' . json_last_error_msg(),
+                'debug' => [
+                    'raw_response' => substr($response, 0, 500),
+                    'http_code' => $http_code
+                ]
+            ]);
+            break;
+        }
+
+        // Check for successful creation
+        if ($http_code >= 200 && $http_code < 300) {
+            // Evolution API might return different structures
+            $qr_base64 = null;
+
+            // Try different possible response structures
+            if (isset($data['qrcode']['base64'])) {
+                $qr_base64 = $data['qrcode']['base64'];
+            } elseif (isset($data['qrcode']['code'])) {
+                $qr_base64 = $data['qrcode']['code'];
+            } elseif (isset($data['qr'])) {
+                $qr_base64 = $data['qr'];
+            } elseif (isset($data['base64'])) {
+                $qr_base64 = $data['base64'];
+            }
+
+            if ($qr_base64) {
+                // Log in DB (pairing state)
+                $stmt = $pdo->prepare("INSERT INTO wa_accounts (user_id, instance_name, status) VALUES (?, ?, 'pairing')");
+                $stmt->execute([$user_id, $instance_name]);
+
+                echo json_encode([
+                    'status' => 'success',
+                    'qr' => $qr_base64,
+                    'instance_name' => $instance_name
+                ]);
+            } else {
+                // Instance created but no QR code yet, try to fetch it
+                sleep(1); // Give Evolution API time to generate QR
+
+                $ch = curl_init($evo_url . '/instance/connect/' . $instance_name);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, ['apikey: ' . $evo_key]);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+                $qr_response = curl_exec($ch);
+                curl_close($ch);
+
+                $qr_data = json_decode($qr_response, true);
+                $qr_base64 = $qr_data['base64'] ?? $qr_data['qrcode']['base64'] ?? null;
+
+                if ($qr_base64) {
+                    $stmt = $pdo->prepare("INSERT INTO wa_accounts (user_id, instance_name, status) VALUES (?, ?, 'pairing')");
+                    $stmt->execute([$user_id, $instance_name]);
+
+                    echo json_encode([
+                        'status' => 'success',
+                        'qr' => $qr_base64,
+                        'instance_name' => $instance_name
+                    ]);
+                } else {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'Instance created but QR code not available',
+                        'debug' => [
+                            'response_structure' => array_keys($data),
+                            'instance_name' => $instance_name
+                        ]
+                    ]);
+                }
+            }
         } else {
-            echo json_encode(['status' => 'error', 'message' => 'Failed to create instance: ' . ($data['message'] ?? 'Unknown error')]);
+            // HTTP error
+            $error_message = $data['message'] ?? $data['error'] ?? 'Unknown error';
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Failed to create instance: ' . $error_message,
+                'debug' => [
+                    'http_code' => $http_code,
+                    'response' => $data,
+                    'url' => $evo_url . '/instance/create'
+                ]
+            ]);
         }
         break;
 
