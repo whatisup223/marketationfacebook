@@ -10,9 +10,14 @@ $user_id = $_SESSION['user_id'];
 $pdo = getDB();
 
 // Fetch current user settings
-$stmt = $pdo->prepare("SELECT * FROM user_wa_settings WHERE user_id = ?");
-$stmt->execute([$user_id]);
-$user_settings = $stmt->fetch(PDO::FETCH_ASSOC);
+try {
+    $stmt = $pdo->prepare("SELECT * FROM user_wa_settings WHERE user_id = ?");
+    $stmt->execute([$user_id]);
+    $user_settings = $stmt->fetch(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    error_log("DB Fetch Error in wa_settings: " . $e->getMessage());
+    $user_settings = false;
+}
 
 // If no settings exist yet, set defaults
 if (!$user_settings) {
@@ -23,7 +28,7 @@ if (!$user_settings) {
     ];
 }
 
-$config = json_decode($user_settings['external_config'], true) ?: [];
+$config = json_decode($user_settings['external_config'] ?? '{}', true) ?: [];
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -54,22 +59,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $config_json = json_encode($new_config);
 
     // Upsert logic
-    $stmt = $pdo->prepare("INSERT INTO user_wa_settings (user_id, active_gateway, external_provider, external_config) 
-                           VALUES (?, ?, ?, ?) 
-                           ON DUPLICATE KEY UPDATE active_gateway = ?, external_provider = ?, external_config = ?");
-    $stmt->execute([
-        $user_id,
-        $active_gateway,
-        $external_provider,
-        $config_json,
-        $active_gateway,
-        $external_provider,
-        $config_json
-    ]);
+    try {
+        $stmt = $pdo->prepare("INSERT INTO user_wa_settings (user_id, active_gateway, external_provider, external_config) 
+                               VALUES (?, ?, ?, ?) 
+                               ON DUPLICATE KEY UPDATE active_gateway = ?, external_provider = ?, external_config = ?");
+        $stmt->execute([
+            $user_id,
+            $active_gateway,
+            $external_provider,
+            $config_json,
+            $active_gateway,
+            $external_provider,
+            $config_json
+        ]);
 
-    $_SESSION['wa_settings_success'] = true;
-    header("Location: wa_settings.php");
-    exit;
+        $_SESSION['wa_settings_success'] = true;
+        header("Location: wa_settings.php");
+        exit;
+    } catch (PDOException $e) {
+        error_log("DB Save Error in wa_settings: " . $e->getMessage());
+        // Simple error handling
+        echo "<div style='color:red; bg:white; padding:20px;'>Error saving settings: " . htmlspecialchars($e->getMessage()) . "</div>";
+        // Do not redirect so user sees error
+    }
 }
 
 $success = false;
