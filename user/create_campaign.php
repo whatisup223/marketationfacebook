@@ -123,19 +123,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_campaign'])) {
         $target_path = $upload_dir . $file_name;
 
         if (move_uploaded_file($_FILES['image_file']['tmp_name'], $target_path)) {
-            // COMPRESSION & OPTIMIZATION (Speed-UP)
+            // COMPRESSION STRATEGY: NEW FILE + AGGRESSIVE JPG
             try {
-                // Adjust max dimensions if too large (e.g. > 1600px width)
+                // Adjust max dimensions
                 list($orig_w, $orig_h) = getimagesize($target_path);
-                $max_w = 1600;
+                $max_w = 1200; // Optimal for Messenger
 
-                // Threshold: Optimize if width > 1600 OR Size > 200KB (More aggressive check)
-                if ($orig_w > $max_w || filesize($target_path) > 200000) {
-                    $src_img = null;
-                    // Fix: Handle cases where extension doesn't match mime type
+                // Threshold: Optimize if width > 1200 OR Size > 150KB
+                if ($orig_w > $max_w || filesize($target_path) > 150000) {
                     $info = getimagesize($target_path);
                     $mime = $info['mime'];
 
+                    $src_img = null;
                     if ($mime == 'image/jpeg')
                         $src_img = imagecreatefromjpeg($target_path);
                     elseif ($mime == 'image/png')
@@ -147,7 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_campaign'])) {
                         $new_w = $orig_w;
                         $new_h = $orig_h;
 
-                        // Resize logic
+                        // Resize
                         if ($orig_w > $max_w) {
                             $ratio = $max_w / $orig_w;
                             $new_w = $max_w;
@@ -156,37 +155,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_campaign'])) {
 
                         $dst_img = imagecreatetruecolor($new_w, $new_h);
 
-                        // Maintain transparency for PNG stuff
-                        if ($mime == 'image/png' || $mime == 'image/gif') {
-                            imagealphablending($dst_img, false);
-                            imagesavealpha($dst_img, true);
-                            $transparent = imagecolorallocatealpha($dst_img, 255, 255, 255, 127);
-                            imagefilledrectangle($dst_img, 0, 0, $new_w, $new_h, $transparent);
-                        } else {
-                            // Fill white background for JPEGs just in case
-                            $white = imagecolorallocate($dst_img, 255, 255, 255);
-                            imagefilledrectangle($dst_img, 0, 0, $new_w, $new_h, $white);
+                        // Check if we REALLY need transparency.
+                        // For marketing, usually JPG is better.
+                        $is_transparent_png = false;
+                        if ($mime == 'image/png') {
+                            // Let's assume user prefers JPG for size unless it's strictly a logo with transparency.
+                            // But determining "real" transparency is hard.
+                            // Strategy: If it was PNG, keep simple transparency logic but check size later?
+                            // No, let's force JPG conversion unless requested (user uploads PNG often just because).
+                            // We will convert to JPG to guarantee size reduction.
+                            // If transparency is needed, white background is safer for Messenger anyway (Dark mode issues otherwise).
+                            $is_transparent_png = false;
+                        }
+
+                        // Fill white background (Safe for JPG conversion)
+                        $white = imagecolorallocate($dst_img, 255, 255, 255);
+                        imagefilledrectangle($dst_img, 0, 0, $new_w, $new_h, $white);
+
+                        if ($mime == 'image/png' && $is_transparent_png) {
+                            // If we decide to support transparency later
+                            imagecolortransparent($dst_img, $white);
                         }
 
                         imagecopyresampled($dst_img, $src_img, 0, 0, 0, 0, $new_w, $new_h, $orig_w, $orig_h);
 
-                        // Overwrite original with compressed version
-                        if ($mime == 'image/png') {
-                            // PNG Compression 0-9. 9 is slowest but smallest size.
-                            imagepng($dst_img, $target_path, 9);
-                        } else {
-                            // JPG: 60 is aggressive but acceptable for chat apps
-                            imagejpeg($dst_img, $target_path, 60);
+                        // SAVE AS NEW OPTIMIZED FILE
+                        $path_parts = pathinfo($target_path);
+                        $new_filename = $path_parts['filename'] . '_opt.jpg'; // Always JPG
+                        $new_target_path = $path_parts['dirname'] . '/' . $new_filename;
+
+                        // Quality 60 is the sweet spot for Messenger marketing
+                        $saved = imagejpeg($dst_img, $new_target_path, 60);
+
+                        if ($saved) {
+                            // Delete heavy original
+                            @unlink($target_path);
+                            // Update refs
+                            $file_name = $new_filename;
+                            $target_path = $new_target_path;
                         }
 
                         imagedestroy($src_img);
                         imagedestroy($dst_img);
-
-                        // Clear cache so PHP sees new file size
                         clearstatcache();
                     }
                 }
-            } catch (Exception $e) { /* Ignore compression errors, keep original */
+            } catch (Exception $e) { /* Ignore */
             }
 
             // Get the absolute URL or relative path for the frontend
