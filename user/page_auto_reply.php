@@ -49,7 +49,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <?php echo __('select_page'); ?>
                     </label>
                     <div class="relative group">
-                        <select x-model="selectedPageId" @change="fetchRules()"
+                        <select x-model="selectedPageId" @change="fetchRules(); fetchTokenDebug();"
                             class="w-full bg-gray-900/50 border border-gray-700 text-white text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-3 pr-10 appearance-none transition-all group-hover:border-gray-600">
                             <option value=""><?php echo __('select_page'); ?>...</option>
                             <?php foreach ($pages as $page): ?>
@@ -69,24 +69,40 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                     <!-- Activate Webhook Button -->
                     <template x-if="selectedPageId">
-                        <button @click="subscribePage()"
-                            class="w-full mt-4 flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition-all shadow-lg shadow-indigo-600/20 font-bold text-sm"
-                            :class="subscribing ? 'opacity-50 cursor-not-allowed' : ''" :disabled="subscribing">
-                            <svg x-show="!subscribing" class="w-4 h-4" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                            <svg x-show="subscribing" class="animate-spin h-4 w-4 text-white"
-                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                    stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor"
-                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                                </path>
-                            </svg>
-                            <span x-text="subscribing ? '<?php echo __('processing_activity'); ?>' : '<?php echo __('activate_auto_reply'); ?>'"></span>
-                        </button>
+                        <div>
+                            <button @click="subscribePage()"
+                                class="w-full mt-4 flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition-all shadow-lg shadow-indigo-600/20 font-bold text-sm"
+                                :class="subscribing ? 'opacity-50 cursor-not-allowed' : ''" :disabled="subscribing">
+                                <svg x-show="!subscribing" class="w-4 h-4" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <svg x-show="subscribing" class="animate-spin h-4 w-4 text-white"
+                                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                        stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                    </path>
+                                </svg>
+                                <span
+                                    x-text="subscribing ? '<?php echo __('processing_activity'); ?>' : '<?php echo __('activate_auto_reply'); ?>'"></span>
+                            </button>
+
+                            <!-- Token Debug Info -->
+                            <div x-show="debugInfo"
+                                class="mt-4 p-3 bg-black/40 rounded-lg border border-white/10 text-[10px] font-mono text-gray-400">
+                                <div class="flex justify-between mb-1">
+                                    <span>Token (Masked):</span>
+                                    <span class="text-indigo-400" x-text="debugInfo.masked_token"></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Token Length:</span>
+                                    <span class="text-indigo-400" x-text="debugInfo.length"></span>
+                                </div>
+                            </div>
+                        </div>
                     </template>
                 </div>
 
@@ -425,6 +441,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
             modalReply: '',
             modalHideComment: false,
             subscribing: false,
+            debugInfo: null,
 
             // Webhook info
             webhookUrl: 'Loading...',
@@ -434,9 +451,23 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 // Check if page stored in localstorage
                 const stored = localStorage.getItem('ar_last_page');
                 if (stored) this.selectedPageId = stored;
-                if (this.selectedPageId) this.fetchRules();
+                if (this.selectedPageId) {
+                    this.fetchRules();
+                    this.fetchTokenDebug();
+                }
 
                 this.fetchWebhookInfo();
+            },
+
+            fetchTokenDebug() {
+                if (!this.selectedPageId) return;
+                fetch(`ajax_auto_reply.php?action=debug_token_info&page_id=${this.selectedPageId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            this.debugInfo = data;
+                        }
+                    });
             },
 
             subscribePage() {
