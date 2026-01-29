@@ -127,7 +127,7 @@ require_once __DIR__ . '/../includes/header.php';
                     </div>
                 <?php else: ?>
                     <?php foreach ($scheduled_posts as $post): ?>
-                        <div
+                        <div x-show="formData.page_id === '' || formData.page_id === '<?php echo $post['page_id']; ?>'"
                             class="glass-card p-5 rounded-3xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all group">
                             <div class="flex justify-between items-start mb-4">
                                 <div class="flex items-center gap-3">
@@ -166,8 +166,26 @@ require_once __DIR__ . '/../includes/header.php';
                             <?php if ($post['media_url']): ?>
                                 <div
                                     class="relative aspect-video rounded-xl overflow-hidden bg-black/40 mb-4 border border-white/5">
-                                    <img src="<?php echo htmlspecialchars($post['media_url']); ?>"
-                                        class="w-full h-full object-cover">
+                                    <?php
+                                    $is_video = false;
+                                    $ext = strtolower(pathinfo($post['media_url'], PATHINFO_EXTENSION));
+                                    if (in_array($ext, ['mp4', 'mov', 'avi']))
+                                        $is_video = true;
+
+                                    if ($is_video): ?>
+                                        <video src="<?php echo htmlspecialchars($post['media_url']); ?>"
+                                            class="w-full h-full object-cover" muted></video>
+                                        <div class="absolute inset-0 flex items-center justify-center bg-black/20">
+                                            <svg class="w-10 h-10 text-white opacity-70" fill="currentColor" viewBox="0 0 20 20">
+                                                <path
+                                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z">
+                                                </path>
+                                            </svg>
+                                        </div>
+                                    <?php else: ?>
+                                        <img src="<?php echo htmlspecialchars($post['media_url']); ?>"
+                                            class="w-full h-full object-cover">
+                                    <?php endif; ?>
                                 </div>
                             <?php endif; ?>
 
@@ -386,8 +404,26 @@ require_once __DIR__ . '/../includes/header.php';
 
                                             <div class="relative bg-gray-900 aspect-video overflow-hidden border-y border-white/5"
                                                 x-show="formData.media_url">
-                                                <img :src="formData.media_url"
-                                                    class="absolute inset-0 w-full h-full object-cover">
+                                                <template x-if="isVideoUrl(formData.media_url)">
+                                                    <div class="relative w-full h-full">
+                                                        <video :src="formData.media_url"
+                                                            class="absolute inset-0 w-full h-full object-cover"
+                                                            muted></video>
+                                                        <div
+                                                            class="absolute inset-0 flex items-center justify-center bg-black/20">
+                                                            <svg class="w-12 h-12 text-white opacity-70"
+                                                                fill="currentColor" viewBox="0 0 20 20">
+                                                                <path
+                                                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z">
+                                                                </path>
+                                                            </svg>
+                                                        </div>
+                                                    </div>
+                                                </template>
+                                                <template x-if="!isVideoUrl(formData.media_url)">
+                                                    <img :src="formData.media_url"
+                                                        class="absolute inset-0 w-full h-full object-cover">
+                                                </template>
                                             </div>
                                         </div>
 
@@ -452,6 +488,12 @@ require_once __DIR__ . '/../includes/header.php';
             getPageName() {
                 const page = this.pages.find(p => p.page_id == this.formData.page_id);
                 return page ? page.page_name : '';
+            },
+
+            isVideoUrl(url) {
+                if (!url) return false;
+                const videoExtensions = ['.mp4', '.mov', '.avi', '.webm', '.mkv'];
+                return videoExtensions.some(ext => url.toLowerCase().includes(ext));
             },
 
             async fetchTokenDebug() {
