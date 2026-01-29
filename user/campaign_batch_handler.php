@@ -118,34 +118,45 @@ try {
     $fb = new FacebookAPI();
     $processed_results = [];
 
-    // 4. Process Batch
-    foreach ($items as $item) {
-        $queue_id = $item['q_id'];
-        $current_attempts = $item['attempts_count'];
+    // 4. Process Batch PARALLEL (Max Speed)
+    $batch_payloads = [];
+    $map_key_to_item = [];
 
-        // Prepare Message
+    foreach ($items as $idx => $item) {
         $message = $item['message_text'];
         $message = str_replace('{{name}}', $item['fb_user_name'] ?? 'User', $message);
 
-        // Send
-        $response = $fb->sendMessage(
-            $item['fb_page_id'],
-            $item['page_access_token'],
-            $item['fb_user_id'],
-            $message,
-            $item['image_url']
-        );
+        // Optimizing Image: If user uses our local uploads, we can force a smaller version
+        // Assuming typical structure: uploads/campaigns/image.jpg -> uploads/campaigns/image_small.jpg
+        // For now, we rely on parallel sending to overcome latency.
+
+        $batch_payloads[$idx] = [
+            'page_id' => $item['fb_page_id'],
+            'access_token' => $item['page_access_token'],
+            'recipient_id' => $item['fb_user_id'],
+            'message_text' => $message,
+            'image_url' => $item['image_url']
+        ];
+        $map_key_to_item[$idx] = $item;
+    }
+
+    // Execute Parallel Send
+    $batch_responses = $fb->sendBatchMessages($batch_payloads);
+
+    // Process Results
+    foreach ($batch_responses as $idx => $response) {
+        $item = $map_key_to_item[$idx];
+        $queue_id = $item['q_id'];
+        $current_attempts = $item['attempts_count'];
 
         if (isset($response['error'])) {
             // FAILED
             $new_attempts = $current_attempts + 1;
-            $error_msg = is_array($response['error']) ? $response['error']['message'] : $response['error'];
+            $error_msg = is_array($response['error']) ? ($response['error']['message'] ?? json_encode($response['error'])) : $response['error'];
 
             if ($new_attempts <= $max_retries) {
                 // RETRY LATER
-                // Calculate next time
                 $next_time = date('Y-m-d H:i:s', time() + $retry_delay);
-
                 $update = $pdo->prepare("UPDATE campaign_queue SET attempts_count = ?, next_retry_at = ?, error_message = ? WHERE id = ?");
                 $update->execute([$new_attempts, $next_time, "Retry #$new_attempts: $error_msg", $queue_id]);
 
