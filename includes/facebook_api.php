@@ -9,18 +9,17 @@ class FacebookAPI
     {
     }
 
-    private function makeRequest($endpoint, $params = [], $access_token = '', $method = 'GET')
+    public function makeRequest($endpoint, $params = [], $access_token = '', $method = 'GET')
     {
-        // ... (Keep existing setup, just update the logic to be clean)
         $url = $this->base_url . $this->api_version . '/' . ltrim($endpoint, '/');
-        $url .= (strpos($url, '?') === false ? '?' : '&') . 'access_token=' . urlencode($access_token);
 
         $ch = curl_init();
         $headers = ['Accept: application/json'];
 
         if ($method === 'POST') {
             curl_setopt($ch, CURLOPT_POST, true);
-            // Check if we are sending a file (multipart)
+
+            // Handle multipart/form-data for files
             $hasFile = false;
             foreach ($params as $key => $val) {
                 if ($val instanceof CURLFile) {
@@ -30,14 +29,28 @@ class FacebookAPI
             }
 
             if ($hasFile) {
+                // For files, we MUST NOT use json_encode, and we MUST include the access token in fields
+                $params['access_token'] = $access_token;
                 curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
             } else {
+                // Standard JSON POST
+                $url .= (strpos($url, '?') === false ? '?' : '&') . 'access_token=' . urlencode($access_token);
                 $headers[] = 'Content-Type: application/json';
                 curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($params));
             }
         } else {
-            if (!empty($params))
-                $url .= '&' . http_build_query($params);
+            // GET, DELETE, etc.
+            $url .= (strpos($url, '?') === false ? '?' : '&') . 'access_token=' . urlencode($access_token);
+            if ($method !== 'GET') {
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
+                if (!empty($params)) {
+                    $headers[] = 'Content-Type: application/json';
+                    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($params));
+                }
+            } else {
+                if (!empty($params))
+                    $url .= '&' . http_build_query($params);
+            }
         }
 
         curl_setopt($ch, CURLOPT_URL, $url);
@@ -335,6 +348,151 @@ class FacebookAPI
             'message' => ['text' => $message]
         ];
         return $this->makeRequest($endpoint, $params, $access_token, 'POST');
+    }
+
+    /**
+     * Publish a post (immediate or scheduled)
+     */
+    public function publishPost($page_id, $access_token, $message, $image = null, $scheduled_at = null, $post_type = 'feed')
+    {
+        $params = [];
+        $endpoint = "$page_id/feed";
+
+        // Determine File Type if $image is a file
+        $is_video = false;
+        if ($image && !is_string($image)) {
+            // Check CURLFile mime or filename
+            $filename = $image->getFilename();
+            $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+            if (in_array($ext, ['mp4', 'mov', 'avi', 'mkv'])) {
+                $is_video = true;
+            }
+        } elseif (is_string($image) && !filter_var($image, FILTER_VALIDATE_URL)) {
+            $ext = strtolower(pathinfo($image, PATHINFO_EXTENSION));
+            if (in_array($ext, ['mp4', 'mov', 'avi', 'mkv'])) {
+                $is_video = true;
+            }
+        }
+
+        if ($post_type === 'story') {
+            return $this->publishStory($page_id, $access_token, $image, $scheduled_at);
+        }
+
+        if ($post_type === 'reel') {
+            return $this->publishReel($page_id, $access_token, $image, $message, $scheduled_at);
+        }
+
+        if ($is_video) {
+            $endpoint = "$page_id/videos";
+            $params['description'] = $message;
+            if ($image instanceof CURLFile) {
+                $params['source'] = $image;
+            } else {
+                $abs_path = realpath($image);
+                $params['source'] = new CURLFile($abs_path);
+            }
+        } elseif ($image) {
+            if (is_string($image) && filter_var($image, FILTER_VALIDATE_URL)) {
+                $params['message'] = $message;
+                $params['link'] = $image;
+            } else {
+                $endpoint = "$page_id/photos";
+                $params['caption'] = $message;
+                if ($image instanceof CURLFile) {
+                    $params['source'] = $image;
+                } else {
+                    $abs_path = realpath($image);
+                    $params['source'] = new CURLFile($abs_path);
+                }
+            }
+        } else {
+            $params['message'] = $message;
+        }
+
+        if ($scheduled_at) {
+            $params['published'] = 'false';
+            $params['scheduled_publish_time'] = (string) $scheduled_at;
+        }
+
+        return $this->makeRequest($endpoint, $params, $access_token, 'POST');
+    }
+
+    /**
+     * Publish a Story
+     */
+    public function publishStory($page_id, $access_token, $media, $scheduled_at = null)
+    {
+        // Standard FB Pages API usually expects stories through specific endpoints or as a photo/video post with target set.
+        // For broad compatibility, we use the photos/videos endpoint but tagged for stories where possible.
+        // Currently, most apps use current photo_stories/video_stories.
+
+        $params = [];
+        $is_video = false;
+
+        if ($media instanceof CURLFile) {
+            $media_item = $media;
+            $ext = strtolower(pathinfo($media->getFilename(), PATHINFO_EXTENSION));
+            if (in_array($ext, ['mp4', 'mov', 'avi']))
+                $is_video = true;
+        } else {
+            $abs_file = realpath($media);
+            if ($abs_file && file_exists($abs_file)) {
+                $media_item = new CURLFile($abs_file);
+                $ext = strtolower(pathinfo($abs_file, PATHINFO_EXTENSION));
+                if (in_array($ext, ['mp4', 'mov', 'avi']))
+                    $is_video = true;
+            } else {
+                return ['error' => ['message' => 'Media file not found for Story']];
+            }
+        }
+
+        if ($is_video) {
+            $endpoint = "$page_id/video_stories";
+            $params['video'] = $media_item;
+        } else {
+            $endpoint = "$page_id/photo_stories";
+            $params['photo'] = $media_item;
+        }
+
+        if ($scheduled_at) {
+            $params['scheduled_publish_time'] = (string) $scheduled_at;
+        }
+
+        return $this->makeRequest($endpoint, $params, $access_token, 'POST');
+    }
+
+    /**
+     * Publish a Reel (simplified for now via videos endpoint with vertical orientation)
+     */
+    public function publishReel($page_id, $access_token, $media, $caption = '', $scheduled_at = null)
+    {
+        $endpoint = "$page_id/videos";
+        $params = [
+            'description' => $caption,
+            'title' => substr($caption, 0, 50)
+        ];
+
+        if ($media instanceof CURLFile) {
+            $params['source'] = $media;
+        } else {
+            $abs_path = realpath($media);
+            if ($abs_path) {
+                $params['source'] = new CURLFile($abs_path);
+            } else {
+                return ['error' => ['message' => 'Video file not found for Reel']];
+            }
+        }
+
+        if ($scheduled_at) {
+            $params['published'] = 'false';
+            $params['scheduled_publish_time'] = (string) $scheduled_at;
+        }
+
+        return $this->makeRequest($endpoint, $params, $access_token, 'POST');
+    }
+    public function deleteScheduledPost($post_id, $access_token)
+    {
+        return $this->makeRequest($post_id, [], $access_token, 'DELETE');
     }
 
     public function debugToken($input_token, $app_access_token)
