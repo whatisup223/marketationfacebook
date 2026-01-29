@@ -210,7 +210,19 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <textarea x-model="defaultReplyText" rows="3"
                                     class="w-full bg-gray-900/50 border border-gray-700 rounded-xl p-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all mb-4"
                                     placeholder="<?php echo __('reply_placeholder'); ?>"></textarea>
-                                <div class="flex justify-end">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-3 bg-black/20 p-2.5 rounded-xl border border-white/5">
+                                        <div
+                                            class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                                            <input type="checkbox" x-model="defaultHideComment" id="toggleHideDefault"
+                                                class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer border-gray-300" />
+                                            <label for="toggleHideDefault"
+                                                :class="defaultHideComment ? 'bg-indigo-600 border-indigo-600' : 'bg-gray-700 border-gray-700'"
+                                                class="toggle-label block overflow-hidden h-5 rounded-full cursor-pointer transition-colors border-2"></label>
+                                        </div>
+                                        <label for="toggleHideDefault"
+                                            class="text-xs font-bold text-gray-300 cursor-pointer select-none"><?php echo __('hide_comment'); ?></label>
+                                    </div>
                                     <button @click="saveDefaultReply()"
                                         class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-xl transition-all shadow-lg shadow-indigo-500/30 flex items-center gap-2 text-sm hover:-translate-y-0.5 transform">
                                         <span x-show="!savingDefault"><?php echo __('save'); ?></span>
@@ -441,6 +453,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
             modalKeywords: '',
             modalReply: '',
             modalHideComment: false,
+            defaultHideComment: false,
             subscribing: false,
             debugInfo: null,
 
@@ -558,6 +571,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             const defRule = data.rules.find(r => r.trigger_type === 'default');
                             if (defRule) {
                                 this.defaultReplyText = defRule.reply_message;
+                                this.defaultHideComment = (defRule.hide_comment == 1);
                             }
                         }
                     });
@@ -574,6 +588,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 formData.append('type', 'default');
                 formData.append('reply', this.defaultReplyText);
                 formData.append('keywords', '*');
+                formData.append('hide_comment', this.defaultHideComment ? '1' : '0');
 
                 fetch('ajax_auto_reply.php?action=save_rule', {
                     method: 'POST',
