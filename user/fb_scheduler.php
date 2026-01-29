@@ -114,6 +114,18 @@ require_once __DIR__ . '/../includes/header.php';
 
             <!-- List of Scheduled Posts -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Empty State: No page selected -->
+                <div x-show="formData.page_id === ''" x-cloak
+                    class="col-span-full glass-panel p-12 text-center border border-white/5 bg-gray-900/40">
+                    <div
+                        class="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-600">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                        </svg>
+                    </div>
+                    <p class="text-gray-400"><?php echo __('no_scheduled_posts'); ?></p>
+                </div>
                 <?php if (empty($scheduled_posts)): ?>
                     <div class="col-span-full glass-panel p-12 text-center border border-white/5 bg-gray-900/40">
                         <div
@@ -127,7 +139,7 @@ require_once __DIR__ . '/../includes/header.php';
                     </div>
                 <?php else: ?>
                     <?php foreach ($scheduled_posts as $post): ?>
-                        <div x-show="formData.page_id === '' || formData.page_id === '<?php echo $post['page_id']; ?>'"
+                        <div x-show="formData.page_id !== '' && formData.page_id === '<?php echo $post['page_id']; ?>'"
                             class="glass-card p-5 rounded-3xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all group">
                             <div class="flex justify-between items-start mb-4">
                                 <div class="flex items-center gap-3">
@@ -540,7 +552,7 @@ require_once __DIR__ . '/../includes/header.php';
                 const offset = d.getTimezoneOffset() * 60000;
                 const localISODate = (new Date(d.getTime() - offset)).toISOString().slice(0, 16);
                 this.formData.scheduled_at = localISODate;
-                
+
                 // Handle media: if it's a local path, show it but don't set fileSelected
                 if (post.media_url) {
                     if (post.media_url.startsWith('../uploads/') || post.media_url.startsWith('uploads/')) {
@@ -561,7 +573,7 @@ require_once __DIR__ . '/../includes/header.php';
                     this.fileSelected = null;
                     this.fileSelectedName = '';
                 }
-                
+
                 this.showModal = true;
                 this.fetchTokenDebug();
             },
