@@ -29,6 +29,10 @@ if (!isLoggedIn()) {
 }
 
 $user_id = $_SESSION['user_id'];
+// IMPORTANT: Release session lock immediately. 
+// This prevents this long-running script from blocking other page loads (like refresh or dashboard).
+session_write_close();
+
 $campaign_id = $_POST['campaign_id'] ?? 0;
 
 try {
