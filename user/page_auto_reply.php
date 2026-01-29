@@ -83,7 +83,8 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <?php echo __('webhook_configuration'); ?>
                     </h3>
                     <p class="text-xs text-gray-400 mb-6 relative z-10 leading-relaxed">
-                        <?php echo __('webhook_help'); ?></p>
+                        <?php echo __('webhook_help'); ?>
+                    </p>
 
                     <div class="space-y-5 relative z-10">
                         <!-- Callback URL -->
@@ -225,11 +226,19 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                                             class="bg-gray-800 text-indigo-300 text-xs px-2.5 py-1 rounded-lg border border-gray-700 font-medium"
                                                             x-text="kw.trim()"></span>
                                                     </template>
-                                                    
+
                                                     <!-- Hide Badge -->
-                                                    <div x-show="rule.hide_comment == 1" class="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-bold" title="Auto Hide Comment">
-                                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path></svg>
-                                                        <span>HIDDEN</span>
+                                                    <div x-show="rule.hide_comment == 1"
+                                                        class="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-bold"
+                                                        title="<?php echo __('hide_comment'); ?>">
+                                                        <svg class="w-3 h-3" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21">
+                                                            </path>
+                                                        </svg>
+                                                        <span><?php echo __('auto_hide_status'); ?></span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -343,8 +352,8 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         </div>
                         <div>
                             <label for="toggleHide"
-                                class="text-sm font-bold text-gray-300 cursor-pointer select-none">Hide Comment</label>
-                            <p class="text-[10px] text-gray-500">Automatically hide the user's comment after replying
+                                class="text-sm font-bold text-gray-300 cursor-pointer select-none"><?php echo __('hide_comment'); ?></label>
+                            <p class="text-[10px] text-gray-500"><?php echo __('hide_comment_desc'); ?>
                             </p>
                         </div>
                     </div>

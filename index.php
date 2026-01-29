@@ -158,7 +158,8 @@ require_once 'includes/header.php';
                     <div
                         class="absolute -inset-4 bg-gradient-to-tr from-indigo-500 to-purple-600 rounded-[2.5rem] blur-2xl opacity-20 group-hover:opacity-30 transition duration-1000">
                     </div>
-                    <div class="relative rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl animate-float">
+                    <div
+                        class="relative rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl animate-float">
                         <?php
                         $about_img = getSetting('about_image');
                         $about_img_url = !empty($about_img) ? 'uploads/' . $about_img : 'assets/img/about-default.png';
@@ -330,9 +331,13 @@ require_once 'includes/header.php';
                     class="relative glass-card p-10 rounded-[2.5rem] border border-white/5 hover:border-purple-500/30 transition-all duration-500 h-full flex flex-col items-center text-center overflow-hidden">
 
                     <div class="w-24 h-24 relative mb-8 group/icon">
-                        <div class="absolute inset-0 bg-purple-500/20 rounded-2xl blur-xl group-hover/icon:blur-2xl transition-all"></div>
-                        <div class="relative w-full h-full bg-gradient-to-br from-purple-500/20 to-purple-600/5 border border-white/10 rounded-2xl flex items-center justify-center text-purple-400 group-hover/icon:scale-110 group-hover/icon:-rotate-3 transition-all duration-500 shadow-2xl animate-float" style="animation-delay: 1s;">
-                            <svg class="w-12 h-12 drop-shadow-[0_0_10px_rgba(168,85,247,0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div
+                            class="absolute inset-0 bg-purple-500/20 rounded-2xl blur-xl group-hover/icon:blur-2xl transition-all">
+                        </div>
+                        <div class="relative w-full h-full bg-gradient-to-br from-purple-500/20 to-purple-600/5 border border-white/10 rounded-2xl flex items-center justify-center text-purple-400 group-hover/icon:scale-110 group-hover/icon:-rotate-3 transition-all duration-500 shadow-2xl animate-float"
+                            style="animation-delay: 1s;">
+                            <svg class="w-12 h-12 drop-shadow-[0_0_10px_rgba(168,85,247,0.5)]" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="<?php echo getSetting('feature_2_icon', 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z'); ?>">
                                 </path>
@@ -359,11 +364,16 @@ require_once 'includes/header.php';
                     class="relative glass-card p-10 rounded-[2.5rem] border border-white/5 hover:border-pink-500/30 transition-all duration-500 h-full flex flex-col items-center text-center overflow-hidden">
 
                     <div class="w-24 h-24 relative mb-8 group/icon">
-                        <div class="absolute inset-0 bg-pink-500/20 rounded-2xl blur-xl group-hover/icon:blur-2xl transition-all"></div>
-                        <div class="relative w-full h-full bg-gradient-to-br from-pink-500/20 to-pink-600/5 border border-white/10 rounded-2xl flex items-center justify-center text-pink-400 group-hover/icon:scale-110 group-hover/icon:rotate-3 transition-all duration-500 shadow-2xl animate-float" style="animation-delay: 2s;">
-                            <svg class="w-12 h-12 drop-shadow-[0_0_10px_rgba(236,72,153,0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div
+                            class="absolute inset-0 bg-pink-500/20 rounded-2xl blur-xl group-hover/icon:blur-2xl transition-all">
+                        </div>
+                        <div class="relative w-full h-full bg-gradient-to-br from-pink-500/20 to-pink-600/5 border border-white/10 rounded-2xl flex items-center justify-center text-pink-400 group-hover/icon:scale-110 group-hover/icon:rotate-3 transition-all duration-500 shadow-2xl animate-float"
+                            style="animation-delay: 2s;">
+                            <svg class="w-12 h-12 drop-shadow-[0_0_10px_rgba(236,72,153,0.5)]" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="<?php echo getSetting('feature_3_icon', 'M13 10V3L4 14h7v7l9-11h-7z'); ?>"></path>
+                                    d="<?php echo getSetting('feature_3_icon', 'M13 10V3L4 14h7v7l9-11h-7z'); ?>">
+                                </path>
                             </svg>
                         </div>
                     </div>
@@ -466,7 +476,7 @@ require_once 'includes/header.php';
                                 $btn_text = __('start_now');
                             ?>
                             <a href="#contact"
-                                class="flex items-center justify-center w-full py-4 rounded-2xl font-black text-sm tracking-wide transition-all duration-300 <?php echo $is_popular ? 'bg-white text-gray-900 hover:bg-gray-100 shadow-xl shadow-white/10' : 'bg-white/5 text-white border border-white/10 hover:bg-white/10'; ?>">
+                                class="flex items-center justify-center w-full py-4 rounded-2xl font-black text-sm tracking-wide transition-all duration-300 <?php echo $is_featured ? 'bg-white text-gray-900 hover:bg-gray-100 shadow-xl shadow-white/10' : 'bg-white/5 text-white border border-white/10 hover:bg-white/10'; ?>">
                                 <span><?php echo $btn_text; ?></span>
                                 <svg class="w-4 h-4 ml-2 rtl:mr-2 rtl:ml-0 group-hover:translate-x-1 transition-transform"
                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
