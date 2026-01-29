@@ -134,6 +134,43 @@ require_once __DIR__ . '/../includes/header.php';
         animation: pulse-ring 1.25s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
     }
 </style>
+<script>
+    // Helper to update row UI without code duplication
+    function updateRowUI(row, item) {
+        if (!row) return;
+
+        // Remove old classes
+        row.classList.remove('row-processing', 'row-success', 'row-error');
+
+        if (item.status === 'sent') {
+            row.classList.add('row-success');
+            row.querySelector('.status-cell').innerHTML = `
+                <div class="flex items-center gap-2 text-green-500 font-bold text-xs">
+                    <div class="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                    <?php echo __('status_sent_small'); ?>
+                </div>`;
+            const sentTime = item.sent_at ? new Date(item.sent_at) : new Date();
+            const timeString = sentTime.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }) + ' ' + (sentTime.getDate() + '/' + (sentTime.getMonth() + 1));
+            row.querySelector('.msg-cell').innerText = timeString;
+        } else if (item.status === 'failed') {
+            row.classList.add('row-error');
+            row.querySelector('.status-cell').innerHTML = `
+                <div class="flex items-center gap-2 text-red-500 font-bold text-xs">
+                    <div class="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+                    <?php echo __('status_failed_small'); ?>
+                </div>`;
+            row.querySelector('.msg-cell').innerHTML = `<div class="text-red-400 max-w-[200px] ml-auto overflow-hidden text-ellipsis">${item.error_message || item.error || 'Error'}</div>`;
+        } else if (item.status === 'retrying') {
+            // Keep as pending visually or special retry state
+            row.querySelector('.status-cell').innerHTML = `
+                <div class="flex items-center gap-2 text-yellow-500 font-bold text-xs">
+                    <div class="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse"></div>
+                    <?php echo ($lang == 'ar' ? 'إعادة مطابقة' : 'Retrying'); ?>
+                </div>`;
+            row.querySelector('.msg-cell').innerHTML = `<div class="text-yellow-400 text-[9px]">${item.error || item.error_message || ''}</div>`;
+        }
+    }
+</script>
 
 <div class="flex min-h-screen pt-4">
     <?php require_once __DIR__ . '/../includes/user_sidebar.php'; ?>
@@ -882,7 +919,39 @@ require_once __DIR__ . '/../includes/header.php';
             })
             .catch(err => console.error("Monitor Error", err));
 
-        setTimeout(monitorLoop, 500);
+        // OPTIMIZED: Sync visible rows periodically to fix UI lag
+        // This ensures that even if backend processes items 'out of order' or off-screen,
+        // the visible rows on THIS page are always accurate.
+        const visibleRows = Array.from(document.querySelectorAll('.task-row'));
+        if (visibleRows.length > 0) {
+            const ids = visibleRows.map(r => r.dataset.id).join(',');
+            const formData = new FormData();
+            formData.append('ids', ids);
+
+            fetch('api_sync_rows.php', { method: 'POST', body: formData })
+                .then(res => res.json())
+                .then(resp => {
+                    if (resp.status === 'ok' && resp.data) {
+                        resp.data.forEach(item => {
+                            const row = document.getElementById('row-' + item.id);
+                            if (!row) return; // Should not happen as we queried them
+
+                            // Only update if status changed effectively
+                            if (row.dataset.status !== item.status) {
+                                row.dataset.status = item.status;
+                                updateRowUI(row, item);
+
+                                // Update local counters (approximate)
+                                if (item.status === 'sent' && !row.classList.contains('counted-sent')) {
+                                    row.classList.add('counted-sent');
+                                }
+                            }
+                        });
+                    }
+                }).catch(e => console.error("Sync Row Error", e));
+        }
+
+        setTimeout(monitorLoop, 3000); // Throttled to 3s to reduce CPU/Network load
     }
 
     async function processQueue() {
@@ -926,17 +995,7 @@ require_once __DIR__ . '/../includes/header.php';
                         const row = document.getElementById('row-' + item.id);
                         if (row) {
                             if (item.status === 'sent') {
-                                row.classList.remove('row-processing');
-                                row.classList.add('row-success');
-                                row.querySelector('.status-cell').innerHTML = `
-                                    <div class="flex items-center gap-2 text-green-500 font-bold text-xs">
-                                        <div class="w-1.5 h-1.5 rounded-full bg-green-500"></div>
-                                        <?php echo __('status_sent_small'); ?>
-                                    </div>`;
-                                const now = new Date();
-                                const timeString = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }) + ' ' + (now.getDate() + '/' + (now.getMonth() + 1));
-                                row.querySelector('.msg-cell').innerText = timeString;
-
+                                updateRowUI(row, item);
                                 sentCount++;
                                 pendingCount--;
                                 const idx = queue.indexOf(item.id);
@@ -949,16 +1008,8 @@ require_once __DIR__ . '/../includes/header.php';
                                         <?php echo ($lang == 'ar' ? 'إعادة مطابقة' : 'Retrying'); ?>
                                     </div>`;
                                 row.querySelector('.msg-cell').innerHTML = `<div class="text-yellow-400 text-[9px]">${item.error}</div>`;
-                                // We DON'T remove from queue or pendingCount because it's still coming back
                             } else {
-                                row.classList.remove('row-processing');
-                                row.classList.add('row-error');
-                                row.querySelector('.status-cell').innerHTML = `
-                                    <div class="flex items-center gap-2 text-red-500 font-bold text-xs">
-                                        <div class="w-1.5 h-1.5 rounded-full bg-red-500"></div>
-                                        <?php echo __('status_failed_small'); ?>
-                                    </div>`;
-                                row.querySelector('.msg-cell').innerHTML = `<div class="text-red-400 max-w-[200px] ml-auto overflow-hidden text-ellipsis">${item.error || 'Error'}</div>`;
+                                updateRowUI(row, item);
                                 failedCount++;
                                 pendingCount--;
                                 const idx = queue.indexOf(item.id);
