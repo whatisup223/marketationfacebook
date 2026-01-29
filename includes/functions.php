@@ -2,7 +2,7 @@
 date_default_timezone_set('Africa/Cairo');
 
 if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+    @session_start();
 }
 
 // Flash Messages Helper

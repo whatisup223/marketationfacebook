@@ -478,8 +478,5 @@ class FacebookAPI
         return false;
     }
 
-    public function hideComment($comment_id, $access_token)
-    {
-        return $this->makeRequest($comment_id, ['is_hidden' => 'true'], $access_token, 'POST');
-    }
+
 }
