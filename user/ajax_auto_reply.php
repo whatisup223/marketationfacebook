@@ -140,6 +140,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $pdo->prepare("DELETE FROM auto_reply_rules WHERE id = ?");
         $stmt->execute([$id]);
         echo json_encode(['success' => true, 'message' => __('rule_deleted')]);
+        exit;
+    }
+
+    if ($action === 'subscribe_page') {
+        $page_id = $_POST['page_id'] ?? '';
+        if (!$page_id) {
+            echo json_encode(['success' => false, 'error' => 'Page ID is required']);
+            exit;
+        }
+
+        try {
+            // Get page access token
+            $stmt = $pdo->prepare("SELECT page_access_token FROM fb_pages WHERE page_id = ?");
+            $stmt->execute([$page_id]);
+            $page = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$page) {
+                echo json_encode(['success' => false, 'error' => 'Page not found in database']);
+                exit;
+            }
+
+            require_once '../includes/facebook_api.php';
+            $fb = new FacebookAPI();
+            $res = $fb->subscribeApp($page_id, $page['page_access_token']);
+
+            if (isset($res['success']) && $res['success']) {
+                echo json_encode(['success' => true, 'message' => 'Page successfully subscribed to Webhook!']);
+            } else {
+                $err = isset($res['error']['message']) ? $res['error']['message'] : json_encode($res);
+                echo json_encode(['success' => false, 'error' => 'FB Error: ' . $err]);
+            }
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+        exit;
     }
 }
 ?>

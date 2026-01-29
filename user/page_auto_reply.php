@@ -66,6 +66,28 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             </svg>
                         </div>
                     </div>
+
+                    <!-- Activate Webhook Button -->
+                    <template x-if="selectedPageId">
+                        <button @click="subscribePage()"
+                            class="w-full mt-4 flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition-all shadow-lg shadow-indigo-600/20 font-bold text-sm"
+                            :class="subscribing ? 'opacity-50 cursor-not-allowed' : ''" :disabled="subscribing">
+                            <svg x-show="!subscribing" class="w-4 h-4" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <svg x-show="subscribing" class="animate-spin h-4 w-4 text-white"
+                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                    stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                </path>
+                            </svg>
+                            <span x-text="subscribing ? '<?php echo __('processing_activity'); ?>' : '<?php echo __('activate_auto_reply'); ?>'"></span>
+                        </button>
+                    </template>
                 </div>
 
                 <!-- Webhook Settings -->
@@ -402,6 +424,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
             modalKeywords: '',
             modalReply: '',
             modalHideComment: false,
+            subscribing: false,
 
             // Webhook info
             webhookUrl: 'Loading...',
@@ -414,6 +437,32 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 if (this.selectedPageId) this.fetchRules();
 
                 this.fetchWebhookInfo();
+            },
+
+            subscribePage() {
+                if (!this.selectedPageId) return;
+                this.subscribing = true;
+
+                let formData = new FormData();
+                formData.append('page_id', this.selectedPageId);
+
+                fetch('ajax_auto_reply.php?action=subscribe_page', {
+                    method: 'POST',
+                    body: formData
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        this.subscribing = false;
+                        if (data.success) {
+                            alert(data.message);
+                        } else {
+                            alert(data.error);
+                        }
+                    })
+                    .catch(err => {
+                        this.subscribing = false;
+                        alert('Network Error');
+                    });
             },
 
             fetchWebhookInfo() {
