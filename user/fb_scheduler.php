@@ -127,7 +127,7 @@ require_once __DIR__ . '/../includes/header.php';
                     <p class="text-gray-400"><?php echo __('no_scheduled_posts'); ?></p>
                 </div>
                 <?php if (empty($scheduled_posts)): ?>
-                    <div class="col-span-full glass-panel p-12 text-center border border-white/5 bg-gray-900/40">
+                    <div x-show="formData.page_id !== ''" x-cloak class="col-span-full glass-panel p-12 text-center border border-white/5 bg-gray-900/40">
                         <div
                             class="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-600">
                             <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
