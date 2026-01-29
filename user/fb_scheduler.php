@@ -520,22 +520,48 @@ require_once __DIR__ . '/../includes/header.php';
                     return;
                 }
                 this.editId = null;
+                this.formData.post_type = 'feed';
                 this.formData.content = '';
                 this.formData.scheduled_at = '';
                 this.formData.media_url = '';
+                this.fileSelected = null;
+                this.fileSelectedName = '';
+                this.mediaMode = 'url';
                 this.showModal = true;
             },
 
             editPost(post) {
                 this.editId = post.id;
                 this.formData.page_id = post.page_id;
+                this.formData.post_type = post.post_type || 'feed';
                 this.formData.content = post.content;
                 // Format date for datetime-local (YYYY-MM-DDThh:mm)
                 const d = new Date(post.scheduled_at);
                 const offset = d.getTimezoneOffset() * 60000;
                 const localISODate = (new Date(d.getTime() - offset)).toISOString().slice(0, 16);
                 this.formData.scheduled_at = localISODate;
-                this.formData.media_url = post.media_url;
+                
+                // Handle media: if it's a local path, show it but don't set fileSelected
+                if (post.media_url) {
+                    if (post.media_url.startsWith('../uploads/') || post.media_url.startsWith('uploads/')) {
+                        // Local file - show preview but user must re-upload if they want to change
+                        this.formData.media_url = post.media_url;
+                        this.mediaMode = 'url'; // Show as URL since we can't re-populate file input
+                        this.fileSelected = null;
+                        this.fileSelectedName = '';
+                    } else {
+                        // External URL
+                        this.formData.media_url = post.media_url;
+                        this.mediaMode = 'url';
+                        this.fileSelected = null;
+                        this.fileSelectedName = '';
+                    }
+                } else {
+                    this.formData.media_url = '';
+                    this.fileSelected = null;
+                    this.fileSelectedName = '';
+                }
+                
                 this.showModal = true;
                 this.fetchTokenDebug();
             },

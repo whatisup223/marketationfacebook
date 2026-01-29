@@ -119,7 +119,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!$old_post)
                 throw new Exception("Original post not found.");
 
-            // IF media changed, we MUST delete and re-create because FB doesn't allow media swap on existing post
+            // Determine if new media was uploaded
+            $new_media_uploaded = ($media_file && $media_file['error'] === UPLOAD_ERR_OK);
+
+            // If no new media uploaded, keep the old media
+            if (!$new_media_uploaded && !$media_url) {
+                $local_path = $old_post['media_url'];
+                $image_to_fb = $old_post['media_url'];
+            }
+
+            // Check if media actually changed
             $media_changed = ($old_post['media_url'] !== $local_path);
 
             if ($media_changed || $old_post['post_type'] !== $post_type) {
