@@ -143,4 +143,4 @@ function processAutoReply($page_id, $comment_id, $user_message, $sender_id)
         }
     }
 }
-?>
+
