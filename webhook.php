@@ -92,7 +92,7 @@ function processAutoReply($page_id, $comment_id, $user_message, $sender_id)
     $access_token = $page['page_access_token'];
 
     // Get Rules for this page
-    $stmt = $pdo->prepare("SELECT * FROM auto_reply_rules WHERE page_id = ? AND active = 1 ORDER BY trigger_type DESC");
+    $stmt = $pdo->prepare("SELECT * FROM auto_reply_rules WHERE page_id = ? AND is_active = 1 ORDER BY trigger_type DESC");
     $stmt->execute([$page_id]);
     $rules = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -126,6 +126,12 @@ function processAutoReply($page_id, $comment_id, $user_message, $sender_id)
     if ($final_rule) {
         $fb = new FacebookAPI();
 
+        // 1. Hide Comment if requested
+        if (!empty($final_rule['hide_comment']) && $final_rule['hide_comment'] == 1) {
+            $fb->hideComment($comment_id, $access_token);
+        }
+
+        // 2. Reply to Comment
         if (!empty($final_rule['reply_message'])) {
             // Spintax support
             $reply_text = preg_replace_callback('/\{([^{}]+)\}/', function ($matches) {

@@ -96,6 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $keywords = $_POST['keywords'] ?? '';
         $reply = $_POST['reply'] ?? '';
         $rule_id = $_POST['rule_id'] ?? '';
+        $hide_comment = isset($_POST['hide_comment']) ? (int) $_POST['hide_comment'] : 0;
 
         if (!$page_id || !$reply) {
             echo json_encode(['success' => false, 'error' => 'Missing required fields']);
@@ -105,24 +106,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             if ($rule_id) {
                 // Update
-                $stmt = $pdo->prepare("UPDATE auto_reply_rules SET trigger_type = ?, keywords = ?, reply_message = ? WHERE id = ? AND page_id = ?");
-                $stmt->execute([$type, $keywords, $reply, $rule_id, $page_id]);
+                $stmt = $pdo->prepare("UPDATE auto_reply_rules SET trigger_type = ?, keywords = ?, reply_message = ?, hide_comment = ? WHERE id = ? AND page_id = ?");
+                $stmt->execute([$type, $keywords, $reply, $hide_comment, $rule_id, $page_id]);
             } else {
                 // Check if existing default rule
                 if ($type === 'default') {
                     $check = $pdo->prepare("SELECT id FROM auto_reply_rules WHERE page_id = ? AND trigger_type = 'default'");
                     $check->execute([$page_id]);
                     if ($check->fetch()) {
-                        $stmt = $pdo->prepare("UPDATE auto_reply_rules SET reply_message = ? WHERE page_id = ? AND trigger_type = 'default'");
-                        $stmt->execute([$reply, $page_id]);
+                        $stmt = $pdo->prepare("UPDATE auto_reply_rules SET reply_message = ?, hide_comment = ? WHERE page_id = ? AND trigger_type = 'default'");
+                        $stmt->execute([$reply, $hide_comment, $page_id]);
                         echo json_encode(['success' => true, 'message' => __('rule_saved')]);
                         exit;
                     }
                 }
 
                 // Insert
-                $stmt = $pdo->prepare("INSERT INTO auto_reply_rules (page_id, trigger_type, keywords, reply_message) VALUES (?, ?, ?, ?)");
-                $stmt->execute([$page_id, $type, $keywords, $reply]);
+                $stmt = $pdo->prepare("INSERT INTO auto_reply_rules (page_id, trigger_type, keywords, reply_message, hide_comment) VALUES (?, ?, ?, ?, ?)");
+                $stmt->execute([$page_id, $type, $keywords, $reply, $hide_comment]);
             }
             echo json_encode(['success' => true, 'message' => __('rule_saved')]);
         } catch (Exception $e) {
