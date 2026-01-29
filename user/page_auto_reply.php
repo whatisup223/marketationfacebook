@@ -70,25 +70,47 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <!-- Activate Webhook Button -->
                     <template x-if="selectedPageId">
                         <div>
-                            <button @click="subscribePage()"
-                                class="w-full mt-4 flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition-all shadow-lg shadow-indigo-600/20 font-bold text-sm"
-                                :class="subscribing ? 'opacity-50 cursor-not-allowed' : ''" :disabled="subscribing">
-                                <svg x-show="!subscribing" class="w-4 h-4" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                <svg x-show="subscribing" class="animate-spin h-4 w-4 text-white"
-                                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                        stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor"
-                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                                    </path>
-                                </svg>
-                                <span
-                                    x-text="subscribing ? '<?php echo __('processing_activity'); ?>' : '<?php echo __('activate_auto_reply'); ?>'"></span>
-                            </button>
+                            <div class="flex gap-2">
+                                <button @click="subscribePage()"
+                                    class="flex-1 mt-4 flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition-all shadow-lg shadow-indigo-600/20 font-bold text-sm"
+                                    :class="subscribing ? 'opacity-50 cursor-not-allowed' : ''" :disabled="subscribing">
+                                    <svg x-show="!subscribing" class="w-4 h-4" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <svg x-show="subscribing" class="animate-spin h-4 w-4 text-white"
+                                        xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                            stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor"
+                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                        </path>
+                                    </svg>
+                                    <span
+                                        x-text="subscribing ? '<?php echo __('processing_activity'); ?>' : '<?php echo __('activate_auto_reply'); ?>'"></span>
+                                </button>
+
+                                <button @click="stopAutoReply()"
+                                    class="mt-4 flex items-center justify-center gap-2 px-4 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-xl transition-all font-bold text-sm"
+                                    :class="stopping ? 'opacity-50 cursor-not-allowed' : ''" :disabled="stopping"
+                                    title="<?php echo __('stop_auto_reply_desc'); ?>">
+                                    <svg x-show="!stopping" class="w-4 h-4" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z">
+                                        </path>
+                                    </svg>
+                                    <svg x-show="stopping" class="animate-spin h-4 w-4 text-currentColor"
+                                        xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                            stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor"
+                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                        </path>
+                                    </svg>
+                                </button>
+                            </div>
 
                             <!-- Token Debug Info -->
                             <div x-show="debugInfo"
@@ -211,7 +233,8 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     class="w-full bg-gray-900/50 border border-gray-700 rounded-xl p-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all mb-4"
                                     placeholder="<?php echo __('reply_placeholder'); ?>"></textarea>
                                 <div class="flex items-center justify-between">
-                                    <div class="flex items-center gap-3 bg-black/20 p-2.5 rounded-xl border border-white/5">
+                                    <div
+                                        class="flex items-center gap-3 bg-black/20 p-2.5 rounded-xl border border-white/5">
                                         <div
                                             class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
                                             <input type="checkbox" x-model="defaultHideComment" id="toggleHideDefault"
@@ -455,6 +478,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
             modalHideComment: false,
             defaultHideComment: false,
             subscribing: false,
+            stopping: false,
             debugInfo: null,
 
             // Webhook info
@@ -506,6 +530,34 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     })
                     .catch(err => {
                         this.subscribing = false;
+                        alert('Network Error');
+                    });
+            },
+
+            stopAutoReply() {
+                if (!this.selectedPageId) return;
+                if (!confirm('<?php echo __('confirm_stop_auto_reply'); ?>')) return;
+
+                this.stopping = true;
+
+                let formData = new FormData();
+                formData.append('page_id', this.selectedPageId);
+
+                fetch('ajax_auto_reply.php?action=unsubscribe_page', {
+                    method: 'POST',
+                    body: formData
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        this.stopping = false;
+                        if (data.success) {
+                            alert(data.message);
+                        } else {
+                            alert(data.error);
+                        }
+                    })
+                    .catch(err => {
+                        this.stopping = false;
                         alert('Network Error');
                     });
             },

@@ -358,9 +358,51 @@ class FacebookAPI
         $params = [];
         $endpoint = "$page_id/feed";
 
+        // Check if array of media (Album)
+        if (is_array($image) && count($image) > 1) {
+            // Upload each photo independently to get ID
+            $media_ids = [];
+            foreach ($image as $img_file) {
+                // Determine if it's CURLFile or path
+                $img_param = [];
+                if ($img_file instanceof CURLFile) {
+                    $img_param['source'] = $img_file;
+                } elseif (is_string($img_file) && !filter_var($img_file, FILTER_VALIDATE_URL)) {
+                    $abs_path = realpath($img_file);
+                    if ($abs_path) {
+                        $img_param['source'] = new CURLFile($abs_path);
+                    }
+                }
+
+                if (!empty($img_param)) {
+                    $img_param['published'] = 'false';
+                    // Upload to /photos
+                    $res = $this->makeRequest("$page_id/photos", $img_param, $access_token, 'POST');
+                    if (isset($res['id'])) {
+                        $media_ids[] = $res['id'];
+                    }
+                }
+            }
+
+            if (!empty($media_ids)) {
+                // Publish Feed Post with attached_media
+                $feed_params = ['message' => $message];
+                foreach ($media_ids as $index => $fbid) {
+                    $feed_params["attached_media[$index]"] = json_encode(['media_fbid' => $fbid]);
+                }
+
+                if ($scheduled_at) {
+                    $feed_params['published'] = 'false';
+                    $feed_params['scheduled_publish_time'] = (string) $scheduled_at;
+                }
+
+                return $this->makeRequest("$page_id/feed", $feed_params, $access_token, 'POST');
+            }
+        }
+
         // Determine File Type if $image is a file
         $is_video = false;
-        if ($image && !is_string($image)) {
+        if ($image && !is_array($image) && !is_string($image)) {
             // Check CURLFile mime or filename
             $filename = $image->getFilename();
             $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));

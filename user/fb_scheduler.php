@@ -127,7 +127,8 @@ require_once __DIR__ . '/../includes/header.php';
                     <p class="text-gray-400"><?php echo __('no_scheduled_posts'); ?></p>
                 </div>
                 <?php if (empty($scheduled_posts)): ?>
-                    <div x-show="formData.page_id !== ''" x-cloak class="col-span-full glass-panel p-12 text-center border border-white/5 bg-gray-900/40">
+                    <div x-show="formData.page_id !== ''" x-cloak
+                        class="col-span-full glass-panel p-12 text-center border border-white/5 bg-gray-900/40">
                         <div
                             class="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-600">
                             <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -291,9 +292,14 @@ require_once __DIR__ . '/../includes/header.php';
 
                                 <!-- Content -->
                                 <div class="space-y-4"
-                                    x-show="formData.post_type === 'feed' || formData.post_type === 'reel'">
+                                    x-show="formData.post_type === 'feed'|| formData.post_type === 'reel'">
                                     <label
-                                        class="block text-xs font-black text-gray-500 uppercase tracking-widest"><?php echo __('post_content'); ?></label>
+                                        class="block text-xs font-black text-gray-500 uppercase tracking-widest"><?php echo __('post_content'); ?>
+                                        <span
+                                            x-show="formData.post_type !== 'reel'">(<?php echo __('optional'); ?>)</span>
+                                        <span x-show="formData.post_type === 'reel'"
+                                            class="text-red-400">(<?php echo __('required'); ?>)</span>
+                                    </label>
                                     <textarea x-model="formData.content" rows="6"
                                         class="w-full bg-black/40 border border-white/10 rounded-[1.5rem] px-6 py-5 text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all resize-none text-base leading-relaxed"
                                         placeholder="<?php echo __('post_content_placeholder'); ?>"></textarea>
@@ -301,9 +307,13 @@ require_once __DIR__ . '/../includes/header.php';
 
                                 <!-- Media -->
                                 <div class="space-y-4">
-                                    <label
-                                        class="block text-xs font-black text-gray-500 uppercase tracking-widest"><?php echo __('upload_image'); ?>
-                                        (<?php echo __('optional'); ?>)</label>
+                                    <label class="block text-xs font-black text-gray-500 uppercase tracking-widest">
+                                        <?php echo __('upload_image'); ?>
+                                        <span
+                                            x-show="formData.post_type === 'feed'">(<?php echo __('optional'); ?>)</span>
+                                        <span x-show="formData.post_type === 'story' || formData.post_type === 'reel'"
+                                            class="text-red-400">(<?php echo __('required'); ?>)</span>
+                                    </label>
 
                                     <div
                                         class="flex gap-2 p-1.5 bg-black/30 rounded-2xl border border-white/5 mb-4 max-w-fit">
@@ -328,7 +338,10 @@ require_once __DIR__ . '/../includes/header.php';
                                         x-transition:enter-start="opacity-0 -translate-y-2">
                                         <label
                                             class="flex flex-col items-center justify-center w-full h-40 border-2 border-white/10 border-dashed rounded-[1.5rem] cursor-pointer bg-black/10 hover:bg-black/20 transition-all hover:border-indigo-500/50 group">
-                                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+
+                                            <!-- Drag Drop UI -->
+                                            <div
+                                                class="flex flex-col items-center justify-center pt-5 pb-6 text-center">
                                                 <svg class="w-12 h-12 mb-3 text-gray-500 group-hover:text-indigo-400 transition-colors"
                                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path
@@ -336,13 +349,59 @@ require_once __DIR__ . '/../includes/header.php';
                                                         stroke-width="2" stroke-linecap="round"
                                                         stroke-linejoin="round" />
                                                 </svg>
-                                                <p class="mb-2 text-sm text-gray-400 font-bold"
-                                                    x-text="fileSelectedName || '<?php echo __('upload_image'); ?>'">
+                                                <p class="text-sm text-gray-400 font-bold mb-1">
+                                                    <?php echo __('upload_image'); ?>
+                                                </p>
+                                                <p class="text-[10px] text-gray-500 uppercase tracking-widest">
+                                                    Supports Multiple Files
                                                 </p>
                                             </div>
                                             <input type="file" @change="handleFileUpload" class="hidden"
-                                                accept="image/*,video/*" />
+                                                accept="image/*,video/*" multiple />
                                         </label>
+
+                                        <!-- File List -->
+                                        <div x-show="filesSelected.length > 0" class="mt-4 space-y-2">
+                                            <template x-for="(file, index) in filesSelected" :key="index">
+                                                <div
+                                                    class="flex items-center justify-between p-3 bg-black/30 rounded-xl border border-white/5 group hover:border-indigo-500/30 transition-all">
+                                                    <div class="flex items-center gap-3 overflow-hidden">
+                                                        <div
+                                                            class="w-10 h-10 rounded-lg bg-gray-800 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                                                            <template x-if="file.type.startsWith('image/')">
+                                                                <img :src="file.preview"
+                                                                    class="w-full h-full object-cover">
+                                                            </template>
+                                                            <template x-if="!file.type.startsWith('image/')">
+                                                                <svg class="w-5 h-5 text-gray-500" fill="none"
+                                                                    viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                                        stroke-width="2"
+                                                                        d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                                        stroke-width="2"
+                                                                        d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                </svg>
+                                                            </template>
+                                                        </div>
+                                                        <div class="min-w-0">
+                                                            <p class="text-xs text-gray-300 font-bold truncate"
+                                                                x-text="file.name"></p>
+                                                            <p class="text-[10px] text-gray-500"
+                                                                x-text="(file.size/1024/1024).toFixed(2) + ' MB'"></p>
+                                                        </div>
+                                                    </div>
+                                                    <button type="button" @click="removeFile(index)"
+                                                        class="p-2 hover:bg-red-500/10 text-gray-500 hover:text-red-400 rounded-lg transition-colors">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </template>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -379,7 +438,7 @@ require_once __DIR__ . '/../includes/header.php';
 
                                 <!-- Phone UI Mockup -->
                                 <div class="w-full max-w-[300px] bg-black rounded-[3.5rem] border-[12px] border-gray-800 shadow-3xl relative overflow-hidden flex flex-col scale-100 mb-8 transition-all duration-500"
-                                    :class="formData.post_type === 'story' ? 'aspect-[9/16] h-[550px]' : 'h-[600px]'">
+                                    :class="(formData.post_type === 'story' || formData.post_type === 'reel') ? 'aspect-[9/16] h-[550px]' : 'h-[600px]'">
                                     <!-- Top Notch -->
                                     <div class="h-8 bg-black w-full flex justify-center items-end pb-1.5 pt-4">
                                         <div class="w-24 h-5 bg-gray-900 rounded-full border border-white/5"></div>
@@ -414,7 +473,8 @@ require_once __DIR__ . '/../includes/header.php';
                                                 x-text="formData.content || '<?php echo __('post_content_placeholder'); ?>'">
                                             </div>
 
-                                            <div class="relative bg-gray-900 aspect-video overflow-hidden border-y border-white/5"
+                                            <div class="relative bg-gray-900 overflow-hidden border-y border-white/5"
+                                                :class="(formData.post_type === 'story' || formData.post_type === 'reel') ? 'aspect-[9/16]' : 'aspect-video'"
                                                 x-show="formData.media_url">
                                                 <template x-if="isVideoUrl(formData.media_url)">
                                                     <div class="relative w-full h-full">
@@ -452,8 +512,22 @@ require_once __DIR__ . '/../includes/header.php';
                             </div>
                         </div>
 
-                        <!-- Final Action Button -->
-                        <div class="mt-12 sticky bottom-0 bg-gray-900/80 backdrop-blur-md p-4 md:p-0">
+                        <!-- Final Action Button & Progress -->
+                        <div class="mt-12 sticky bottom-0 bg-gray-900/80 backdrop-blur-md p-4 md:p-0 z-20">
+                            <!-- Progress Bar -->
+                            <div x-show="uploading || processing" x-transition.opacity class="mb-4">
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-xs font-bold text-indigo-400" x-text="progressText()"></span>
+                                    <span class="text-xs font-bold text-white" x-text="uploadPercent + '%'"></span>
+                                </div>
+                                <div class="w-full bg-gray-800 rounded-full h-2.5 overflow-hidden">
+                                    <div class="bg-indigo-600 h-2.5 rounded-full transition-all duration-300 relative overflow-hidden"
+                                        :style="'width: ' + uploadPercent + '%'">
+                                        <div class="absolute inset-0 bg-white/20 animate-[shimmer_2s_infinite]"></div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <button type="submit" :disabled="loading"
                                 class="w-full bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed text-white py-5 rounded-[1.5rem] font-black text-lg shadow-2xl shadow-indigo-600/40 transition-all flex items-center justify-center gap-3">
                                 <template x-if="loading">
@@ -466,7 +540,7 @@ require_once __DIR__ . '/../includes/header.php';
                                     </svg>
                                 </template>
                                 <span
-                                    x-text="loading ? '<?php echo __('processing'); ?>...' : (editId ? '<?php echo __('update'); ?>' : '<?php echo __('schedule_post_btn'); ?>')"></span>
+                                    x-text="loading ? '<?php echo __('processing_activity'); ?>...' : (editId ? '<?php echo __('update'); ?>' : '<?php echo __('schedule_post_btn'); ?>')"></span>
                             </button>
                         </div>
                     </form>
@@ -482,12 +556,13 @@ require_once __DIR__ . '/../includes/header.php';
         return {
             showModal: false,
             loading: false,
+            uploading: false,
+            processing: false,
+            uploadPercent: 0,
             mediaMode: 'url',
-            fileSelected: null,
-            fileSelectedName: '',
+            filesSelected: [], // Array of file objects with previews
             debugInfo: null,
             editId: null,
-            mediaMode: 'url',
             formData: {
                 page_id: '',
                 post_type: 'feed',
@@ -506,6 +581,12 @@ require_once __DIR__ . '/../includes/header.php';
                 if (!url) return false;
                 const videoExtensions = ['.mp4', '.mov', '.avi', '.webm', '.mkv'];
                 return videoExtensions.some(ext => url.toLowerCase().includes(ext));
+            },
+            
+            progressText() {
+                if (this.uploading && this.uploadPercent < 100) return 'Uploading Media...';
+                if (this.uploadPercent >= 100 || this.processing) return 'Processing with Facebook...';
+                return '';
             },
 
             async fetchTokenDebug() {
@@ -536,9 +617,9 @@ require_once __DIR__ . '/../includes/header.php';
                 this.formData.content = '';
                 this.formData.scheduled_at = '';
                 this.formData.media_url = '';
-                this.fileSelected = null;
-                this.fileSelectedName = '';
+                this.filesSelected = [];
                 this.mediaMode = 'url';
+                this.uploadPercent = 0;
                 this.showModal = true;
             },
 
@@ -553,25 +634,13 @@ require_once __DIR__ . '/../includes/header.php';
                 const localISODate = (new Date(d.getTime() - offset)).toISOString().slice(0, 16);
                 this.formData.scheduled_at = localISODate;
 
-                // Handle media: if it's a local path, show it but don't set fileSelected
+                // Handle media
+                this.filesSelected = [];
                 if (post.media_url) {
-                    if (post.media_url.startsWith('../uploads/') || post.media_url.startsWith('uploads/')) {
-                        // Local file - show preview but user must re-upload if they want to change
-                        this.formData.media_url = post.media_url;
-                        this.mediaMode = 'url'; // Show as URL since we can't re-populate file input
-                        this.fileSelected = null;
-                        this.fileSelectedName = '';
-                    } else {
-                        // External URL
-                        this.formData.media_url = post.media_url;
-                        this.mediaMode = 'url';
-                        this.fileSelected = null;
-                        this.fileSelectedName = '';
-                    }
+                    this.formData.media_url = post.media_url;
+                    this.mediaMode = 'url';
                 } else {
                     this.formData.media_url = '';
-                    this.fileSelected = null;
-                    this.fileSelectedName = '';
                 }
 
                 this.showModal = true;
@@ -579,15 +648,33 @@ require_once __DIR__ . '/../includes/header.php';
             },
 
             handleFileUpload(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    this.fileSelected = file;
-                    this.fileSelectedName = file.name;
+                const files = Array.from(e.target.files);
+                if (files.length === 0) return;
+
+                files.forEach(file => {
                     const reader = new FileReader();
-                    reader.onload = (e) => {
-                        this.formData.media_url = e.target.result;
+                    reader.onload = (ev) => {
+                        file.preview = ev.target.result;
+                        this.filesSelected.push(file);
+                        
+                        // Set first image as main preview if empty
+                        if (!this.formData.media_url) {
+                            this.formData.media_url = file.preview;
+                        }
                     };
                     reader.readAsDataURL(file);
+                });
+                
+                e.target.value = '';
+            },
+
+            removeFile(index) {
+                this.filesSelected.splice(index, 1);
+                // Update main preview if needed
+                if (this.filesSelected.length > 0) {
+                     this.formData.media_url = this.filesSelected[0].preview;
+                } else {
+                     this.formData.media_url = '';
                 }
             },
 
@@ -600,19 +687,25 @@ require_once __DIR__ . '/../includes/header.php';
                 const hasPage = !!this.formData.page_id;
                 const hasContent = !!this.formData.content;
                 const hasTime = !!this.formData.scheduled_at;
-                const hasMedia = !!this.formData.media_url || this.fileSelected;
+                const hasMedia = !!this.formData.media_url || this.filesSelected.length > 0;
 
                 let isValid = false;
                 if (isFeed) {
                     isValid = hasPage && hasContent && hasTime;
                 } else if (isStory) {
-                    isValid = hasPage && hasTime && hasMedia; // Stories REQUIRE media
+                    isValid = hasPage && hasTime && hasMedia; 
                 } else if (isReel) {
-                    isValid = hasPage && hasTime && hasMedia && hasContent; // Reels use content as caption
+                    isValid = hasPage && hasTime && hasMedia && hasContent;
                 }
 
                 if (!isValid) {
                     alert('<?php echo __('fill_all_fields'); ?>');
+                    return;
+                }
+                
+                // Extra check for Reel/Story - Only single file allowed currently
+                if ((isStory || isReel) && this.filesSelected.length > 1) {
+                    alert('Stories and Reels currently support only 1 file.');
                     return;
                 }
 
@@ -627,41 +720,75 @@ require_once __DIR__ . '/../includes/header.php';
                 }
 
                 this.loading = true;
-                try {
-                    const sendData = new FormData();
-                    sendData.append('page_id', this.formData.page_id);
-                    sendData.append('post_type', this.formData.post_type);
-                    sendData.append('content', this.formData.content);
-                    sendData.append('scheduled_at', this.formData.scheduled_at);
+                this.uploading = true;
+                this.processing = false;
+                this.uploadPercent = 0;
 
-                    if (this.editId) {
-                        sendData.append('id', this.editId);
-                        sendData.append('action', 'edit');
-                    }
+                const sendData = new FormData();
+                sendData.append('page_id', this.formData.page_id);
+                sendData.append('post_type', this.formData.post_type);
+                sendData.append('content', this.formData.content);
+                sendData.append('scheduled_at', this.formData.scheduled_at);
 
-                    if (this.mediaMode === 'url') {
-                        sendData.append('media_url', this.formData.media_url);
-                    } else if (this.fileSelected) {
-                        sendData.append('media_file', this.fileSelected);
-                    }
-
-                    const response = await fetch('ajax_scheduler.php', {
-                        method: 'POST',
-                        body: sendData
-                    });
-                    const result = await response.json();
-
-                    if (result.status === 'success') {
-                        alert('<?php echo __('schedule_success'); ?>');
-                        window.location.reload();
-                    } else {
-                        alert(result.message || 'Error occurred');
-                    }
-                } catch (error) {
-                    alert('Connection error');
-                } finally {
-                    this.loading = false;
+                if (this.editId) {
+                    sendData.append('id', this.editId);
+                    sendData.append('action', 'edit');
                 }
+
+                if (this.mediaMode === 'url') {
+                    sendData.append('media_url', this.formData.media_url);
+                } else if (this.filesSelected.length > 0) {
+                    this.filesSelected.forEach(f => {
+                         sendData.append('media_file[]', f);
+                    });
+                }
+
+                // Use XMLHttpRequest for progress tracking
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', 'ajax_scheduler.php', true);
+
+                xhr.upload.addEventListener('progress', (e) => {
+                    if (e.lengthComputable) {
+                        const percentComplete = Math.round((e.loaded / e.total) * 100);
+                        this.uploadPercent = percentComplete;
+                        if (percentComplete >= 100) {
+                             this.processing = true; 
+                             this.uploading = false;
+                        }
+                    }
+                });
+
+                xhr.onload = () => {
+                    this.loading = false;
+                    this.uploading = false;
+                    this.processing = false;
+                    
+                    if (xhr.status === 200) {
+                        try {
+                            const result = JSON.parse(xhr.responseText);
+                            if (result.status === 'success') {
+                                alert('<?php echo __('schedule_success'); ?>');
+                                window.location.reload();
+                            } else {
+                                alert(result.message || 'Error occurred');
+                            }
+                        } catch (e) {
+                             console.error('JSON Error:', xhr.responseText);
+                             alert('Server Error: Invalid Response');
+                        }
+                    } else {
+                        alert('HTTP Error: ' + xhr.status);
+                    }
+                };
+
+                xhr.onerror = () => {
+                    this.loading = false;
+                    this.uploading = false;
+                    this.processing = false;
+                    alert('Network Connection Error');
+                };
+
+                xhr.send(sendData);
             },
 
             async deletePost(id) {

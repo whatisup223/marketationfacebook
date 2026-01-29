@@ -125,7 +125,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $rule_id = $_POST['rule_id'] ?? '';
         $hide_comment = isset($_POST['hide_comment']) ? (int) $_POST['hide_comment'] : 0;
 
-        if (!$page_id || !$reply) {
+        // Allow empty reply ONLY for default type (to disable it)
+        if (!$page_id || ($type !== 'default' && !$reply)) {
             echo json_encode(['success' => false, 'error' => 'Missing required fields']);
             exit;
         }
@@ -194,6 +195,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (isset($res['success']) && $res['success']) {
                 echo json_encode(['success' => true, 'message' => 'Page successfully subscribed to Webhook!']);
+            } else {
+                $err = isset($res['error']['message']) ? $res['error']['message'] : json_encode($res);
+                echo json_encode(['success' => false, 'error' => 'FB Error: ' . $err]);
+            }
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+        exit;
+    }
+
+    if ($action === 'unsubscribe_page') {
+        $page_id = $_POST['page_id'] ?? '';
+        if (!$page_id) {
+            echo json_encode(['success' => false, 'error' => 'Page ID is required']);
+            exit;
+        }
+
+        try {
+            // Get page access token
+            $stmt = $pdo->prepare("SELECT page_access_token FROM fb_pages WHERE page_id = ?");
+            $stmt->execute([$page_id]);
+            $page = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$page) {
+                echo json_encode(['success' => false, 'error' => 'Page not found in database']);
+                exit;
+            }
+
+            require_once '../includes/facebook_api.php';
+            $fb = new FacebookAPI();
+            // Using a new method unsubscribeApp (need to add it) or makeRequest manually
+            // DELETE /{page_id}/subscribed_apps
+            $res = $fb->makeRequest("$page_id/subscribed_apps", [], $page['page_access_token'], 'DELETE');
+
+            if (isset($res['success']) && $res['success']) {
+                echo json_encode(['success' => true, 'message' => 'Page Auto-Reply Stopped (Unsubscribed)!']);
             } else {
                 $err = isset($res['error']['message']) ? $res['error']['message'] : json_encode($res);
                 echo json_encode(['success' => false, 'error' => 'FB Error: ' . $err]);
