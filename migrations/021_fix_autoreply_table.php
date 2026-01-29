@@ -59,7 +59,13 @@ try {
 
     // Ensure is_active exists
     if (!in_array('is_active', $columns)) {
-        $pdo->exec("ALTER TABLE auto_reply_rules ADD COLUMN is_active TINYINT(1) DEFAULT 1");
+        if (in_array('active', $columns)) {
+            $pdo->exec("ALTER TABLE auto_reply_rules CHANGE COLUMN active is_active TINYINT(1) DEFAULT 1");
+            echo "Renamed active to is_active.<br>";
+        } else {
+            $pdo->exec("ALTER TABLE auto_reply_rules ADD COLUMN is_active TINYINT(1) DEFAULT 1");
+            echo "Added is_active column.<br>";
+        }
     }
 
     echo "Auto Reply table schema fixed successfully.<br>";
