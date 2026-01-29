@@ -55,6 +55,33 @@ if ($action === 'fetch_rules') {
     exit;
 }
 
+if ($action === 'debug_token_info') {
+    $page_id = $_GET['page_id'] ?? '';
+    if (!$page_id) {
+        echo json_encode(['success' => false, 'error' => 'Page ID required']);
+        exit;
+    }
+
+    $stmt = $pdo->prepare("SELECT page_access_token FROM fb_pages WHERE page_id = ?");
+    $stmt->execute([$page_id]);
+    $page = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$page) {
+        echo json_encode(['success' => false, 'error' => 'Page not found']);
+        exit;
+    }
+
+    $token = $page['page_access_token'];
+    $masked_token = substr($token, 0, 8) . '...' . substr($token, -8);
+
+    echo json_encode([
+        'success' => true,
+        'masked_token' => $masked_token,
+        'length' => strlen($token)
+    ]);
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Regenerate Webhook URL ID only
@@ -140,35 +167,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $pdo->prepare("DELETE FROM auto_reply_rules WHERE id = ?");
         $stmt->execute([$id]);
         echo json_encode(['success' => true, 'message' => __('rule_deleted')]);
-        exit;
-    }
-
-    if ($action === 'debug_token_info') {
-        $page_id = $_GET['page_id'] ?? '';
-        if (!$page_id) {
-            echo json_encode(['success' => false, 'error' => 'Page ID required']);
-            exit;
-        }
-
-        $stmt = $pdo->prepare("SELECT page_access_token FROM fb_pages WHERE page_id = ?");
-        $stmt->execute([$page_id]);
-        $page = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if (!$page) {
-            echo json_encode(['success' => false, 'error' => 'Page not found']);
-            exit;
-        }
-
-        $token = $page['page_access_token'];
-        $masked_token = substr($token, 0, 8) . '...' . substr($token, -8);
-
-        // We can try to call FB Debug API if we have an app token, 
-        // but for now let's just return the masked token and length.
-        echo json_encode([
-            'success' => true,
-            'masked_token' => $masked_token,
-            'length' => strlen($token)
-        ]);
         exit;
     }
 

@@ -95,11 +95,12 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 class="mt-4 p-3 bg-black/40 rounded-lg border border-white/10 text-[10px] font-mono text-gray-400">
                                 <div class="flex justify-between mb-1">
                                     <span>Token (Masked):</span>
-                                    <span class="text-indigo-400" x-text="debugInfo.masked_token"></span>
+                                    <span class="text-indigo-400"
+                                        x-text="debugInfo ? debugInfo.masked_token : ''"></span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span>Token Length:</span>
-                                    <span class="text-indigo-400" x-text="debugInfo.length"></span>
+                                    <span class="text-indigo-400" x-text="debugInfo ? debugInfo.length : ''"></span>
                                 </div>
                             </div>
                         </div>
