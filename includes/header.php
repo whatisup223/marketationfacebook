@@ -163,9 +163,9 @@ if (isLoggedIn()) {
                 extend: {
                     fontFamily: {
                         <?php if ($lang === 'ar'): ?>
-                                                                                sans: ['IBM Plex Sans Arabic', 'sans-serif'],
+                                                                                        sans: ['IBM Plex Sans Arabic', 'sans-serif'],
                         <?php else: ?>
-                                                                                sans: ['Outfit', 'sans-serif'],
+                                                                                        sans: ['Outfit', 'sans-serif'],
                         <?php endif; ?>
                     },
                     colors: {
@@ -684,8 +684,7 @@ if (isLoggedIn()) {
             x-show="mobileMenu" x-transition:enter="transform transition ease-in-out duration-300 sm:duration-500"
             x-transition:enter-start="translate-x-full rtl:-translate-x-full" x-transition:enter-end="translate-x-0"
             x-transition:leave="transform transition ease-in-out duration-300 sm:duration-500"
-            x-transition:leave-start="translate-x-0"
-            x-transition:leave-end="translate-x-full rtl:-translate-x-full">
+            x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-full rtl:-translate-x-full">
 
             <div class="flex items-center justify-between">
                 <a href="<?php echo $prefix; ?>index.php"
@@ -807,164 +806,188 @@ if (isLoggedIn()) {
                                     class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'dashboard.php' ? 'text-indigo-400' : 'text-gray-300'; ?> hover:bg-gray-800 flex justify-between items-center">
                                     <span><?php echo __('overview'); ?></span>
                                 </a>
-                                <a href="<?php echo $prefix; ?>admin/fb_accounts.php"
-                                    class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'fb_accounts.php' ? 'text-indigo-400' : 'text-gray-300'; ?> hover:bg-gray-800"><?php echo __('fb_accounts'); ?></a>
-                                <a href="<?php echo $prefix; ?>admin/users.php"
-                                    class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'users.php' ? 'text-indigo-400' : 'text-gray-300'; ?> hover:bg-gray-800"><?php echo __('users'); ?></a>
-                                <a href="<?php echo $prefix; ?>admin/profile.php"
-                                    class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'profile.php' ? 'text-indigo-400' : 'text-gray-300'; ?> hover:bg-gray-800"><?php echo __('profile'); ?></a>
-                                <a href="<?php echo $prefix; ?>admin/settings.php"
-                                    class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'settings.php' ? 'text-indigo-400' : 'text-gray-300'; ?> hover:bg-gray-800"><?php echo __('settings'); ?></a>
-                            <?php else: ?>
-                                <h3
-                                    class="mt-4 text-xs font-semibold text-gray-500 uppercase tracking-wider pl-3 rtl:pr-3 border-t border-gray-800 pt-4">
-                                    <?php echo __('user_panel'); ?>
-                                </h3>
-                                <a href="<?php echo $prefix; ?>user/dashboard.php"
-                                    class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'dashboard.php' ? 'text-indigo-400' : 'text-gray-300'; ?> hover:bg-gray-800"><?php echo __('overview'); ?></a>
-
-                                <!-- Facebook Mobile Dropdown -->
-                                <div
-                                    x-data="{ mFbOpen: <?php echo in_array(basename($_SERVER['PHP_SELF']), ['fb_accounts.php', 'page_inbox.php', 'create_campaign.php', 'campaign_reports.php']) ? 'true' : 'false'; ?> }">
-                                    <button @click="mFbOpen = !mFbOpen"
-                                        class="-mx-3 w-full flex items-center justify-between rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-300 hover:bg-gray-800">
-                                        <div class="flex items-center gap-2">
-                                            <svg class="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
-                                                <path
-                                                    d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                                            </svg>
-                                            <span><?php echo __('facebook'); ?></span>
+                                <!-- Admin Accounts Dropdown -->
+                                        <div x-data="{ mAdmAcc: <?php echo in_array(basename($_SERVER['PHP_SELF']), ['fb_accounts.php', 'users.php']) ? 'true' : 'false'; ?> }">
+                                            <button @click="mAdmAcc = !mAdmAcc" class="-mx-3 w-full flex items-center justify-between rounded-lg px-3 py-2 text-base font-semibold text-gray-300 hover:bg-gray-800">
+                                                <span><?php echo __('accounts_management'); ?></span>
+                                                <svg class="w-4 h-4 transition-transform" :class="mAdmAcc ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                            </button>
+                                            <div x-show="mAdmAcc" x-transition class="pl-4 rtl:pr-4">
+                                                <a href="<?php echo $prefix; ?>admin/users.php" class="block rounded-lg px-3 py-2 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'users.php' ? 'text-indigo-400' : 'text-gray-400'; ?> hover:bg-gray-800"><?php echo __('users'); ?></a>
+                                                <a href="<?php echo $prefix; ?>admin/fb_accounts.php" class="block rounded-lg px-3 py-2 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'fb_accounts.php' ? 'text-indigo-400' : 'text-gray-400'; ?> hover:bg-gray-800"><?php echo __('fb_accounts'); ?></a>
+                                            </div>
                                         </div>
-                                        <svg class="w-4 h-4 transition-transform duration-200"
-                                            :class="mFbOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M19 9l-7 7-7-7" />
-                                        </svg>
-                                    </button>
-                                    <div x-show="mFbOpen" x-transition class="pl-4 rtl:pr-4">
-                                        <a href="<?php echo $prefix; ?>user/fb_accounts.php"
-                                            class="block rounded-lg px-3 py-2 text-sm font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'fb_accounts.php' ? 'text-indigo-400' : 'text-gray-400'; ?> hover:bg-gray-800"><?php echo __('fb_accounts'); ?></a>
-                                        <a href="<?php echo $prefix; ?>user/page_inbox.php"
-                                            class="block rounded-lg px-3 py-2 text-sm font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'page_inbox.php' ? 'text-indigo-400' : 'text-gray-400'; ?> hover:bg-gray-800"><?php echo __('manage_messages'); ?></a>
-                                        <a href="<?php echo $prefix; ?>user/create_campaign.php"
-                                            class="block rounded-lg px-3 py-2 text-sm font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'create_campaign.php' ? 'text-indigo-400' : 'text-gray-400'; ?> hover:bg-gray-800"><?php echo __('setup_campaign'); ?></a>
-                                    </div>
-                                </div>
 
-                                <!-- WhatsApp Mobile Dropdown -->
-                                <div x-data="{ mWaOpen: false }">
-                                    <button @click="mWaOpen = !mWaOpen"
-                                        class="-mx-3 w-full flex items-center justify-between rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-300 hover:bg-gray-800">
-                                        <div class="flex items-center gap-2">
-                                            <svg class="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
-                                                <path
-                                                    d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
-                                            </svg>
-                                            <span><?php echo __('whatsapp'); ?></span>
+                                        <!-- Admin System Dropdown -->
+                                        <div x-data="{ mAdmSys: <?php echo in_array(basename($_SERVER['PHP_SELF']), ['settings.php', 'backup.php', 'system_update.php']) ? 'true' : 'false'; ?> }">
+                                            <button @click="mAdmSys = !mAdmSys" class="-mx-3 w-full flex items-center justify-between rounded-lg px-3 py-2 text-base font-semibold text-gray-300 hover:bg-gray-800">
+                                                <span><?php echo __('system_management'); ?></span>
+                                                <svg class="w-4 h-4 transition-transform" :class="mAdmSys ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                            </button>
+                                            <div x-show="mAdmSys" x-transition class="pl-4 rtl:pr-4">
+                                                <a href="<?php echo $prefix; ?>admin/settings.php" class="block rounded-lg px-3 py-2 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'settings.php' ? 'text-indigo-400' : 'text-gray-400'; ?> hover:bg-gray-800"><?php echo __('settings'); ?></a>
+                                                <a href="<?php echo $prefix; ?>admin/backup.php" class="block rounded-lg px-3 py-2 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'backup.php' ? 'text-indigo-400' : 'text-gray-400'; ?> hover:bg-gray-800"><?php echo __('backup_restore'); ?></a>
+                                                <a href="<?php echo $prefix; ?>admin/system_update.php" class="block rounded-lg px-3 py-2 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'system_update.php' ? 'text-indigo-400' : 'text-gray-400'; ?> hover:bg-gray-800"><?php echo __('system_update'); ?></a>
+                                            </div>
                                         </div>
-                                        <svg class="w-4 h-4 transition-transform duration-200"
-                                            :class="mWaOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M19 9l-7 7-7-7" />
-                                        </svg>
-                                    </button>
-                                    <div x-show="mWaOpen" x-transition class="pl-4 rtl:pr-4">
-                                        <a href="<?php echo $prefix; ?>user/wa_accounts.php"
-                                            class="block rounded-lg px-3 py-2 text-sm font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'wa_accounts.php' ? 'text-indigo-400' : 'text-gray-400'; ?> hover:bg-gray-800"><?php echo __('wa_accounts'); ?></a>
-                                        <a href="<?php echo $prefix; ?>user/wa_bulk_send.php"
-                                            class="block rounded-lg px-3 py-2 text-sm font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'wa_bulk_send.php' ? 'text-indigo-400' : 'text-gray-400'; ?> hover:bg-gray-800"><?php echo __('wa_bulk_send'); ?></a>
-                                        <a href="<?php echo $prefix; ?>user/wa_settings.php"
-                                            class="block rounded-lg px-3 py-2 text-sm font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'wa_settings.php' ? 'text-indigo-400' : 'text-gray-400'; ?> hover:bg-gray-800"><?php echo __('wa_settings'); ?></a>
-                                    </div>
-                                </div>
 
-                                <!-- Campaign Reports moved outside -->
-                                <a href="<?php echo $prefix; ?>user/campaign_reports.php"
-                                    class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'campaign_reports.php' ? 'text-indigo-400' : 'text-gray-300'; ?> hover:bg-gray-800"><?php echo __('campaign_reports'); ?></a>
+                                        <a href="<?php echo $prefix; ?>admin/profile.php"
+                                            class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'profile.php' ? 'text-indigo-400' : 'text-gray-300'; ?> hover:bg-gray-800"><?php echo __('profile'); ?></a>
+                                <?php else: ?>
+                                        <h3
+                                            class="mt-4 text-xs font-semibold text-gray-500 uppercase tracking-wider pl-3 rtl:pr-3 border-t border-gray-800 pt-4">
+                                            <?php echo __('user_panel'); ?>
+                                        </h3>
+                                        <a href="<?php echo $prefix; ?>user/dashboard.php"
+                                            class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'dashboard.php' ? 'text-indigo-400' : 'text-gray-300'; ?> hover:bg-gray-800"><?php echo __('overview'); ?></a>
 
-                                <a href="<?php echo $prefix; ?>user/profile.php"
-                                    class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'profile.php' ? 'text-indigo-400' : 'text-gray-300'; ?> hover:bg-gray-800"><?php echo __('profile'); ?></a>
-                                <a href="<?php echo $prefix; ?>user/notifications.php"
-                                    class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'notifications.php' ? 'text-indigo-400' : 'text-gray-300'; ?> hover:bg-gray-800 flex justify-between items-center">
-                                    <span><?php echo __('notifications'); ?></span>
-                                    <?php if ($notifications_unread_count > 0): ?>
-                                        <span class="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-sm">
-                                            <?php echo $notifications_unread_count > 9 ? '9+' : $notifications_unread_count; ?>
-                                        </span>
-                                    <?php endif; ?>
-                                </a>
-                                <a href="<?php echo $prefix; ?>user/support.php"
-                                    class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'support.php' || basename($_SERVER['PHP_SELF']) == 'create_ticket.php' || basename($_SERVER['PHP_SELF']) == 'view_ticket.php' ? 'text-indigo-400' : 'text-gray-300'; ?> hover:bg-gray-800 flex justify-between items-center">
-                                    <span><?php echo __('support_tickets'); ?></span>
-                                    <?php
-                                    $m_user_ticket_unread = 0;
-                                    if (isset($_SESSION['user_id'])) {
-                                        $m_user_ticket_unread = getUserTicketUnreadCount($_SESSION['user_id']);
-                                    }
-                                    if ($m_user_ticket_unread > 0):
-                                        ?>
-                                        <span class="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-sm">
-                                            <?php echo $m_user_ticket_unread > 9 ? '9+' : $m_user_ticket_unread; ?>
-                                        </span>
-                                    <?php endif; ?>
-                                </a>
-                            <?php endif; ?>
+                                        <!-- Facebook Mobile Dropdown -->
+                                        <div
+                                            x-data="{ mFbOpen: <?php echo in_array(basename($_SERVER['PHP_SELF']), ['fb_accounts.php', 'page_inbox.php', 'create_campaign.php', 'campaign_reports.php', 'page_auto_reply.php', 'fb_scheduler.php']) ? 'true' : 'false'; ?> }">
+                                            <button @click="mFbOpen = !mFbOpen"
+                                                class="-mx-3 w-full flex items-center justify-between rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-300 hover:bg-gray-800">
+                                                <div class="flex items-center gap-2">
+                                                    <svg class="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+                                                        <path
+                                                            d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                                                    </svg>
+                                                    <span><?php echo __('facebook'); ?></span>
+                                                </div>
+                                                <svg class="w-4 h-4 transition-transform duration-200"
+                                                    :class="mFbOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </button>
+                                            <div x-show="mFbOpen" x-transition class="pl-4 rtl:pr-4">
+                                                <a href="<?php echo $prefix; ?>user/fb_accounts.php"
+                                                    class="block rounded-lg px-3 py-2 text-sm font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'fb_accounts.php' ? 'text-indigo-400' : 'text-gray-400'; ?> hover:bg-gray-800"><?php echo __('fb_accounts'); ?></a>
+                                                <a href="<?php echo $prefix; ?>user/page_inbox.php"
+                                                    class="block rounded-lg px-3 py-2 text-sm font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'page_inbox.php' ? 'text-indigo-400' : 'text-gray-400'; ?> hover:bg-gray-800"><?php echo __('manage_messages'); ?></a>
+                                                <a href="<?php echo $prefix; ?>user/create_campaign.php"
+                                                    class="block rounded-lg px-3 py-2 text-sm font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'create_campaign.php' ? 'text-indigo-400' : 'text-gray-400'; ?> hover:bg-gray-800"><?php echo __('setup_campaign'); ?></a>
+                                                <a href="<?php echo $prefix; ?>user/page_auto_reply.php"
+                                                    class="block rounded-lg px-3 py-2 text-sm font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'page_auto_reply.php' ? 'text-indigo-400' : 'text-gray-400'; ?> hover:bg-gray-800"><?php echo __('auto_reply'); ?></a>
+                                                <a href="<?php echo $prefix; ?>user/fb_scheduler.php"
+                                                    class="block rounded-lg px-3 py-2 text-sm font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'fb_scheduler.php' ? 'text-indigo-400' : 'text-gray-400'; ?> hover:bg-gray-800"><?php echo __('post_scheduler'); ?></a>
+                                            </div>
+                                        </div>
 
-                            <?php if (isAdmin() && !$is_frontend): ?>
-                                <a href="<?php echo $prefix; ?>admin/notifications.php"
-                                    class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'notifications.php' ? 'text-indigo-400' : 'text-gray-300'; ?> hover:bg-gray-800 flex justify-between items-center">
-                                    <span><?php echo __('notifications'); ?></span>
-                                    <?php if ($notifications_unread_count > 0): ?>
-                                        <span class="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-sm">
-                                            <?php echo $notifications_unread_count > 9 ? '9+' : $notifications_unread_count; ?>
-                                        </span>
-                                    <?php endif; ?>
-                                </a>
-                                <a href="<?php echo $prefix; ?>admin/backup.php"
-                                    class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'backup.php' ? 'text-indigo-400' : 'text-gray-300'; ?> hover:bg-gray-800"><?php echo __('backup_restore'); ?></a>
-                                <a href="<?php echo $prefix; ?>admin/system_update.php"
-                                    class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'system_update.php' ? 'text-indigo-400' : 'text-gray-300'; ?> hover:bg-gray-800 flex items-center gap-2">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
-                                        </path>
-                                    </svg>
-                                    <?php echo __('system_update'); ?>
-                                </a>
-                                <a href="<?php echo $prefix; ?>admin/support.php"
-                                    class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'support.php' || basename($_SERVER['PHP_SELF']) == 'view_ticket.php' ? 'text-indigo-400' : 'text-gray-300'; ?> hover:bg-gray-800 flex justify-between items-center">
-                                    <span><?php echo __('support_tickets'); ?></span>
-                                    <?php
-                                    $m_admin_ticket_unread = getAdminTicketUnreadCount();
-                                    if ($m_admin_ticket_unread > 0):
-                                        ?>
-                                        <span class="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-sm">
-                                            <?php echo $m_admin_ticket_unread > 9 ? '9+' : $m_admin_ticket_unread; ?>
-                                        </span>
-                                    <?php endif; ?>
-                                </a>
-                            <?php endif; ?>
+                                        <!-- WhatsApp Mobile Dropdown -->
+                                        <div
+                                            x-data="{ mWaOpen: <?php echo in_array(basename($_SERVER['PHP_SELF']), ['wa_accounts.php', 'wa_bulk_send.php', 'wa_settings.php']) ? 'true' : 'false'; ?> }">
+                                            <button @click="mWaOpen = !mWaOpen"
+                                                class="-mx-3 w-full flex items-center justify-between rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-300 hover:bg-gray-800">
+                                                <div class="flex items-center gap-2">
+                                                    <svg class="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+                                                        <path
+                                                            d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+                                                    </svg>
+                                                    <span><?php echo __('whatsapp'); ?></span>
+                                                </div>
+                                                <svg class="w-4 h-4 transition-transform duration-200"
+                                                    :class="mWaOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </button>
+                                            <div x-show="mWaOpen" x-transition class="pl-4 rtl:pr-4">
+                                                <a href="<?php echo $prefix; ?>user/wa_accounts.php"
+                                                    class="block rounded-lg px-3 py-2 text-sm font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'wa_accounts.php' ? 'text-indigo-400' : 'text-gray-400'; ?> hover:bg-gray-800"><?php echo __('wa_accounts'); ?></a>
+                                                <a href="<?php echo $prefix; ?>user/wa_bulk_send.php"
+                                                    class="block rounded-lg px-3 py-2 text-sm font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'wa_bulk_send.php' ? 'text-indigo-400' : 'text-gray-400'; ?> hover:bg-gray-800"><?php echo __('wa_bulk_send'); ?></a>
+                                                <a href="<?php echo $prefix; ?>user/wa_settings.php"
+                                                    class="block rounded-lg px-3 py-2 text-sm font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'wa_settings.php' ? 'text-indigo-400' : 'text-gray-400'; ?> hover:bg-gray-800"><?php echo __('wa_settings'); ?></a>
+                                            </div>
+                                        </div>
+
+                                        <!-- Campaign Reports moved outside -->
+                                        <a href="<?php echo $prefix; ?>user/campaign_reports.php"
+                                            class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'campaign_reports.php' ? 'text-indigo-400' : 'text-gray-300'; ?> hover:bg-gray-800"><?php echo __('campaign_reports'); ?></a>
+
+                                        <a href="<?php echo $prefix; ?>user/profile.php"
+                                            class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'profile.php' ? 'text-indigo-400' : 'text-gray-300'; ?> hover:bg-gray-800"><?php echo __('profile'); ?></a>
+                                        <a href="<?php echo $prefix; ?>user/notifications.php"
+                                            class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'notifications.php' ? 'text-indigo-400' : 'text-gray-300'; ?> hover:bg-gray-800 flex justify-between items-center">
+                                            <span><?php echo __('notifications'); ?></span>
+                                            <?php if ($notifications_unread_count > 0): ?>
+                                                    <span class="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-sm">
+                                                        <?php echo $notifications_unread_count > 9 ? '9+' : $notifications_unread_count; ?>
+                                                    </span>
+                                            <?php endif; ?>
+                                        </a>
+                                        <a href="<?php echo $prefix; ?>user/support.php"
+                                            class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'support.php' || basename($_SERVER['PHP_SELF']) == 'create_ticket.php' || basename($_SERVER['PHP_SELF']) == 'view_ticket.php' ? 'text-indigo-400' : 'text-gray-300'; ?> hover:bg-gray-800 flex justify-between items-center">
+                                            <span><?php echo __('support_tickets'); ?></span>
+                                            <?php
+                                            $m_user_ticket_unread = 0;
+                                            if (isset($_SESSION['user_id'])) {
+                                                $m_user_ticket_unread = getUserTicketUnreadCount($_SESSION['user_id']);
+                                            }
+                                            if ($m_user_ticket_unread > 0):
+                                                ?>
+                                                    <span class="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-sm">
+                                                        <?php echo $m_user_ticket_unread > 9 ? '9+' : $m_user_ticket_unread; ?>
+                                                    </span>
+                                            <?php endif; ?>
+                                        </a>
+                                <?php endif; ?>
+
+                                <?php if (isAdmin() && !$is_frontend): ?>
+                                        <a href="<?php echo $prefix; ?>admin/notifications.php"
+                                            class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'notifications.php' ? 'text-indigo-400' : 'text-gray-300'; ?> hover:bg-gray-800 flex justify-between items-center">
+                                            <span><?php echo __('notifications'); ?></span>
+                                            <?php if ($notifications_unread_count > 0): ?>
+                                                    <span class="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-sm">
+                                                        <?php echo $notifications_unread_count > 9 ? '9+' : $notifications_unread_count; ?>
+                                                    </span>
+                                            <?php endif; ?>
+                                        </a>
+                                        <a href="<?php echo $prefix; ?>admin/backup.php"
+                                            class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'backup.php' ? 'text-indigo-400' : 'text-gray-300'; ?> hover:bg-gray-800"><?php echo __('backup_restore'); ?></a>
+                                        <a href="<?php echo $prefix; ?>admin/system_update.php"
+                                            class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'system_update.php' ? 'text-indigo-400' : 'text-gray-300'; ?> hover:bg-gray-800 flex items-center gap-2">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                                                </path>
+                                            </svg>
+                                            <?php echo __('system_update'); ?>
+                                        </a>
+                                        <a href="<?php echo $prefix; ?>admin/support.php"
+                                            class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'support.php' || basename($_SERVER['PHP_SELF']) == 'view_ticket.php' ? 'text-indigo-400' : 'text-gray-300'; ?> hover:bg-gray-800 flex justify-between items-center">
+                                            <span><?php echo __('support_tickets'); ?></span>
+                                            <?php
+                                            $m_admin_ticket_unread = getAdminTicketUnreadCount();
+                                            if ($m_admin_ticket_unread > 0):
+                                                ?>
+                                                    <span class="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-sm">
+                                                        <?php echo $m_admin_ticket_unread > 9 ? '9+' : $m_admin_ticket_unread; ?>
+                                                    </span>
+                                            <?php endif; ?>
+                                        </a>
+                                <?php endif; ?>
                         <?php endif; ?>
 
                         <?php if (!isLoggedIn()): ?>
-                            <div class="mt-4 flex flex-col space-y-3">
-                                <a href="<?php echo $prefix; ?>login.php"
-                                    class="w-full text-center rounded-lg px-3 py-2.5 text-base font-bold text-white bg-gray-700 hover:bg-gray-600 shadow-md">
-                                    <?php echo __('login'); ?>
-                                </a>
-                                <a href="<?php echo $prefix; ?>register.php"
-                                    class="w-full text-center rounded-lg px-3 py-2.5 text-base font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-500/30">
-                                    <?php echo __('register'); ?>
-                                </a>
-                            </div>
+                                <div class="mt-4 flex flex-col space-y-3">
+                                    <a href="<?php echo $prefix; ?>login.php"
+                                        class="w-full text-center rounded-lg px-3 py-2.5 text-base font-bold text-white bg-gray-700 hover:bg-gray-600 shadow-md">
+                                        <?php echo __('login'); ?>
+                                    </a>
+                                    <a href="<?php echo $prefix; ?>register.php"
+                                        class="w-full text-center rounded-lg px-3 py-2.5 text-base font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-500/30">
+                                        <?php echo __('register'); ?>
+                                    </a>
+                                </div>
                         <?php endif; ?>
                     </div>
                     <div class="py-6">
                         <?php if (isLoggedIn()): ?>
-                            <a href="<?php echo $prefix; ?>logout.php"
-                                class="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-red-400 hover:bg-gray-800 border border-red-500/20 text-center"><?php echo __('logout'); ?></a>
+                                <a href="<?php echo $prefix; ?>logout.php"
+                                    class="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-red-400 hover:bg-gray-800 border border-red-500/20 text-center"><?php echo __('logout'); ?></a>
                         <?php endif; ?>
 
 

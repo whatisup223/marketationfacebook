@@ -46,8 +46,8 @@
         </h3>
     </div>
     <nav class="space-y-2" x-data="{ 
-        fbOpen: <?php echo in_array(basename($_SERVER['PHP_SELF']), ['fb_accounts.php', 'page_inbox.php', 'create_campaign.php', 'campaign_reports.php', 'page_auto_reply.php']) ? 'true' : 'false'; ?>,
-        waOpen: false 
+        fbOpen: <?php echo in_array(basename($_SERVER['PHP_SELF']), ['fb_accounts.php', 'page_inbox.php', 'create_campaign.php', 'campaign_reports.php', 'page_auto_reply.php', 'fb_scheduler.php']) ? 'true' : 'false'; ?>,
+        waOpen: <?php echo in_array(basename($_SERVER['PHP_SELF']), ['wa_accounts.php', 'wa_bulk_send.php', 'wa_settings.php']) ? 'true' : 'false'; ?> 
     }">
         <a href="dashboard.php"
             class="block px-4 py-3 <?php echo basename($_SERVER['PHP_SELF']) == 'dashboard.php' ? 'bg-indigo-600/20 text-indigo-300 border-indigo-500/30' : 'text-gray-400 hover:bg-gray-800 hover:text-white'; ?> rounded-xl font-medium border border-transparent transition-colors">
@@ -90,6 +90,10 @@
                 <a href="page_auto_reply.php"
                     class="block px-4 py-2.5 <?php echo basename($_SERVER['PHP_SELF']) == 'page_auto_reply.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> rounded-lg text-sm font-medium transition-colors mb-1">
                     <?php echo __('auto_reply'); ?>
+                </a>
+                <a href="fb_scheduler.php"
+                    class="block px-4 py-2.5 <?php echo basename($_SERVER['PHP_SELF']) == 'fb_scheduler.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> rounded-lg text-sm font-medium transition-colors mb-1">
+                    <?php echo __('post_scheduler'); ?>
                 </a>
             </div>
         </div>
