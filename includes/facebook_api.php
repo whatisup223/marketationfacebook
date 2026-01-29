@@ -132,6 +132,7 @@ class FacebookAPI
         $results = [];
 
         // 1. Prepare all requests
+        // 1. Prepare all requests
         foreach ($items as $key => $item) {
             $page_id = $item['page_id'];
             $access_token = $item['access_token'];
@@ -139,13 +140,37 @@ class FacebookAPI
             $message_text = $item['message_text'];
             $image_url = $item['image_url'] ?? null;
 
-            // Constuct Payload (Similar to sending logic)
-            $payload = [];
             $endpoint = $this->base_url . $this->api_version . '/' . $page_id . '/messages';
             $endpoint .= '?access_token=' . urlencode($access_token);
 
-            if (!empty($image_url)) {
-                $payload = [
+            $requests_to_make = [];
+
+            // Case A: Image + Text (Send Image FIRST, then Text)
+            // Note: In parallel they might arrive slightly mixed, but usually network latency for image makes text arrive first if simultaneous.
+            // To ensure order we usually need sequential, but for speed we do parallel.
+            // Let's send both.
+            if (!empty($image_url) && !empty($message_text)) {
+                // Image Req
+                $requests_to_make[$key . '_img'] = [
+                    'recipient' => ['id' => $recipient_id],
+                    'message' => [
+                        'attachment' => [
+                            'type' => 'image',
+                            'payload' => ['url' => $image_url, 'is_reusable' => true]
+                        ]
+                    ],
+                    'messaging_type' => 'RESPONSE'
+                ];
+                // Text Req
+                $requests_to_make[$key . '_txt'] = [
+                    'recipient' => ['id' => $recipient_id],
+                    'message' => ['text' => $message_text],
+                    'messaging_type' => 'RESPONSE'
+                ];
+
+            } elseif (!empty($image_url)) {
+                // Image Only
+                $requests_to_make[$key] = [
                     'recipient' => ['id' => $recipient_id],
                     'message' => [
                         'attachment' => [
@@ -156,27 +181,28 @@ class FacebookAPI
                     'messaging_type' => 'RESPONSE'
                 ];
             } elseif (!empty($message_text)) {
-                $payload = [
+                // Text Only
+                $requests_to_make[$key] = [
                     'recipient' => ['id' => $recipient_id],
                     'message' => ['text' => $message_text],
                     'messaging_type' => 'RESPONSE'
                 ];
-            } else {
-                continue; // Skip invalid
             }
 
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $endpoint);
-            curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 30); // 30s timeout per req
+            foreach ($requests_to_make as $reqKey => $payload) {
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, $endpoint);
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+                curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 30);
 
-            curl_multi_add_handle($mh, $ch);
-            $handles[$key] = $ch;
+                curl_multi_add_handle($mh, $ch);
+                $handles[$reqKey] = $ch;
+            }
         }
 
         // 2. Execute Parallel
@@ -190,15 +216,37 @@ class FacebookAPI
         foreach ($handles as $key => $ch) {
             $response = curl_multi_getcontent($ch);
             $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
             $json = json_decode($response, true);
 
-            // If failed response, we might need fallback logic (Text-only fallback logic is harder in batch)
-            // Ideally we assume success, if error, we return error.
-            if ($http_code >= 400 || isset($json['error'])) {
-                $results[$key] = $json ?? ['error' => 'HTTP ' . $http_code];
+            // Determine separate keys
+            $originalKey = $key;
+            if (strpos($key, '_img') !== false) {
+                $originalKey = str_replace('_img', '', $key);
+            } elseif (strpos($key, '_txt') !== false) {
+                $originalKey = str_replace('_txt', '', $key);
+            }
+
+            // Determine Success/Error
+            $isError = ($http_code >= 400 || isset($json['error']));
+            $resultData = $isError ? ($json ?? ['error' => 'HTTP ' . $http_code]) : $json;
+
+            // Merge logic:
+            // If we already have a result for this key (e.g. from the other part), we need to be careful.
+            // Priority: If ANY part failed, we strictly might want to show error?
+            // BETTER: If Text succeeded but Image failed, we still sent something.
+            // Let's store failures.
+
+            if (!isset($results[$originalKey])) {
+                $results[$originalKey] = $resultData;
             } else {
-                $results[$key] = $json;
+                // We have a previous result.
+                // If current is error, overwrite previous success (so we know something went wrong)
+                // OR: If current is success and previous was error, we can maybe say "partial success"?
+                // Let's keep the last one unless it's an error overwriting a success, that's tricky.
+                // Simple logic: If we have an error now, save it.
+                if ($isError) {
+                    $results[$originalKey] = $resultData;
+                }
             }
 
             curl_multi_remove_handle($mh, $ch);
