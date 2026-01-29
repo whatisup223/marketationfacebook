@@ -129,12 +129,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_campaign'])) {
                 list($orig_w, $orig_h) = getimagesize($target_path);
                 $max_w = 1600;
 
-                if ($orig_w > $max_w || filesize($target_path) > 500000) { // If > 500KB or Width > 1600
+                // Threshold: Optimize if width > 1600 OR Size > 200KB (More aggressive check)
+                if ($orig_w > $max_w || filesize($target_path) > 200000) {
                     $src_img = null;
-                    if ($file_ext === 'jpg' || $file_ext === 'jpeg')
-                        $src_img = @imagecreatefromjpeg($target_path);
-                    elseif ($file_ext === 'png')
-                        $src_img = @imagecreatefrompng($target_path);
+                    // Fix: Handle cases where extension doesn't match mime type
+                    $info = getimagesize($target_path);
+                    $mime = $info['mime'];
+
+                    if ($mime == 'image/jpeg')
+                        $src_img = imagecreatefromjpeg($target_path);
+                    elseif ($mime == 'image/png')
+                        $src_img = imagecreatefrompng($target_path);
+                    elseif ($mime == 'image/gif')
+                        $src_img = imagecreatefromgif($target_path);
 
                     if ($src_img) {
                         $new_w = $orig_w;
@@ -144,30 +151,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_campaign'])) {
                         if ($orig_w > $max_w) {
                             $ratio = $max_w / $orig_w;
                             $new_w = $max_w;
-                            $new_h = $orig_h * $ratio;
+                            $new_h = intval($orig_h * $ratio);
                         }
 
                         $dst_img = imagecreatetruecolor($new_w, $new_h);
 
-                        // Maintain transparency for PNG
-                        if ($file_ext === 'png') {
+                        // Maintain transparency for PNG stuff
+                        if ($mime == 'image/png' || $mime == 'image/gif') {
                             imagealphablending($dst_img, false);
                             imagesavealpha($dst_img, true);
                             $transparent = imagecolorallocatealpha($dst_img, 255, 255, 255, 127);
                             imagefilledrectangle($dst_img, 0, 0, $new_w, $new_h, $transparent);
+                        } else {
+                            // Fill white background for JPEGs just in case
+                            $white = imagecolorallocate($dst_img, 255, 255, 255);
+                            imagefilledrectangle($dst_img, 0, 0, $new_w, $new_h, $white);
                         }
 
                         imagecopyresampled($dst_img, $src_img, 0, 0, 0, 0, $new_w, $new_h, $orig_w, $orig_h);
 
                         // Overwrite original with compressed version
-                        if ($file_ext === 'png') {
-                            imagepng($dst_img, $target_path, 8); // Quality 0-9 (8 is good compression)
+                        if ($mime == 'image/png') {
+                            // PNG Compression 0-9. 9 is slowest but smallest size.
+                            imagepng($dst_img, $target_path, 9);
                         } else {
-                            imagejpeg($dst_img, $target_path, 80); // Quality 80% (Great balance)
+                            // JPG: 60 is aggressive but acceptable for chat apps
+                            imagejpeg($dst_img, $target_path, 60);
                         }
 
                         imagedestroy($src_img);
                         imagedestroy($dst_img);
+
+                        // Clear cache so PHP sees new file size
+                        clearstatcache();
                     }
                 }
             } catch (Exception $e) { /* Ignore compression errors, keep original */
