@@ -41,7 +41,7 @@
                 </a>
             <?php endif; ?>
             <?php if (getSetting('social_messenger')): ?>
-                <?php 
+                <?php
                 $msgr_link = getSetting('social_messenger');
                 if (!preg_match("~^(?:f|ht)tps?://~i", $msgr_link)) {
                     $msgr_link = "https://m.me/" . $msgr_link;
@@ -50,7 +50,8 @@
                 <a href="<?php echo $msgr_link; ?>" target="_blank"
                     class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 hover:bg-[#00B2FF] hover:text-white transition-all duration-300 group">
                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 2C6.477 2 2 6.145 2 11.258c0 2.912 1.452 5.513 3.717 7.21v3.532c0 .248.188.468.433.497l.067.003c.18 0 .344-.092.443-.242L8.62 19.38c.15.207.308.406.474.596 1.157.653 2.477 1.022 3.882 1.022 5.523 0 10-4.145 10-9.258C22 6.145 17.523 2 12 2zm1.026 12.185l-2.454-2.62-4.787 2.62 5.263-5.592 2.52 2.62 4.717-2.62-5.259 5.592z" />
+                        <path
+                            d="M12 2C6.477 2 2 6.145 2 11.258c0 2.912 1.452 5.513 3.717 7.21v3.532c0 .248.188.468.433.497l.067.003c.18 0 .344-.092.443-.242L8.62 19.38c.15.207.308.406.474.596 1.157.653 2.477 1.022 3.882 1.022 5.523 0 10-4.145 10-9.258C22 6.145 17.523 2 12 2zm1.026 12.185l-2.454-2.62-4.787 2.62 5.263-5.592 2.52 2.62 4.717-2.62-5.259 5.592z" />
                     </svg>
                 </a>
             <?php endif; ?>
@@ -153,21 +154,16 @@
                     <?php echo date('Y'); ?> صنع بكل <span class="text-red-500">❤️</span> بواسطة <a
                         href="https://facebook.com/marketati0n/" target="_blank"
                         class="text-indigo-400 hover:text-white transition-colors font-bold">ماركتيشن</a>
-                <?php else: ?>
-                    All rights reserved <strong class="text-white"><?php echo __('site_name'); ?></strong>
-                    <span title="Verified System"
-                        class="text-blue-500 bg-blue-500/10 rounded-full px-2 py-0.5 text-[10px] inline-flex items-center gap-1 border border-blue-500/20">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        <?php echo __('verified'); ?>
-                    </span>
-                    <?php echo date('Y'); ?> Made with <span class="text-red-500">❤️</span> by <a
-                        href="https://facebook.com/marketati0n/" target="_blank"
-                        class="text-indigo-400 hover:text-white transition-colors font-bold">Marketation</a>
                 <?php endif; ?>
             </p>
+
+            <div class="mt-4 flex justify-center space-x-6 rtl:space-x-reverse text-xs text-gray-600">
+                <a href="<?php echo $prefix; ?>privacy.php"
+                    class="hover:text-indigo-400 transition-colors"><?php echo __('privacy_policy'); ?></a>
+                <span class="text-gray-800">•</span>
+                <a href="<?php echo $prefix; ?>terms.php"
+                    class="hover:text-indigo-400 transition-colors"><?php echo __('terms_of_service'); ?></a>
+            </div>
 
         </div>
     </div>

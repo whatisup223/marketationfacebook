@@ -300,6 +300,43 @@ class FacebookAPI
         return $this->makeRequest("$page_id/conversations", $params, $access_token);
     }
 
+    /**
+     * Reply to a specific comment
+     */
+    public function replyToComment($comment_id, $message, $access_token)
+    {
+        $endpoint = $comment_id . '/comments';
+        $params = [
+            'message' => $message
+        ];
+        return $this->makeRequest($endpoint, $params, $access_token, 'POST');
+    }
+
+    /**
+     * Hide or Unhide a comment
+     */
+    public function hideComment($comment_id, $access_token, $status = true)
+    {
+        $endpoint = $comment_id;
+        $params = [
+            'is_hidden' => $status
+        ];
+        return $this->makeRequest($endpoint, $params, $access_token, 'POST');
+    }
+
+    /**
+     * Send Private Reply to Comment
+     */
+    public function replyPrivateToComment($comment_id, $message, $access_token)
+    {
+        $endpoint = 'me/messages';
+        $params = [
+            'recipient' => ['comment_id' => $comment_id],
+            'message' => ['text' => $message]
+        ];
+        return $this->makeRequest($endpoint, $params, $access_token, 'POST');
+    }
+
     public function debugToken($input_token, $app_access_token)
     {
         return $this->makeRequest('debug_token', ['input_token' => $input_token], $app_access_token);
