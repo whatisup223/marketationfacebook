@@ -123,6 +123,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_campaign'])) {
         $target_path = $upload_dir . $file_name;
 
         if (move_uploaded_file($_FILES['image_file']['tmp_name'], $target_path)) {
+            // COMPRESSION & OPTIMIZATION (Speed-UP)
+            try {
+                // Adjust max dimensions if too large (e.g. > 1600px width)
+                list($orig_w, $orig_h) = getimagesize($target_path);
+                $max_w = 1600;
+
+                if ($orig_w > $max_w || filesize($target_path) > 500000) { // If > 500KB or Width > 1600
+                    $src_img = null;
+                    if ($file_ext === 'jpg' || $file_ext === 'jpeg')
+                        $src_img = @imagecreatefromjpeg($target_path);
+                    elseif ($file_ext === 'png')
+                        $src_img = @imagecreatefrompng($target_path);
+
+                    if ($src_img) {
+                        $new_w = $orig_w;
+                        $new_h = $orig_h;
+
+                        // Resize logic
+                        if ($orig_w > $max_w) {
+                            $ratio = $max_w / $orig_w;
+                            $new_w = $max_w;
+                            $new_h = $orig_h * $ratio;
+                        }
+
+                        $dst_img = imagecreatetruecolor($new_w, $new_h);
+
+                        // Maintain transparency for PNG
+                        if ($file_ext === 'png') {
+                            imagealphablending($dst_img, false);
+                            imagesavealpha($dst_img, true);
+                            $transparent = imagecolorallocatealpha($dst_img, 255, 255, 255, 127);
+                            imagefilledrectangle($dst_img, 0, 0, $new_w, $new_h, $transparent);
+                        }
+
+                        imagecopyresampled($dst_img, $src_img, 0, 0, 0, 0, $new_w, $new_h, $orig_w, $orig_h);
+
+                        // Overwrite original with compressed version
+                        if ($file_ext === 'png') {
+                            imagepng($dst_img, $target_path, 8); // Quality 0-9 (8 is good compression)
+                        } else {
+                            imagejpeg($dst_img, $target_path, 80); // Quality 80% (Great balance)
+                        }
+
+                        imagedestroy($src_img);
+                        imagedestroy($dst_img);
+                    }
+                }
+            } catch (Exception $e) { /* Ignore compression errors, keep original */
+            }
+
             // Get the absolute URL or relative path for the frontend
             $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
             $host = $_SERVER['HTTP_HOST'];
