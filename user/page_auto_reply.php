@@ -22,7 +22,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <div class="flex h-screen bg-gray-900 font-sans overflow-hidden" x-data="autoReplyApp()">
     <?php include '../includes/user_sidebar.php'; ?>
 
-    <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-900/50 backdrop-blur-md h-full relative p-6">
+    <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-900/50 backdrop-blur-md h-full relative p-6 pb-24 no-scrollbar">
 
         <!-- Header -->
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
@@ -517,6 +517,17 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 </div>
 
 <style>
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .no-scrollbar {
+        -ms-overflow-style: none;
+        /* IE and Edge */
+        scrollbar-width: none;
+        /* Firefox */
+    }
+
     .messenger-scrollbar::-webkit-scrollbar {
         width: 4px;
     }
