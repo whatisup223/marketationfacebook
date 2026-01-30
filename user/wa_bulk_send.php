@@ -61,6 +61,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['start_campaign'])) {
             $fileContent = file_get_contents($csvFile);
 
             if ($fileContent !== false) {
+                // HANDLE ENCODING ISSUES (Fix for Excel CSVs/UTF-16)
+                // If null bytes are detected, it's likely UTF-16/Wide char
+                if (strpos($fileContent, "\x00") !== false) {
+                    $encoding = mb_detect_encoding($fileContent, ['UTF-16LE', 'UTF-16BE', 'UCS-2LE', 'UCS-2BE'], true);
+                    if ($encoding) {
+                        $fileContent = mb_convert_encoding($fileContent, 'UTF-8', $encoding);
+                    } else {
+                        // Fallback: Remove null bytes to make it ASCII-compatible for digits
+                        $fileContent = str_replace("\x00", "", $fileContent);
+                    }
+                }
+
                 // Extract sequences of 10 to 15 digits
                 // This accounts for various separators (comma, newline, space, semicolon)
                 // and ignores surrounding text/headers implicitly.
