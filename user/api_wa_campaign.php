@@ -146,6 +146,14 @@ try {
                 $user_settings = $user_stmt->fetch(PDO::FETCH_ASSOC);
 
                 $selected_accounts = json_decode($campaign['selected_accounts'] ?: '[]', true);
+
+                // Fallback: If no accounts selected in campaign, use ALL connected accounts for this user
+                if (empty($selected_accounts)) {
+                    $fallback_stmt = $pdo->prepare("SELECT id FROM wa_accounts WHERE user_id = ? AND status = 'connected'");
+                    $fallback_stmt->execute([$user_id]);
+                    $selected_accounts = $fallback_stmt->fetchAll(PDO::FETCH_COLUMN);
+                }
+
                 if (!empty($selected_accounts)) {
                     $account_id = $selected_accounts[$campaign['current_account_index'] % count($selected_accounts)];
 
