@@ -394,7 +394,10 @@ require_once __DIR__ . '/../includes/header.php';
                                 </svg>
                             </div>
                             <div>
-                                <h3 class="text-xl font-bold text-white"><?php echo __('wa_select_accounts'); ?></h3>
+                                <h3 class="text-xl font-bold text-white">
+                                    <span x-show="gateway === 'qr'"><?php echo __('wa_select_accounts'); ?></span>
+                                    <span x-show="gateway !== 'qr'"><?php echo __('api_status'); ?></span>
+                                </h3>
                                 <p class="text-xs text-gray-500 mt-1"
                                     x-text="gateway === 'qr' ? '<?php echo __('wa_select_qr_accs'); ?>' : '<?php echo __('wa_official_api_info'); ?>'">
                                 </p>
