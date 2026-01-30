@@ -249,45 +249,78 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <!-- Comments Thread -->
                             <div class="flex-1 overflow-y-auto pr-1 messenger-scrollbar space-y-4">
 
-                                <!-- Test Comment -->
-                                <div class="relative group/comment transition-all duration-300">
-                                    <div class="flex gap-2">
-                                        <div
-                                            class="w-8 h-8 rounded-full bg-gradient-to-tr from-yellow-400 to-orange-500 flex-shrink-0 border border-black/20">
-                                        </div>
-                                        <div class="flex-1 max-w-[90%]">
+                                <!-- Dynamic Simulated Comments -->
+                                <div class="space-y-4">
+                                    <!-- Phone Example -->
+                                    <template x-if="rules.hide_phones">
+                                        <div class="flex gap-2 animate-in slide-in-from-left-4 duration-300">
                                             <div
-                                                class="bg-[#3a3b3c] rounded-2xl px-3 py-2 inline-block text-[#e4e6eb] relative">
-                                                <div class="font-bold text-xs mb-0.5 cursor-pointer hover:underline">
-                                                    <?php echo __('customer_name_sample'); ?>
-                                                </div>
-                                                <input type="text" x-model="testComment"
-                                                    placeholder="<?php echo __('write_here_preview'); ?>"
-                                                    class="bg-transparent border-none p-0 text-[13px] text-white focus:ring-0 w-full">
-
-                                                <!-- Red Overlay if violated -->
-                                                <template x-if="moderationResult.violated">
-                                                    <div
-                                                        class="absolute inset-0 bg-red-600/95 rounded-2xl flex flex-col items-center justify-center p-2 text-white text-center">
-                                                        <span class="text-[12px] font-black mb-1"
-                                                            x-text="moderationResult.reason"></span>
-                                                        <div class="h-px w-8 bg-white/20 mb-1"></div>
+                                                class="w-8 h-8 rounded-full bg-blue-500 flex-shrink-0 border border-black/20 flex items-center justify-center text-white text-xs">
+                                                A</div>
+                                            <div class="flex-1">
+                                                <div
+                                                    class="bg-[#3a3b3c] rounded-2xl px-3 py-2 inline-block text-[#e4e6eb] relative">
+                                                    <div class="font-bold text-xs mb-0.5">Ahmed Ali</div>
+                                                    <div class="text-[13px]">ممكن تكلمني على 01012345678؟</div>
+                                                    <div class="absolute inset-0 rounded-2xl flex flex-col items-center justify-center p-2 text-white text-center"
+                                                        :class="rules.action_type === 'hide' ? 'bg-indigo-950/80 backdrop-blur-[2px] border border-indigo-500/30' : 'bg-red-600 shadow-[0_0_20px_rgba(220,38,38,0.5)]'">
                                                         <span
-                                                            class="text-[9px] font-bold uppercase tracking-widest opacity-80"
+                                                            class="text-[10px] font-black"><?php echo __('phone_violation'); ?></span>
+                                                        <span class="text-[8px] font-bold uppercase opacity-80"
                                                             x-text="rules.action_type === 'hide' ? '<?php echo __('bot_action_hide'); ?>' : '<?php echo __('bot_action_delete'); ?>'"></span>
                                                     </div>
-                                                </template>
-                                            </div>
-                                            <div
-                                                class="flex flex-wrap gap-4 mt-1 ml-1 text-[11px] font-bold text-[#b0b3b8] items-center">
-                                                <span
-                                                    class="cursor-pointer hover:underline"><?php echo __('fb_like'); ?></span>
-                                                <span
-                                                    class="cursor-pointer hover:underline"><?php echo __('fb_reply'); ?></span>
-                                                <span><?php echo __('fb_time_2m'); ?></span>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    </template>
+
+                                    <!-- Link Example -->
+                                    <template x-if="rules.hide_links">
+                                        <div class="flex gap-2 animate-in slide-in-from-left-4 duration-300">
+                                            <div
+                                                class="w-8 h-8 rounded-full bg-green-500 flex-shrink-0 border border-black/20 flex items-center justify-center text-white text-xs">
+                                                S</div>
+                                            <div class="flex-1">
+                                                <div
+                                                    class="bg-[#3a3b3c] rounded-2xl px-3 py-2 inline-block text-[#e4e6eb] relative">
+                                                    <div class="font-bold text-xs mb-0.5">Sami J.</div>
+                                                    <div class="text-[13px]">Check this out: www.mysite.com</div>
+                                                    <div class="absolute inset-0 rounded-2xl flex flex-col items-center justify-center p-2 text-white text-center"
+                                                        :class="rules.action_type === 'hide' ? 'bg-indigo-950/80 backdrop-blur-[2px] border border-indigo-500/30' : 'bg-red-600 shadow-[0_0_20px_rgba(220,38,38,0.5)]'">
+                                                        <span
+                                                            class="text-[10px] font-black"><?php echo __('link_violation'); ?></span>
+                                                        <span class="text-[8px] font-bold uppercase opacity-80"
+                                                            x-text="rules.action_type === 'hide' ? '<?php echo __('bot_action_hide'); ?>' : '<?php echo __('bot_action_delete'); ?>'"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
+
+                                    <!-- Keyword Example -->
+                                    <template x-if="rules.banned_keywords && rules.banned_keywords.trim().length > 0">
+                                        <div class="flex gap-2 animate-in slide-in-from-left-4 duration-300">
+                                            <div
+                                                class="w-8 h-8 rounded-full bg-purple-500 flex-shrink-0 border border-black/20 flex items-center justify-center text-white text-xs">
+                                                M</div>
+                                            <div class="flex-1">
+                                                <div
+                                                    class="bg-[#3a3b3c] rounded-2xl px-3 py-2 inline-block text-[#e4e6eb] relative">
+                                                    <div class="font-bold text-xs mb-0.5">Mona K.</div>
+                                                    <div class="text-[13px] truncate max-w-[160px]">
+                                                        <?php echo __('simulated_keyword_comment'); ?>
+                                                    </div>
+                                                    <div class="absolute inset-0 rounded-2xl flex flex-col items-center justify-center px-4 text-white text-center"
+                                                        :class="rules.action_type === 'hide' ? 'bg-indigo-950/80 backdrop-blur-[2px] border border-indigo-500/30' : 'bg-red-600 shadow-[0_0_20px_rgba(220,38,38,0.5)]'">
+                                                        <span class="text-[10px] font-black truncate w-full"
+                                                            x-text="'<?php echo __('keyword_violation'); ?>' + rules.banned_keywords.split(/[،,]/).slice(0, 1).map(k => k.trim()) + (rules.banned_keywords.split(/[،,]/).length > 1 ? '...' : '')"></span>
+                                                        <span class="text-[8px] font-bold uppercase opacity-80"
+                                                            x-text="rules.action_type === 'hide' ? '<?php echo __('bot_action_hide'); ?>' : '<?php echo __('bot_action_delete'); ?>'"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
                                 </div>
 
                                 <!-- Summary Hint -->
@@ -431,9 +464,10 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                             x-text="log.sender_name || 'Anonymous'"></span>
                                         <span class="px-2 py-0.5 rounded-full text-[8px] font-black uppercase"
                                             :class="log.action_taken === 'hide' ? 'bg-indigo-500/20 text-indigo-400' : 'bg-red-500/20 text-red-500'"
-                                            x-text="log.action_taken"></span>
+                                            x-text="log.action_taken === 'hide' ? '<?php echo __('bot_action_hide'); ?>' : '<?php echo __('bot_action_delete'); ?>'"></span>
                                     </div>
-                                    <p class="text-xs text-gray-500 italic mt-1" x-text="log.comment_text"></p>
+                                    <p class="text-xs text-gray-500 italic mt-1 line-clamp-1" x-text="log.comment_text">
+                                    </p>
                                 </div>
                             </div>
                             <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
@@ -554,6 +588,13 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 </div>
 
 <style>
+    .line-clamp-1 {
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
     .messenger-scrollbar::-webkit-scrollbar {
         width: 4px;
     }
@@ -605,42 +646,40 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 this.$watch('rules', () => this.updateModerationResult(), { deep: true });
             },
 
-            updateModerationResult() {
-                if (!this.testComment) {
-                    this.moderationResult = { violated: false };
-                    return;
-                }
+            checkViolation(text) {
+                if (!text || typeof text !== 'string') return { violated: false };
 
                 // Keywords
                 if (this.rules.banned_keywords) {
                     const keywords = this.rules.banned_keywords.split(/[،,]/).map(k => k.trim()).filter(k => k);
                     for (let k of keywords) {
-                        if (this.testComment.toLowerCase().includes(k.toLowerCase())) {
-                            this.moderationResult = { violated: true, reason: '<?php echo __('keyword_violation'); ?>' + k };
-                            return;
+                        if (text.toLowerCase().includes(k.toLowerCase())) {
+                            return { violated: true, reason: '<?php echo __('keyword_violation'); ?>' + k };
                         }
                     }
                 }
 
                 // Phones
                 if (this.rules.hide_phones) {
-                    const phoneRegex = /(\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9})/g;
-                    if (phoneRegex.test(this.testComment)) {
-                        this.moderationResult = { violated: true, reason: '<?php echo __('phone_violation'); ?>' };
-                        return;
+                    const phoneRegex = /(\d{8,15})|(\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9})/g;
+                    if (phoneRegex.test(text)) {
+                        return { violated: true, reason: '<?php echo __('phone_violation'); ?>' };
                     }
                 }
 
                 // Links
                 if (this.rules.hide_links) {
                     const linkRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)/gi;
-                    if (linkRegex.test(this.testComment)) {
-                        this.moderationResult = { violated: true, reason: '<?php echo __('link_violation'); ?>' };
-                        return;
+                    if (linkRegex.test(text)) {
+                        return { violated: true, reason: '<?php echo __('link_violation'); ?>' };
                     }
                 }
 
-                this.moderationResult = { violated: false };
+                return { violated: false };
+            },
+
+            updateModerationResult() {
+                this.moderationResult = this.checkViolation(this.testComment);
             },
 
             copyToClipboard(text) {
