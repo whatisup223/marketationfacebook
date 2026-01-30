@@ -19,10 +19,10 @@ $stmt->execute([$_SESSION['user_id']]);
 $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
-<div class="flex h-screen bg-gray-900 font-sans overflow-hidden" x-data="autoReplyApp()">
+<div class="flex min-h-screen bg-gray-900 font-sans" x-data="autoReplyApp()">
     <?php include '../includes/user_sidebar.php'; ?>
 
-    <main class="flex-1 flex flex-col bg-gray-900/50 backdrop-blur-md h-full relative p-6 overflow-hidden">
+    <main class="flex-1 flex flex-col bg-gray-900/50 backdrop-blur-md relative p-6">
 
         <!-- Header -->
         <div class="flex-none flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
@@ -179,7 +179,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
 
         <!-- Main Body: Preview (Left) & Rules (Right) -->
-        <div class="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 pb-20">
 
             <!-- Left Side: Preview Card -->
             <div class="lg:col-span-4 order-2 lg:order-1">
@@ -280,7 +280,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </div>
 
             <!-- Right Side: Rules Area -->
-            <div class="lg:col-span-8 space-y-8 order-1 lg:order-2 h-full overflow-y-auto pr-2 messenger-scrollbar">
+            <div class="lg:col-span-8 space-y-8 order-1 lg:order-2">
 
                 <template x-if="!selectedPageId">
                     <div
@@ -432,12 +432,6 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             </template>
                         </div>
                     </div>
-                </div>
-
-                <!-- Footer Section (Inside Scrollable Area) -->
-                <div class="pt-8 pb-4 text-center text-xs text-gray-500/50">
-                    <p>&copy; <?php echo date('Y'); ?> <?php echo __('site_name'); ?>.
-                        <?php echo __('all_rights_reserved'); ?></p>
                 </div>
 
             </div>
@@ -753,6 +747,4 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 </script>
 
-</body>
-
-</html>
+<?php require_once '../includes/footer.php'; ?>
