@@ -163,9 +163,9 @@ if (isLoggedIn()) {
                 extend: {
                     fontFamily: {
                         <?php if ($lang === 'ar'): ?>
-                                                                                                                                                            sans: ['IBM Plex Sans Arabic', 'sans-serif'],
+                                                                                                                                                                        sans: ['IBM Plex Sans Arabic', 'sans-serif'],
                         <?php else: ?>
-                                                                                                                                                            sans: ['Outfit', 'sans-serif'],
+                                                                                                                                                                        sans: ['Outfit', 'sans-serif'],
                         <?php endif; ?>
                     },
                     colors: {
@@ -855,7 +855,7 @@ if (isLoggedIn()) {
                                 <div class="mt-4 pt-4 border-t border-gray-800">
                                     <a href="<?php echo isAdmin() ? $prefix . 'admin/dashboard.php' : $prefix . 'user/dashboard.php'; ?>"
                                         class="mx-0 block rounded-lg px-3 py-2.5 text-base font-bold text-center text-white bg-indigo-600 shadow-lg hover:bg-indigo-500 transition-all">
-                                        <?php echo __('dashboard'); ?>
+                                        <?php echo isAdmin() ? ($lang === 'ar' ? 'لوحة الإدارة' : 'Admin Panel') : ($lang === 'ar' ? 'لوحة التحكم' : 'Control Panel'); ?>
                                     </a>
                                 </div>
                             <?php endif; ?>
@@ -871,7 +871,7 @@ if (isLoggedIn()) {
                             <?php if (isAdmin()): ?>
                                 <h3
                                     class="text-xs font-bold text-gray-500 uppercase tracking-widest border-b border-gray-800 pb-2 mb-4 pl-3 rtl:pr-3">
-                                    <?php echo __('admin_panel'); ?>
+                                    <?php echo $lang === 'ar' ? 'لوحة الإدارة' : 'Admin Panel'; ?>
                                 </h3>
 
                                 <div class="space-y-1">
@@ -1003,7 +1003,7 @@ if (isLoggedIn()) {
                             <?php else: ?>
                                 <h3
                                     class="text-xs font-bold text-gray-500 uppercase tracking-widest border-b border-gray-800 pb-2 mb-4 pl-3 rtl:pr-3">
-                                    <?php echo __('user_panel'); ?>
+                                    <?php echo isAdmin() ? ($lang === 'ar' ? 'لوحة الإدارة' : 'Admin Panel') : ($lang === 'ar' ? 'لوحة التحكم' : 'Control Panel'); ?>
                                 </h3>
 
                                 <div class="space-y-1">
