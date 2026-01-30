@@ -6,7 +6,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 // Hardcoded target URL
-$evo_url = 'https://api.n8nmarketation.online';
+$evo_url = 'https://peaceful-numeric-utils-telecommunications.trycloudflare.com';
 
 echo "<h1>Connectivity Test (No DB)</h1>";
 echo "<p><strong>Target URL:</strong> $evo_url</p>";
