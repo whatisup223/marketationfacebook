@@ -250,8 +250,13 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                                 <!-- Red Overlay if violated -->
                                                 <template x-if="moderationResult.violated">
                                                     <div
-                                                        class="absolute inset-0 bg-red-600/90 rounded-2xl flex items-center justify-center p-2 text-[10px] font-bold text-white text-center">
-                                                        <span x-text="moderationResult.reason"></span>
+                                                        class="absolute inset-0 bg-red-600/95 rounded-2xl flex flex-col items-center justify-center p-2 text-white text-center">
+                                                        <span class="text-[12px] font-black mb-1"
+                                                            x-text="moderationResult.reason"></span>
+                                                        <div class="h-px w-8 bg-white/20 mb-1"></div>
+                                                        <span
+                                                            class="text-[9px] font-bold uppercase tracking-widest opacity-80"
+                                                            x-text="rules.action_type === 'hide' ? '<?php echo __('bot_action_hide'); ?>' : '<?php echo __('bot_action_delete'); ?>'"></span>
                                                     </div>
                                                 </template>
                                             </div>
@@ -325,7 +330,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <div>
                                     <label
                                         class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-3"><?php echo __('banned_keywords'); ?></label>
-                                    <textarea x-model="rules.banned_keywords" rows="5"
+                                    <textarea x-model="rules.banned_keywords" @input="updateModerationResult()" rows="5"
                                         class="w-full bg-black/40 border border-white/10 rounded-2xl p-5 text-white placeholder-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm leading-relaxed"
                                         placeholder="الكلمات الممنوعة، افصل بينها بفاصلة..."></textarea>
                                 </div>
@@ -337,7 +342,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-3"><?php echo __('smart_filtering'); ?></label>
 
                                 <div class="space-y-3">
-                                    <div @click="rules.hide_phones = !rules.hide_phones"
+                                    <div @click="rules.hide_phones = !rules.hide_phones; updateModerationResult()"
                                         class="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 cursor-pointer hover:bg-white/10 transition-all">
                                         <span
                                             class="text-sm font-bold text-white"><?php echo __('hide_phones'); ?></span>
@@ -351,7 +356,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                         </div>
                                     </div>
 
-                                    <div @click="rules.hide_links = !rules.hide_links"
+                                    <div @click="rules.hide_links = !rules.hide_links; updateModerationResult()"
                                         class="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 cursor-pointer hover:bg-white/10 transition-all">
                                         <span
                                             class="text-sm font-bold text-white"><?php echo __('hide_links'); ?></span>
@@ -370,12 +375,12 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     <label
                                         class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-3"><?php echo __('action_to_take'); ?></label>
                                     <div class="flex gap-2">
-                                        <button @click="rules.action_type = 'hide'"
+                                        <button @click="rules.action_type = 'hide'; updateModerationResult()"
                                             class="flex-1 py-3 px-4 rounded-xl border-2 font-bold transition-all text-xs"
                                             :class="rules.action_type === 'hide' ? 'bg-indigo-600/20 border-indigo-600 text-white' : 'bg-black/40 border-white/5 text-gray-500'">
                                             <?php echo __('hide_action'); ?>
                                         </button>
-                                        <button @click="rules.action_type = 'delete'"
+                                        <button @click="rules.action_type = 'delete'; updateModerationResult()"
                                             class="flex-1 py-3 px-4 rounded-xl border-2 font-bold transition-all text-xs"
                                             :class="rules.action_type === 'delete' ? 'bg-red-600/20 border-red-600 text-white' : 'bg-black/40 border-white/5 text-gray-500'">
                                             <?php echo __('delete_action'); ?>
@@ -581,7 +586,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     const keywords = this.rules.banned_keywords.split(/[،,]/).map(k => k.trim()).filter(k => k);
                     for (let k of keywords) {
                         if (this.testComment.toLowerCase().includes(k.toLowerCase())) {
-                            this.moderationResult = { violated: true, reason: 'كلمة محظورة: ' + k };
+                            this.moderationResult = { violated: true, reason: '<?php echo __('keyword_violation'); ?>' + k };
                             return;
                         }
                     }
@@ -591,7 +596,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 if (this.rules.hide_phones) {
                     const phoneRegex = /(\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9})/g;
                     if (phoneRegex.test(this.testComment)) {
-                        this.moderationResult = { violated: true, reason: 'رقم هاتف' };
+                        this.moderationResult = { violated: true, reason: '<?php echo __('phone_violation'); ?>' };
                         return;
                     }
                 }
@@ -600,7 +605,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 if (this.rules.hide_links) {
                     const linkRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)/gi;
                     if (linkRegex.test(this.testComment)) {
-                        this.moderationResult = { violated: true, reason: 'رابط (URL)' };
+                        this.moderationResult = { violated: true, reason: '<?php echo __('link_violation'); ?>' };
                         return;
                     }
                 }

@@ -217,7 +217,7 @@ if ($action === 'subscribe_page' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $fb = new FacebookAPI();
         $res = $fb->subscribeApp($page_id, $page['page_access_token']);
         if (isset($res['success']) && $res['success']) {
-            echo json_encode(['status' => 'success', 'message' => 'Page successfully protected!']);
+            echo json_encode(['status' => 'success', 'message' => __('page_protected_success')]);
         } else {
             $err = isset($res['error']['message']) ? $res['error']['message'] : json_encode($res);
             echo json_encode(['status' => 'error', 'message' => 'FB Error: ' . $err]);
@@ -246,7 +246,7 @@ if ($action === 'unsubscribe_page' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $fb = new FacebookAPI();
         $res = $fb->makeRequest("$page_id/subscribed_apps", [], $page['page_access_token'], 'DELETE');
         if (isset($res['success']) && $res['success']) {
-            echo json_encode(['status' => 'success', 'message' => 'Page protection stopped!']);
+            echo json_encode(['status' => 'success', 'message' => __('page_protection_stopped')]);
         } else {
             $err = isset($res['error']['message']) ? $res['error']['message'] : json_encode($res);
             echo json_encode(['status' => 'error', 'message' => 'FB Error: ' . $err]);
