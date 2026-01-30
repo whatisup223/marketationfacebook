@@ -342,7 +342,7 @@ require_once __DIR__ . '/../includes/header.php';
 
             <!-- Minified Account Selection Card -->
             <div class="xl:w-[450px] glass-card rounded-3xl border border-white/5 p-4 flex flex-col justify-center"
-                x-show="gateway === 'qr'" x-cloak>
+                x-show="gateway === 'qr'">
                 <div class="flex items-center justify-between mb-3 px-2">
                     <h3 class="text-sm font-bold text-white flex items-center gap-2">
                         <span
@@ -468,10 +468,10 @@ require_once __DIR__ . '/../includes/header.php';
                                 class="px-4 py-2 rounded-lg text-xs font-bold transition-all">
                                 <?php echo __('wa_paste_numbers'); ?>
                             </button>
-                            <button type="button" @click="importMode = 'csv'"
-                                :class="importMode === 'csv' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'"
+                            <button type="button" @click="importMode = 'txt'"
+                                :class="importMode === 'txt' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'"
                                 class="px-4 py-2 rounded-lg text-xs font-bold transition-all">
-                                <?php echo __('wa_import_csv'); ?>
+                                <?php echo __('wa_import_txt'); ?>
                             </button>
                         </div>
                     </div>
@@ -483,7 +483,7 @@ require_once __DIR__ . '/../includes/header.php';
                         <p class="mt-2 text-xs text-gray-500"><?php echo __('wa_numbers_hint'); ?></p>
                     </div>
 
-                    <div x-show="importMode === 'txt'" class="animate-fade-in" x-cloak>
+                    <div x-show="importMode === 'txt'" class="animate-fade-in">
                         <div
                             class="border-2 border-dashed border-white/10 rounded-2xl p-8 text-center hover:border-indigo-500/30 transition-colors cursor-pointer relative group">
                             <input type="file" name="numbers_txt" accept=".txt"
