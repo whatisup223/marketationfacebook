@@ -163,9 +163,9 @@ if (isLoggedIn()) {
                 extend: {
                     fontFamily: {
                         <?php if ($lang === 'ar'): ?>
-                                                                                                                        sans: ['IBM Plex Sans Arabic', 'sans-serif'],
+                                                                                                                            sans: ['IBM Plex Sans Arabic', 'sans-serif'],
                         <?php else: ?>
-                                                                                                                        sans: ['Outfit', 'sans-serif'],
+                                                                                                                            sans: ['Outfit', 'sans-serif'],
                         <?php endif; ?>
                     },
                     colors: {
@@ -416,61 +416,61 @@ if (isLoggedIn()) {
                             <span
                                 class="absolute -bottom-1 left-0 w-0 h-0.5 bg-indigo-500 transition-all group-hover:w-full"></span>
                         </a>
-                        <a href="#about-us"
+                        <a href="<?php echo $prefix; ?>index.php#about-us"
                             class="text-[12px] 2xl:text-sm font-medium text-gray-300 hover:text-white transition-colors relative group whitespace-nowrap px-1">
                             <?php echo __('about_us'); ?>
                             <span
                                 class="absolute -bottom-1 left-0 w-0 h-0.5 bg-indigo-500 transition-all group-hover:w-full"></span>
                         </a>
-                        <a href="#features"
+                        <a href="<?php echo $prefix; ?>index.php#features"
                             class="text-[12px] 2xl:text-sm font-medium text-gray-300 hover:text-white transition-colors relative group whitespace-nowrap px-1">
                             <?php echo __('features'); ?>
                             <span
                                 class="absolute -bottom-1 left-0 w-0 h-0.5 bg-indigo-500 transition-all group-hover:w-full"></span>
                         </a>
-                        <a href="#services"
+                        <a href="<?php echo $prefix; ?>index.php#services"
                             class="text-[12px] 2xl:text-sm font-medium text-gray-300 hover:text-white transition-colors relative group whitespace-nowrap px-1">
                             <?php echo __('services_section'); ?>
                             <span
                                 class="absolute -bottom-1 left-0 w-0 h-0.5 bg-indigo-500 transition-all group-hover:w-full"></span>
                         </a>
-                        <a href="#how-it-works"
+                        <a href="<?php echo $prefix; ?>index.php#how-it-works"
                             class="text-[12px] 2xl:text-sm font-medium text-gray-300 hover:text-white transition-colors relative group whitespace-nowrap px-1">
                             <?php echo __('how_it_works'); ?>
                             <span
                                 class="absolute -bottom-1 left-0 w-0 h-0.5 bg-indigo-500 transition-all group-hover:w-full"></span>
                         </a>
-                        <a href="#portfolio"
+                        <a href="<?php echo $prefix; ?>index.php#portfolio"
                             class="text-[12px] 2xl:text-sm font-medium text-gray-300 hover:text-white transition-colors relative group whitespace-nowrap px-1">
                             <?php echo __('portfolio_section'); ?>
                             <span
                                 class="absolute -bottom-1 left-0 w-0 h-0.5 bg-indigo-500 transition-all group-hover:w-full"></span>
                         </a>
-                        <a href="#tool-showcase"
+                        <a href="<?php echo $prefix; ?>index.php#tool-showcase"
                             class="text-[12px] 2xl:text-sm font-medium text-gray-300 hover:text-white transition-colors relative group whitespace-nowrap px-1">
                             <?php echo __('extraction_tools'); ?>
                             <span
                                 class="absolute -bottom-1 left-0 w-0 h-0.5 bg-indigo-500 transition-all group-hover:w-full"></span>
                         </a>
-                        <a href="#pricing"
+                        <a href="<?php echo $prefix; ?>index.php#pricing"
                             class="text-[12px] 2xl:text-sm font-medium text-gray-300 hover:text-white transition-colors relative group whitespace-nowrap px-1">
                             <?php echo __('pricing'); ?>
                             <span
                                 class="absolute -bottom-1 left-0 w-0 h-0.5 bg-indigo-500 transition-all group-hover:w-full"></span>
                         </a>
-                        <a href="#testimonials"
+                        <a href="<?php echo $prefix; ?>index.php#testimonials"
                             class="text-[12px] 2xl:text-sm font-medium text-gray-300 hover:text-white transition-colors relative group whitespace-nowrap px-1">
                             <?php echo __('testimonials'); ?>
                             <span
                                 class="absolute -bottom-1 left-0 w-0 h-0.5 bg-indigo-500 transition-all group-hover:w-full"></span>
                         </a>
-                        <a href="#faqs"
+                        <a href="<?php echo $prefix; ?>index.php#faqs"
                             class="text-[12px] 2xl:text-sm font-medium text-gray-300 hover:text-white transition-colors relative group whitespace-nowrap px-1">
                             <?php echo __('faqs'); ?>
                             <span
                                 class="absolute -bottom-1 left-0 w-0 h-0.5 bg-indigo-500 transition-all group-hover:w-full"></span>
                         </a>
-                        <a href="#contact"
+                        <a href="<?php echo $prefix; ?>index.php#contact"
                             class="text-[12px] 2xl:text-sm font-medium text-gray-300 hover:text-white transition-colors relative group whitespace-nowrap px-1">
                             <?php echo __('contact'); ?>
                             <span
@@ -804,34 +804,44 @@ if (isLoggedIn()) {
                             <a href="<?php echo $prefix; ?>index.php" @click="mobileMenu = false"
                                 class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-white hover:bg-gray-800"><?php echo __('home'); ?></a>
 
-                            <a href="#about-us" @click="mobileMenu = false"
+                            <a href="<?php echo $prefix; ?>index.php#about-us"
+                                @click.prevent="mobileMenu = false; $nextTick(() => { const el = document.getElementById('about-us'); if(el) { el.scrollIntoView({behavior: 'smooth'}); } else { window.location.href = '<?php echo $prefix; ?>index.php#about-us'; } })"
                                 class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-300 hover:text-white hover:bg-gray-800"><?php echo __('about_us'); ?></a>
 
-                            <a href="#features" @click="mobileMenu = false"
+                            <a href="<?php echo $prefix; ?>index.php#features"
+                                @click.prevent="mobileMenu = false; $nextTick(() => { const el = document.getElementById('features'); if(el) { el.scrollIntoView({behavior: 'smooth'}); } else { window.location.href = '<?php echo $prefix; ?>index.php#features'; } })"
                                 class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-300 hover:text-white hover:bg-gray-800"><?php echo __('features'); ?></a>
 
-                            <a href="#services" @click="mobileMenu = false"
+                            <a href="<?php echo $prefix; ?>index.php#services"
+                                @click.prevent="mobileMenu = false; $nextTick(() => { const el = document.getElementById('services'); if(el) { el.scrollIntoView({behavior: 'smooth'}); } else { window.location.href = '<?php echo $prefix; ?>index.php#services'; } })"
                                 class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-300 hover:text-white hover:bg-gray-800"><?php echo __('services_section'); ?></a>
 
-                            <a href="#how-it-works" @click="mobileMenu = false"
+                            <a href="<?php echo $prefix; ?>index.php#how-it-works"
+                                @click.prevent="mobileMenu = false; $nextTick(() => { const el = document.getElementById('how-it-works'); if(el) { el.scrollIntoView({behavior: 'smooth'}); } else { window.location.href = '<?php echo $prefix; ?>index.php#how-it-works'; } })"
                                 class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-300 hover:text-white hover:bg-gray-800"><?php echo __('how_it_works'); ?></a>
 
-                            <a href="#portfolio" @click="mobileMenu = false"
+                            <a href="<?php echo $prefix; ?>index.php#portfolio"
+                                @click.prevent="mobileMenu = false; $nextTick(() => { const el = document.getElementById('portfolio'); if(el) { el.scrollIntoView({behavior: 'smooth'}); } else { window.location.href = '<?php echo $prefix; ?>index.php#portfolio'; } })"
                                 class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-300 hover:text-white hover:bg-gray-800"><?php echo __('portfolio_section'); ?></a>
 
-                            <a href="#tool-showcase" @click="mobileMenu = false"
+                            <a href="<?php echo $prefix; ?>index.php#tool-showcase"
+                                @click.prevent="mobileMenu = false; $nextTick(() => { const el = document.getElementById('tool-showcase'); if(el) { el.scrollIntoView({behavior: 'smooth'}); } else { window.location.href = '<?php echo $prefix; ?>index.php#tool-showcase'; } })"
                                 class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-300 hover:text-white hover:bg-gray-800"><?php echo __('extraction_tools'); ?></a>
 
-                            <a href="#pricing" @click="mobileMenu = false"
+                            <a href="<?php echo $prefix; ?>index.php#pricing"
+                                @click.prevent="mobileMenu = false; $nextTick(() => { const el = document.getElementById('pricing'); if(el) { el.scrollIntoView({behavior: 'smooth'}); } else { window.location.href = '<?php echo $prefix; ?>index.php#pricing'; } })"
                                 class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-300 hover:text-white hover:bg-gray-800"><?php echo __('pricing'); ?></a>
 
-                            <a href="#testimonials" @click="mobileMenu = false"
+                            <a href="<?php echo $prefix; ?>index.php#testimonials"
+                                @click.prevent="mobileMenu = false; $nextTick(() => { const el = document.getElementById('testimonials'); if(el) { el.scrollIntoView({behavior: 'smooth'}); } else { window.location.href = '<?php echo $prefix; ?>index.php#testimonials'; } })"
                                 class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-300 hover:text-white hover:bg-gray-800"><?php echo __('testimonials'); ?></a>
 
-                            <a href="#faqs" @click="mobileMenu = false"
+                            <a href="<?php echo $prefix; ?>index.php#faqs"
+                                @click.prevent="mobileMenu = false; $nextTick(() => { const el = document.getElementById('faqs'); if(el) { el.scrollIntoView({behavior: 'smooth'}); } else { window.location.href = '<?php echo $prefix; ?>index.php#faqs'; } })"
                                 class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-300 hover:text-white hover:bg-gray-800"><?php echo __('faqs'); ?></a>
 
-                            <a href="#contact" @click="mobileMenu = false"
+                            <a href="<?php echo $prefix; ?>index.php#contact"
+                                @click.prevent="mobileMenu = false; $nextTick(() => { const el = document.getElementById('contact'); if(el) { el.scrollIntoView({behavior: 'smooth'}); } else { window.location.href = '<?php echo $prefix; ?>index.php#contact'; } })"
                                 class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-300 hover:text-white hover:bg-gray-800"><?php echo __('contact'); ?></a>
 
                             <?php if (isLoggedIn()): ?>
