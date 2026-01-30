@@ -229,7 +229,7 @@ require_once __DIR__ . '/../includes/header.php';
 
             <!-- Minified Account Selection Card -->
             <div class="xl:w-[450px] glass-card rounded-3xl border border-white/5 p-4 flex flex-col justify-center"
-                x-show="gateway === 'qr'" x-transition>
+                x-show="gateway === 'qr'" x-cloak>
                 <div class="flex items-center justify-between mb-3 px-2">
                     <h3 class="text-sm font-bold text-white flex items-center gap-2">
                         <span
@@ -294,7 +294,7 @@ require_once __DIR__ . '/../includes/header.php';
                     <div class="flex flex-col gap-4">
                         <label
                             class="text-xs font-bold text-gray-500 uppercase tracking-widest pl-2"><?php echo __('select_gateway'); ?></label>
-                        <select name="gateway_mode" x-model="gateway" @change="gateway = $event.target.value"
+                        <select name="gateway_mode" x-model="gateway"
                             class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white text-lg font-bold focus:outline-none focus:border-indigo-500/50 transition-all font-sans appearance-none cursor-pointer">
                             <option value="qr" class="bg-gray-900 text-white">Evolution API (QR Scan)</option>
                             <option value="twilio" class="bg-gray-900 text-white">Twilio API</option>
