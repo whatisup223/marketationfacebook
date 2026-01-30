@@ -183,7 +183,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             <!-- Left Side: Preview Card -->
             <div class="lg:col-span-4 order-2 lg:order-1">
-                <div class="sticky top-8 space-y-6">
+                <div class="sticky top-24 space-y-6">
                     <div
                         class="glass-card rounded-[32px] border border-white/10 shadow-2xl overflow-hidden bg-[#18191a]">
                         <!-- Title Bar -->
@@ -371,10 +371,10 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             </button>
                         </div>
 
-                        <div class="grid grid-cols-1 gap-4">
+                        <div class="grid grid-cols-1 gap-4 max-h-[600px] overflow-y-auto pr-2 messenger-scrollbar">
                             <template x-for="rule in rules" :key="rule.id">
                                 <div
-                                    class="glass-panel p-6 rounded-2xl border border-white/5 bg-gray-800/20 hover:bg-gray-800/40 hover:border-indigo-500/30 transition-all flex justify-between items-center group">
+                                    class="glass-panel p-6 rounded-2xl border border-white/5 bg-gray-800/20 hover:bg-gray-800/40 hover:border-indigo-500/30 transition-all flex justify-between items-center group shrink-0">
                                     <div class="flex items-center gap-4">
                                         <div class="p-3 bg-indigo-500/10 rounded-2xl text-indigo-400">
                                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
