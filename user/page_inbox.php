@@ -579,15 +579,15 @@ require_once __DIR__ . '/../includes/header.php';
 
                     <!-- Row 2: Control Hub (Ultra-Responsive) -->
                     <div
-                        class="glass-card bg-[#0f172a]/60 border border-white/10 rounded-2xl p-3 md:p-2 shadow-xl relative mb-4 w-full">
-                        <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-4 md:gap-6">
+                        class="glass-card bg-[#0f172a]/60 border border-white/10 rounded-2xl p-3 md:p-4 shadow-xl relative mb-4 w-full">
+                        <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-6">
 
                             <!-- 1. Extraction Mode -->
                             <div
                                 class="bg-black/40 rounded-xl p-1 flex items-center shrink-0 border border-white/5 w-full lg:w-auto">
                                 <button type="button" onclick="setMode('limit')" id="btn-mode-limit"
-                                    class="flex-1 lg:flex-none px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 bg-indigo-600 text-white shadow-lg">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    class="flex-1 lg:px-6 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 bg-indigo-600 text-white shadow-lg">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z">
                                         </path>
@@ -595,8 +595,8 @@ require_once __DIR__ . '/../includes/header.php';
                                     <span class="whitespace-nowrap"><?php echo __('extract_limit_option'); ?></span>
                                 </button>
                                 <button type="button" onclick="setMode('all')" id="btn-mode-all"
-                                    class="flex-1 lg:flex-none px-4 py-2 rounded-lg text-xs font-bold text-gray-400 hover:text-white transition-all flex items-center justify-center gap-2">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    class="flex-1 lg:px-6 py-2 rounded-lg text-xs font-bold text-gray-400 hover:text-white transition-all flex items-center justify-center gap-2">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M19 11v-2a2 2 0 00-2-2H7a2 2 0 00-2 2v2m14 0v2a2 2 0 01-2 2h-1m-4 0h-4m9 0H7a2 2 0 01-2-2v-2m14 0V9a2 2 0 00-2-2M5 11V9a1.5 1.5 0 011.5-1.5h11A1.5 1.5 0 0119 9v1">
                                         </path>
@@ -606,29 +606,29 @@ require_once __DIR__ . '/../includes/header.php';
                             </div>
 
                             <!-- 2. Inputs Group -->
-                            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-3 flex-1 lg:flex-initial">
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 flex-1">
                                 <!-- Batch Size -->
-                                <div class="relative min-w-0">
+                                <div class="relative">
                                     <label
-                                        class="absolute -top-3 left-2 text-[10px] font-bold text-indigo-400 uppercase bg-[#0f172a] px-1 rounded shadow-sm border border-white/5"><?php echo __('lbl_batch_size'); ?></label>
+                                        class="absolute -top-2.5 left-3 text-[10px] font-bold text-indigo-400 uppercase bg-[#0f172a] px-1.5 rounded border border-white/5 z-10"><?php echo __('lbl_batch_size'); ?></label>
                                     <input type="number" id="scan_limit" value="50" min="1" max="500"
-                                        class="w-full bg-black/20 border border-white/10 rounded-xl px-2 py-2.5 text-white text-sm font-mono focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all text-center">
+                                        class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white text-sm font-mono focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all">
                                 </div>
 
                                 <!-- Total Goal -->
-                                <div class="relative min-w-0 transition-all duration-300" id="goal-wrapper">
+                                <div class="relative transition-all duration-300" id="goal-wrapper">
                                     <label
-                                        class="absolute -top-3 left-2 text-[10px] font-bold text-purple-400 uppercase bg-[#0f172a] px-1 rounded shadow-sm border border-white/5"><?php echo __('lbl_total_goal'); ?></label>
+                                        class="absolute -top-2.5 left-3 text-[10px] font-bold text-purple-400 uppercase bg-[#0f172a] px-1.5 rounded border border-white/5 z-10"><?php echo __('lbl_total_goal'); ?></label>
                                     <input type="number" id="scan_goal" value="100" min="1"
-                                        class="w-full bg-black/20 border border-white/10 rounded-xl px-2 py-2.5 text-white text-sm font-mono focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-all text-center">
+                                        class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white text-sm font-mono focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-all">
                                 </div>
 
                                 <!-- Delay -->
-                                <div class="relative min-w-0">
+                                <div class="relative">
                                     <label
-                                        class="absolute -top-3 left-2 text-[10px] font-bold text-green-400 uppercase bg-[#0f172a] px-1 rounded shadow-sm border border-white/5"><?php echo __('lbl_delay'); ?></label>
+                                        class="absolute -top-2.5 left-3 text-[10px] font-bold text-green-400 uppercase bg-[#0f172a] px-1.5 rounded border border-white/5 z-10"><?php echo __('lbl_delay'); ?></label>
                                     <input type="number" id="scan_delay" value="1" min="0"
-                                        class="w-full bg-black/20 border border-white/10 rounded-xl px-2 py-2.5 text-white text-sm font-mono focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition-all text-center">
+                                        class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white text-sm font-mono focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition-all">
                                 </div>
                             </div>
                         </div>
@@ -755,88 +755,85 @@ require_once __DIR__ . '/../includes/header.php';
                 <div
                     class="glass-card rounded-3xl overflow-hidden border border-white/5 flex flex-col shadow-2xl shadow-black/50">
                     <!-- Table Header Toolbad -->
-                    <div
-                        class="p-6 border-b border-white/5 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white/5 backdrop-blur-xl">
+                    <div class="p-4 md:p-6 border-b border-white/5 bg-white/5 backdrop-blur-xl">
+                        <div class="flex flex-col xl:flex-row justify-between items-stretch xl:items-center gap-6">
+                            <!-- Left: Identity & Global Actions -->
+                            <div class="flex flex-col md:flex-row md:items-center gap-4 flex-1 min-w-0">
+                                <h2 class="text-lg md:text-xl font-bold flex items-center gap-3 text-white shrink-0">
+                                    <span
+                                        class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0">
+                                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+                                            </path>
+                                        </svg>
+                                    </span>
+                                    <span class="truncate"><?php echo __('inbox_leads'); ?></span>
+                                </h2>
 
-                        <!-- Title & Global Action Wrapper -->
-                        <div class="flex flex-col sm:flex-row sm:items-center gap-4 w-full lg:w-auto">
-                            <h2 class="text-xl font-bold flex items-center gap-3 text-white">
-                                <span
-                                    class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0">
-                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
-                                        </path>
-                                    </svg>
-                                </span>
-                                <span class="whitespace-nowrap"><?php echo __('inbox_leads'); ?></span>
-                            </h2>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <!-- Direct Link to Campaigns (Fluid) -->
+                                    <a href="create_campaign.php<?php echo $page ? '?page_id=' . $page['id'] : ''; ?>"
+                                        class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 text-gray-400 border border-white/10 text-[10px] md:text-xs font-bold hover:bg-white/10 hover:text-white transition-all group whitespace-nowrap">
+                                        <svg class="w-3.5 h-3.5 text-indigo-400 group-hover:scale-110 transition-transform shrink-0"
+                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z">
+                                            </path>
+                                        </svg>
+                                        <span><?php echo ($lang == 'ar' ? 'إدارة الحملات' : 'Manage Campaigns'); ?></span>
+                                    </a>
 
-                            <!-- Direct Link to Campaigns (NEW) -->
-                            <a href="create_campaign.php<?php echo $page ? '?page_id=' . $page['id'] : ''; ?>"
-                                class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-white/5 text-gray-400 border border-white/10 text-xs font-bold hover:bg-white/10 hover:text-white transition-all w-full sm:w-auto mt-2 sm:mt-0 group">
-                                <svg class="w-3.5 h-3.5 text-indigo-400 group-hover:scale-110 transition-transform"
-                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z">
-                                    </path>
-                                </svg>
-                                <?php echo ($lang == 'ar' ? 'إدارة الحملات' : 'Manage Campaigns'); ?>
-                            </a>
-
-                            <!-- Global Select Action -->
-                            <button type="button" onclick="selectAllGlobal(<?php echo $page['id']; ?>)"
-                                class="inline-flex items-center justify-center gap-1 px-4 py-2 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-xs font-bold hover:bg-indigo-500 hover:text-white transition-all w-full sm:w-auto mt-2 sm:mt-0">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01">
-                                    </path>
-                                </svg>
-                                <?php echo __('select_all_global'); ?>
-                            </button>
-                        </div>
-
-                        <!-- Search & Actions Wrapper -->
-                        <div class="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
-                            <!-- Search Box -->
-                            <div class="relative w-full sm:w-64 group">
-                                <input type="text" id="lead-search"
-                                    class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 pl-10 text-xs text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all"
-                                    placeholder="<?php echo __('search_placeholder'); ?>">
-                                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-indigo-400 transition-colors"
-                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                                </svg>
+                                    <button type="button" onclick="selectAllGlobal(<?php echo $page['id']; ?>)"
+                                        class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[10px] md:text-xs font-bold hover:bg-indigo-500 hover:text-white transition-all">
+                                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01">
+                                            </path>
+                                        </svg>
+                                        <span class="whitespace-nowrap"><?php echo __('select_all_global'); ?></span>
+                                    </button>
+                                </div>
                             </div>
 
-                            <form action="create_campaign.php" method="POST" id="campaign-form" class="w-full sm:w-auto">
-                                <input type="hidden" name="page_id" value="<?php echo $page['id']; ?>">
-                                <div class="flex flex-col gap-2">
+                            <!-- Right: Search & Create -->
+                            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full xl:w-auto">
+                                <!-- Search Box (Expanding) -->
+                                <div class="relative flex-1 sm:w-64 group">
+                                    <input type="text" id="lead-search"
+                                        class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 pl-10 text-xs text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all"
+                                        placeholder="<?php echo __('search_placeholder'); ?>">
+                                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-indigo-400 transition-colors"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                    </svg>
+                                </div>
+
+                                <form action="create_campaign.php" method="POST" id="campaign-form"
+                                    class="w-full sm:w-auto shrink-0">
+                                    <input type="hidden" name="page_id" value="<?php echo $page['id']; ?>">
                                     <button type="submit"
-                                        class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2.5 rounded-xl shadow-lg shadow-indigo-600/20 transition-all transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 h-full min-h-[42px]"
+                                        class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2.5 rounded-xl shadow-lg shadow-indigo-600/20 transition-all transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-h-[42px]"
                                         id="create-btn" disabled>
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M12 4v16m8-8H4">
-                                            </path>
+                                                d="M12 4v16m8-8H4"></path>
                                         </svg>
                                         <span class="whitespace-nowrap"><?php echo __('create_campaign'); ?></span>
                                         <span id="selected-count"
                                             class="bg-black/30 text-white text-[10px] px-2 py-0.5 rounded-full font-mono min-w-[20px] text-center">0</span>
                                     </button>
-                                    <a href="create_campaign.php?page_id=<?php echo $page['id']; ?>"
-                                        class="text-[10px] text-gray-500 hover:text-indigo-400 text-center font-bold transition-all uppercase tracking-wider">
-                                        <?php echo ($lang == 'ar' ? 'عرض تاريخ حملات الصفحة' : 'View Page Campaign History'); ?>
-                                    </a>
-                                </div>
-                            </form>
+                                </form>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Table Content -->
-                    <div class="overflow-y-auto max-h-[600px] custom-scrollbar bg-[#0f172a]/50">
-                        <table class="w-full text-start border-collapse" id="leads-table">
+                    <div class="overflow-x-auto overflow-y-auto max-h-[600px] custom-scrollbar bg-[#0f172a]/50">
+                        <table class="w-full text-start border-collapse min-w-[800px]" id="leads-table">
                             <thead
                                 class="bg-[#1e293b] text-gray-400 text-[10px] uppercase font-bold sticky top-0 z-10 shadow-lg shadow-black/20 tracking-wider">
                                 <tr>
@@ -1027,81 +1024,87 @@ require_once __DIR__ . '/../includes/header.php';
                                                     </div>
                                                 </div>
 
-                                                <!-- Stats Mini -->
-                                                <div class="flex items-center gap-4 mt-4">
-                                                    <div class="text-center">
-                                                        <div class="text-[10px] text-gray-500 uppercase font-bold">
-                                                            <?php echo __('sent'); ?>
-                                                        </div>
-                                                        <div class="text-sm font-bold text-green-400">
-                                                            <?php echo $camp['sent_count']; ?>
-                                                        </div>
-                                                    </div>
-                                                    <div class="text-center">
-                                                        <div class="text-[10px] text-gray-500 uppercase font-bold">
-                                                            <?php echo __('failed'); ?>
-                                                        </div>
-                                                        <div class="text-sm font-bold text-red-400">
-                                                            <?php echo $camp['failed_count']; ?>
-                                                        </div>
-                                                    </div>
-                                                    <div class="text-center">
-                                                        <div class="text-[10px] text-gray-500 uppercase font-bold">
-                                                            <?php echo __('total'); ?>
-                                                        </div>
-                                                        <div class="text-sm font-bold text-indigo-400">
-                                                            <?php echo $camp['total_leads']; ?>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                                <!-- Stats Mini (Flexible Grid) -->
+                                                            <div class="grid grid-cols-3 gap-2 mt-4">
+                                                                <div class="bg-black/20 p-2 rounded-xl border border-white/5 text-center flex flex-col justify-center min-w-0">
+                                                                    <div class="text-[8px] md:text-[9px] text-gray-500 uppercase font-bold mb-1 truncate">
+                                                                        <?php echo __('sent'); ?>
+                                                                    </div>
+                                                                    <div class="text-xs md:text-sm font-bold text-green-400 truncate">
+                                                                        <?php echo $camp['sent_count']; ?>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="bg-black/20 p-2 rounded-xl border border-white/5 text-center flex flex-col justify-center min-w-0">
+                                                                    <div class="text-[8px] md:text-[9px] text-gray-500 uppercase font-bold mb-1 truncate">
+                                                                        <?php echo __('failed'); ?>
+                                                                    </div>
+                                                                    <div class="text-xs md:text-sm font-bold text-red-400 truncate">
+                                                                        <?php echo $camp['failed_count']; ?>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="bg-black/20 p-2 rounded-xl border border-white/5 text-center flex flex-col justify-center min-w-0">
+                                                                    <div class="text-[8px] md:text-[9px] text-gray-500 uppercase font-bold mb-1 truncate">
+                                                                        <?php echo __('total'); ?>
+                                                                    </div>
+                                                                    <div class="text-xs md:text-sm font-bold text-indigo-400 truncate">
+                                                                        <?php echo $camp['total_leads']; ?>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
 
-                                                <!-- Actions -->
-                                                <div class="flex items-center gap-2 mt-4 pt-4 border-t border-white/5">
-                                                    <a href="campaign_runner.php?id=<?php echo $camp['id']; ?>"
-                                                        class="flex-1 flex justify-center items-center py-1.5 bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white rounded-lg text-[10px] font-bold transition-all border border-indigo-500/20">
-                                                        <?php echo ($lang == 'ar' ? 'فتح المحرر' : 'Open Runner'); ?>
-                                                    </a>
-                                                    <a href="create_campaign.php?id=<?php echo $camp['id']; ?>"
-                                                        class="p-1.5 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all"
-                                                        title="<?php echo __('edit'); ?>">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
-                                                            </path>
-                                                        </svg>
-                                                    </a>
-                                                    <a href="campaign_reports.php?id=<?php echo $camp['id']; ?>"
-                                                        class="p-1.5 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all"
-                                                        title="<?php echo __('reports'); ?>">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                                d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                                                            </path>
-                                                        </svg>
-                                                    </a>
-                                                    <button onclick="window.deleteCampaign(<?php echo $camp['id']; ?>)"
-                                                        class="p-1.5 text-red-500/50 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
-                                                        title="<?php echo __('delete'); ?>">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                                                            </path>
-                                                        </svg>
-                                                    </button>
+                                                            <!-- Actions (Responsive Wrap) -->
+                                                            <div class="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-white/5">
+                                                                <a href="campaign_runner.php?id=<?php echo $camp['id']; ?>"
+                                                                    class="flex-1 min-w-[120px] flex justify-center items-center py-2 bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white rounded-xl text-[10px] font-bold transition-all border border-indigo-500/20 whitespace-nowrap">
+                                                                    <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                                    </svg>
+                                                                    <?php echo ($lang == 'ar' ? 'فتح المحرر' : 'Open Runner'); ?>
+                                                                </a>
+                                                                <div class="flex items-center gap-1.5 flex-wrap sm:flex-nowrap justify-end ml-auto">
+                                                                    <a href="create_campaign.php?id=<?php echo $camp['id']; ?>"
+                                                                        class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl transition-all border border-white/5 shrink-0"
+                                                                        title="<?php echo __('edit'); ?>">
+                                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                                                                            </path>
+                                                                        </svg>
+                                                                    </a>
+                                                                    <a href="campaign_reports.php?id=<?php echo $camp['id']; ?>"
+                                                                        class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl transition-all border border-white/5 shrink-0"
+                                                                        title="<?php echo __('reports'); ?>">
+                                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                                d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                                                            </path>
+                                                                        </svg>
+                                                                    </a>
+                                                                    <button onclick="window.deleteCampaign(<?php echo $camp['id']; ?>)"
+                                                                        class="w-9 h-9 flex items-center justify-center text-red-500/50 hover:text-red-400 bg-red-500/5 hover:bg-red-500/10 rounded-xl transition-all border border-red-500/10 shrink-0"
+                                                                        title="<?php echo __('delete'); ?>">
+                                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                                                            </path>
+                                                                        </svg>
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </div>
+                                        <?php endforeach; ?>
                                     </div>
-                                <?php endforeach; ?>
-                            </div>
-                        <?php else: ?>
-                            <div class="glass-card p-10 rounded-2xl border border-white/5 border-dashed text-center">
-                                <p class="text-sm text-gray-500 italic">
-                                    <?php echo ($lang == 'ar' ? 'لا توجد حملات سابقة لهذه الصفحة' : 'No previous campaigns for this page'); ?>
-                                </p>
-                            </div>
-                        <?php endif; ?>
-                    </div>
+                            <?php else: ?>
+                                    <div class="glass-card p-10 rounded-2xl border border-white/5 border-dashed text-center">
+                                        <p class="text-sm text-gray-500 italic">
+                                            <?php echo ($lang == 'ar' ? 'لا توجد حملات سابقة لهذه الصفحة' : 'No previous campaigns for this page'); ?>
+                                        </p>
+                                    </div>
+                            <?php endif; ?>
+                        </div>
                 <?php endif; ?>
             </div>
         </div>
@@ -1150,668 +1153,668 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
 
         <?php if (!$showSelector): ?>
-            <script>
-                // --- STATE MANAGEMENT ---
-                let state = {
-                    isRunning: false,
-                    isPaused: false,
-                    scanMode: 'limit', // 'limit' or 'all'
-                    limit: 50,         // Batch size
-                    totalGoal: 100,    // Only for limit mode
-                    delay: 1,
-                    processed: 0,
-                    nextCursor: null
-                };
-
-                // --- STATE PERSISTENCE ---
-                const SETTINGS_KEY = `extraction_settings_${<?php echo $page['id'] ?? 0; ?>}`;
-
-                function saveSettings() {
-                    // Save FULL state to allow auto-resume after reload/crash
-                    const settings = {
-                        limit: ui.inputLimit.value,
-                        goal: ui.inputGoal.value,
-                        delay: ui.inputDelay.value,
-                        mode: state.scanMode,
-                        // Persist State
-                        isRunning: state.isRunning,
-                        isPaused: state.isPaused,
-                        processed: state.processed,
-                        nextCursor: state.nextCursor,
-                        totalGoal: state.totalGoal
+                <script>
+                    // --- STATE MANAGEMENT ---
+                    let state = {
+                        isRunning: false,
+                        isPaused: false,
+                        scanMode: 'limit', // 'limit' or 'all'
+                        limit: 50,         // Batch size
+                        totalGoal: 100,    // Only for limit mode
+                        delay: 1,
+                        processed: 0,
+                        nextCursor: null
                     };
-                    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-                }
 
-                function loadSettings() {
-                    const saved = localStorage.getItem(SETTINGS_KEY);
-                    if (saved) {
-                        try {
-                            const settings = JSON.parse(saved);
-                            ui.inputLimit.value = settings.limit || 50;
-                            ui.inputGoal.value = settings.goal || 100;
-                            ui.inputDelay.value = settings.delay || 1;
-                            setMode(settings.mode || 'limit');
+                    // --- STATE PERSISTENCE ---
+                    const SETTINGS_KEY = `extraction_settings_${<?php echo $page['id'] ?? 0; ?>}`;
 
-                            // RESTORE STATE & AUTO-RESUME
-                            state.processed = settings.processed || 0;
-                            state.totalGoal = settings.totalGoal || 100;
-                            state.nextCursor = settings.nextCursor;
-                            state.limit = parseInt(settings.limit) || 50;
-                            state.delay = parseInt(settings.delay) || 1;
-
-                            // FORCE RESUME LOGIC (SMART)
-                            // Only auto-resume if it was ACTUALLY running (Crash Recovery)
-                            // If it was PAUSED by user, do NOT auto-start. Just restore UI.
-
-                            const wasRunning = settings.isRunning === true;
-                            const wasPaused = settings.isPaused === true;
-                            const incomplete = (state.processed > 0 && state.processed < state.totalGoal && state.nextCursor);
-
-                            // Restore UI Values
-                            ui.inputLimit.value = state.limit;
-                            ui.inputGoal.value = state.totalGoal;
-
-                            if (wasRunning && incomplete && !wasPaused) {
-                                // CRASH RECOVERY: Auto-Start
-                                updateUI('running');
-                                ui.statusText.innerText = "Resuming from crash...";
-                                console.log('🔄 Auto-Resuming Scan (Crash Recovery)...', state);
-
-                                setTimeout(() => {
-                                    state.isRunning = true;
-                                    state.isPaused = false;
-                                    scanLoop();
-                                }, 2000);
-                            }
-                            else if (wasPaused && incomplete) {
-                                // PAUSED STATE: Restore UI but DO NOT Start
-                                state.isPaused = true;
-                                state.isRunning = true; // Logically running but paused
-
-                                updateUI('paused');
-                                ui.statusText.innerText = `<?php echo __('status_paused'); ?> (Resumed)`;
-                                console.log('⏸️ Restored Paused State. Waiting for user...');
-                            }
-
-                        } catch (e) { console.error("Error loading settings", e); }
-                    }
-                }
-
-                // --- UI HELPERS ---
-                const ui = {
-                    btnLimit: document.getElementById('btn-mode-limit'),
-                    btnAll: document.getElementById('btn-mode-all'),
-                    inputLimit: document.getElementById('scan_limit'),
-                    inputGoal: document.getElementById('scan_goal'),
-                    goalWrapper: document.getElementById('goal-wrapper'),
-                    inputDelay: document.getElementById('scan_delay'),
-                    btnPlay: document.getElementById('btn-play'),
-                    btnPause: document.getElementById('btn-pause'),
-                    btnStop: document.getElementById('btn-stop'),
-                    textPlay: document.getElementById('text-play'),
-
-                    statusText: document.getElementById('status-text'),
-                    statusDot: document.getElementById('status-dot'),
-                    progressCount: document.getElementById('progress-count'),
-                    progressBar: document.getElementById('progress-bar'),
-
-                    tbody: document.getElementById('leads-tbody'),
-                    noLeadsRow: document.getElementById('no-leads-row')
-                };
-
-                // Add listeners to save on change
-                if (ui.inputLimit && ui.inputGoal && ui.inputDelay) {
-                    [ui.inputLimit, ui.inputGoal, ui.inputDelay].forEach(input => {
-                        input.addEventListener('change', saveSettings);
-                        input.addEventListener('input', saveSettings);
-                    });
-                }
-
-                // Initialize settings on load
-                loadSettings();
-
-                function setMode(mode) {
-                    if (state.isRunning) return;
-
-                    state.scanMode = mode;
-                    if (mode === 'limit') {
-                        ui.btnLimit.classList.replace('text-gray-400', 'text-white');
-                        ui.btnLimit.classList.add('bg-indigo-600', 'shadow-lg');
-                        ui.btnAll.classList.remove('bg-indigo-600', 'shadow-lg', 'text-white');
-                        ui.btnAll.classList.add('text-gray-400');
-
-                        ui.goalWrapper.classList.remove('hidden');
-                    } else {
-                        ui.btnAll.classList.replace('text-gray-400', 'text-white');
-                        ui.btnAll.classList.add('bg-indigo-600', 'shadow-lg');
-                        ui.btnLimit.classList.remove('bg-indigo-600', 'shadow-lg', 'text-white');
-                        ui.btnLimit.classList.add('text-gray-400');
-
-                        ui.goalWrapper.classList.add('hidden');
-                    }
-                    saveSettings();
-                }
-
-                // --- SCAN LOGIC ---
-                async function startScan() {
-                    if (state.isRunning && !state.isPaused) return;
-
-                    if (state.isPaused) {
-                        resumeScan();
-                        return;
+                    function saveSettings() {
+                        // Save FULL state to allow auto-resume after reload/crash
+                        const settings = {
+                            limit: ui.inputLimit.value,
+                            goal: ui.inputGoal.value,
+                            delay: ui.inputDelay.value,
+                            mode: state.scanMode,
+                            // Persist State
+                            isRunning: state.isRunning,
+                            isPaused: state.isPaused,
+                            processed: state.processed,
+                            nextCursor: state.nextCursor,
+                            totalGoal: state.totalGoal
+                        };
+                        localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
                     }
 
-                    // INIT
-                    state.isRunning = true;
-                    state.isPaused = false;
-                    state.processed = 0;
-                    state.nextCursor = null;
-                    state.limit = parseInt(ui.inputLimit.value) || 50;
-                    state.totalGoal = parseInt(ui.inputGoal.value) || 100;
-                    state.delay = parseInt(ui.inputDelay.value) || 0;
+                    function loadSettings() {
+                        const saved = localStorage.getItem(SETTINGS_KEY);
+                        if (saved) {
+                            try {
+                                const settings = JSON.parse(saved);
+                                ui.inputLimit.value = settings.limit || 50;
+                                ui.inputGoal.value = settings.goal || 100;
+                                ui.inputDelay.value = settings.delay || 1;
+                                setMode(settings.mode || 'limit');
 
-                    updateUI('running');
-                    scanLoop();
-                }
+                                // RESTORE STATE & AUTO-RESUME
+                                state.processed = settings.processed || 0;
+                                state.totalGoal = settings.totalGoal || 100;
+                                state.nextCursor = settings.nextCursor;
+                                state.limit = parseInt(settings.limit) || 50;
+                                state.delay = parseInt(settings.delay) || 1;
 
-                function pauseScan() {
-                    state.isPaused = true;
-                    updateUI('paused');
-                    saveSettings(); // Save manual pause state
-                }
+                                // FORCE RESUME LOGIC (SMART)
+                                // Only auto-resume if it was ACTUALLY running (Crash Recovery)
+                                // If it was PAUSED by user, do NOT auto-start. Just restore UI.
 
-                function resumeScan() {
-                    state.isPaused = false;
-                    updateUI('running');
-                    scanLoop();
-                }
+                                const wasRunning = settings.isRunning === true;
+                                const wasPaused = settings.isPaused === true;
+                                const incomplete = (state.processed > 0 && state.processed < state.totalGoal && state.nextCursor);
 
-                function stopScan() {
-                    state.isRunning = false;
-                    state.isPaused = false;
-                    updateUI('stopped');
+                                // Restore UI Values
+                                ui.inputLimit.value = state.limit;
+                                ui.inputGoal.value = state.totalGoal;
 
-                    // MURDER THE ZOMBIE: Explicit stop clears memory
-                    clearSettings();
+                                if (wasRunning && incomplete && !wasPaused) {
+                                    // CRASH RECOVERY: Auto-Start
+                                    updateUI('running');
+                                    ui.statusText.innerText = "Resuming from crash...";
+                                    console.log('🔄 Auto-Resuming Scan (Crash Recovery)...', state);
 
-                    // Optional: Reload to clear UI if needed, but per request we keep state
-                    // window.location.reload(); 
-                }
+                                    setTimeout(() => {
+                                        state.isRunning = true;
+                                        state.isPaused = false;
+                                        scanLoop();
+                                    }, 2000);
+                                }
+                                else if (wasPaused && incomplete) {
+                                    // PAUSED STATE: Restore UI but DO NOT Start
+                                    state.isPaused = true;
+                                    state.isRunning = true; // Logically running but paused
 
-                async function scanLoop() {
-                    while (state.isRunning && !state.isPaused) {
-
-                        // Check if we reached the goal in limit mode
-                        if (state.scanMode === 'limit' && state.processed >= state.totalGoal) {
-                            finishScan();
-                            break;
-                        }
-
-                        // Determine Batch Size
-                        let currentBatch = state.limit;
-                        if (state.scanMode === 'limit') {
-                            currentBatch = Math.min(state.limit, state.totalGoal - state.processed);
-                        }
-
-                        // Status: Scanning (Batch Size)
-                        ui.statusText.innerText = `<?php echo __('status_scanning'); ?>`.replace('%s', currentBatch);
-                        ui.progressBar.classList.add('animate-pulse');
-
-                        try {
-                            const formData = new FormData();
-                            formData.append('ajax_scan', '1');
-                            formData.append('limit', currentBatch);
-                            if (state.nextCursor) formData.append('after_cursor', state.nextCursor);
-
-                            // SAVE STATE BEFORE FETCH (CRITICAL FOR CRASH RECOVERY)
-                            saveSettings();
-
-                            const response = await fetch('page_inbox.php?page_id=<?php echo $page['id']; ?>', {
-                                method: 'POST',
-                                body: formData
-                            });
-
-                            const data = await response.json();
-
-                            if (data.status === 'error') {
-                                // Check for Token Errors
-                                let msg = JSON.stringify(data.message).toLowerCase();
-                                if (msg.includes('session has expired') || msg.includes('oauth') || msg.includes('access token') || msg.includes('code: 190')) {
-                                    state.isRunning = false; // Stop permanently on token error
-                                    saveSettings();
-                                    stopScan();
-                                    showTokenModal();
-                                    return;
+                                    updateUI('paused');
+                                    ui.statusText.innerText = `<?php echo __('status_paused'); ?> (Resumed)`;
+                                    console.log('⏸️ Restored Paused State. Waiting for user...');
                                 }
 
-                                console.error('Scan Error:', data.message);
-                                // Don't stop! Wait and retry (Maybe temporary server issue)
-                                await new Promise(r => setTimeout(r, 5000));
-                                continue;
-                            }
+                            } catch (e) { console.error("Error loading settings", e); }
+                        }
+                    }
 
-                            // LOGIC RESTORATION: Real-time with Safety
-                            if (data.html) {
-                                if (ui.noLeadsRow) ui.noLeadsRow.remove();
-                                ui.tbody.insertAdjacentHTML('afterbegin', data.html); // Add new leads to top
+                    // --- UI HELPERS ---
+                    const ui = {
+                        btnLimit: document.getElementById('btn-mode-limit'),
+                        btnAll: document.getElementById('btn-mode-all'),
+                        inputLimit: document.getElementById('scan_limit'),
+                        inputGoal: document.getElementById('scan_goal'),
+                        goalWrapper: document.getElementById('goal-wrapper'),
+                        inputDelay: document.getElementById('scan_delay'),
+                        btnPlay: document.getElementById('btn-play'),
+                        btnPause: document.getElementById('btn-pause'),
+                        btnStop: document.getElementById('btn-stop'),
+                        textPlay: document.getElementById('text-play'),
 
-                                // PERFORMANCE SAFEGUARD: Keep DOM light
-                                // Only show the last 50 items during scan to prevent crash
-                                while (ui.tbody.children.length > 50) {
-                                    ui.tbody.lastElementChild.remove();
-                                }
+                        statusText: document.getElementById('status-text'),
+                        statusDot: document.getElementById('status-dot'),
+                        progressCount: document.getElementById('progress-count'),
+                        progressBar: document.getElementById('progress-bar'),
 
-                                // Update Processed Count
-                                let newCount = data.count || 0;
-                                state.processed += newCount;
+                        tbody: document.getElementById('leads-tbody'),
+                        noLeadsRow: document.getElementById('no-leads-row')
+                    };
 
-                                // Update Progress UI
-                                ui.progressCount.innerText = state.processed + (state.scanMode === 'limit' ? ' / ' + state.totalGoal : '');
-                                ui.progressCount.classList.remove('hidden');
-                            }
+                    // Add listeners to save on change
+                    if (ui.inputLimit && ui.inputGoal && ui.inputDelay) {
+                        [ui.inputLimit, ui.inputGoal, ui.inputDelay].forEach(input => {
+                            input.addEventListener('change', saveSettings);
+                            input.addEventListener('input', saveSettings);
+                        });
+                    }
 
-                            // Progress Bar Update
-                            if (state.scanMode === 'limit') {
-                                let pct = Math.min(100, (state.processed / state.totalGoal) * 100);
-                                ui.progressBar.style.width = pct + '%';
-                            } else {
-                                ui.progressBar.style.width = '100%';
-                            }
+                    // Initialize settings on load
+                    loadSettings();
 
-                            if (data.next_cursor && (state.scanMode === 'all' || state.processed < state.totalGoal)) {
-                                state.nextCursor = data.next_cursor;
-                                // saveSettings(); // Save new cursor immediately
-                            } else {
+                    function setMode(mode) {
+                        if (state.isRunning) return;
+
+                        state.scanMode = mode;
+                        if (mode === 'limit') {
+                            ui.btnLimit.classList.replace('text-gray-400', 'text-white');
+                            ui.btnLimit.classList.add('bg-indigo-600', 'shadow-lg');
+                            ui.btnAll.classList.remove('bg-indigo-600', 'shadow-lg', 'text-white');
+                            ui.btnAll.classList.add('text-gray-400');
+
+                            ui.goalWrapper.classList.remove('hidden');
+                        } else {
+                            ui.btnAll.classList.replace('text-gray-400', 'text-white');
+                            ui.btnAll.classList.add('bg-indigo-600', 'shadow-lg');
+                            ui.btnLimit.classList.remove('bg-indigo-600', 'shadow-lg', 'text-white');
+                            ui.btnLimit.classList.add('text-gray-400');
+
+                            ui.goalWrapper.classList.add('hidden');
+                        }
+                        saveSettings();
+                    }
+
+                    // --- SCAN LOGIC ---
+                    async function startScan() {
+                        if (state.isRunning && !state.isPaused) return;
+
+                        if (state.isPaused) {
+                            resumeScan();
+                            return;
+                        }
+
+                        // INIT
+                        state.isRunning = true;
+                        state.isPaused = false;
+                        state.processed = 0;
+                        state.nextCursor = null;
+                        state.limit = parseInt(ui.inputLimit.value) || 50;
+                        state.totalGoal = parseInt(ui.inputGoal.value) || 100;
+                        state.delay = parseInt(ui.inputDelay.value) || 0;
+
+                        updateUI('running');
+                        scanLoop();
+                    }
+
+                    function pauseScan() {
+                        state.isPaused = true;
+                        updateUI('paused');
+                        saveSettings(); // Save manual pause state
+                    }
+
+                    function resumeScan() {
+                        state.isPaused = false;
+                        updateUI('running');
+                        scanLoop();
+                    }
+
+                    function stopScan() {
+                        state.isRunning = false;
+                        state.isPaused = false;
+                        updateUI('stopped');
+
+                        // MURDER THE ZOMBIE: Explicit stop clears memory
+                        clearSettings();
+
+                        // Optional: Reload to clear UI if needed, but per request we keep state
+                        // window.location.reload(); 
+                    }
+
+                    async function scanLoop() {
+                        while (state.isRunning && !state.isPaused) {
+
+                            // Check if we reached the goal in limit mode
+                            if (state.scanMode === 'limit' && state.processed >= state.totalGoal) {
                                 finishScan();
                                 break;
                             }
 
-                            // Delay / Anti-Ban
-                            if (state.delay > 0 && state.isRunning && !state.isPaused) {
-                                ui.statusText.innerText = `<?php echo __('status_sleeping'); ?>`.replace('%s', state.delay);
-                                await new Promise(r => setTimeout(r, state.delay * 1000));
+                            // Determine Batch Size
+                            let currentBatch = state.limit;
+                            if (state.scanMode === 'limit') {
+                                currentBatch = Math.min(state.limit, state.totalGoal - state.processed);
                             }
 
-                        } catch (e) {
-                            console.error("Crash/Network Error:", e);
-                            // Simple Retry without reload (since we are not crashing anymore)
-                            ui.statusText.innerText = "Network Error... Retrying in 5s...";
-                            await new Promise(r => setTimeout(r, 5000));
-                            continue;
+                            // Status: Scanning (Batch Size)
+                            ui.statusText.innerText = `<?php echo __('status_scanning'); ?>`.replace('%s', currentBatch);
+                            ui.progressBar.classList.add('animate-pulse');
+
+                            try {
+                                const formData = new FormData();
+                                formData.append('ajax_scan', '1');
+                                formData.append('limit', currentBatch);
+                                if (state.nextCursor) formData.append('after_cursor', state.nextCursor);
+
+                                // SAVE STATE BEFORE FETCH (CRITICAL FOR CRASH RECOVERY)
+                                saveSettings();
+
+                                const response = await fetch('page_inbox.php?page_id=<?php echo $page['id']; ?>', {
+                                    method: 'POST',
+                                    body: formData
+                                });
+
+                                const data = await response.json();
+
+                                if (data.status === 'error') {
+                                    // Check for Token Errors
+                                    let msg = JSON.stringify(data.message).toLowerCase();
+                                    if (msg.includes('session has expired') || msg.includes('oauth') || msg.includes('access token') || msg.includes('code: 190')) {
+                                        state.isRunning = false; // Stop permanently on token error
+                                        saveSettings();
+                                        stopScan();
+                                        showTokenModal();
+                                        return;
+                                    }
+
+                                    console.error('Scan Error:', data.message);
+                                    // Don't stop! Wait and retry (Maybe temporary server issue)
+                                    await new Promise(r => setTimeout(r, 5000));
+                                    continue;
+                                }
+
+                                // LOGIC RESTORATION: Real-time with Safety
+                                if (data.html) {
+                                    if (ui.noLeadsRow) ui.noLeadsRow.remove();
+                                    ui.tbody.insertAdjacentHTML('afterbegin', data.html); // Add new leads to top
+
+                                    // PERFORMANCE SAFEGUARD: Keep DOM light
+                                    // Only show the last 50 items during scan to prevent crash
+                                    while (ui.tbody.children.length > 50) {
+                                        ui.tbody.lastElementChild.remove();
+                                    }
+
+                                    // Update Processed Count
+                                    let newCount = data.count || 0;
+                                    state.processed += newCount;
+
+                                    // Update Progress UI
+                                    ui.progressCount.innerText = state.processed + (state.scanMode === 'limit' ? ' / ' + state.totalGoal : '');
+                                    ui.progressCount.classList.remove('hidden');
+                                }
+
+                                // Progress Bar Update
+                                if (state.scanMode === 'limit') {
+                                    let pct = Math.min(100, (state.processed / state.totalGoal) * 100);
+                                    ui.progressBar.style.width = pct + '%';
+                                } else {
+                                    ui.progressBar.style.width = '100%';
+                                }
+
+                                if (data.next_cursor && (state.scanMode === 'all' || state.processed < state.totalGoal)) {
+                                    state.nextCursor = data.next_cursor;
+                                    // saveSettings(); // Save new cursor immediately
+                                } else {
+                                    finishScan();
+                                    break;
+                                }
+
+                                // Delay / Anti-Ban
+                                if (state.delay > 0 && state.isRunning && !state.isPaused) {
+                                    ui.statusText.innerText = `<?php echo __('status_sleeping'); ?>`.replace('%s', state.delay);
+                                    await new Promise(r => setTimeout(r, state.delay * 1000));
+                                }
+
+                            } catch (e) {
+                                console.error("Crash/Network Error:", e);
+                                // Simple Retry without reload (since we are not crashing anymore)
+                                ui.statusText.innerText = "Network Error... Retrying in 5s...";
+                                await new Promise(r => setTimeout(r, 5000));
+                                continue;
+                            }
                         }
                     }
-                }
 
-                function finishScan() {
-                    state.isRunning = false;
-                    state.isPaused = false;
+                    function finishScan() {
+                        state.isRunning = false;
+                        state.isPaused = false;
 
-                    // MURDER THE ZOMBIE: Clear storage completely so it never auto-resumes
-                    clearSettings();
+                        // MURDER THE ZOMBIE: Clear storage completely so it never auto-resumes
+                        clearSettings();
 
-                    updateUI('finished');
-                    ui.statusText.innerText = `<?php echo __('status_finished'); ?>`;
+                        updateUI('finished');
+                        ui.statusText.innerText = `<?php echo __('status_finished'); ?>`;
 
-                    console.log('Scan finished. Next Cursor:', state.nextCursor);
+                        console.log('Scan finished. Next Cursor:', state.nextCursor);
 
-                    // Final Auto-Reload to show all results
-                    ui.statusText.innerText = "Finished. Reloading...";
-                    alert('Extraction Finished! Click OK to see results.');
-                    window.location.reload();
-                }
+                        // Final Auto-Reload to show all results
+                        ui.statusText.innerText = "Finished. Reloading...";
+                        alert('Extraction Finished! Click OK to see results.');
+                        window.location.reload();
+                    }
 
-                function clearSettings() {
-                    localStorage.removeItem(SETTINGS_KEY);
-                }
+                    function clearSettings() {
+                        localStorage.removeItem(SETTINGS_KEY);
+                    }
 
-                // Enforce reasonable limits on input
-                if (ui.inputLimit) {
-                    ui.inputLimit.addEventListener('change', function () {
-                        // Removed limit restriction as requested
-                    });
-                }
+                    // Enforce reasonable limits on input
+                    if (ui.inputLimit) {
+                        ui.inputLimit.addEventListener('change', function () {
+                            // Removed limit restriction as requested
+                        });
+                    }
 
-                function updateUI(status) {
-                    if (ui.statusText && ui.statusDot) {
-                        if (status === 'running') {
-                            ui.btnPlay.classList.add('hidden');
-                            ui.btnPause.classList.remove('hidden');
-                            ui.btnStop.disabled = false;
-                            ui.btnPause.disabled = false;
+                    function updateUI(status) {
+                        if (ui.statusText && ui.statusDot) {
+                            if (status === 'running') {
+                                ui.btnPlay.classList.add('hidden');
+                                ui.btnPause.classList.remove('hidden');
+                                ui.btnStop.disabled = false;
+                                ui.btnPause.disabled = false;
 
-                            ui.statusDot.classList.replace('bg-green-500', 'bg-blue-500');
-                            ui.statusDot.classList.add('animate-ping');
+                                ui.statusDot.classList.replace('bg-green-500', 'bg-blue-500');
+                                ui.statusDot.classList.add('animate-ping');
 
-                            ui.inputLimit.disabled = true;
-                            ui.inputGoal.disabled = true;
-                            ui.inputDelay.disabled = true;
-                        }
-                        else if (status === 'paused') {
-                            ui.btnPlay.classList.remove('hidden');
-                            ui.btnPause.classList.add('hidden');
-                            ui.textPlay.innerText = `<?php echo __('btn_resume'); ?>`;
+                                ui.inputLimit.disabled = true;
+                                ui.inputGoal.disabled = true;
+                                ui.inputDelay.disabled = true;
+                            }
+                            else if (status === 'paused') {
+                                ui.btnPlay.classList.remove('hidden');
+                                ui.btnPause.classList.add('hidden');
+                                ui.textPlay.innerText = `<?php echo __('btn_resume'); ?>`;
 
-                            ui.statusDot.classList.replace('bg-green-500', 'bg-yellow-500');
-                            ui.statusDot.classList.remove('animate-ping');
-                            ui.statusText.innerText = `<?php echo __('status_paused'); ?>`;
-                        }
-                        else if (status === 'stopped' || status === 'finished') {
-                            ui.btnPlay.classList.remove('hidden');
-                            ui.btnPause.classList.add('hidden');
-                            ui.textPlay.innerText = `<?php echo __('btn_start'); ?>`;
-                            ui.btnStop.disabled = true;
+                                ui.statusDot.classList.replace('bg-green-500', 'bg-yellow-500');
+                                ui.statusDot.classList.remove('animate-ping');
+                                ui.statusText.innerText = `<?php echo __('status_paused'); ?>`;
+                            }
+                            else if (status === 'stopped' || status === 'finished') {
+                                ui.btnPlay.classList.remove('hidden');
+                                ui.btnPause.classList.add('hidden');
+                                ui.textPlay.innerText = `<?php echo __('btn_start'); ?>`;
+                                ui.btnStop.disabled = true;
 
-                            ui.statusDot.className = 'w-2 h-2 rounded-full bg-gray-600';
-                            ui.progressBar.classList.remove('animate-pulse');
-                            if (status === 'stopped') ui.progressBar.style.width = '0';
+                                ui.statusDot.className = 'w-2 h-2 rounded-full bg-gray-600';
+                                ui.progressBar.classList.remove('animate-pulse');
+                                if (status === 'stopped') ui.progressBar.style.width = '0';
 
-                            ui.inputLimit.disabled = false;
-                            ui.inputGoal.disabled = false;
-                            ui.inputDelay.disabled = false;
+                                ui.inputLimit.disabled = false;
+                                ui.inputGoal.disabled = false;
+                                ui.inputDelay.disabled = false;
+                            }
                         }
                     }
-                }
 
-                // --- CHECKBOX LOGIC ---
-                // --- PERSISTENT SELECTION LOGIC ---
-                // Uses sessionStorage to keep track of selected IDs across pagination
-                const PAGE_KEY = 'selected_leads_<?php echo $page['id']; ?>';
-                const selectAll = document.getElementById('select-all');
+                    // --- CHECKBOX LOGIC ---
+                    // --- PERSISTENT SELECTION LOGIC ---
+                    // Uses sessionStorage to keep track of selected IDs across pagination
+                    const PAGE_KEY = 'selected_leads_<?php echo $page['id']; ?>';
+                    const selectAll = document.getElementById('select-all');
 
-                // Helper to get/set Storage
-                function getStoredSelection() {
-                    const stored = sessionStorage.getItem(PAGE_KEY);
-                    return stored ? JSON.parse(stored) : [];
-                }
+                    // Helper to get/set Storage
+                    function getStoredSelection() {
+                        const stored = sessionStorage.getItem(PAGE_KEY);
+                        return stored ? JSON.parse(stored) : [];
+                    }
 
-                function saveSelection(ids) {
-                    sessionStorage.setItem(PAGE_KEY, JSON.stringify(ids));
-                    updateUIStats(ids.length);
-                }
+                    function saveSelection(ids) {
+                        sessionStorage.setItem(PAGE_KEY, JSON.stringify(ids));
+                        updateUIStats(ids.length);
+                    }
 
-                function updateUIStats(count) {
-                    const countSpan = document.getElementById('selected-count');
-                    const createBtn = document.getElementById('create-btn');
+                    function updateUIStats(count) {
+                        const countSpan = document.getElementById('selected-count');
+                        const createBtn = document.getElementById('create-btn');
 
-                    if (countSpan) countSpan.innerText = count;
-                    if (createBtn) createBtn.disabled = count === 0;
+                        if (countSpan) countSpan.innerText = count;
+                        if (createBtn) createBtn.disabled = count === 0;
 
-                    // Check "Select All" checkbox state if all currently visible are selected
-                    if (selectAll) {
-                        const allVisible = Array.from(document.querySelectorAll('.lead-checkbox'));
-                        if (allVisible.length > 0) {
-                            const allChecked = allVisible.every(cb => cb.checked);
-                            selectAll.checked = allChecked;
+                        // Check "Select All" checkbox state if all currently visible are selected
+                        if (selectAll) {
+                            const allVisible = Array.from(document.querySelectorAll('.lead-checkbox'));
+                            if (allVisible.length > 0) {
+                                const allChecked = allVisible.every(cb => cb.checked);
+                                selectAll.checked = allChecked;
+                            }
                         }
                     }
-                }
 
-                // Initialize: Restore Selection
-                function initSelection() {
-                    const selectedIds = getStoredSelection();
+                    // Initialize: Restore Selection
+                    function initSelection() {
+                        const selectedIds = getStoredSelection();
 
-                    // Apply to current checkboxes
-                    document.querySelectorAll('.lead-checkbox').forEach(cb => {
-                        if (selectedIds.includes(cb.value)) {
-                            cb.checked = true;
-                        }
-                    });
+                        // Apply to current checkboxes
+                        document.querySelectorAll('.lead-checkbox').forEach(cb => {
+                            if (selectedIds.includes(cb.value)) {
+                                cb.checked = true;
+                            }
+                        });
 
-                    updateUIStats(selectedIds.length);
-                }
-
-                // Toggle Single Row
-                function toggleRow(row) {
-                    const checkbox = row.querySelector('.lead-checkbox');
-                    if (checkbox) {
-                        // Toggle Check
-                        checkbox.checked = !checkbox.checked;
-
-                        // Update Storage
-                        let selectedIds = getStoredSelection();
-                        if (checkbox.checked) {
-                            if (!selectedIds.includes(checkbox.value)) selectedIds.push(checkbox.value);
-                        } else {
-                            selectedIds = selectedIds.filter(id => id !== checkbox.value);
-                        }
-                        saveSelection(selectedIds);
+                        updateUIStats(selectedIds.length);
                     }
-                }
 
-                // Handle Direct Checkbox Click (prevent bubbling double toggle)
-                document.querySelectorAll('.lead-checkbox').forEach(cb => {
-                    cb.addEventListener('click', function (e) {
-                        e.stopPropagation(); // Stop row click
+                    // Toggle Single Row
+                    function toggleRow(row) {
+                        const checkbox = row.querySelector('.lead-checkbox');
+                        if (checkbox) {
+                            // Toggle Check
+                            checkbox.checked = !checkbox.checked;
 
-                        let selectedIds = getStoredSelection();
-                        if (this.checked) {
-                            if (!selectedIds.includes(this.value)) selectedIds.push(this.value);
-                        } else {
-                            selectedIds = selectedIds.filter(id => id !== this.value);
-                        }
-                        saveSelection(selectedIds);
-                    });
-                });
-
-                // Select All (Visible Only)
-                if (selectAll) {
-                    selectAll.addEventListener('change', function () {
-                        const isChecked = this.checked;
-                        let selectedIds = getStoredSelection();
-                        const visibleCheckboxes = document.querySelectorAll('.lead-checkbox');
-
-                        visibleCheckboxes.forEach(cb => {
-                            cb.checked = isChecked;
-                            if (isChecked) {
-                                if (!selectedIds.includes(cb.value)) selectedIds.push(cb.value);
+                            // Update Storage
+                            let selectedIds = getStoredSelection();
+                            if (checkbox.checked) {
+                                if (!selectedIds.includes(checkbox.value)) selectedIds.push(checkbox.value);
                             } else {
-                                selectedIds = selectedIds.filter(id => id !== cb.value);
+                                selectedIds = selectedIds.filter(id => id !== checkbox.value);
                             }
-                        });
-
-                        saveSelection(selectedIds);
-                    });
-                }
-
-                // Handle Form Submit
-                document.getElementById('campaign-form').addEventListener('submit', function (e) {
-                    // Remove any existing hidden inputs first
-                    this.querySelectorAll('input[type="hidden"][name="leads[]"]').forEach(el => el.remove());
-
-                    // Add ALL selected IDs from storage via SINGLE JSON input
-                    // This prevents max_input_vars limit issues with large selections (e.g. 10k leads)
-                    const selectedIds = getStoredSelection();
-
-                    // Remove old inputs if exist
-                    if (this.querySelector('input[name="ids_json"]')) {
-                        this.querySelector('input[name="ids_json"]').remove();
-                    }
-
-                    const input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = 'ids_json';
-                    input.value = JSON.stringify(selectedIds);
-                    this.appendChild(input);
-
-                    // Optional: Clear selection after submit? 
-                    // Usually valid to keep until explicit clear or success
-                    // sessionStorage.removeItem(PAGE_KEY); 
-                });
-
-
-                // Run Init
-                initSelection();
-
-                // --- GLOBAL SELECT LOGIC ---
-                async function selectAllGlobal(pageId) {
-                    const btn = document.querySelector('[onclick^="selectAllGlobal"]');
-                    const originalText = btn ? btn.innerHTML : '';
-                    if (btn) btn.innerHTML = '<?php echo __('please_wait'); ?>';
-
-                    try {
-                        const formData = new FormData();
-                        formData.append('page_id', pageId);
-
-                        const response = await fetch('ajax_get_all_ids.php', {
-                            method: 'POST',
-                            body: formData
-                        });
-                        const data = await response.json();
-
-                        if (data.status === 'success') {
-                            // Map IDs to strings to match checkbox values
-                            const stringIds = data.ids.map(String);
-                            saveSelection(stringIds);
-                            initSelection();
-                            alert('<?php echo __('all_leads_selected_success'); ?>'.replace('%s', data.count));
-                        } else {
-                            alert('Error: ' + data.message);
+                            saveSelection(selectedIds);
                         }
-                    } catch (e) {
-                        console.error(e);
-                        alert('Failed to fetch all IDs');
-                    } finally {
-                        if (btn) btn.innerHTML = originalText || '<?php echo __('select_all_global'); ?>';
-                    }
-                }
-
-                // --- SERVER-SIDE SEARCH LOGIC ---
-                const leadSearch = document.getElementById('lead-search');
-                let searchTimeout = null;
-
-                window.filterLeads = function () {
-                    if (!leadSearch) return;
-                    const query = leadSearch.value.trim();
-                    const tbody = document.getElementById('leads-tbody');
-
-                    // Clear prev timer
-                    if (searchTimeout) clearTimeout(searchTimeout);
-
-                    // If empty, reload to show default view or handle gracefully
-                    if (query.length === 0) {
-                        window.location.reload(); // Simple reset
-                        return;
                     }
 
-                    // Debounce search input (500ms)
-                    searchTimeout = setTimeout(async () => {
-                        if (query.length < 2) return; // Min 2 chars
+                    // Handle Direct Checkbox Click (prevent bubbling double toggle)
+                    document.querySelectorAll('.lead-checkbox').forEach(cb => {
+                        cb.addEventListener('click', function (e) {
+                            e.stopPropagation(); // Stop row click
 
-                        // Visual loading indicator
-                        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-10 text-white"><span class="animate-pulse">Searching global database...</span></td></tr>';
+                            let selectedIds = getStoredSelection();
+                            if (this.checked) {
+                                if (!selectedIds.includes(this.value)) selectedIds.push(this.value);
+                            } else {
+                                selectedIds = selectedIds.filter(id => id !== this.value);
+                            }
+                            saveSelection(selectedIds);
+                        });
+                    });
+
+                    // Select All (Visible Only)
+                    if (selectAll) {
+                        selectAll.addEventListener('change', function () {
+                            const isChecked = this.checked;
+                            let selectedIds = getStoredSelection();
+                            const visibleCheckboxes = document.querySelectorAll('.lead-checkbox');
+
+                            visibleCheckboxes.forEach(cb => {
+                                cb.checked = isChecked;
+                                if (isChecked) {
+                                    if (!selectedIds.includes(cb.value)) selectedIds.push(cb.value);
+                                } else {
+                                    selectedIds = selectedIds.filter(id => id !== cb.value);
+                                }
+                            });
+
+                            saveSelection(selectedIds);
+                        });
+                    }
+
+                    // Handle Form Submit
+                    document.getElementById('campaign-form').addEventListener('submit', function (e) {
+                        // Remove any existing hidden inputs first
+                        this.querySelectorAll('input[type="hidden"][name="leads[]"]').forEach(el => el.remove());
+
+                        // Add ALL selected IDs from storage via SINGLE JSON input
+                        // This prevents max_input_vars limit issues with large selections (e.g. 10k leads)
+                        const selectedIds = getStoredSelection();
+
+                        // Remove old inputs if exist
+                        if (this.querySelector('input[name="ids_json"]')) {
+                            this.querySelector('input[name="ids_json"]').remove();
+                        }
+
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'ids_json';
+                        input.value = JSON.stringify(selectedIds);
+                        this.appendChild(input);
+
+                        // Optional: Clear selection after submit? 
+                        // Usually valid to keep until explicit clear or success
+                        // sessionStorage.removeItem(PAGE_KEY); 
+                    });
+
+
+                    // Run Init
+                    initSelection();
+
+                    // --- GLOBAL SELECT LOGIC ---
+                    async function selectAllGlobal(pageId) {
+                        const btn = document.querySelector('[onclick^="selectAllGlobal"]');
+                        const originalText = btn ? btn.innerHTML : '';
+                        if (btn) btn.innerHTML = '<?php echo __('please_wait'); ?>';
 
                         try {
                             const formData = new FormData();
-                            formData.append('q', query);
-                            formData.append('current_page_id', <?php echo $page ? $page['id'] : 0; ?>);
-                            // ^ Note: current_page_id is to ensure we can keep current context if needed, 
-                            // but User wants to search globally across pages, or just extensive search on this page?
-                            // User said: "Search by user name or ID ... should search in ALL pages existing in leads, not just one page"
+                            formData.append('page_id', pageId);
 
-                            const res = await fetch('page_inbox_search.php', { method: 'POST', body: formData });
-                            const html = await res.text();
+                            const response = await fetch('ajax_get_all_ids.php', {
+                                method: 'POST',
+                                body: formData
+                            });
+                            const data = await response.json();
 
-                            if (html.trim()) {
-                                tbody.innerHTML = html;
-                                // Re-initialize checkboxes state
+                            if (data.status === 'success') {
+                                // Map IDs to strings to match checkbox values
+                                const stringIds = data.ids.map(String);
+                                saveSelection(stringIds);
                                 initSelection();
+                                alert('<?php echo __('all_leads_selected_success'); ?>'.replace('%s', data.count));
                             } else {
-                                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-10 text-gray-400">No results found in any page.</td></tr>';
+                                alert('Error: ' + data.message);
+                            }
+                        } catch (e) {
+                            console.error(e);
+                            alert('Failed to fetch all IDs');
+                        } finally {
+                            if (btn) btn.innerHTML = originalText || '<?php echo __('select_all_global'); ?>';
+                        }
+                    }
+
+                    // --- SERVER-SIDE SEARCH LOGIC ---
+                    const leadSearch = document.getElementById('lead-search');
+                    let searchTimeout = null;
+
+                    window.filterLeads = function () {
+                        if (!leadSearch) return;
+                        const query = leadSearch.value.trim();
+                        const tbody = document.getElementById('leads-tbody');
+
+                        // Clear prev timer
+                        if (searchTimeout) clearTimeout(searchTimeout);
+
+                        // If empty, reload to show default view or handle gracefully
+                        if (query.length === 0) {
+                            window.location.reload(); // Simple reset
+                            return;
+                        }
+
+                        // Debounce search input (500ms)
+                        searchTimeout = setTimeout(async () => {
+                            if (query.length < 2) return; // Min 2 chars
+
+                            // Visual loading indicator
+                            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-10 text-white"><span class="animate-pulse">Searching global database...</span></td></tr>';
+
+                            try {
+                                const formData = new FormData();
+                                formData.append('q', query);
+                                formData.append('current_page_id', <?php echo $page ? $page['id'] : 0; ?>);
+                                // ^ Note: current_page_id is to ensure we can keep current context if needed, 
+                                // but User wants to search globally across pages, or just extensive search on this page?
+                                // User said: "Search by user name or ID ... should search in ALL pages existing in leads, not just one page"
+
+                                const res = await fetch('page_inbox_search.php', { method: 'POST', body: formData });
+                                const html = await res.text();
+
+                                if (html.trim()) {
+                                    tbody.innerHTML = html;
+                                    // Re-initialize checkboxes state
+                                    initSelection();
+                                } else {
+                                    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-10 text-gray-400">No results found in any page.</td></tr>';
+                                }
+
+                            } catch (err) {
+                                console.error(err);
+                                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-10 text-red-400">Search Error</td></tr>';
                             }
 
-                        } catch (err) {
-                            console.error(err);
-                            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-10 text-red-400">Search Error</td></tr>';
-                        }
+                        }, 500);
+                    };
 
-                    }, 500);
-                };
-
-                if (leadSearch) {
-                    leadSearch.addEventListener('input', filterLeads);
-                }
-
-                setMode('limit');
-
-                // Check for cleared message to reset selection
-                const urlParams = new URLSearchParams(window.location.search);
-                if (urlParams.get('msg') === 'cleared') {
-                    sessionStorage.removeItem(PAGE_KEY);
-                    initSelection(); // This will clear UI
-                }
-
-                if (window.history.replaceState) {
-                    const url = new URL(window.location);
-                    url.searchParams.delete('msg');
-                    window.history.replaceState(null, '', url);
-                }
-                // --- TOKEN MODAL LOGIC ---
-                function showTokenModal() {
-                    document.getElementById('token-modal').classList.remove('hidden');
-                }
-
-                async function updateToken() {
-                    const newToken = document.getElementById('new-token-input').value.trim();
-                    if (!newToken) {
-                        alert('<?php echo __('enter_valid_token'); ?>');
-                        return;
+                    if (leadSearch) {
+                        leadSearch.addEventListener('input', filterLeads);
                     }
 
-                    const btn = document.getElementById('btn-update-token');
-                    btn.disabled = true;
-                    btn.innerHTML = '<?php echo __('updating_btn'); ?>';
+                    setMode('limit');
 
-                    try {
-                        const formData = new FormData();
-                        formData.append('action', 'update_token_page');
-                        formData.append('page_id', <?php echo $page['id']; ?>);
-                        formData.append('new_token', newToken);
-
-                        const response = await fetch('page_inbox.php', {
-                            method: 'POST',
-                            body: formData
-                        });
-                        const data = await response.json();
-
-                        if (data.status === 'success') {
-                            document.getElementById('token-modal').classList.add('hidden');
-                            alert('<?php echo __('token_updated_success'); ?>');
-                            // Force a clean reload (GET) to avoid resubmitting old POST data
-                            window.location.href = window.location.href;
-                        } else {
-                            alert('Error: ' + data.message);
-                        }
-                    } catch (e) {
-                        console.error(e);
-                        alert('<?php echo __('update_token_error'); ?>');
-                    } finally {
-                        btn.disabled = false;
-                        btn.innerHTML = '<?php echo __('update_token_btn'); ?>';
-                    }
-                }
-                // Clear Selection Helper
-                function clearSelection() {
-                    if (confirm('<?php echo __('clear_selection_confirm'); ?>')) {
+                    // Check for cleared message to reset selection
+                    const urlParams = new URLSearchParams(window.location.search);
+                    if (urlParams.get('msg') === 'cleared') {
                         sessionStorage.removeItem(PAGE_KEY);
-                        initSelection();
-                        // Untick all visual
-                        document.querySelectorAll('.lead-checkbox').forEach(cb => cb.checked = false);
-                        if (selectAll) selectAll.checked = false;
-
-                        // Hide clear button
-                        document.getElementById('btn-clear-selection').style.display = 'none';
+                        initSelection(); // This will clear UI
                     }
-                }
 
-                // Show clear button if selection > 0
-                const statCheck = setInterval(() => {
-                    const cnt = getStoredSelection().length;
-                    const btn = document.getElementById('btn-clear-selection');
-                    if (btn) btn.style.display = cnt > 0 ? 'inline-block' : 'none';
-                }, 1000);
+                    if (window.history.replaceState) {
+                        const url = new URL(window.location);
+                        url.searchParams.delete('msg');
+                        window.history.replaceState(null, '', url);
+                    }
+                    // --- TOKEN MODAL LOGIC ---
+                    function showTokenModal() {
+                        document.getElementById('token-modal').classList.remove('hidden');
+                    }
 
-            </script>
+                    async function updateToken() {
+                        const newToken = document.getElementById('new-token-input').value.trim();
+                        if (!newToken) {
+                            alert('<?php echo __('enter_valid_token'); ?>');
+                            return;
+                        }
+
+                        const btn = document.getElementById('btn-update-token');
+                        btn.disabled = true;
+                        btn.innerHTML = '<?php echo __('updating_btn'); ?>';
+
+                        try {
+                            const formData = new FormData();
+                            formData.append('action', 'update_token_page');
+                            formData.append('page_id', <?php echo $page['id']; ?>);
+                            formData.append('new_token', newToken);
+
+                            const response = await fetch('page_inbox.php', {
+                                method: 'POST',
+                                body: formData
+                            });
+                            const data = await response.json();
+
+                            if (data.status === 'success') {
+                                document.getElementById('token-modal').classList.add('hidden');
+                                alert('<?php echo __('token_updated_success'); ?>');
+                                // Force a clean reload (GET) to avoid resubmitting old POST data
+                                window.location.href = window.location.href;
+                            } else {
+                                alert('Error: ' + data.message);
+                            }
+                        } catch (e) {
+                            console.error(e);
+                            alert('<?php echo __('update_token_error'); ?>');
+                        } finally {
+                            btn.disabled = false;
+                            btn.innerHTML = '<?php echo __('update_token_btn'); ?>';
+                        }
+                    }
+                    // Clear Selection Helper
+                    function clearSelection() {
+                        if (confirm('<?php echo __('clear_selection_confirm'); ?>')) {
+                            sessionStorage.removeItem(PAGE_KEY);
+                            initSelection();
+                            // Untick all visual
+                            document.querySelectorAll('.lead-checkbox').forEach(cb => cb.checked = false);
+                            if (selectAll) selectAll.checked = false;
+
+                            // Hide clear button
+                            document.getElementById('btn-clear-selection').style.display = 'none';
+                        }
+                    }
+
+                    // Show clear button if selection > 0
+                    const statCheck = setInterval(() => {
+                        const cnt = getStoredSelection().length;
+                        const btn = document.getElementById('btn-clear-selection');
+                        if (btn) btn.style.display = cnt > 0 ? 'inline-block' : 'none';
+                    }, 1000);
+
+                </script>
         <?php endif; ?>
 
         <script>

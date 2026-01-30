@@ -11,7 +11,7 @@ $current_user = $_SESSION['user_id'];
 $pdo = getDB();
 
 // Fetch Pages
-$stmt = $pdo->prepare("SELECT p.* FROM fb_pages p JOIN fb_accounts a ON p.account_id = a.id WHERE a.user_id = ?");
+$stmt = $pdo->prepare("SELECT p.* FROM fb_pages p JOIN fb_accounts a ON p.account_id = a.id WHERE a.user_id = ? GROUP BY p.page_id");
 $stmt->execute([$current_user]);
 $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -582,7 +582,7 @@ require_once __DIR__ . '/../includes/header.php';
                 const videoExtensions = ['.mp4', '.mov', '.avi', '.webm', '.mkv'];
                 return videoExtensions.some(ext => url.toLowerCase().includes(ext));
             },
-            
+
             progressText() {
                 if (this.uploading && this.uploadPercent < 100) return 'Uploading Media...';
                 if (this.uploadPercent >= 100 || this.processing) return 'Processing with Facebook...';
@@ -656,7 +656,7 @@ require_once __DIR__ . '/../includes/header.php';
                     reader.onload = (ev) => {
                         file.preview = ev.target.result;
                         this.filesSelected.push(file);
-                        
+
                         // Set first image as main preview if empty
                         if (!this.formData.media_url) {
                             this.formData.media_url = file.preview;
@@ -664,7 +664,7 @@ require_once __DIR__ . '/../includes/header.php';
                     };
                     reader.readAsDataURL(file);
                 });
-                
+
                 e.target.value = '';
             },
 
@@ -672,9 +672,9 @@ require_once __DIR__ . '/../includes/header.php';
                 this.filesSelected.splice(index, 1);
                 // Update main preview if needed
                 if (this.filesSelected.length > 0) {
-                     this.formData.media_url = this.filesSelected[0].preview;
+                    this.formData.media_url = this.filesSelected[0].preview;
                 } else {
-                     this.formData.media_url = '';
+                    this.formData.media_url = '';
                 }
             },
 
@@ -693,7 +693,7 @@ require_once __DIR__ . '/../includes/header.php';
                 if (isFeed) {
                     isValid = hasPage && hasContent && hasTime;
                 } else if (isStory) {
-                    isValid = hasPage && hasTime && hasMedia; 
+                    isValid = hasPage && hasTime && hasMedia;
                 } else if (isReel) {
                     isValid = hasPage && hasTime && hasMedia && hasContent;
                 }
@@ -702,7 +702,7 @@ require_once __DIR__ . '/../includes/header.php';
                     alert('<?php echo __('fill_all_fields'); ?>');
                     return;
                 }
-                
+
                 // Extra check for Reel/Story - Only single file allowed currently
                 if ((isStory || isReel) && this.filesSelected.length > 1) {
                     alert('Stories and Reels currently support only 1 file.');
@@ -739,7 +739,7 @@ require_once __DIR__ . '/../includes/header.php';
                     sendData.append('media_url', this.formData.media_url);
                 } else if (this.filesSelected.length > 0) {
                     this.filesSelected.forEach(f => {
-                         sendData.append('media_file[]', f);
+                        sendData.append('media_file[]', f);
                     });
                 }
 
@@ -752,8 +752,8 @@ require_once __DIR__ . '/../includes/header.php';
                         const percentComplete = Math.round((e.loaded / e.total) * 100);
                         this.uploadPercent = percentComplete;
                         if (percentComplete >= 100) {
-                             this.processing = true; 
-                             this.uploading = false;
+                            this.processing = true;
+                            this.uploading = false;
                         }
                     }
                 });
@@ -762,7 +762,7 @@ require_once __DIR__ . '/../includes/header.php';
                     this.loading = false;
                     this.uploading = false;
                     this.processing = false;
-                    
+
                     if (xhr.status === 200) {
                         try {
                             const result = JSON.parse(xhr.responseText);
@@ -773,8 +773,8 @@ require_once __DIR__ . '/../includes/header.php';
                                 alert(result.message || 'Error occurred');
                             }
                         } catch (e) {
-                             console.error('JSON Error:', xhr.responseText);
-                             alert('Server Error: Invalid Response');
+                            console.error('JSON Error:', xhr.responseText);
+                            alert('Server Error: Invalid Response');
                         }
                     } else {
                         alert('HTTP Error: ' + xhr.status);

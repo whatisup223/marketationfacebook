@@ -26,17 +26,82 @@ try {
             exit;
         }
 
-        // Verify by fetching 'me'
+        // 1. Try to debug the token for expiry info
+        $app_id = getSetting('fb_app_id');
+        $app_secret = getSetting('fb_app_secret');
+        $app_token = (!empty($app_id) && !empty($app_secret)) ? ($app_id . '|' . $app_secret) : $token;
+
+        $debug = $fb->debugToken($token, $app_token);
+
+        $token_type = 'Unknown';
+        $expires_at = null;
+        $expiry_label = '';
+
+        if (isset($debug['data'])) {
+            $data = $debug['data'];
+            $is_valid = $data['is_valid'] ?? false;
+
+            if ($is_valid) {
+                $token_type = ($data['expires_at'] ?? 0) == 0 ? 'Long-lived' : 'Short-lived';
+                if (isset($data['expires_at']) && $data['expires_at'] > 0) {
+                    $expires_at = date('Y-m-d H:i:s', $data['expires_at']);
+                    $expiry_label = date('Y-m-d H:i', $data['expires_at']);
+
+                    // Calculate remaining time
+                    $remaining = $data['expires_at'] - time();
+                    if ($remaining > 0) {
+                        $days = floor($remaining / 86400);
+                        $hours = floor(($remaining % 86400) / 3600);
+                        $remains_label = ($days > 0 ? $days . 'd ' : '') . $hours . 'h';
+                        $expiry_label .= " ({$remains_label})";
+                    }
+                } else {
+                    $token_type = 'Long-lived / Indefinite';
+                    $expiry_label = 'No Expiry';
+                }
+
+                // Update DB with details
+                $stmt = $pdo->prepare("UPDATE fb_accounts SET is_active = 1, token_type = ?, expires_at = ? WHERE id = ?");
+                $stmt->execute([$token_type, $expires_at, $acc_id]);
+
+                // Localized labels
+                $localized_type = $token_type;
+                if ($token_type === 'Long-lived')
+                    $localized_type = __('token_long_lived');
+                elseif ($token_type === 'Short-lived')
+                    $localized_type = __('token_short_lived');
+                elseif ($token_type === 'Long-lived / Indefinite')
+                    $localized_type = __('token_static');
+
+                echo json_encode([
+                    'status' => 'active',
+                    'message' => __('valid_token'),
+                    'token_type' => $localized_type,
+                    'expires_at' => ($expiry_label === 'No Expiry' ? __('token_never') : $expiry_label),
+                    'expiry_prefix' => __('token_expiry'),
+                    'is_long_lived' => ($token_type !== 'Short-lived')
+                ]);
+                exit;
+            }
+        }
+
+        // 2. Fallback: Simple Verify by fetching 'me'
         $response = $fb->getObject('me', $token);
 
         if (isset($response['id'])) {
-            // Valid
+            // Valid but maybe couldn't get debug info
             $pdo->prepare("UPDATE fb_accounts SET is_active = 1 WHERE id = ?")->execute([$acc_id]);
-            echo json_encode(['status' => 'active', 'message' => 'Token is valid']);
+            echo json_encode([
+                'status' => 'active',
+                'message' => __('valid_token'),
+                'token_type' => __('active'),
+                'expires_at' => __('token_unknown'),
+                'expiry_prefix' => __('token_expiry')
+            ]);
         } else {
             // Invalid
             $pdo->prepare("UPDATE fb_accounts SET is_active = 0 WHERE id = ?")->execute([$acc_id]);
-            echo json_encode(['status' => 'expired', 'message' => 'Token expired']);
+            echo json_encode(['status' => 'expired', 'message' => __('invalid_token')]);
         }
 
     } elseif (isset($_POST['page_db_id'])) {

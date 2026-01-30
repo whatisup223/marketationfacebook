@@ -13,6 +13,7 @@ $pdo = getDB();
 $stmt = $pdo->prepare("SELECT p.* FROM fb_pages p 
                       JOIN fb_accounts a ON p.account_id = a.id 
                       WHERE a.user_id = ? 
+                      GROUP BY p.page_id 
                       ORDER BY p.page_name ASC");
 $stmt->execute([$_SESSION['user_id']]);
 $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -131,76 +132,80 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                 <!-- Webhook Settings -->
                 <div
-                    class="glass-panel p-6 rounded-2xl border border-indigo-500/20 bg-indigo-500/5 backdrop-blur-xl relative overflow-hidden">
+                    class="glass-panel p-4 md:p-6 rounded-2xl border border-indigo-500/20 bg-indigo-500/5 backdrop-blur-xl relative overflow-hidden">
                     <div
                         class="absolute top-0 right-0 w-32 h-32 bg-indigo-600/10 blur-3xl -mr-16 -mt-16 pointer-events-none">
                     </div>
 
-                    <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2 relative z-10">
+                    <h3 class="text-base md:text-lg font-bold text-white mb-4 flex items-center gap-2 relative z-10">
                         <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                         </svg>
                         <?php echo __('webhook_configuration'); ?>
                     </h3>
-                    <p class="text-xs text-gray-400 mb-6 relative z-10 leading-relaxed">
+                    <p class="text-[10px] md:text-xs text-gray-400 mb-6 relative z-10 leading-relaxed">
                         <?php echo __('webhook_help'); ?>
                     </p>
 
-                    <div class="space-y-5 relative z-10">
+                    <div class="space-y-6 relative z-10">
                         <!-- Callback URL -->
-                        <div>
+                        <div class="min-w-0">
                             <label
-                                class="block text-[10px] font-bold text-indigo-300/70 uppercase tracking-widest mb-2"><?php echo __('callback_url'); ?></label>
-                            <div class="flex gap-2">
+                                class="block text-[9px] md:text-[10px] font-bold text-indigo-300/70 uppercase tracking-widest mb-2"><?php echo __('callback_url'); ?></label>
+                            <div class="flex flex-wrap sm:flex-nowrap gap-2 items-center">
                                 <input type="text" readonly :value="webhookUrl"
-                                    class="flex-1 bg-black/30 border border-white/10 rounded-lg text-xs text-gray-300 p-2.5 font-mono truncate focus:outline-none focus:border-indigo-500/50 transition-colors">
-                                <button @click="regenerateWebhookId()"
-                                    class="p-2.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-gray-600 rounded-lg text-gray-400 hover:text-white transition-all shadow-lg"
-                                    title="<?php echo __('regenerate'); ?>">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
-                                        </path>
-                                    </svg>
-                                </button>
-                                <button @click="copyToClipboard(webhookUrl)"
-                                    class="p-2.5 bg-indigo-600 hover:bg-indigo-500 border border-transparent rounded-lg text-white transition-all shadow-lg shadow-indigo-500/20"
-                                    title="<?php echo __('copy'); ?>">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3">
-                                        </path>
-                                    </svg>
-                                </button>
+                                    class="flex-1 min-w-0 bg-black/30 border border-white/10 rounded-lg text-[11px] md:text-xs text-gray-300 p-2.5 font-mono truncate focus:outline-none focus:border-indigo-500/50 transition-colors">
+                                <div class="flex gap-2 w-full sm:w-auto shrink-0">
+                                    <button @click="regenerateWebhookId()"
+                                        class="flex-1 sm:flex-none p-2.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-gray-600 rounded-lg text-gray-400 hover:text-white transition-all shadow-lg flex justify-center items-center"
+                                        title="<?php echo __('regenerate'); ?>">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                                            </path>
+                                        </svg>
+                                    </button>
+                                    <button @click="copyToClipboard(webhookUrl)"
+                                        class="flex-1 sm:flex-none p-2.5 bg-indigo-600 hover:bg-indigo-500 border border-transparent rounded-lg text-white transition-all shadow-lg shadow-indigo-500/20 flex justify-center items-center"
+                                        title="<?php echo __('copy'); ?>">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3">
+                                            </path>
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
                         <!-- Verify Token -->
-                        <div>
+                        <div class="min-w-0">
                             <label
-                                class="block text-[10px] font-bold text-indigo-300/70 uppercase tracking-widest mb-2"><?php echo __('verify_token'); ?></label>
-                            <div class="flex gap-2">
+                                class="block text-[9px] md:text-[10px] font-bold text-indigo-300/70 uppercase tracking-widest mb-2"><?php echo __('verify_token'); ?></label>
+                            <div class="flex flex-wrap sm:flex-nowrap gap-2 items-center">
                                 <input type="text" readonly :value="verifyToken"
-                                    class="flex-1 bg-black/30 border border-white/10 rounded-lg text-xs text-gray-300 p-2.5 font-mono truncate focus:outline-none focus:border-indigo-500/50 transition-colors">
-                                <button @click="regenerateVerifyToken()"
-                                    class="p-2.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-gray-600 rounded-lg text-gray-400 hover:text-white transition-all shadow-lg"
-                                    title="<?php echo __('regenerate'); ?>">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
-                                        </path>
-                                    </svg>
-                                </button>
-                                <button @click="copyToClipboard(verifyToken)"
-                                    class="p-2.5 bg-indigo-600 hover:bg-indigo-500 border border-transparent rounded-lg text-white transition-all shadow-lg shadow-indigo-500/20"
-                                    title="<?php echo __('copy'); ?>">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3">
-                                        </path>
-                                    </svg>
-                                </button>
+                                    class="flex-1 min-w-0 bg-black/30 border border-white/10 rounded-lg text-[11px] md:text-xs text-gray-300 p-2.5 font-mono truncate focus:outline-none focus:border-indigo-500/50 transition-colors">
+                                <div class="flex gap-2 w-full sm:w-auto shrink-0">
+                                    <button @click="regenerateVerifyToken()"
+                                        class="flex-1 sm:flex-none p-2.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-gray-600 rounded-lg text-gray-400 hover:text-white transition-all shadow-lg flex justify-center items-center"
+                                        title="<?php echo __('regenerate'); ?>">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                                            </path>
+                                        </svg>
+                                    </button>
+                                    <button @click="copyToClipboard(verifyToken)"
+                                        class="flex-1 sm:flex-none p-2.5 bg-indigo-600 hover:bg-indigo-500 border border-transparent rounded-lg text-white transition-all shadow-lg shadow-indigo-500/20 flex justify-center items-center"
+                                        title="<?php echo __('copy'); ?>">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3">
+                                            </path>
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
