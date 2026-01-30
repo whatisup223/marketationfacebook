@@ -53,31 +53,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['start_campaign'])) {
         $numbers_raw = $_POST['numbers'] ?? '';
         $numbers = array_filter(array_map('trim', preg_split('/[\r\n,]+/', $numbers_raw)));
 
-        // Handle CSV Upload for Numbers (Robust Regex Method)
-        if (isset($_FILES['numbers_csv']) && $_FILES['numbers_csv']['error'] === UPLOAD_ERR_OK) {
-            $csvFile = $_FILES['numbers_csv']['tmp_name'];
-
+        // Handle TXT Upload for Numbers (Robust Regex Method)
+        if (isset($_FILES['numbers_txt']) && $_FILES['numbers_txt']['error'] === UPLOAD_ERR_OK) {
+            $txtFile = $_FILES['numbers_txt']['tmp_name'];
+            
             // Read entire file content
-            $fileContent = file_get_contents($csvFile);
-
+            $fileContent = file_get_contents($txtFile);
+            
             if ($fileContent !== false) {
-                // HANDLE ENCODING ISSUES (Fix for Excel CSVs/UTF-16)
-                // If null bytes are detected, it's likely UTF-16/Wide char
-                if (strpos($fileContent, "\x00") !== false) {
-                    $encoding = mb_detect_encoding($fileContent, ['UTF-16LE', 'UTF-16BE', 'UCS-2LE', 'UCS-2BE'], true);
-                    if ($encoding) {
-                        $fileContent = mb_convert_encoding($fileContent, 'UTF-8', $encoding);
-                    } else {
-                        // Fallback: Remove null bytes to make it ASCII-compatible for digits
-                        $fileContent = str_replace("\x00", "", $fileContent);
-                    }
-                }
-
                 // Extract sequences of 10 to 15 digits
-                // This accounts for various separators (comma, newline, space, semicolon)
-                // and ignores surrounding text/headers implicitly.
                 preg_match_all('/\d{10,15}/', $fileContent, $matches);
-
+                
                 if (!empty($matches[0])) {
                     $numbers = array_merge($numbers, $matches[0]);
                 }
@@ -382,18 +368,18 @@ require_once __DIR__ . '/../includes/header.php';
                         <p class="mt-2 text-xs text-gray-500"><?php echo __('wa_numbers_hint'); ?></p>
                     </div>
 
-                    <div x-show="importMode === 'csv'" class="animate-fade-in">
+                    <div x-show="importMode === 'txt'" class="animate-fade-in" x-cloak>
                         <div
                             class="border-2 border-dashed border-white/10 rounded-2xl p-8 text-center hover:border-indigo-500/30 transition-colors cursor-pointer relative group">
-                            <input type="file" name="numbers_csv" accept=".csv, .txt"
+                            <input type="file" name="numbers_txt" accept=".txt"
                                 class="absolute inset-0 opacity-0 cursor-pointer">
                             <svg class="w-12 h-12 text-gray-400 mx-auto mb-4 group-hover:scale-110 transition-transform"
                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                             </svg>
-                            <p class="text-white font-bold"><?php echo __('wa_csv_drop'); ?></p>
-                            <p class="text-gray-500 text-xs mt-1"><?php echo __('wa_csv_hint'); ?></p>
+                            <p class="text-white font-bold"><?php echo __('wa_txt_drop'); ?></p>
+                            <p class="text-gray-500 text-xs mt-1"><?php echo __('wa_txt_hint'); ?></p>
                         </div>
                     </div>
                 </div>

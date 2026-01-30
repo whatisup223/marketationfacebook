@@ -147,6 +147,9 @@ $translations = [
         'verified' => 'موثق',
         'wa_no_leads_selected' => 'يرجى إدخال رقم هاتف واحد على الأقل أو رفع ملف CSV صحيح.',
         'wa_error_missing_fields' => 'اسم الحملة ومحتوى الرسالة مطلوبان.',
+        'wa_import_txt' => 'استيراد من ملف نصي (TXT)',
+        'wa_txt_drop' => 'اسحب ملف TXT هنا',
+        'wa_txt_hint' => 'يجب أن يحتوي الملف على الأرقام فقط.',
 
         // Modules
         'extraction_tools' => 'أدوات الاستخراج',
