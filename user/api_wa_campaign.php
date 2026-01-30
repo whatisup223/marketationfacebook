@@ -150,14 +150,17 @@ try {
                 return $options[array_rand($options)];
             }, $processed_message);
 
-            // RESOLVE GATEWAY MODE (Fix for 'official' generic mode)
-            // If mode is 'official', we need to check which provider is actually active in settings
-            if ($campaign['gateway_mode'] === 'official') {
+            // RESOLVE GATEWAY MODE (Fix for 'official' generic mode OR empty legacy modes)
+            // If mode is 'official' or empty, we need to check which provider is actually active in settings
+            if (empty($campaign['gateway_mode']) || $campaign['gateway_mode'] === 'official') {
                 $prov_stmt = $pdo->prepare("SELECT external_provider FROM user_wa_settings WHERE user_id = ?");
                 $prov_stmt->execute([$user_id]);
                 $active_provider = $prov_stmt->fetchColumn();
                 if ($active_provider) {
                     $campaign['gateway_mode'] = $active_provider; // override to 'meta', 'twilio', etc.
+                } else {
+                    // Fallback if no provider set? Maybe default to meta or just log it
+                    // If it remains empty, it will fail below with "Invalid Gateway Mode"
                 }
             }
 
