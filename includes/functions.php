@@ -146,6 +146,7 @@ $translations = [
         'copyright' => 'جميع الحقوق محفوظة',
         'verified' => 'موثق',
         'wa_error_no_numbers' => 'يرجى إدخال رقم هاتف واحد على الأقل أو رفع ملف CSV صحيح.',
+        'wa_error_missing_fields' => 'اسم الحملة ومحتوى الرسالة مطلوبان.',
 
         // Modules
         'extraction_tools' => 'أدوات الاستخراج',

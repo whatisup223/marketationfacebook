@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['start_campaign'])) {
     try {
         // Validate required fields
         if (empty($_POST['campaign_name']) || empty($_POST['message'])) {
-            throw new Exception("Campaign name and message are required");
+            throw new Exception(__('wa_error_missing_fields'));
         }
 
         // Get selected gateway mode from form
