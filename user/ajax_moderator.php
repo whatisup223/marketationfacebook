@@ -12,7 +12,33 @@ if (!isLoggedIn()) {
 
 $user_id = $_SESSION['user_id'];
 $pdo = getDB();
-$action = $_GET['action'] ?? '';
+$action = $_GET['action'] ?? $_POST['action'] ?? '';
+
+// 0. Webhook Info
+if ($action === 'get_webhook_info') {
+    try {
+        $stmt = $pdo->prepare("SELECT webhook_token, verify_token FROM users WHERE id = ?");
+        $stmt->execute([$user_id]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
+        $current_url = "$protocol://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+        $dir_url = dirname($current_url);
+        $root_url = dirname($dir_url);
+
+        $token = $user['webhook_token'] ?? '';
+        $webhook_url = rtrim($root_url, '/') . '/webhook.php?uid=' . $token;
+
+        echo json_encode([
+            'status' => 'success',
+            'webhook_url' => $webhook_url,
+            'verify_token' => $user['verify_token'] ?? ''
+        ]);
+    } catch (Exception $e) {
+        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+    }
+    exit;
+}
 
 // 1. Get Rules
 if ($action === 'get_rules') {
@@ -85,6 +111,149 @@ if ($action === 'get_logs') {
     $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     echo json_encode(['status' => 'success', 'data' => $logs]);
+    exit;
+}
+
+// 4. Delete Log & Comment
+if ($action === 'delete_log' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $log_id = $_POST['log_id'] ?? '';
+    if (!$log_id) {
+        echo json_encode(['status' => 'error', 'message' => 'Log ID required']);
+        exit;
+    }
+
+    $stmt = $pdo->prepare("SELECT * FROM fb_moderation_logs WHERE id = ? AND user_id = ?");
+    $stmt->execute([$log_id, $user_id]);
+    $log = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$log) {
+        echo json_encode(['status' => 'error', 'message' => 'Log not found']);
+        exit;
+    }
+
+    // Attempt to delete from Facebook
+    $stmt = $pdo->prepare("SELECT page_access_token FROM fb_pages WHERE page_id = ?");
+    $stmt->execute([$log['page_id']]);
+    $token = $stmt->fetchColumn();
+
+    if ($token && !empty($log['comment_id'])) {
+        $fb = new FacebookAPI();
+        try {
+            $fb->makeRequest($log['comment_id'], [], $token, 'DELETE');
+        } catch (Exception $e) {
+            // Silently ignore if already deleted or error
+        }
+    }
+
+    // Delete from DB
+    $stmt = $pdo->prepare("DELETE FROM fb_moderation_logs WHERE id = ?");
+    $stmt->execute([$log_id]);
+
+    echo json_encode(['status' => 'success', 'message' => 'Log and comment deleted']);
+    exit;
+}
+
+// 5. Token Debug/Webhook Check
+if ($action === 'get_token_debug') {
+    $page_id = $_GET['page_id'] ?? '';
+    if (!$page_id) {
+        echo json_encode(['status' => 'error', 'message' => 'Page ID required']);
+        exit;
+    }
+
+    $stmt = $pdo->prepare("SELECT page_access_token FROM fb_pages WHERE page_id = ?");
+    $stmt->execute([$page_id]);
+    $token = $stmt->fetchColumn();
+
+    if (!$token) {
+        echo json_encode(['status' => 'error', 'message' => 'Page token not found']);
+        exit;
+    }
+
+    $fb = new FacebookAPI();
+    $app_id = getSetting('fb_app_id');
+    $app_secret = getSetting('fb_app_secret');
+    $app_access_token = "$app_id|$app_secret";
+    $debug = $fb->debugToken($token, $app_access_token);
+
+    // Also check webhook subscription
+    $is_subscribed = false;
+    $subs = $fb->makeRequest("$page_id/subscribed_apps", [], $token, 'GET');
+    if (isset($subs['data'])) {
+        foreach ($subs['data'] as $app) {
+            if ($app['name'] === 'Marketation' || (isset($app['id']) && $app['id'] == getSetting('fb_app_id'))) {
+                $is_subscribed = true;
+                break;
+            }
+        }
+    }
+
+    echo json_encode([
+        'status' => 'success',
+        'data' => [
+            'valid' => !empty($debug),
+            'subscribed' => $is_subscribed,
+            'masked_token' => substr($token, 0, 10) . '...' . substr($token, -5)
+        ]
+    ]);
+    exit;
+}
+
+// 6. Subscribe Page
+if ($action === 'subscribe_page' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $page_id = $_POST['page_id'] ?? '';
+    if (!$page_id) {
+        echo json_encode(['status' => 'error', 'message' => 'Page ID is required']);
+        exit;
+    }
+    try {
+        $stmt = $pdo->prepare("SELECT page_access_token FROM fb_pages WHERE page_id = ?");
+        $stmt->execute([$page_id]);
+        $page = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$page) {
+            echo json_encode(['status' => 'error', 'message' => 'Page not found']);
+            exit;
+        }
+        $fb = new FacebookAPI();
+        $res = $fb->subscribeApp($page_id, $page['page_access_token']);
+        if (isset($res['success']) && $res['success']) {
+            echo json_encode(['status' => 'success', 'message' => 'Page successfully protected!']);
+        } else {
+            $err = isset($res['error']['message']) ? $res['error']['message'] : json_encode($res);
+            echo json_encode(['status' => 'error', 'message' => 'FB Error: ' . $err]);
+        }
+    } catch (Exception $e) {
+        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+    }
+    exit;
+}
+
+// 7. Unsubscribe Page
+if ($action === 'unsubscribe_page' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $page_id = $_POST['page_id'] ?? '';
+    if (!$page_id) {
+        echo json_encode(['status' => 'error', 'message' => 'Page ID is required']);
+        exit;
+    }
+    try {
+        $stmt = $pdo->prepare("SELECT page_access_token FROM fb_pages WHERE page_id = ?");
+        $stmt->execute([$page_id]);
+        $page = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$page) {
+            echo json_encode(['status' => 'error', 'message' => 'Page not found']);
+            exit;
+        }
+        $fb = new FacebookAPI();
+        $res = $fb->makeRequest("$page_id/subscribed_apps", [], $page['page_access_token'], 'DELETE');
+        if (isset($res['success']) && $res['success']) {
+            echo json_encode(['status' => 'success', 'message' => 'Page protection stopped!']);
+        } else {
+            $err = isset($res['error']['message']) ? $res['error']['message'] : json_encode($res);
+            echo json_encode(['status' => 'error', 'message' => 'FB Error: ' . $err]);
+        }
+    } catch (Exception $e) {
+        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+    }
     exit;
 }
 
