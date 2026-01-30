@@ -38,6 +38,83 @@ if (empty($wa_accounts) && $gateway_mode === 'qr') {
     }
 }
 
+// Handle API Status Check (AJAX)
+if (isset($_POST['action']) && $_POST['action'] === 'check_api_status') {
+    header('Content-Type: application/json');
+
+    // Helper to make curl requests
+    function check_url($url, $auth_header = null)
+    {
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        if ($auth_header) {
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $auth_header);
+        }
+        $response = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        return ['code' => $http_code, 'body' => $response];
+    }
+
+    try {
+        if ($gateway_mode === 'qr') {
+            throw new Exception("QR Mode is active");
+        }
+
+        $config = json_decode($user_settings['external_config'] ?? '{}', true);
+        $provider = $user_settings['external_provider'] ?? 'meta';
+        $status_data = [];
+
+        if ($provider === 'meta') {
+            if (empty($config['phone_id']) || empty($config['token']))
+                throw new Exception("Missing Meta Config");
+            $url = "https://graph.facebook.com/v17.0/" . $config['phone_id'] . "?access_token=" . $config['token'];
+            $res = check_url($url);
+
+            if ($res['code'] === 200) {
+                $body = json_decode($res['body'], true);
+                $status_data = ['name' => $body['verified_name'] ?? 'Meta Account', 'number' => $body['display_phone_number'] ?? ''];
+            } else {
+                throw new Exception("Meta API Error: " . $res['code']);
+            }
+
+        } elseif ($provider === 'twilio') {
+            if (empty($config['sid']) || empty($config['token']))
+                throw new Exception("Missing Twilio Config");
+            $url = "https://api.twilio.com/2010-04-01/Accounts/" . $config['sid'] . ".json";
+            $auth = ["Authorization: Basic " . base64_encode($config['sid'] . ":" . $config['token'])];
+            $res = check_url($url, $auth);
+
+            if ($res['code'] === 200) {
+                $body = json_decode($res['body'], true);
+                $status_data = ['name' => $body['friendly_name'] ?? 'Twilio Account', 'number' => 'Active'];
+            } else {
+                throw new Exception("Twilio API Error: " . $res['code']);
+            }
+
+        } elseif ($provider === 'ultramsg') {
+            if (empty($config['instance_id']) || empty($config['token']))
+                throw new Exception("Missing UltraMsg Config");
+            $url = "https://api.ultramsg.com/" . $config['instance_id'] . "/instance/status?token=" . $config['token'];
+            $res = check_url($url);
+
+            if ($res['code'] === 200) {
+                $body = json_decode($res['body'], true);
+                $status_data = ['name' => 'UltraMsg Instance', 'number' => $body['status']['text'] ?? 'Connected'];
+            } else {
+                throw new Exception("UltraMsg API Error");
+            }
+        }
+
+        echo json_encode(['status' => 'connected', 'data' => $status_data]);
+
+    } catch (Exception $e) {
+        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+    }
+    exit;
+}
+
 // Handle Form Submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['start_campaign'])) {
     try {
@@ -187,6 +264,45 @@ require_once __DIR__ . '/../includes/header.php';
     lng: '',
     gateway: '<?php echo $gateway_mode; ?>',
     
+    // API Status Logic
+    apiStatus: 'idle', // idle, checking, connected, error
+    apiDetails: null,
+    apiError: '',
+
+    init() {
+        this.gateway = '<?php echo $gateway_mode; ?>';
+        if (this.gateway !== 'qr') {
+            this.checkApiStatus();
+        }
+    },
+
+    async checkApiStatus() {
+        this.apiStatus = 'checking';
+        this.apiError = '';
+        
+        const formData = new FormData();
+        formData.append('action', 'check_api_status');
+
+        try {
+            const res = await fetch('wa_bulk_send.php', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+            
+            if (data.status === 'connected') {
+                this.apiStatus = 'connected';
+                this.apiDetails = data.data;
+            } else {
+                this.apiStatus = 'error';
+                this.apiError = data.message || 'Unknown Error';
+            }
+        } catch (e) {
+            this.apiStatus = 'error';
+            this.apiError = 'Network or Server Error';
+        }
+    },
+    
     // Upload State
     isUploading: false,
     uploadProgress: 0,
@@ -265,7 +381,7 @@ require_once __DIR__ . '/../includes/header.php';
 
         xhr.send(formData);
     }
-}" x-init="gateway = '<?php echo $gateway_mode; ?>'">
+}" x-init="init()">
     <?php require_once __DIR__ . '/../includes/user_sidebar.php'; ?>
 
     <form method="POST" enctype="multipart/form-data" class="flex-1 min-w-0 p-4 md:p-8 relative"
@@ -465,22 +581,76 @@ require_once __DIR__ . '/../includes/header.php';
                         <?php endif; ?>
                     </div>
 
-                    <!-- Content for Official API -->
-                    <div x-show="gateway !== 'qr'"
-                        class="bg-indigo-500/5 rounded-2xl p-6 border border-indigo-500/10 text-center">
-                        <div
-                            class="w-16 h-16 rounded-full bg-indigo-500/20 mx-auto mb-4 flex items-center justify-center text-indigo-400">
-                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                            </svg>
+                    <!-- Content for Official API (Dynamic Status) -->
+                    <div x-show="gateway !== 'qr'" class="relative">
+                        <!-- Checking State -->
+                        <div x-show="apiStatus === 'checking'"
+                            class="bg-indigo-500/5 rounded-2xl p-8 border border-indigo-500/10 text-center animate-pulse">
+                            <div class="w-16 h-16 mx-auto mb-4 relative">
+                                <div class="absolute inset-0 rounded-full border-4 border-indigo-500/20"></div>
+                                <div class="absolute inset-0 rounded-full border-4 border-t-indigo-500 animate-spin">
+                                </div>
+                            </div>
+                            <h4 class="text-white font-bold mb-1">Checking Connection...</h4>
+                            <p class="text-xs text-gray-500">Verifying your API credentials</p>
                         </div>
-                        <h4 class="text-lg font-bold text-white mb-2">
-                            <?php echo strtoupper($user_settings['external_provider'] ?? 'Official API'); ?> Connected
-                        </h4>
-                        <p class="text-gray-400 text-sm">
-                            <?php echo __('wa_using_official_api'); ?>
-                        </p>
+
+                        <!-- Connected State -->
+                        <div x-show="apiStatus === 'connected'"
+                            class="bg-emerald-500/10 rounded-2xl p-6 border border-emerald-500/20 text-center relative overflow-hidden group">
+                            <div
+                                class="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none">
+                            </div>
+
+                            <div
+                                class="w-16 h-16 rounded-full bg-emerald-500/20 mx-auto mb-4 flex items-center justify-center text-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
+
+                            <h4 class="text-xl font-black text-white mb-1 tracking-tight">API Connected!</h4>
+                            <p class="text-emerald-400 font-bold text-sm mb-1"
+                                x-text="apiDetails?.name || 'Official Account'"></p>
+                            <p class="text-gray-400 text-xs font-mono"
+                                x-text="apiDetails?.number ? 'ID: ' + apiDetails.number : 'Ready to Send'"></p>
+
+                            <div
+                                class="mt-4 inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/20 rounded-full border border-emerald-500/20">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                <span class="text-[10px] uppercase font-bold text-emerald-300">Operational</span>
+                            </div>
+                        </div>
+
+                        <!-- Error State -->
+                        <div x-show="apiStatus === 'error'"
+                            class="bg-red-500/5 rounded-2xl p-6 border border-red-500/20 text-center relative">
+                            <div
+                                class="w-16 h-16 rounded-full bg-red-500/10 mx-auto mb-4 flex items-center justify-center text-red-500">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                            </div>
+
+                            <h4 class="text-lg font-bold text-white mb-2">Connection Failed</h4>
+                            <p class="text-red-300 text-sm mb-4 px-4 bg-red-500/5 py-2 rounded-lg break-all font-mono"
+                                x-text="apiError"></p>
+
+                            <button type="button" @click="checkApiStatus()"
+                                class="px-6 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm font-bold text-white transition-all flex items-center gap-2 mx-auto">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                                    </path>
+                                </svg>
+                                Retry Connection
+                            </button>
+
+                            <p class="text-[10px] text-gray-500 mt-4">Check your settings in <a href="wa_settings.php"
+                                    class="text-indigo-400 hover:underline">WhatsApp Settings</a></p>
+                        </div>
                     </div>
                 </div>
 
