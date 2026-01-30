@@ -163,9 +163,9 @@ if (isLoggedIn()) {
                 extend: {
                     fontFamily: {
                         <?php if ($lang === 'ar'): ?>
-                                                                                                                                                                        sans: ['IBM Plex Sans Arabic', 'sans-serif'],
+                                                                                                                                                                            sans: ['IBM Plex Sans Arabic', 'sans-serif'],
                         <?php else: ?>
-                                                                                                                                                                        sans: ['Outfit', 'sans-serif'],
+                                                                                                                                                                            sans: ['Outfit', 'sans-serif'],
                         <?php endif; ?>
                     },
                     colors: {
@@ -805,8 +805,9 @@ if (isLoggedIn()) {
                 <div class="-my-6 divide-y divide-gray-500/25">
                     <div class="space-y-2 py-6">
                         <?php
-                        $is_frontend = (basename($_SERVER['PHP_SELF']) == 'index.php');
-                        if ($is_frontend): ?>
+                        // Robust check: If prefix is empty, we are in the root (Frontend)
+                        $is_frontend_context = ($prefix === '');
+                        if ($is_frontend_context): ?>
                             <!-- Frontend Links (Synced with Landing Page) -->
                             <a href="<?php echo $prefix; ?>index.php" @click="mobileMenu = false"
                                 class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-white hover:bg-gray-800"><?php echo getSetting('nav_home_' . $lang, __('home')); ?></a>
