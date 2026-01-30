@@ -180,8 +180,8 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <!-- Main Body: Preview (Left) & Rules (Right) -->
         <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 pb-20">
 
-            <!-- Left Side: Preview Card -->
-            <div class="lg:col-span-4 order-2 lg:order-1">
+            <!-- Left Side: Preview Card (First on mobile, First on desktop) -->
+            <div class="lg:col-span-4 order-1">
                 <div class="sticky top-24 space-y-6">
                     <div
                         class="glass-card rounded-[32px] border border-white/10 shadow-2xl overflow-hidden bg-[#18191a]">
@@ -285,8 +285,8 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 </div>
             </div>
 
-            <!-- Right Side: Rules Area -->
-            <div class="lg:col-span-8 space-y-8 order-1 lg:order-2">
+            <!-- Right Side: Rules Area (Second on mobile, Second on desktop) -->
+            <div class="lg:col-span-8 space-y-8 order-2">
 
                 <template x-if="!selectedPageId">
                     <div
@@ -438,13 +438,32 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                             <p class="text-xs text-gray-500 italic mt-1" x-text="log.comment_text"></p>
                                         </div>
                                     </div>
-                                    <button @click="confirmDelete(log)"
-                                        class="opacity-0 group-hover:opacity-100 p-2 text-gray-600 hover:text-red-500 transition-all">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                    </button>
+                                    <div
+                                        class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                                        <!-- Open on Facebook -->
+                                        <template x-if="log.comment_id">
+                                            <a :href="'https://facebook.com/' + log.comment_id" target="_blank"
+                                                class="p-2 text-gray-400 hover:text-indigo-400 transition-colors"
+                                                title="<?php echo __('view_on_facebook'); ?>">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                                </svg>
+                                            </a>
+                                        </template>
+
+                                        <!-- Delete Log -->
+                                        <button @click="confirmDelete(log)"
+                                            class="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                                            title="<?php echo __('delete'); ?>">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </div>
                             </template>
 
@@ -463,23 +482,37 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </main>
 
     <!-- Delete Modal -->
-    <template x-if="showDeleteModal">
-        <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-            <div @click.away="showDeleteModal = false"
-                class="bg-gray-900 border border-white/10 rounded-[2rem] p-8 max-w-sm w-full shadow-2xl">
-                <h3 class="text-xl font-bold text-white text-center mb-6"><?php echo __('confirm_delete'); ?></h3>
-                <div class="flex gap-4">
-                    <button @click="showDeleteModal = false"
-                        class="flex-1 py-3 bg-white/5 text-gray-400 rounded-xl font-bold">
-                        <?php echo __('cancel'); ?>
-                    </button>
-                    <button @click="deleteLog()" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold">
-                        <?php echo __('confirm'); ?>
-                    </button>
-                </div>
+    <div x-show="showDeleteModal" x-cloak x-transition.opacity
+        class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
+        <div @click.away="showDeleteModal = false"
+            class="bg-gray-900 border border-white/10 rounded-[2.5rem] p-8 max-w-sm w-full shadow-2xl text-center">
+            <div class="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg class="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2"><?php echo __('confirm_delete'); ?></h3>
+            <p class="text-gray-500 text-sm mb-8"><?php echo __('delete_log_hint'); ?></p>
+            <div class="flex gap-4">
+                <button @click="showDeleteModal = false"
+                    class="flex-1 py-4 bg-white/5 hover:bg-white/10 text-gray-300 rounded-2xl font-bold transition-all">
+                    <?php echo __('cancel'); ?>
+                </button>
+                <button @click="deleteLog()" :disabled="deleting"
+                    class="flex-1 py-4 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-bold transition-all flex items-center justify-center gap-2">
+                    <svg x-show="deleting" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                        </circle>
+                        <path class="opacity-75" fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                        </path>
+                    </svg>
+                    <span x-text="deleting ? '...' : '<?php echo __('confirm'); ?>'"></span>
+                </button>
             </div>
         </div>
-    </template>
+    </div>
 
     <!-- Success Modal -->
     <template x-if="showSuccessModal">
