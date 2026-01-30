@@ -192,13 +192,40 @@ try {
                         $api_key = trim($api_key); // Clean any whitespace
 
                         $endpoint = "$evolution_url/message/sendText/$instance_name";
-
-
-
                         $data = [
                             'number' => $number,
                             'text' => $processed_message
                         ];
+
+                        // HANDLE MEDIA (IMAGE/VIDEO)
+                        if (!empty($campaign['media_url']) && $campaign['media_type'] !== 'text') {
+                            $endpoint = "$evolution_url/message/sendMedia/$instance_name";
+
+                            // Ensure Absolute URL
+                            $media_full_url = $campaign['media_url'];
+                            if (!filter_var($media_full_url, FILTER_VALIDATE_URL)) {
+                                $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
+                                $host = $_SERVER['HTTP_HOST'];
+                                $media_full_url = "$protocol://$host/" . ltrim($media_full_url, '/');
+                            }
+
+                            // Determine Mime/Type based on extension roughly or just send generic 'image'/'video'
+                            // Evolution handles 'mediatype' as 'image', 'video', 'document'
+                            $mediaType = 'image'; // default
+                            if ($campaign['media_type'] == 'video')
+                                $mediaType = 'video';
+                            if ($campaign['media_type'] == 'document')
+                                $mediaType = 'document';
+
+                            $data = [
+                                'number' => $number,
+                                'mediatype' => $mediaType,
+                                'mimetype' => 'application/octet-stream', // Evolution can detect, or we can improve detection later
+                                'caption' => $processed_message,
+                                'media' => $media_full_url,
+                                'fileName' => basename($campaign['media_url'])
+                            ];
+                        }
 
                         $ch = curl_init($endpoint);
                         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
