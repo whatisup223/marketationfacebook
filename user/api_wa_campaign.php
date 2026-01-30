@@ -163,6 +163,13 @@ try {
 
                     if ($account && $user_settings) {
                         $evolution_url = $user_settings['evolution_url'];
+
+                        // Fallback: Use Global Settings if User Settings is empty
+                        if (empty($evolution_url)) {
+                            $global_stmt = $pdo->query("SELECT setting_value FROM settings WHERE setting_key = 'wa_evolution_url'");
+                            $evolution_url = $global_stmt->fetchColumn();
+                        }
+
                         $api_key = $user_settings['evolution_api_key'];
                         $instance_name = $account['instance_name'];
 
