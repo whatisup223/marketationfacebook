@@ -26,6 +26,28 @@ if ($outgoing_ip) {
     echo "<p style='color:orange'>Could not detect outgoing IP (Service unreachable)</p>";
 }
 
+
+echo "<hr><h3>System Network Tests (Requested by Support)</h3>";
+
+// Function to safely execute command
+function run_cmd($cmd)
+{
+    echo "<div style='background:#222; color:#0f0; padding:10px; margin-bottom:10px; border-radius:5px;'>";
+    echo "<strong>$ " . htmlspecialchars($cmd) . "</strong><br><pre>";
+    $output = shell_exec($cmd . " 2>&1"); // redirection to capture stderr
+    echo htmlspecialchars($output ? $output : "No output (shell_exec might be disabled).");
+    echo "</pre></div>";
+}
+
+// 1. Curl Verbose (System Level, distinct from PHP cURL)
+run_cmd("curl -vk " . escapeshellarg($evo_url));
+
+// 2. Traceroute (try standard linux path)
+run_cmd("traceroute -n -m 20 " . escapeshellarg("72.62.236.129"));
+
+// 3. Ping
+run_cmd("ping -c 4 " . escapeshellarg("72.62.236.129"));
+
 echo "<p><strong>Checking DNS Resolution...</strong></p>";
 
 $host = parse_url($evo_url, PHP_URL_HOST);
