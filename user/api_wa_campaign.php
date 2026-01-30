@@ -436,6 +436,94 @@ try {
                 } else {
                     $result = ['success' => false, 'error' => 'User settings not found'];
                 }
+            } elseif ($campaign['gateway_mode'] === 'ultramsg') {
+                // UltraMsg API
+                $user_stmt = $pdo->prepare("SELECT * FROM user_wa_settings WHERE user_id = ?");
+                $user_stmt->execute([$user_id]);
+                $user_settings = $user_stmt->fetch(PDO::FETCH_ASSOC);
+
+                if ($user_settings) {
+                    $config = json_decode($user_settings['external_config'] ?? '{}', true);
+                    $instance_id = $config['instance_id'] ?? '';
+                    $token = $config['token'] ?? '';
+
+                    if ($instance_id && $token) {
+                        // Check for Media
+                        if (!empty($campaign['media_url']) && $campaign['media_type'] !== 'text') {
+                            $url = "https://api.ultramsg.com/$instance_id/messages/image"; // Default image
+                            if ($campaign['media_type'] === 'video')
+                                $url = "https://api.ultramsg.com/$instance_id/messages/video";
+                            if ($campaign['media_type'] === 'document')
+                                $url = "https://api.ultramsg.com/$instance_id/messages/document";
+
+                            // Ensure full URL
+                            $media_url = $campaign['media_url'];
+                            if (!filter_var($media_url, FILTER_VALIDATE_URL)) {
+                                $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
+                                $host = $_SERVER['HTTP_HOST'];
+                                $media_url = "$protocol://$host/" . ltrim($media_url, '/');
+                            }
+
+                            $data = [
+                                'token' => $token,
+                                'to' => $number,
+                                'image' => $media_url, // API param names vary by type, simplifying for now
+                                'video' => $media_url,
+                                'document' => $media_url,
+                                'caption' => $processed_message
+                            ];
+                            // Clean up params based on type
+                            if ($campaign['media_type'] === 'image') {
+                                unset($data['video']);
+                                unset($data['document']);
+                            }
+                            if ($campaign['media_type'] === 'video') {
+                                unset($data['image']);
+                                unset($data['document']);
+                            }
+                            if ($campaign['media_type'] === 'document') {
+                                unset($data['image']);
+                                unset($data['video']);
+                                $data['filename'] = basename($media_url);
+                            }
+
+                        } else {
+                            $url = "https://api.ultramsg.com/$instance_id/messages/chat";
+                            $data = [
+                                'token' => $token,
+                                'to' => $number,
+                                'body' => $processed_message
+                            ];
+                        }
+
+                        $ch = curl_init($url);
+                        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                        curl_setopt($ch, CURLOPT_POST, true);
+                        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
+                        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+
+                        $response = curl_exec($ch);
+                        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                        $curl_error = curl_error($ch);
+                        curl_close($ch);
+
+                        if ($http_code >= 200 && $http_code < 300) {
+                            $res_json = json_decode($response, true);
+                            if (isset($res_json['sent']) && $res_json['sent'] == 'true') {
+                                $result = ['success' => true];
+                            } else {
+                                $result = ['success' => false, 'error' => "API Error: " . ($res_json['message'] ?? $response)];
+                            }
+                        } else {
+                            $result = ['success' => false, 'error' => "HTTP $http_code: $response" . ($curl_error ? " | cURL: $curl_error" : "")];
+                        }
+                    } else {
+                        $result = ['success' => false, 'error' => __('wa_err_missing_ultra')];
+                    }
+                } else {
+                    $result = ['success' => false, 'error' => 'User settings not found'];
+                }
             }
 
             if ($result['success']) {
