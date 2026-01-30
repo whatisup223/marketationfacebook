@@ -150,7 +150,8 @@ require_once __DIR__ . '/../includes/header.php';
                         <div x-show="formData.page_id !== '' && formData.page_id === '<?php echo $post['page_id']; ?>'" x-cloak
                             x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 scale-95"
                             x-transition:enter-end="opacity-100 scale-100"
-                            class="glass-card p-5 rounded-3xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all group">
+                            class="glass-card p-5 rounded-3xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all group relative">
+
                             <div class="flex justify-between items-start mb-4">
                                 <div class="flex items-center gap-3">
                                     <div
@@ -161,26 +162,60 @@ require_once __DIR__ . '/../includes/header.php';
                                         </svg>
                                     </div>
                                     <div>
-                                        <h4 class="text-sm font-bold text-white truncate max-w-[120px]">
-                                            <?php
-                                            $p_name = "Page";
-                                            foreach ($pages as $p)
-                                                if ($p['page_id'] == $post['page_id'])
-                                                    $p_name = $p['page_name'];
-                                            echo htmlspecialchars($p_name);
-                                            ?>
-                                        </h4>
+                                        <div class="flex items-center gap-2">
+                                            <h4 class="text-sm font-bold text-white truncate max-w-[100px]">
+                                                <?php
+                                                $p_name = "Page";
+                                                foreach ($pages as $p)
+                                                    if ($p['page_id'] == $post['page_id'])
+                                                        $p_name = $p['page_name'];
+                                                echo htmlspecialchars($p_name);
+                                                ?>
+                                            </h4>
+                                            <?php if ($post['fb_post_id']): ?>
+                                                <a href="https://facebook.com/<?php echo $post['fb_post_id']; ?>" target="_blank"
+                                                    class="text-indigo-400 hover:text-indigo-300 transition-colors"
+                                                    title="View on Facebook">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path
+                                                            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                                    </svg>
+                                                </a>
+                                            <?php endif; ?>
+                                        </div>
                                         <p class="text-[10px] text-gray-500">
                                             <?php echo date('M d, Y H:i', strtotime($post['scheduled_at'])); ?>
                                         </p>
                                     </div>
                                 </div>
-                                <span
-                                    class="px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider 
-                                    <?php echo $post['status'] === 'success' ? 'bg-green-500/20 text-green-400' :
-                                        ($post['status'] === 'pending' ? 'bg-indigo-500/20 text-indigo-400' : 'bg-red-500/20 text-red-400'); ?>">
-                                    <?php echo $post['status'] === 'pending' ? 'Scheduled' : __($post['status']); ?>
-                                </span>
+                                <div class="flex flex-col items-end gap-2">
+                                    <span
+                                        class="px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider 
+                                        <?php echo $post['status'] === 'success' ? 'bg-green-500/20 text-green-400' :
+                                            ($post['status'] === 'pending' ? 'bg-indigo-500/20 text-indigo-400' : 'bg-red-500/20 text-red-400'); ?>">
+                                        <?php
+                                        if ($post['status'] === 'pending')
+                                            echo 'Scheduled';
+                                        elseif ($post['status'] === 'success')
+                                            echo 'Published';
+                                        else
+                                            echo 'Failed';
+                                        ?>
+                                    </span>
+                                    <?php if ($post['fb_post_id']): ?>
+                                        <button @click="syncPost(<?php echo $post['id']; ?>)"
+                                            class="p-1.5 bg-white/5 hover:bg-white/10 text-gray-500 hover:text-indigo-400 rounded-lg transition-all"
+                                            :class="syncingId == <?php echo $post['id']; ?> ? 'animate-spin text-indigo-400' : ''"
+                                            title="Sync Status">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path
+                                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                            </svg>
+                                        </button>
+                                    <?php endif; ?>
+                                </div>
                             </div>
                             <p class="text-sm text-gray-300 line-clamp-3 mb-4 h-15">
                                 <?php echo htmlspecialchars($post['content']); ?>
@@ -190,8 +225,8 @@ require_once __DIR__ . '/../includes/header.php';
                                     class="relative aspect-video rounded-xl overflow-hidden bg-black/40 mb-4 border border-white/5">
                                     <?php
                                     $is_video = false;
-                                    $ext = strtolower(pathinfo($post['media_url'], PATHINFO_EXTENSION));
-                                    if (in_array($ext, ['mp4', 'mov', 'avi']))
+                                    $ext_path = pathinfo($post['media_url'], PATHINFO_EXTENSION);
+                                    if (in_array(strtolower($ext_path), ['mp4', 'mov', 'avi']))
                                         $is_video = true;
 
                                     if ($is_video): ?>
@@ -212,15 +247,22 @@ require_once __DIR__ . '/../includes/header.php';
                             <?php endif; ?>
 
                             <div class="flex gap-2">
-                                <button @click="deletePost(<?php echo $post['id']; ?>)"
-                                    class="flex-1 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl text-xs font-bold transition-all border border-red-500/20">
+                                <button @click="confirmSmartDelete(<?php echo htmlspecialchars(json_encode($post)); ?>)"
+                                    class="flex-1 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-2xl text-xs font-bold transition-all border border-red-500/20 flex items-center justify-center gap-2 group">
+                                    <svg class="w-4 h-4 group-hover:scale-110 transition-transform" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path
+                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
                                     <?php echo __('delete'); ?>
                                 </button>
-                                <?php if ($post['status'] === 'pending'): ?>
+                                <?php if ($post['status'] === 'pending' || $post['status'] === 'failed'): ?>
                                     <button @click="editPost(<?php echo htmlspecialchars(json_encode($post)); ?>)"
-                                        class="px-3 py-2 bg-white/5 hover:bg-white/10 text-gray-400 rounded-xl transition-all border border-white/5"
+                                        class="px-4 py-3 bg-white/5 hover:bg-white/10 text-gray-400 rounded-2xl transition-all border border-white/5 group"
                                         title="<?php echo __('edit'); ?>">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="w-4 h-4 group-hover:rotate-12 transition-transform" fill="none"
+                                            stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                         </svg>
@@ -230,6 +272,44 @@ require_once __DIR__ . '/../includes/header.php';
                         </div>
                     <?php endforeach; ?>
                 <?php endif; ?>
+            </div>
+        </div>
+
+        <!-- Smart Delete Modal -->
+        <div x-show="showDeleteModal" x-cloak x-transition.opacity
+            class="fixed inset-0 z-[110] flex items-center justify-center p-4">
+            <div class="absolute inset-0 bg-black/90 backdrop-blur-sm" @click="showDeleteModal = false"></div>
+            <div
+                class="glass-panel w-full max-w-md bg-gray-900 border border-white/10 rounded-[2.5rem] p-8 relative z-10 text-center">
+                <div class="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <svg class="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2"
+                    x-text="postToDelete?.status === 'success' ? 'هل تريد حذف المنشور من فيسبوك أيضاً؟' : 'تأكيد الحذف'">
+                </h3>
+                <p class="text-gray-400 text-sm mb-8 leading-relaxed">هذا الإجراء سيقوم بإزالة المنشور من لوحة التحكم
+                    الخاصة بك.</p>
+
+                <div class="space-y-3">
+                    <template x-if="postToDelete?.fb_post_id">
+                        <button @click="executeDelete(true)"
+                            class="w-full py-4 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-bold transition-all flex items-center justify-center gap-2">
+                            <span>حذف من هنا ومن فيسبوك</span>
+                        </button>
+                    </template>
+                    <button @click="executeDelete(false)"
+                        class="w-full py-4 bg-white/5 hover:bg-white/10 text-white rounded-2xl font-bold transition-all">
+                        حذف من هنا فقط
+                    </button>
+                    <button @click="showDeleteModal = false"
+                        class="w-full py-4 text-gray-500 hover:text-white transition-colors">
+                        إلغاء
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -564,6 +644,9 @@ require_once __DIR__ . '/../includes/header.php';
     function postScheduler() {
         return {
             showModal: false,
+            showDeleteModal: false,
+            syncingId: null,
+            postToDelete: null,
             loading: false,
             uploading: false,
             processing: false,
@@ -808,7 +891,50 @@ require_once __DIR__ . '/../includes/header.php';
                 xhr.send(sendData);
             },
 
+            async syncPost(id) {
+                this.syncingId = id;
+                try {
+                    const response = await fetch('ajax_scheduler.php?action=sync&id=' + id);
+                    const result = await response.json();
+                    if (result.status === 'success') {
+                        // Refresh after small delay to show success
+                        setTimeout(() => window.location.reload(), 500);
+                    } else {
+                        alert(result.message);
+                    }
+                } catch (e) {
+                    alert('Sync failed');
+                } finally {
+                    this.syncingId = null;
+                }
+            },
+
+            confirmSmartDelete(post) {
+                this.postToDelete = post;
+                this.showDeleteModal = true;
+            },
+
+            async executeDelete(fromFb) {
+                if (!this.postToDelete) return;
+
+                this.showDeleteModal = false;
+                try {
+                    const response = await fetch(`ajax_scheduler.php?action=delete&id=${this.postToDelete.id}&from_fb=${fromFb ? 1 : 0}`);
+                    const result = await response.json();
+                    if (result.status === 'success') {
+                        window.location.reload();
+                    } else {
+                        alert(result.message);
+                    }
+                } catch (e) {
+                    alert('Delete failed');
+                } finally {
+                    this.postToDelete = null;
+                }
+            },
+
             async deletePost(id) {
+                // Keep for legacy if needed, but we use confirmSmartDelete now
                 if (!confirm('<?php echo __('confirm_delete'); ?>')) return;
                 try {
                     const response = await fetch('ajax_scheduler.php?action=delete&id=' + id);

@@ -16,8 +16,53 @@ $fb = new FacebookAPI();
 
 // 1. Handle GET Actions
 $action_get = $_GET['action'] ?? '';
+
+if ($action_get === 'sync') {
+    $id = $_GET['id'] ?? 0;
+    $stmt = $pdo->prepare("SELECT * FROM fb_scheduled_posts WHERE id = ? AND user_id = ?");
+    $stmt->execute([$id, $user_id]);
+    $post = $stmt->fetch();
+
+    if (!$post || !$post['fb_post_id']) {
+        echo json_encode(['status' => 'error', 'message' => 'Post or FB ID not found']);
+        exit;
+    }
+
+    $stmt = $pdo->prepare("SELECT page_access_token FROM fb_pages WHERE page_id = ?");
+    $stmt->execute([$post['page_id']]);
+    $token = $stmt->fetchColumn();
+
+    if (!$token) {
+        echo json_encode(['status' => 'error', 'message' => 'Token not found']);
+        exit;
+    }
+
+    // Check FB Status
+    $fb_res = $fb->getObject($post['fb_post_id'], $token);
+
+    if (isset($fb_res['error'])) {
+        $err_code = $fb_res['error']['code'] ?? 0;
+        if ($err_code == 100 || $err_code == 10 || $err_code == 21) {
+            // Post probably deleted from FB
+            $stmt = $pdo->prepare("UPDATE fb_scheduled_posts SET status = 'failed', error_message = 'Deleted from Facebook' WHERE id = ?");
+            $stmt->execute([$id]);
+            echo json_encode(['status' => 'success', 'new_state' => 'deleted_from_fb']);
+        } else {
+            echo json_encode(['status' => 'error', 'message' => $fb_res['error']['message']]);
+        }
+    } else {
+        // Post is alive
+        $stmt = $pdo->prepare("UPDATE fb_scheduled_posts SET status = 'success' WHERE id = ?");
+        $stmt->execute([$id]);
+        echo json_encode(['status' => 'success', 'new_state' => 'alive']);
+    }
+    exit;
+}
+
 if ($action_get === 'delete') {
     $id = $_GET['id'] ?? 0;
+    $delete_from_fb = ($_GET['from_fb'] ?? '0') === '1';
+
     $stmt = $pdo->prepare("SELECT * FROM fb_scheduled_posts WHERE id = ? AND user_id = ?");
     $stmt->execute([$id, $user_id]);
     $post = $stmt->fetch();
@@ -27,30 +72,12 @@ if ($action_get === 'delete') {
         exit;
     }
 
-    if ($post['fb_post_id']) {
+    if ($delete_from_fb && $post['fb_post_id']) {
         $stmt = $pdo->prepare("SELECT page_access_token FROM fb_pages WHERE page_id = ?");
         $stmt->execute([$post['page_id']]);
         $token = $stmt->fetchColumn();
         if ($token) {
-            $fb_res = $fb->deleteScheduledPost($post['fb_post_id'], $token);
-
-            // If Facebook returns an error, we check if it's a "Not Found" type error.
-            // Even if it's another error, for 'delete' action, we often want to proceed with local deletion
-            // so the record doesn't get "stuck" in the dashboard.
-            if (isset($fb_res['error'])) {
-                $err_msg = $fb_res['error']['message'] ?? '';
-                $err_code = $fb_res['error']['code'] ?? 0;
-
-                // Codes 100, 10, 21 or specific messages indicate the post is likely already gone or inaccessible
-                $is_phantom = ($err_code == 100 || $err_code == 10 || $err_code == 21 ||
-                    strpos($err_msg, 'does not exist') !== false ||
-                    strpos($err_msg, 'Unsupported delete request') !== false);
-
-                if (!$is_phantom) {
-                    echo json_encode(['status' => 'error', 'message' => 'Facebook error: ' . $err_msg]);
-                    exit;
-                }
-            }
+            $fb->deleteScheduledPost($post['fb_post_id'], $token);
         }
     }
 
