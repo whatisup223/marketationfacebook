@@ -163,6 +163,18 @@ $translations = [
         'wa_retry_connection' => 'أعد المحاولة',
         'wa_check_settings' => 'تأكد من إعداداتك في',
         'whatsapp_settings' => 'إعدادات واتساب',
+        // API Errors
+        'wa_err_missing_meta' => 'إعدادات Meta ناقصة (Phone ID أو Token)',
+        'wa_err_meta_api' => 'خطأ في Meta API',
+        'wa_err_missing_twilio' => 'إعدادات Twilio ناقصة (SID أو Token)',
+        'wa_err_twilio_404' => 'حساب Twilio غير موجود',
+        'wa_err_twilio_api' => 'خطأ في Twilio API',
+        'wa_err_check_credentials' => 'تحقق من بيانات الاعتماد',
+        'wa_err_missing_ultra' => 'إعدادات UltraMsg ناقصة',
+        'wa_err_ultra_api' => 'خطأ في UltraMsg API',
+        'wa_err_qr_mode' => 'وضع QR نشط',
+        'wa_err_code' => 'كود',
+        'wa_unknown_error' => 'خطأ غير معروف',
 
 
         // Status & Actions
@@ -2171,6 +2183,18 @@ $translations = [
         'wa_retry_connection' => 'Retry Connection',
         'wa_check_settings' => 'Check your settings in',
         'whatsapp_settings' => 'WhatsApp Settings',
+        // API Errors
+        'wa_err_missing_meta' => 'Missing Meta Config (Phone ID or Token)',
+        'wa_err_meta_api' => 'Meta API Error',
+        'wa_err_missing_twilio' => 'Missing Twilio Config (SID or Token)',
+        'wa_err_twilio_404' => 'Twilio Account Not Found',
+        'wa_err_twilio_api' => 'Twilio API Error',
+        'wa_err_check_credentials' => 'Check Credentials',
+        'wa_err_missing_ultra' => 'Missing UltraMsg Config',
+        'wa_err_ultra_api' => 'UltraMsg API Error',
+        'wa_err_qr_mode' => 'QR Mode is active',
+        'wa_err_code' => 'Code',
+        'wa_unknown_error' => 'Unknown Error',
     ],
 ];
 

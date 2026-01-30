@@ -65,7 +65,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'check_api_status') {
 
     try {
         if ($gateway_mode === 'qr') {
-            throw new Exception("QR Mode is active");
+            throw new Exception(__('wa_err_qr_mode'));
         }
 
         $config = json_decode($user_settings['external_config'] ?? '{}', true);
@@ -74,7 +74,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'check_api_status') {
 
         if ($provider === 'meta') {
             if (empty($config['phone_id']) || empty($config['token']))
-                throw new Exception("Missing Meta Config (Phone ID or Token)");
+                throw new Exception(__('wa_err_missing_meta'));
             $url = "https://graph.facebook.com/v17.0/" . $config['phone_id'] . "?access_token=" . $config['token'];
             $res = check_url($url);
 
@@ -83,13 +83,13 @@ if (isset($_POST['action']) && $_POST['action'] === 'check_api_status') {
                 $status_data = ['name' => $body['verified_name'] ?? 'Meta Account', 'number' => $body['display_phone_number'] ?? ''];
             } else {
                 $err_body = json_decode($res['body'], true);
-                $api_msg = $err_body['error']['message'] ?? 'Unknown API Error';
-                throw new Exception("Meta API Error ({$res['code']}): " . $res['error'] . " | " . $api_msg);
+                $api_msg = $err_body['error']['message'] ?? __('wa_unknown_error');
+                throw new Exception(__('wa_err_meta_api') . " ({$res['code']}): " . $api_msg);
             }
 
         } elseif ($provider === 'twilio') {
             if (empty($config['sid']) || empty($config['token']))
-                throw new Exception("Missing Twilio Config (SID or Token)");
+                throw new Exception(__('wa_err_missing_twilio'));
             $url = "https://api.twilio.com/2010-04-01/Accounts/" . $config['sid'] . ".json";
             $auth = ["Authorization: Basic " . base64_encode($config['sid'] . ":" . $config['token'])];
             $res = check_url($url, $auth);
@@ -97,17 +97,20 @@ if (isset($_POST['action']) && $_POST['action'] === 'check_api_status') {
             if ($res['code'] === 200) {
                 $body = json_decode($res['body'], true);
                 if (isset($body['status']) && $body['status'] == 404)
-                    throw new Exception("Twilio Account Not Found");
+                    throw new Exception(__('wa_err_twilio_404'));
                 $status_data = ['name' => $body['friendly_name'] ?? 'Twilio Account', 'number' => 'Active'];
             } else {
                 $err_body = json_decode($res['body'], true);
-                $api_msg = $err_body['message'] ?? 'Check Credentials';
-                throw new Exception("Twilio API Error ({$res['code']}): " . $api_msg);
+                // Check if message is generic "Check credentials" and translate it, otherwise keep API msg
+                $api_msg_raw = $err_body['message'] ?? 'Check Credentials';
+                $api_msg = ($api_msg_raw === 'Check Credentials') ? __('wa_err_check_credentials') : $api_msg_raw;
+
+                throw new Exception(__('wa_err_twilio_api') . " ({$res['code']}): " . $api_msg);
             }
 
         } elseif ($provider === 'ultramsg') {
             if (empty($config['instance_id']) || empty($config['token']))
-                throw new Exception("Missing UltraMsg Config");
+                throw new Exception(__('wa_err_missing_ultra'));
             $url = "https://api.ultramsg.com/" . $config['instance_id'] . "/instance/status?token=" . $config['token'];
             $res = check_url($url);
 
@@ -115,7 +118,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'check_api_status') {
                 $body = json_decode($res['body'], true);
                 $status_data = ['name' => 'UltraMsg Instance', 'number' => $body['status']['text'] ?? 'Connected'];
             } else {
-                throw new Exception("UltraMsg API Error ({$res['code']}): " . $res['error']);
+                throw new Exception(__('wa_err_ultra_api') . " ({$res['code']}): " . $res['error']);
             }
         }
 
