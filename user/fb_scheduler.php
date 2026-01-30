@@ -10,8 +10,14 @@ if (!isLoggedIn()) {
 $current_user = $_SESSION['user_id'];
 $pdo = getDB();
 
-// Fetch Pages
-$stmt = $pdo->prepare("SELECT p.* FROM fb_pages p JOIN fb_accounts a ON p.account_id = a.id WHERE a.user_id = ? GROUP BY p.page_id");
+// Fetch Pages - Robust query to prevent duplicates while ensuring all user pages are included
+$stmt = $pdo->prepare("SELECT * FROM fb_pages WHERE id IN (
+    SELECT MIN(p.id) 
+    FROM fb_pages p 
+    JOIN fb_accounts a ON p.account_id = a.id 
+    WHERE a.user_id = ? 
+    GROUP BY p.page_id
+) ORDER BY page_name ASC");
 $stmt->execute([$current_user]);
 $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
