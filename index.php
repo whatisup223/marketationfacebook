@@ -1118,7 +1118,7 @@ if (!empty($pricingPlans)):
 </section>
 
 <!-- FAQ Section -->
-<section id="faq" class="py-16 relative overflow-hidden">
+<section id="faqs" class="py-16 relative overflow-hidden">
     <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div class="text-center mb-12">
             <h2 class="text-2xl md:text-4xl font-black text-white mb-3">

@@ -163,9 +163,9 @@ if (isLoggedIn()) {
                 extend: {
                     fontFamily: {
                         <?php if ($lang === 'ar'): ?>
-                                                                                                                    sans: ['IBM Plex Sans Arabic', 'sans-serif'],
+                                                                                                                        sans: ['IBM Plex Sans Arabic', 'sans-serif'],
                         <?php else: ?>
-                                                                                                                    sans: ['Outfit', 'sans-serif'],
+                                                                                                                        sans: ['Outfit', 'sans-serif'],
                         <?php endif; ?>
                     },
                     colors: {
@@ -185,6 +185,15 @@ if (isLoggedIn()) {
             ;
             background-color: #0f172a;
             color: #fff;
+        }
+
+        /* Scroll behavior and offset for sticky header */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        section[id] {
+            scroll-margin-top: 5rem;
         }
 
         /* Glassmorphism Utilities - Dark Mode Only */
