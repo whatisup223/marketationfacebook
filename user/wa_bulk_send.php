@@ -266,6 +266,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['start_campaign'])) {
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
+
+<style>
+    [x-cloak] {
+        display: none !important;
+    }
+</style>
 <div class="flex min-h-screen pt-4" x-data="{ 
     message: '', 
     numbers: '', 
