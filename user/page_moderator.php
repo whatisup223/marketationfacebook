@@ -178,10 +178,28 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
 
         <!-- Main Body: Preview (Left) & Rules (Right) -->
+        <!-- No Page Selected Hint -->
+        <div x-show="!selectedPageId" class="mb-12">
+            <div
+                class="glass-panel p-20 rounded-[3rem] border border-white/5 border-dashed flex flex-col items-center justify-center text-center group transition-all hover:bg-white/5">
+                <div
+                    class="w-24 h-24 rounded-[2.5rem] bg-gray-800/50 flex items-center justify-center mb-8 border border-white/5 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
+                    <svg class="w-12 h-12 text-gray-600 group-hover:text-indigo-500 transition-colors" fill="none"
+                        stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z">
+                        </path>
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-white mb-3"><?php echo __('select_page_to_configure'); ?></h2>
+                <p class="text-gray-500 max-w-sm"><?php echo __('unselected_page_hint'); ?></p>
+            </div>
+        </div>
+
         <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 pb-20">
 
-            <!-- Left Side: Preview Card (First on mobile, First on desktop) -->
-            <div class="lg:col-span-4 order-1">
+            <!-- Preview Card (Order 2 on mobile, Order 1 on desktop) -->
+            <div class="lg:col-span-4 order-2 lg:order-1" x-show="selectedPageId">
                 <div class="sticky top-24 space-y-6">
                     <div
                         class="glass-card rounded-[32px] border border-white/10 shadow-2xl overflow-hidden bg-[#18191a]">
@@ -285,277 +303,254 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 </div>
             </div>
 
-            <!-- Right Side: Rules Area (Second on mobile, Second on desktop) -->
-            <div class="lg:col-span-8 space-y-8 order-2">
+            <!-- Rules Area (Order 1 on mobile, Order 2 on desktop) -->
+            <div class="lg:col-span-8 order-1 lg:order-2" x-show="selectedPageId">
+                <div
+                    class="glass-panel p-8 rounded-[2rem] border border-white/10 bg-gray-800/40 backdrop-blur-2xl hover:border-indigo-500/30 transition-all shadow-2xl relative overflow-hidden group">
+                    <div class="absolute top-0 left-0 w-1 h-full bg-indigo-600 opacity-50"></div>
 
-                <template x-if="!selectedPageId">
-                    <div
-                        class="glass-panel p-20 rounded-[3rem] border border-white/5 border-dashed flex flex-col items-center justify-center text-center group transition-all hover:bg-white/5">
-                        <div
-                            class="w-24 h-24 rounded-[2.5rem] bg-gray-800/50 flex items-center justify-center mb-8 border border-white/5 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
-                            <svg class="w-12 h-12 text-gray-600 group-hover:text-indigo-500 transition-colors"
-                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- Left: Keywords & Activation -->
+                        <div class="space-y-6">
+                            <div class="flex justify-between items-center px-1">
+                                <h3 class="text-xl font-bold text-white"><?php echo __('moderation_rules'); ?></h3>
+                                <div class="flex items-center gap-2">
+                                    <span
+                                        class="text-[10px] font-bold text-gray-500 uppercase"><?php echo __('active'); ?></span>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" x-model="rules.is_active" class="sr-only peer">
+                                        <div
+                                            class="w-10 h-5 bg-gray-700 rounded-full peer peer-checked:bg-indigo-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full">
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label
+                                    class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-3"><?php echo __('banned_keywords'); ?></label>
+                                <textarea x-model="rules.banned_keywords" @input="updateModerationResult()" rows="5"
+                                    class="w-full bg-black/40 border border-white/10 rounded-2xl p-5 text-white placeholder-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm leading-relaxed"
+                                    placeholder="الكلمات الممنوعة، افصل بينها بفاصلة..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Right: Smart Options & Action -->
+                        <div class="space-y-6">
+                            <label
+                                class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-3"><?php echo __('smart_filtering'); ?></label>
+
+                            <div class="space-y-3">
+                                <div @click="rules.hide_phones = !rules.hide_phones; updateModerationResult()"
+                                    class="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 cursor-pointer hover:bg-white/10 transition-all">
+                                    <span class="text-sm font-bold text-white"><?php echo __('hide_phones'); ?></span>
+                                    <div class="w-5 h-5 rounded-md border-2 border-indigo-500 flex items-center justify-center transition-colors"
+                                        :class="rules.hide_phones ? 'bg-indigo-600' : ''">
+                                        <svg x-show="rules.hide_phones" class="w-4 h-4 text-white" fill="none"
+                                            stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                                                d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </div>
+                                </div>
+
+                                <div @click="rules.hide_links = !rules.hide_links; updateModerationResult()"
+                                    class="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 cursor-pointer hover:bg-white/10 transition-all">
+                                    <span class="text-sm font-bold text-white"><?php echo __('hide_links'); ?></span>
+                                    <div class="w-5 h-5 rounded-md border-2 border-indigo-500 flex items-center justify-center transition-colors"
+                                        :class="rules.hide_links ? 'bg-indigo-600' : ''">
+                                        <svg x-show="rules.hide_links" class="w-4 h-4 text-white" fill="none"
+                                            stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                                                d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label
+                                    class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-3"><?php echo __('action_to_take'); ?></label>
+                                <div class="flex gap-2">
+                                    <button @click="rules.action_type = 'hide'; updateModerationResult()"
+                                        class="flex-1 py-3 px-4 rounded-xl border-2 font-bold transition-all text-xs"
+                                        :class="rules.action_type === 'hide' ? 'bg-indigo-600/20 border-indigo-600 text-white' : 'bg-black/40 border-white/5 text-gray-500'">
+                                        <?php echo __('hide_action'); ?>
+                                    </button>
+                                    <button @click="rules.action_type = 'delete'; updateModerationResult()"
+                                        class="flex-1 py-3 px-4 rounded-xl border-2 font-bold transition-all text-xs"
+                                        :class="rules.action_type === 'delete' ? 'bg-red-600/20 border-red-600 text-white' : 'bg-black/40 border-white/5 text-gray-500'">
+                                        <?php echo __('delete_action'); ?>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Save Settings -->
+                    <div class="mt-8 pt-8 border-t border-white/5">
+                        <button @click="saveRules()" :disabled="saving"
+                            class="w-full py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-bold shadow-xl shadow-indigo-600/20 transition-all flex items-center justify-center gap-3">
+                            <svg x-show="saving" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                    stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
                                 </path>
                             </svg>
-                        </div>
-                        <h2 class="text-2xl font-bold text-white mb-3"><?php echo __('select_page_to_configure'); ?>
-                        </h2>
-                        <p class="text-gray-500 max-w-sm"><?php echo __('unselected_page_hint'); ?></p>
-                    </div>
-                </template>
-
-                <div x-show="selectedPageId" x-transition.opacity class="space-y-8" style="display: none;">
-                    <!-- Rules Panel -->
-                    <div
-                        class="glass-panel p-8 rounded-[2rem] border border-white/10 bg-gray-800/40 backdrop-blur-2xl hover:border-indigo-500/30 transition-all shadow-2xl relative overflow-hidden group">
-                        <div class="absolute top-0 left-0 w-1 h-full bg-indigo-600 opacity-50"></div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <!-- Left: Keywords & Activation -->
-                            <div class="space-y-6">
-                                <div class="flex justify-between items-center px-1">
-                                    <h3 class="text-xl font-bold text-white"><?php echo __('moderation_rules'); ?></h3>
-                                    <div class="flex items-center gap-2">
-                                        <span
-                                            class="text-[10px] font-bold text-gray-500 uppercase"><?php echo __('active'); ?></span>
-                                        <label class="relative inline-flex items-center cursor-pointer">
-                                            <input type="checkbox" x-model="rules.is_active" class="sr-only peer">
-                                            <div
-                                                class="w-10 h-5 bg-gray-700 rounded-full peer peer-checked:bg-indigo-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full">
-                                            </div>
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label
-                                        class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-3"><?php echo __('banned_keywords'); ?></label>
-                                    <textarea x-model="rules.banned_keywords" @input="updateModerationResult()" rows="5"
-                                        class="w-full bg-black/40 border border-white/10 rounded-2xl p-5 text-white placeholder-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm leading-relaxed"
-                                        placeholder="الكلمات الممنوعة، افصل بينها بفاصلة..."></textarea>
-                                </div>
-                            </div>
-
-                            <!-- Right: Smart Options & Action -->
-                            <div class="space-y-6">
-                                <label
-                                    class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-3"><?php echo __('smart_filtering'); ?></label>
-
-                                <div class="space-y-3">
-                                    <div @click="rules.hide_phones = !rules.hide_phones; updateModerationResult()"
-                                        class="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 cursor-pointer hover:bg-white/10 transition-all">
-                                        <span
-                                            class="text-sm font-bold text-white"><?php echo __('hide_phones'); ?></span>
-                                        <div class="w-5 h-5 rounded-md border-2 border-indigo-500 flex items-center justify-center transition-colors"
-                                            :class="rules.hide_phones ? 'bg-indigo-600' : ''">
-                                            <svg x-show="rules.hide_phones" class="w-4 h-4 text-white" fill="none"
-                                                stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
-                                                    d="M5 13l4 4L19 7" />
-                                            </svg>
-                                        </div>
-                                    </div>
-
-                                    <div @click="rules.hide_links = !rules.hide_links; updateModerationResult()"
-                                        class="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 cursor-pointer hover:bg-white/10 transition-all">
-                                        <span
-                                            class="text-sm font-bold text-white"><?php echo __('hide_links'); ?></span>
-                                        <div class="w-5 h-5 rounded-md border-2 border-indigo-500 flex items-center justify-center transition-colors"
-                                            :class="rules.hide_links ? 'bg-indigo-600' : ''">
-                                            <svg x-show="rules.hide_links" class="w-4 h-4 text-white" fill="none"
-                                                stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
-                                                    d="M5 13l4 4L19 7" />
-                                            </svg>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label
-                                        class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-3"><?php echo __('action_to_take'); ?></label>
-                                    <div class="flex gap-2">
-                                        <button @click="rules.action_type = 'hide'; updateModerationResult()"
-                                            class="flex-1 py-3 px-4 rounded-xl border-2 font-bold transition-all text-xs"
-                                            :class="rules.action_type === 'hide' ? 'bg-indigo-600/20 border-indigo-600 text-white' : 'bg-black/40 border-white/5 text-gray-500'">
-                                            <?php echo __('hide_action'); ?>
-                                        </button>
-                                        <button @click="rules.action_type = 'delete'; updateModerationResult()"
-                                            class="flex-1 py-3 px-4 rounded-xl border-2 font-bold transition-all text-xs"
-                                            :class="rules.action_type === 'delete' ? 'bg-red-600/20 border-red-600 text-white' : 'bg-black/40 border-white/5 text-gray-500'">
-                                            <?php echo __('delete_action'); ?>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Save Settings -->
-                        <div class="mt-8 pt-8 border-t border-white/5">
-                            <button @click="saveRules()" :disabled="saving"
-                                class="w-full py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-bold shadow-xl shadow-indigo-600/20 transition-all flex items-center justify-center gap-3">
-                                <svg x-show="saving" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                        stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor"
-                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                                    </path>
-                                </svg>
-                                <span x-text="saving ? '...' : '<?php echo __('save_settings'); ?>'"></span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Logs Section -->
-                    <div class="glass-panel p-8 rounded-[2rem] border border-white/10 bg-gray-800/40 backdrop-blur-2xl">
-                        <div class="flex justify-between items-center mb-6 px-1">
-                            <h3 class="text-xl font-bold text-white"><?php echo __('moderation_logs'); ?></h3>
-                            <button @click="loadLogs()" class="text-indigo-400 hover:text-indigo-300 transition-colors">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                </svg>
-                            </button>
-                        </div>
-
-                        <div class="space-y-3 max-h-[500px] overflow-y-auto pr-2 messenger-scrollbar">
-                            <template x-for="log in logs" :key="log.id">
-                                <div
-                                    class="p-4 bg-black/40 rounded-2xl border border-white/5 flex items-center justify-between group">
-                                    <div class="flex items-center gap-4">
-                                        <div class="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center font-bold text-indigo-400"
-                                            x-text="(log.sender_name || 'A').charAt(0).toUpperCase()"></div>
-                                        <div>
-                                            <div class="flex items-center gap-2">
-                                                <span class="font-bold text-white text-sm"
-                                                    x-text="log.sender_name || 'Anonymous'"></span>
-                                                <span class="px-2 py-0.5 rounded-full text-[8px] font-black uppercase"
-                                                    :class="log.action_taken === 'hide' ? 'bg-indigo-500/20 text-indigo-400' : 'bg-red-500/20 text-red-500'"
-                                                    x-text="log.action_taken"></span>
-                                            </div>
-                                            <p class="text-xs text-gray-500 italic mt-1" x-text="log.comment_text"></p>
-                                        </div>
-                                    </div>
-                                    <div
-                                        class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                                        <!-- Open on Facebook -->
-                                        <template x-if="log.comment_id">
-                                            <a :href="'https://facebook.com/' + log.comment_id" target="_blank"
-                                                class="p-2 text-gray-400 hover:text-indigo-400 transition-colors"
-                                                title="<?php echo __('view_on_facebook'); ?>">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                                </svg>
-                                            </a>
-                                        </template>
-
-                                        <!-- Delete Log -->
-                                        <button @click="confirmDelete(log)"
-                                            class="p-2 text-gray-400 hover:text-red-500 transition-colors"
-                                            title="<?php echo __('delete'); ?>">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </div>
-                            </template>
-
-                            <template x-if="logs.length === 0">
-                                <div class="py-12 text-center text-gray-600 italic text-sm">
-                                    <?php echo __('no_moderation_logs'); ?>
-                                </div>
-                            </template>
-                        </div>
+                            <span x-text="saving ? '...' : '<?php echo __('save_settings'); ?>'"></span>
+                        </button>
                     </div>
                 </div>
-
             </div>
         </div>
 
-    </main>
+        <!-- Logs Section (Order 3 on mobile, Order 3 on desktop - will sit under Rules Area) -->
+        <div class="lg:col-span-8 lg:col-start-5 order-3" x-show="selectedPageId">
+            <div class="glass-panel p-8 rounded-[2rem] border border-white/10 bg-gray-800/40 backdrop-blur-2xl">
+                <div class="flex justify-between items-center mb-6 px-1">
+                    <h3 class="text-xl font-bold text-white"><?php echo __('moderation_logs'); ?></h3>
+                    <button @click="loadLogs()" class="text-indigo-400 hover:text-indigo-300 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                    </button>
+                </div>
 
-    <!-- Delete Modal -->
-    <div x-show="showDeleteModal" x-cloak x-transition.opacity
-        class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
-        <div @click.away="showDeleteModal = false"
-            class="bg-gray-900 border border-white/10 rounded-[2.5rem] p-8 max-w-sm w-full shadow-2xl text-center">
-            <div class="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg class="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                <div class="space-y-3 max-h-[500px] overflow-y-auto pr-2 messenger-scrollbar">
+                    <template x-for="log in logs" :key="log.id">
+                        <div
+                            class="p-4 bg-black/40 rounded-2xl border border-white/5 flex items-center justify-between group">
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center font-bold text-indigo-400"
+                                    x-text="(log.sender_name || 'A').charAt(0).toUpperCase()"></div>
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-bold text-white text-sm"
+                                            x-text="log.sender_name || 'Anonymous'"></span>
+                                        <span class="px-2 py-0.5 rounded-full text-[8px] font-black uppercase"
+                                            :class="log.action_taken === 'hide' ? 'bg-indigo-500/20 text-indigo-400' : 'bg-red-500/20 text-red-500'"
+                                            x-text="log.action_taken"></span>
+                                    </div>
+                                    <p class="text-xs text-gray-500 italic mt-1" x-text="log.comment_text"></p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                                <!-- Open on Facebook -->
+                                <template x-if="log.comment_id">
+                                    <a :href="'https://facebook.com/' + (log.comment_id.includes('_') ? log.comment_id : log.page_id + '_' + log.comment_id)"
+                                        target="_blank"
+                                        class="p-2 text-gray-400 hover:text-indigo-400 transition-colors"
+                                        title="<?php echo __('view_on_facebook'); ?>">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                        </svg>
+                                    </a>
+                                </template>
+
+                                <!-- Delete Log -->
+                                <button @click="confirmDelete(log)"
+                                    class="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                                    title="<?php echo __('delete'); ?>">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template x-if="logs.length === 0">
+                        <div class="py-12 text-center text-gray-600 italic text-sm">
+                            <?php echo __('no_moderation_logs'); ?>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+</div>
+</div>
+
+</main>
+
+<!-- Delete Modal -->
+<div x-show="showDeleteModal" x-cloak x-transition.opacity
+    class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
+    <div @click.away="showDeleteModal = false"
+        class="bg-gray-900 border border-white/10 rounded-[2.5rem] p-8 max-w-sm w-full shadow-2xl text-center">
+        <div class="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg class="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+        </div>
+        <h3 class="text-xl font-bold text-white mb-2"><?php echo __('confirm_delete'); ?></h3>
+        <p class="text-gray-500 text-sm mb-8"><?php echo __('delete_log_hint'); ?></p>
+        <div class="flex gap-4">
+            <button @click="showDeleteModal = false"
+                class="flex-1 py-4 bg-white/5 hover:bg-white/10 text-gray-300 rounded-2xl font-bold transition-all">
+                <?php echo __('cancel'); ?>
+            </button>
+            <button @click="deleteLog()" :disabled="deleting"
+                class="flex-1 py-4 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-bold transition-all flex items-center justify-center gap-2">
+                <svg x-show="deleting" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                    </circle>
+                    <path class="opacity-75" fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                    </path>
                 </svg>
-            </div>
-            <h3 class="text-xl font-bold text-white mb-2"><?php echo __('confirm_delete'); ?></h3>
-            <p class="text-gray-500 text-sm mb-8"><?php echo __('delete_log_hint'); ?></p>
-            <div class="flex gap-4">
-                <button @click="showDeleteModal = false"
-                    class="flex-1 py-4 bg-white/5 hover:bg-white/10 text-gray-300 rounded-2xl font-bold transition-all">
-                    <?php echo __('cancel'); ?>
-                </button>
-                <button @click="deleteLog()" :disabled="deleting"
-                    class="flex-1 py-4 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-bold transition-all flex items-center justify-center gap-2">
-                    <svg x-show="deleting" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
-                        </circle>
-                        <path class="opacity-75" fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                        </path>
-                    </svg>
-                    <span x-text="deleting ? '...' : '<?php echo __('confirm'); ?>'"></span>
-                </button>
-            </div>
+                <span x-text="deleting ? '...' : '<?php echo __('confirm'); ?>'"></span>
+            </button>
         </div>
     </div>
+</div>
 
-    <!-- Success Modal -->
-    <template x-if="showSuccessModal">
-        <div class="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md"
-            x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0"
-            x-transition:enter-end="opacity-100">
+<!-- Success Modal -->
+<template x-if="showSuccessModal">
+    <div class="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md"
+        x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100">
 
-            <div @click.away="showSuccessModal = false"
-                class="bg-[#0b0e14] border border-indigo-500/30 rounded-[3rem] p-10 max-w-sm w-full shadow-[0_0_50px_rgba(79,70,229,0.3)] text-center relative overflow-hidden group">
+        <div @click.away="showSuccessModal = false"
+            class="bg-[#0b0e14] border border-indigo-500/30 rounded-[3rem] p-10 max-w-sm w-full shadow-[0_0_50px_rgba(79,70,229,0.3)] text-center relative overflow-hidden group">
 
-                <!-- Animated Background Glow -->
-                <div
-                    class="absolute -top-24 -right-24 w-48 h-48 bg-indigo-600/20 blur-[100px] rounded-full animate-pulse">
-                </div>
-
-                <!-- Shield Icon Animation -->
-                <div class="relative mb-8">
-                    <div
-                        class="w-24 h-24 bg-indigo-600/10 rounded-[2.5rem] flex items-center justify-center mx-auto relative z-10 border border-indigo-500/20 group-hover:scale-110 transition-transform duration-500">
-                        <svg class="w-12 h-12 text-indigo-400 animate-bounce" fill="none" stroke="currentColor"
-                            viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                        </svg>
-                    </div>
-                    <!-- Ripple Effect -->
-                    <div
-                        class="absolute inset-0 w-24 h-24 bg-indigo-500/20 rounded-[2.5rem] mx-auto animate-ping opacity-20">
-                    </div>
-                </div>
-
-                <h3 class="text-2xl font-black text-white mb-4 tracking-tight" x-text="successMessage"></h3>
-                <p class="text-gray-500 text-sm mb-8 leading-relaxed">
-                    تم تفعيل درع الحماية الذكي بنجاح. الصفحة الآن تحت رقابة النظام على مدار الساعة.
-                </p>
-
-                <button @click="showSuccessModal = false"
-                    class="w-full py-4 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest transition-all shadow-lg shadow-indigo-600/20">
-                    استمرار
-                </button>
+            <!-- Animated Background Glow -->
+            <div class="absolute -top-24 -right-24 w-48 h-48 bg-indigo-600/20 blur-[100px] rounded-full animate-pulse">
             </div>
+
+            <!-- Shield Icon Animation -->
+            <div class="relative mb-8">
+                <div
+                    class="w-24 h-24 bg-indigo-600/10 rounded-[2.5rem] flex items-center justify-center mx-auto relative z-10 border border-indigo-500/20 group-hover:scale-110 transition-transform duration-500">
+                    <svg class="w-12 h-12 text-indigo-400 animate-bounce" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                </div>
+                <!-- Ripple Effect -->
+                <div
+                    class="absolute inset-0 w-24 h-24 bg-indigo-500/20 rounded-[2.5rem] mx-auto animate-ping opacity-20">
+                </div>
+            </div>
+
+            <h3 class="text-2xl font-black text-white mb-4 tracking-tight" x-text="successMessage"></h3>
+            <p class="text-gray-500 text-sm mb-8 leading-relaxed">
+                تم تفعيل درع الحماية الذكي بنجاح. الصفحة الآن تحت رقابة النظام على مدار الساعة.
+            </p>
+
+            <button @click="showSuccessModal = false"
+                class="w-full py-4 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest transition-all shadow-lg shadow-indigo-600/20">
+                استمرار
+            </button>
         </div>
-    </template>
+    </div>
+</template>
 </div>
 
 <style>
