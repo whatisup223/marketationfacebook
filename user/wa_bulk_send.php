@@ -102,6 +102,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['start_campaign'])) {
             $selected_accounts = json_encode($_POST['selected_accounts']);
         }
 
+        // Check for empty post-processing
+        if (empty($numbers)) {
+            throw new Exception(__('wa_no_leads_selected') ?: "No valid numbers found in the provided file.");
+        }
+
+        // Re-index array to ensure it encodes as a JSON list [..], not object {..}
+        $numbers = array_values($numbers);
+
         // Insert campaign into database
         $stmt = $pdo->prepare("
             INSERT INTO wa_campaigns (
@@ -113,6 +121,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['start_campaign'])) {
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
         ");
 
+        // Encode Numbers safely
+        // Ensure all numbers are strings before encoding
+        $numbers_as_strings = array_map('strval', $numbers);
+        $json_numbers = json_encode($numbers_as_strings, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        if ($json_numbers === false) {
+            throw new Exception("Error encoding numbers: " . json_last_error_msg());
+        }
+
         $stmt->execute([
             $user_id,
             $_POST['campaign_name'],
@@ -122,7 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['start_campaign'])) {
             $_POST['media_type'] ?? 'text',
             $_POST['media_url'] ?? null,
             $media_file_path,
-            json_encode($numbers),
+            $json_numbers,
             $_POST['delay_min'] ?? 10,
             $_POST['delay_max'] ?? 25,
             $_POST['switch_every'] ?? null,
