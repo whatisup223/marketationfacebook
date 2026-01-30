@@ -33,9 +33,23 @@ if ($action_get === 'delete') {
         $token = $stmt->fetchColumn();
         if ($token) {
             $fb_res = $fb->deleteScheduledPost($post['fb_post_id'], $token);
-            if (isset($fb_res['error']) && strpos($fb_res['error']['message'], 'Object at this ID does not exist') === false) {
-                echo json_encode(['status' => 'error', 'message' => 'Facebook error: ' . $fb_res['error']['message']]);
-                exit;
+
+            // If Facebook returns an error, we check if it's a "Not Found" type error.
+            // Even if it's another error, for 'delete' action, we often want to proceed with local deletion
+            // so the record doesn't get "stuck" in the dashboard.
+            if (isset($fb_res['error'])) {
+                $err_msg = $fb_res['error']['message'] ?? '';
+                $err_code = $fb_res['error']['code'] ?? 0;
+
+                // Codes 100, 10, 21 or specific messages indicate the post is likely already gone or inaccessible
+                $is_phantom = ($err_code == 100 || $err_code == 10 || $err_code == 21 ||
+                    strpos($err_msg, 'does not exist') !== false ||
+                    strpos($err_msg, 'Unsupported delete request') !== false);
+
+                if (!$is_phantom) {
+                    echo json_encode(['status' => 'error', 'message' => 'Facebook error: ' . $err_msg]);
+                    exit;
+                }
             }
         }
     }
@@ -200,8 +214,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt->execute([$content, date('Y-m-d H:i:s', $timestamp), $id]);
                     echo json_encode(['status' => 'success']);
                 } else {
-                    $error = $fb_res['error']['message'] ?? 'Failed to update on Facebook';
-                    echo json_encode(['status' => 'error', 'message' => $error, 'debug' => $fb_res]);
+                    $err_msg = $fb_res['error']['message'] ?? 'Failed to update on Facebook';
+                    $err_code = $fb_res['error']['code'] ?? 0;
+
+                    // Check if it's a phantom post
+                    $is_phantom = ($err_code == 100 || $err_code == 10 || $err_code == 21 ||
+                        strpos($err_msg, 'does not exist') !== false);
+
+                    if ($is_phantom) {
+                        // Delete locally since it's gone from FB
+                        $stmt = $pdo->prepare("DELETE FROM fb_scheduled_posts WHERE id = ?");
+                        $stmt->execute([$id]);
+                        echo json_encode([
+                            'status' => 'error',
+                            'message' => 'هذا المنشور تم حذفه بالفعل من فيسبوك، لذا قمنا بإزالته من القائمة لديك.',
+                            'is_phantom' => true
+                        ]);
+                    } else {
+                        echo json_encode(['status' => 'error', 'message' => $err_msg, 'debug' => $fb_res]);
+                    }
                 }
             }
         } else {

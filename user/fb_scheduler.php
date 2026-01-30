@@ -771,6 +771,9 @@ require_once __DIR__ . '/../includes/header.php';
                                 window.location.reload();
                             } else {
                                 alert(result.message || 'Error occurred');
+                                if (result.is_phantom) {
+                                    window.location.reload();
+                                }
                             }
                         } catch (e) {
                             console.error('JSON Error:', xhr.responseText);
