@@ -193,10 +193,7 @@ try {
 
                         $endpoint = "$evolution_url/message/sendText/$instance_name";
 
-                        // DEBUG LOG
-                        error_log("Trying to send via Evolution:");
-                        error_log("Endpoint: $endpoint");
-                        error_log("API Key (First 5 chars): " . substr($api_key, 0, 5) . "...");
+
 
                         $data = [
                             'number' => $number,
