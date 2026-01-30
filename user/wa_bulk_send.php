@@ -347,17 +347,38 @@ require_once __DIR__ . '/../includes/header.php';
             <!-- Left Side: Config -->
             <div class="flex-1 space-y-8">
 
-                <!-- Gateway Selection Card -->
-                <div class="glass-card rounded-[2.5rem] border border-white/5 p-8">
-                    <div class="flex flex-col gap-4">
-                        <label
-                            class="text-xs font-bold text-gray-500 uppercase tracking-widest pl-2"><?php echo __('select_gateway'); ?></label>
-                        <select name="gateway_mode" x-model="gateway"
-                            class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white text-lg font-bold focus:outline-none focus:border-indigo-500/50 transition-all font-sans appearance-none cursor-pointer">
-                            <option value="qr" class="bg-gray-900 text-white">Evolution API (QR Scan)</option>
-                            <option value="twilio" class="bg-gray-900 text-white">Twilio API</option>
-                            <option value="meta" class="bg-gray-900 text-white">Meta Cloud API</option>
-                        </select>
+                <!-- Active Gateway Info Card (Read-Only) -->
+                <div class="glass-card rounded-[2.5rem] border border-white/5 p-8 animate-fade-in mb-8">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg transition-colors"
+                            :class="gateway === 'qr' ? 'bg-green-500 shadow-green-500/20' : 'bg-indigo-500 shadow-indigo-500/20'">
+                            <!-- QR Icon -->
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                x-show="gateway === 'qr'">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 4v1l-3 3h2v5h2v-5h2l-3-3V4zM8 4h8a2 2 0 012 2v12a2 2 0 01-2 2H8a2 2 0 01-2-2V6a2 2 0 012-2z" />
+                            </svg>
+                            <!-- Official Icon -->
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                x-show="gateway !== 'qr'">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-white mb-1">
+                                <span x-show="gateway === 'qr'"><?php echo __('wa_gateway_qr'); ?></span>
+                                <span x-show="gateway !== 'qr'"><?php echo __('wa_gateway_official'); ?></span>
+                                <span
+                                    class="text-xs font-normal text-gray-500 ml-2 border border-white/10 px-2 py-0.5 rounded-lg bg-white/5"><?php echo __('wa_active_mode'); ?></span>
+                            </h3>
+                            <p class="text-sm text-gray-400">
+                                <span x-show="gateway === 'qr'"><?php echo __('wa_gateway_qr_desc'); ?></span>
+                                <span x-show="gateway !== 'qr'"><?php echo __('wa_gateway_official_desc'); ?></span>
+                            </p>
+                        </div>
+                        <!-- Hidden Input to pass gateway mode -->
+                        <input type="hidden" name="gateway_mode" :value="gateway">
                     </div>
                 </div>
 
@@ -365,67 +386,94 @@ require_once __DIR__ . '/../includes/header.php';
                 <div class="glass-card rounded-[2.5rem] border border-white/5 p-8 animate-fade-in">
                     <div class="flex items-center justify-between mb-6">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center text-green-400">
+                            <div
+                                class="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center text-green-400">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                                 </svg>
                             </div>
                             <div>
                                 <h3 class="text-xl font-bold text-white"><?php echo __('wa_select_accounts'); ?></h3>
-                                <p class="text-xs text-gray-500 mt-1" x-text="gateway === 'qr' ? '<?php echo __('wa_select_qr_accs'); ?>' : '<?php echo __('wa_official_api_info'); ?>'"></p>
+                                <p class="text-xs text-gray-500 mt-1"
+                                    x-text="gateway === 'qr' ? '<?php echo __('wa_select_qr_accs'); ?>' : '<?php echo __('wa_official_api_info'); ?>'">
+                                </p>
                             </div>
                         </div>
-                        
+
                         <!-- Counter for QR -->
-                        <div x-show="gateway === 'qr'" class="bg-indigo-500/10 px-3 py-1.5 rounded-lg border border-indigo-500/20">
-                             <span class="text-xs font-bold text-indigo-400" x-text="selectedAccounts.length + ' selected'"></span>
+                        <div x-show="gateway === 'qr'"
+                            class="bg-indigo-500/10 px-3 py-1.5 rounded-lg border border-indigo-500/20">
+                            <span class="text-xs font-bold text-indigo-400"
+                                x-text="selectedAccounts.length + ' selected'"></span>
                         </div>
                     </div>
 
                     <!-- Content for QR Mode -->
                     <div x-show="gateway === 'qr'" class="space-y-4">
                         <?php if (empty($wa_accounts)): ?>
-                                <div class="text-center p-6 border-2 border-dashed border-white/5 rounded-2xl">
-                                    <p class="text-gray-400 text-sm mb-4">لا توجد حسابات واتساب مرتبطة</p>
-                                    <a href="wa_accounts.php" class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-xl text-sm font-bold transition-all">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                                        ربط حساب جديد
-                                    </a>
-                                </div>
+                            <div class="text-center p-6 border-2 border-dashed border-white/5 rounded-2xl">
+                                <p class="text-gray-400 text-sm mb-4">لا توجد حسابات واتساب مرتبطة</p>
+                                <a href="wa_accounts.php"
+                                    class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-xl text-sm font-bold transition-all">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 4v16m8-8H4" />
+                                    </svg>
+                                    ربط حساب جديد
+                                </a>
+                            </div>
                         <?php else: ?>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[200px] overflow-y-auto custom-scrollbar pr-1">
-                                    <?php foreach ($wa_accounts as $acc): ?>
-                                            <label class="group relative cursor-pointer">
-                                                <input type="checkbox" name="selected_accounts[]" value="<?php echo $acc['id']; ?>" x-model="selectedAccounts" class="peer hidden">
-                                                <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 peer-checked:border-green-500/50 peer-checked:bg-green-500/10 transition-all group-hover:bg-white/10">
-                                                    <div class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 shrink-0">
-                                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
-                                                    </div>
-                                                    <div class="min-w-0">
-                                                        <p class="text-sm text-white font-bold truncate">
-                                                            <?php echo $acc['account_name'] ?: 'WhatsApp Account'; ?>
-                                                        </p>
-                                                        <p class="text-[10px] text-gray-500 font-mono">
-                                                            +<?php echo $acc['phone']; ?>
-                                                        </p>
-                                                    </div>
-                                                    <div class="mr-auto w-5 h-5 rounded-full border-2 border-white/20 peer-checked:border-green-500 peer-checked:bg-green-500 flex items-center justify-center transition-all">
-                                                        <svg class="w-3 h-3 text-white opacity-0 peer-checked:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                                                    </div>
-                                                </div>
-                                            </label>
-                                    <?php endforeach; ?>
-                                </div>
+                            <div
+                                class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[200px] overflow-y-auto custom-scrollbar pr-1">
+                                <?php foreach ($wa_accounts as $acc): ?>
+                                    <label class="group relative cursor-pointer">
+                                        <input type="checkbox" name="selected_accounts[]" value="<?php echo $acc['id']; ?>"
+                                            x-model="selectedAccounts" class="peer hidden">
+                                        <div
+                                            class="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 peer-checked:border-green-500/50 peer-checked:bg-green-500/10 transition-all group-hover:bg-white/10">
+                                            <div
+                                                class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 shrink-0">
+                                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path
+                                                        d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+                                                </svg>
+                                            </div>
+                                            <div class="min-w-0">
+                                                <p class="text-sm text-white font-bold truncate">
+                                                    <?php echo $acc['account_name'] ?: 'WhatsApp Account'; ?>
+                                                </p>
+                                                <p class="text-[10px] text-gray-500 font-mono">
+                                                    +<?php echo $acc['phone']; ?>
+                                                </p>
+                                            </div>
+                                            <div
+                                                class="mr-auto w-5 h-5 rounded-full border-2 border-white/20 peer-checked:border-green-500 peer-checked:bg-green-500 flex items-center justify-center transition-all">
+                                                <svg class="w-3 h-3 text-white opacity-0 peer-checked:opacity-100" fill="none"
+                                                    stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                                                        d="M5 13l4 4L19 7" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    </label>
+                                <?php endforeach; ?>
+                            </div>
                         <?php endif; ?>
                     </div>
 
                     <!-- Content for Official API -->
-                    <div x-show="gateway !== 'qr'" class="bg-indigo-500/5 rounded-2xl p-6 border border-indigo-500/10 text-center">
-                        <div class="w-16 h-16 rounded-full bg-indigo-500/20 mx-auto mb-4 flex items-center justify-center text-indigo-400">
-                             <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                    <div x-show="gateway !== 'qr'"
+                        class="bg-indigo-500/5 rounded-2xl p-6 border border-indigo-500/10 text-center">
+                        <div
+                            class="w-16 h-16 rounded-full bg-indigo-500/20 mx-auto mb-4 flex items-center justify-center text-indigo-400">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                            </svg>
                         </div>
                         <h4 class="text-lg font-bold text-white mb-2">
-                             <?php echo strtoupper($user_settings['external_provider'] ?? 'Official API'); ?> Connected
+                            <?php echo strtoupper($user_settings['external_provider'] ?? 'Official API'); ?> Connected
                         </h4>
                         <p class="text-gray-400 text-sm">
                             <?php echo __('wa_using_official_api'); ?>
@@ -621,35 +669,35 @@ require_once __DIR__ . '/../includes/header.php';
                                     class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:border-indigo-500/50 outline-none">
                             </div>
                             <?php if ($gateway_mode === 'qr'): ?>
-                                    <div
-                                        class="animate-fade-in col-span-1 md:col-span-2 lg:col-span-3 border-t border-white/5 pt-4 mt-2">
-                                        <h4 class="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-4">Advanced
-                                            Sending Options</h4>
-                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                            <div>
-                                                <label
-                                                    class="text-xs font-bold text-gray-500 block mb-2 uppercase tracking-widest"><?php echo __('wa_switch_every'); ?></label>
-                                                <input type="number" name="switch_every" value="5" min="1"
-                                                    class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:border-indigo-500/50 outline-none"
-                                                    title="Switch sender account after every X messages">
-                                                <p class="text-[9px] text-gray-600 mt-1">Leave empty to disable rotation</p>
-                                            </div>
-                                            <div>
-                                                <label
-                                                    class="text-xs font-bold text-gray-500 block mb-2 uppercase tracking-widest">Messages
-                                                    per Batch</label>
-                                                <input type="number" name="batch_size" value="50" min="1"
-                                                    class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:border-indigo-500/50 outline-none">
-                                            </div>
-                                            <div>
-                                                <label
-                                                    class="text-xs font-bold text-gray-500 block mb-2 uppercase tracking-widest">Delay
-                                                    After Batch (Sec)</label>
-                                                <input type="number" name="batch_delay" value="60" min="0"
-                                                    class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:border-indigo-500/50 outline-none">
-                                            </div>
+                                <div
+                                    class="animate-fade-in col-span-1 md:col-span-2 lg:col-span-3 border-t border-white/5 pt-4 mt-2">
+                                    <h4 class="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-4">Advanced
+                                        Sending Options</h4>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        <div>
+                                            <label
+                                                class="text-xs font-bold text-gray-500 block mb-2 uppercase tracking-widest"><?php echo __('wa_switch_every'); ?></label>
+                                            <input type="number" name="switch_every" value="5" min="1"
+                                                class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:border-indigo-500/50 outline-none"
+                                                title="Switch sender account after every X messages">
+                                            <p class="text-[9px] text-gray-600 mt-1">Leave empty to disable rotation</p>
+                                        </div>
+                                        <div>
+                                            <label
+                                                class="text-xs font-bold text-gray-500 block mb-2 uppercase tracking-widest">Messages
+                                                per Batch</label>
+                                            <input type="number" name="batch_size" value="50" min="1"
+                                                class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:border-indigo-500/50 outline-none">
+                                        </div>
+                                        <div>
+                                            <label
+                                                class="text-xs font-bold text-gray-500 block mb-2 uppercase tracking-widest">Delay
+                                                After Batch (Sec)</label>
+                                            <input type="number" name="batch_delay" value="60" min="0"
+                                                class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:border-indigo-500/50 outline-none">
                                         </div>
                                     </div>
+                                </div>
                             <?php endif; ?>
                         </div>
                     </div>
