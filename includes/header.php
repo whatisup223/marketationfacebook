@@ -163,9 +163,9 @@ if (isLoggedIn()) {
                 extend: {
                     fontFamily: {
                         <?php if ($lang === 'ar'): ?>
-                                                                                                                                                    sans: ['IBM Plex Sans Arabic', 'sans-serif'],
+                                                                                                                                                            sans: ['IBM Plex Sans Arabic', 'sans-serif'],
                         <?php else: ?>
-                                                                                                                                                    sans: ['Outfit', 'sans-serif'],
+                                                                                                                                                            sans: ['Outfit', 'sans-serif'],
                         <?php endif; ?>
                     },
                     colors: {
@@ -503,7 +503,7 @@ if (isLoggedIn()) {
                             </svg>
                         </a>
 
-                        <?php if (isLoggedIn()): ?>
+                        <?php if (isLoggedIn() && $prefix !== ''): ?>
                             <!-- Notifications Dropdown -->
                             <?php
                             $notifications_unread_count = getUnreadCount($_SESSION['user_id']);
@@ -673,8 +673,9 @@ if (isLoggedIn()) {
                     <div class="hidden lg:flex items-center space-x-4 rtl:space-x-reverse">
                         <?php if (isLoggedIn()): ?>
                             <a href="<?php echo isAdmin() ? $prefix . 'admin/dashboard.php' : $prefix . 'user/dashboard.php'; ?>"
-                                class="text-sm font-bold text-gray-300 hover:text-white transition-all whitespace-nowrap">
-                                <?php echo isAdmin() ? __('admin_panel') : __('dashboard'); ?>
+                                class="bg-gradient-to-r from-indigo-600/20 to-purple-600/20 hover:from-indigo-600/40 hover:to-purple-600/40 text-indigo-300 hover:text-white border border-indigo-500/30 px-5 py-2.5 rounded-xl transition-all duration-300 shadow-xl shadow-indigo-500/10 text-sm font-bold whitespace-nowrap flex items-center gap-2 group">
+                                <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 group-hover:animate-pulse"></span>
+                                <?php echo isAdmin() ? ($lang === 'ar' ? 'لوحة الإدارة' : 'Admin Panel') : ($lang === 'ar' ? 'لوحة التحكم' : 'Dashboard'); ?>
                             </a>
                             <a href="<?php echo $prefix; ?>logout.php"
                                 class="bg-white/10 text-white hover:bg-white/20 px-4 py-2 rounded-lg transition-all border border-white/10 text-sm font-bold flex-shrink-0">
@@ -766,7 +767,7 @@ if (isLoggedIn()) {
                 </a>
             </div>
 
-            <?php if (isset($current_user)): ?>
+            <?php if (isset($current_user) && $prefix !== ''): ?>
                 <a href="<?php echo isAdmin() ? $prefix . 'admin/profile.php' : $prefix . 'user/profile.php'; ?>"
                     class="mt-4 flex items-center space-x-3 rtl:space-x-reverse p-3 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-all group">
                     <div class="flex-shrink-0">

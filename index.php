@@ -76,9 +76,14 @@ require_once 'includes/header.php';
                             <?php echo __('how_it_works'); ?>
                         </a>
                     <?php else: ?>
-                        <a href="user/dashboard.php"
-                            class="px-10 py-5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-2xl shadow-2xl shadow-indigo-600/30 transition-all duration-300 hover:scale-[1.02]">
-                            <?php echo __('dashboard'); ?>
+                        <a href="<?php echo isAdmin() ? 'admin/dashboard.php' : 'user/dashboard.php'; ?>"
+                            class="px-10 py-5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-2xl shadow-2xl shadow-indigo-600/30 transition-all duration-300 hover:scale-[1.02] flex items-center gap-3 group">
+                            <span><?php echo isAdmin() ? ($lang === 'ar' ? 'لوحة الإدارة' : 'Admin Panel') : ($lang === 'ar' ? 'لوحة التحكم' : 'Control Panel'); ?></span>
+                            <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
                         </a>
                     <?php endif; ?>
                 </div>

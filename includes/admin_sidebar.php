@@ -2,7 +2,7 @@
 // includes/admin_sidebar.php
 ?>
 <aside
-    class="w-64 hidden md:block bg-gray-900/50 backdrop-blur-xl border-r border-gray-800 ml-4 rounded-3xl mb-4 p-6 self-start sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto custom-scrollbar">
+    class="w-64 hidden lg:block bg-gray-900/50 backdrop-blur-xl border-r border-gray-800 ml-4 rounded-3xl mb-4 p-6 self-start sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto custom-scrollbar">
     <div class="mb-8 px-2">
         <a href="../index.php" class="flex items-center space-x-2 rtl:space-x-reverse mb-6">
             <?php if (getSetting('site_logo')): ?>
