@@ -73,7 +73,8 @@ require_once __DIR__ . '/../includes/header.php';
                     <!-- Page Selector & Status -->
                     <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
                         <div class="relative min-w-[240px]">
-                            <select x-model="formData.page_id" @change="fetchTokenDebug();"
+                            <select x-model="formData.page_id"
+                                @change="localStorage.setItem('scheduler_last_page', formData.page_id); fetchTokenDebug();"
                                 class="w-full bg-black/40 border border-white/10 rounded-2xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none appearance-none transition-all pr-10">
                                 <option value=""><?php echo __('select_page'); ?>...</option>
                                 <?php foreach ($pages as $page): ?>
@@ -140,7 +141,9 @@ require_once __DIR__ . '/../includes/header.php';
                     </div>
                 <?php else: ?>
                     <?php foreach ($scheduled_posts as $post): ?>
-                        <div x-show="formData.page_id !== '' && formData.page_id === '<?php echo $post['page_id']; ?>'"
+                        <div x-show="formData.page_id !== '' && formData.page_id === '<?php echo $post['page_id']; ?>'" x-cloak
+                            x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 scale-95"
+                            x-transition:enter-end="opacity-100 scale-100"
                             class="glass-card p-5 rounded-3xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all group">
                             <div class="flex justify-between items-start mb-4">
                                 <div class="flex items-center gap-3">
@@ -564,11 +567,16 @@ require_once __DIR__ . '/../includes/header.php';
             debugInfo: null,
             editId: null,
             formData: {
-                page_id: '',
+                page_id: localStorage.getItem('scheduler_last_page') || '',
                 post_type: 'feed',
                 content: '',
                 scheduled_at: '',
                 media_url: ''
+            },
+            init() {
+                if (this.formData.page_id) {
+                    this.fetchTokenDebug();
+                }
             },
             pages: <?php echo json_encode($pages); ?>,
 
