@@ -10,7 +10,22 @@ $evo_url = 'https://api.n8nmarketation.online';
 
 echo "<h1>Connectivity Test (No DB)</h1>";
 echo "<p><strong>Target URL:</strong> $evo_url</p>";
-echo "<p><strong>Server IP:</strong> " . $_SERVER['SERVER_ADDR'] . "</p>";
+echo "<p><strong>Listening Server IP (Incoming):</strong> " . $_SERVER['SERVER_ADDR'] . "</p>";
+
+// Check Real Outgoing IP
+$ch_ip = curl_init('https://api.ipify.org');
+curl_setopt($ch_ip, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch_ip, CURLOPT_TIMEOUT, 5);
+curl_setopt($ch_ip, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+$outgoing_ip = curl_exec($ch_ip);
+curl_close($ch_ip);
+
+if ($outgoing_ip) {
+    echo "<p style='color:blue; font-size:1.2em'><strong>Real Outgoing IP (The one to whitelist):</strong> $outgoing_ip</p>";
+} else {
+    echo "<p style='color:orange'>Could not detect outgoing IP (Service unreachable)</p>";
+}
+
 echo "<p><strong>Checking DNS Resolution...</strong></p>";
 
 $host = parse_url($evo_url, PHP_URL_HOST);
