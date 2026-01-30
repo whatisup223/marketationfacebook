@@ -360,7 +360,23 @@ try {
                         if ($http_code >= 200 && $http_code < 300) {
                             $result = ['success' => true];
                         } else {
-                            $result = ['success' => false, 'error' => "HTTP $http_code: $response" . ($curl_error ? " | cURL: $curl_error" : "")];
+                            // Parse Error
+                            $err_body = json_decode($response, true);
+                            $error_message = "HTTP $http_code";
+
+                            if (isset($err_body['code']) && $err_body['code'] == 63007) {
+                                $error_message = __('wa_err_twilio_63007'); // Specific translation
+                            } elseif (isset($err_body['message'])) {
+                                $error_message .= ": " . $err_body['message'];
+                            } else {
+                                $error_message .= ": " . $response;
+                            }
+
+                            if ($curl_error) {
+                                $error_message .= " | cURL: $curl_error";
+                            }
+
+                            $result = ['success' => false, 'error' => $error_message];
                         }
                     } else {
                         $result = ['success' => false, 'error' => 'Twilio credentials not configured'];

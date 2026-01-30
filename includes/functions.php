@@ -174,6 +174,7 @@ $translations = [
         'wa_err_ultra_api' => 'خطأ في UltraMsg API',
         'wa_err_qr_mode' => 'وضع QR نشط',
         'wa_err_code' => 'كود',
+        'wa_err_twilio_63007' => 'رقم المرسل (From) غير مفعل كمرسل واتساب في Twilio (خطأ 63007)',
         'wa_unknown_error' => 'خطأ غير معروف',
 
 
@@ -2194,6 +2195,7 @@ $translations = [
         'wa_err_ultra_api' => 'UltraMsg API Error',
         'wa_err_qr_mode' => 'QR Mode is active',
         'wa_err_code' => 'Code',
+        'wa_err_twilio_63007' => 'The From number is not a valid WhatsApp Sender (Twilio Code 63007)',
         'wa_unknown_error' => 'Unknown Error',
     ],
 ];
