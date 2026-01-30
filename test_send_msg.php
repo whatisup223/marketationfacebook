@@ -18,9 +18,13 @@ $evo_url = $stmt->fetchColumn();
 $stmt = $pdo->query("SELECT setting_value FROM settings WHERE setting_key = 'wa_evolution_api_key'");
 $api_key = $stmt->fetchColumn();
 
-echo "<h1>Evolution API Sender Debug</h1>";
-echo "<p><strong>URL:</strong> $evo_url</p>";
-echo "<p><strong>API Key:</strong> $api_key</p>";
+// DEBUG: Dump all settings to find where the key is hiding
+echo "<h3>Database Settings Dump:</h3><pre>";
+$dump = $pdo->query("SELECT * FROM settings WHERE setting_key LIKE '%evolution%'")->fetchAll(PDO::FETCH_ASSOC);
+print_r($dump);
+echo "</pre>";
+
+$stmt = $pdo->query("SELECT setting_value FROM settings WHERE setting_key = 'wa_evolution_api_key'");
 
 // 2. Fetch First Connected Account
 $acc_stmt = $pdo->query("SELECT * FROM wa_accounts WHERE status = 'connected' LIMIT 1");
