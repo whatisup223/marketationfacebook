@@ -86,8 +86,15 @@ function handleFacebookEvent($data, $pdo)
 
                         $comment_id = $val['comment_id'] ?? '';
                         $message_text = $val['message'] ?? '';
+                        $sender_name = $val['from']['name'] ?? '';
 
-                        processAutoReply($pdo, $page_id, $comment_id, $message_text, 'comment');
+                        // 1. Check Moderation First
+                        $is_moderated = processModeration($pdo, $page_id, $comment_id, $message_text, $sender_name);
+
+                        // 2. If not moderated, proceed to Auto-Reply
+                        if (!$is_moderated) {
+                            processAutoReply($pdo, $page_id, $comment_id, $message_text, 'comment');
+                        }
                     }
                 }
             }
@@ -154,6 +161,72 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source)
             $fb->hideComment($target_id, $access_token, true);
         }
     }
+}
+
+function processModeration($pdo, $page_id, $comment_id, $message_text, $sender_name = '')
+{
+    // 1. Get Rules
+    $stmt = $pdo->prepare("SELECT * FROM fb_moderation_rules WHERE page_id = ? AND is_active = 1");
+    $stmt->execute([$page_id]);
+    $rules = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$rules)
+        return false;
+
+    $violation = false;
+    $reason = "";
+
+    // A. Check Phone Numbers
+    if ($rules['hide_phones']) {
+        // Pattern for mobile numbers
+        if (preg_match('/(\d{8,15})|(\+?\d{1,4}[\s-]?\d{3,4}[\s-]?\d{4})/', $message_text)) {
+            $violation = true;
+            $reason = "Phone Number Detected";
+        }
+    }
+
+    // B. Check Links/URLs
+    if (!$violation && $rules['hide_links']) {
+        if (preg_match('/(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9-]+\.(com|net|org|me|info|biz|co|app|xyz))/i', $message_text)) {
+            $violation = true;
+            $reason = "Link Detected";
+        }
+    }
+
+    // C. Check Banned Keywords
+    if (!$violation && !empty($rules['banned_keywords'])) {
+        $keywords = explode(',', $rules['banned_keywords']);
+        foreach ($keywords as $kw) {
+            $kw = trim($kw);
+            if (!empty($kw) && mb_stripos($message_text, $kw) !== false) {
+                $violation = true;
+                $reason = "Banned Keyword: $kw";
+                break;
+            }
+        }
+    }
+
+    if ($violation) {
+        $fb = new FacebookAPI();
+        $stmt = $pdo->prepare("SELECT page_access_token FROM fb_pages WHERE page_id = ?");
+        $stmt->execute([$page_id]);
+        $token = $stmt->fetchColumn();
+
+        if ($token) {
+            if ($rules['action_type'] === 'hide') {
+                $fb->hideComment($comment_id, $token, true);
+            } else {
+                $fb->makeRequest($comment_id, [], $token, 'DELETE');
+            }
+
+            // Log the action
+            $stmt = $pdo->prepare("INSERT INTO fb_moderation_logs (user_id, page_id, comment_id, comment_text, sender_name, reason, action_taken) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$rules['user_id'], $page_id, $comment_id, $message_text, $sender_name, $reason, $rules['action_type']]);
+        }
+        return true; // Handled by moderation
+    }
+
+    return false;
 }
 
 // ----------------------------------------------------------------------

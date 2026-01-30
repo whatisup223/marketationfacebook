@@ -163,9 +163,9 @@ if (isLoggedIn()) {
                 extend: {
                     fontFamily: {
                         <?php if ($lang === 'ar'): ?>
-                                                                                                                                                                                    sans: ['IBM Plex Sans Arabic', 'sans-serif'],
+                                                                                                                                                                                        sans: ['IBM Plex Sans Arabic', 'sans-serif'],
                         <?php else: ?>
-                                                                                                                                                                                    sans: ['Outfit', 'sans-serif'],
+                                                                                                                                                                                        sans: ['Outfit', 'sans-serif'],
                         <?php endif; ?>
                     },
                     colors: {
@@ -175,7 +175,7 @@ if (isLoggedIn()) {
                     }
                 }
             }
-    }
+        }
     </script>
     <style>
         /* Base (Dark Mode Always) */
@@ -1016,7 +1016,7 @@ if (isLoggedIn()) {
 
                                     <!-- Facebook Dropdown -->
                                     <div
-                                        x-data="{ mFbOpen: <?php echo in_array(basename($_SERVER['PHP_SELF']), ['fb_accounts.php', 'page_inbox.php', 'create_campaign.php', 'campaign_reports.php', 'page_auto_reply.php', 'fb_scheduler.php', 'page_messenger_bot.php']) ? 'true' : 'false'; ?> }">
+                                        x-data="{ mFbOpen: <?php echo in_array(basename($_SERVER['PHP_SELF']), ['fb_accounts.php', 'page_inbox.php', 'create_campaign.php', 'campaign_reports.php', 'page_auto_reply.php', 'page_moderator.php', 'fb_scheduler.php', 'page_messenger_bot.php']) ? 'true' : 'false'; ?> }">
                                         <button @click="mFbOpen = !mFbOpen"
                                             class="-mx-3 w-full flex items-center justify-between rounded-xl px-4 py-3 text-base font-semibold leading-7 text-gray-300 hover:bg-gray-800 transition-colors group">
                                             <div class="flex items-center gap-3">
@@ -1043,112 +1043,116 @@ if (isLoggedIn()) {
                                                 class="block rounded-lg px-4 py-2.5 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'create_campaign.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> transition-colors"><?php echo __('setup_campaign'); ?></a>
                                             <a href="<?php echo $prefix; ?>user/page_auto_reply.php"
                                                 class="block rounded-lg px-4 py-2.5 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'page_auto_reply.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> transition-colors"><?php echo __('auto_reply'); ?></a>
-                                            <a href="<?php echo $prefix; ?>user/page_messenger_bot.php" class="block rounded-lg px-4 py-2.5 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'page_messenger_bot.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> transition-colors"><?php echo __('auto_reply_messages'); ?></a>
-                                                    <a href="<?php echo $prefix; ?>user/fb_scheduler.php" class="block rounded-lg px-4 py-2.5 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'fb_scheduler.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> transition-colors"><?php echo __('post_scheduler'); ?></a>
-                                                </div>
-                                            </div>
-
-                                            <!-- WhatsApp Dropdown -->
-                                            <div
-                                                x-data=" { mWaOpen: <?php echo in_array(basename($_SERVER['PHP_SELF']), ['wa_accounts.php', 'wa_bulk_send.php', 'wa_settings.php']) ? 'true' : 'false'; ?> }">
-                                                <button @click="mWaOpen = !mWaOpen"
-                                                    class="-mx-3 w-full flex items-center justify-between rounded-xl px-4 py-3 text-base font-semibold leading-7 text-gray-300 hover:bg-gray-800 transition-colors group">
-                                                    <div class="flex items-center gap-3">
-                                                        <svg class="w-5 h-5 text-gray-500 group-hover:text-green-400 transition-colors"
-                                                            fill="currentColor" viewBox="0 0 24 24">
-                                                            <path
-                                                                d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
-                                                        </svg>
-                                                        <span><?php echo __('whatsapp'); ?></span>
-                                                    </div>
-                                                    <svg class="w-4 h-4 transition-transform duration-200"
-                                                        :class="mWaOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                            d="M19 9l-7 7-7-7" />
-                                                    </svg>
-                                                </button>
-                                                <div x-show="mWaOpen" x-transition class="pl-4 rtl:pr-4 space-y-1 mt-1">
-                                                    <a href="<?php echo $prefix; ?>user/wa_accounts.php"
-                                                        class="block rounded-lg px-4 py-2.5 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'wa_accounts.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> transition-colors"><?php echo __('wa_accounts'); ?></a>
-                                                    <a href="<?php echo $prefix; ?>user/wa_bulk_send.php"
-                                                        class="block rounded-lg px-4 py-2.5 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'wa_bulk_send.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> transition-colors"><?php echo __('wa_bulk_send'); ?></a>
-                                                    <a href="<?php echo $prefix; ?>user/wa_settings.php"
-                                                        class="block rounded-lg px-4 py-2.5 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'wa_settings.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> transition-colors"><?php echo __('wa_settings'); ?></a>
-                                                </div>
+                                            <a href="<?php echo $prefix; ?>user/page_messenger_bot.php"
+                                                class="block rounded-lg px-4 py-2.5 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'page_messenger_bot.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> transition-colors"><?php echo __('auto_reply_messages'); ?></a>
+                                            <a href="<?php echo $prefix; ?>user/fb_scheduler.php"
+                                                class="block rounded-lg px-4 py-2.5 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'fb_scheduler.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> transition-colors"><?php echo __('post_scheduler'); ?></a>
+                                            <a href="<?php echo $prefix; ?>user/page_moderator.php"
+                                                class="block rounded-lg px-4 py-2.5 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'page_moderator.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> transition-colors"><?php echo __('auto_moderator'); ?></a>
                                         </div>
-
-                                        <!-- Campaign Reports -->
-                                        <a href="<?php echo $prefix; ?>user/campaign_reports.php"
-                                            class="-mx-3 block rounded-xl px-4 py-3 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'campaign_reports.php' ? 'text-indigo-400 bg-indigo-600/10 border border-indigo-500/20' : 'text-gray-300 hover:bg-gray-800 transition-colors'; ?>">
-                                            <?php echo __('campaign_reports'); ?>
-                                        </a>
-
-                                        <!-- Profile -->
-                                        <a href="<?php echo $prefix; ?>user/profile.php"
-                                            class="-mx-3 block rounded-xl px-4 py-3 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'profile.php' ? 'text-indigo-400 bg-indigo-600/10 border border-indigo-500/20' : 'text-gray-300 hover:bg-gray-800 transition-colors'; ?>">
-                                            <?php echo __('profile'); ?>
-                                        </a>
-
-                                        <!-- Notifications -->
-                                        <a href="<?php echo $prefix; ?>user/notifications.php"
-                                            class="-mx-3 block rounded-xl px-4 py-3 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'notifications.php' ? 'text-indigo-400 bg-indigo-600/10 border border-indigo-500/20' : 'text-gray-300 hover:bg-gray-800 transition-colors'; ?> flex justify-between items-center group">
-                                            <div class="flex items-center gap-3">
-                                                <span><?php echo __('notifications'); ?></span>
-                                            </div>
-                                            <?php if ($notifications_unread_count > 0): ?>
-                                                <span
-                                                    class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
-                                                    <?php echo $notifications_unread_count > 9 ? '9+' : $notifications_unread_count; ?>
-                                                </span>
-                                            <?php endif; ?>
-                                        </a>
-
-                                        <!-- Support Tickets -->
-                                        <a href="<?php echo $prefix; ?>user/support.php"
-                                            class="-mx-3 block rounded-xl px-4 py-3 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'support.php' || basename($_SERVER['PHP_SELF']) == 'create_ticket.php' || basename($_SERVER['PHP_SELF']) == 'view_ticket.php' ? 'text-indigo-400 bg-indigo-600/10 border border-indigo-500/20' : 'text-gray-300 hover:bg-gray-800 transition-colors'; ?> flex justify-between items-center group">
-                                            <span><?php echo __('support_tickets'); ?></span>
-                                            <?php
-                                            $m_user_ticket_unread = 0;
-                                            if (isset($_SESSION['user_id'])) {
-                                                $m_user_ticket_unread = getUserTicketUnreadCount($_SESSION['user_id']);
-                                            }
-                                            if ($m_user_ticket_unread > 0):
-                                                ?>
-                                                <span
-                                                    class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
-                                                    <?php echo $m_user_ticket_unread > 9 ? '9+' : $m_user_ticket_unread; ?>
-                                                </span>
-                                            <?php endif; ?>
-                                        </a>
                                     </div>
-                                <?php endif; ?>
-                            <?php endif; ?>
 
-                            <?php if (!isLoggedIn()): ?>
-                                <div class="mt-4 flex flex-col space-y-3">
-                                    <a href="<?php echo $prefix; ?>login.php"
-                                        class="w-full text-center rounded-lg px-3 py-2.5 text-base font-bold text-white bg-gray-700 hover:bg-gray-600 shadow-md">
-                                        <?php echo __('login'); ?>
+                                    <!-- WhatsApp Dropdown -->
+                                    <div
+                                        x-data=" { mWaOpen: <?php echo in_array(basename($_SERVER['PHP_SELF']), ['wa_accounts.php', 'wa_bulk_send.php', 'wa_settings.php']) ? 'true' : 'false'; ?> }">
+                                        <button @click="mWaOpen = !mWaOpen"
+                                            class="-mx-3 w-full flex items-center justify-between rounded-xl px-4 py-3 text-base font-semibold leading-7 text-gray-300 hover:bg-gray-800 transition-colors group">
+                                            <div class="flex items-center gap-3">
+                                                <svg class="w-5 h-5 text-gray-500 group-hover:text-green-400 transition-colors"
+                                                    fill="currentColor" viewBox="0 0 24 24">
+                                                    <path
+                                                        d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+                                                </svg>
+                                                <span><?php echo __('whatsapp'); ?></span>
+                                            </div>
+                                            <svg class="w-4 h-4 transition-transform duration-200"
+                                                :class="mWaOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </button>
+                                        <div x-show="mWaOpen" x-transition class="pl-4 rtl:pr-4 space-y-1 mt-1">
+                                            <a href="<?php echo $prefix; ?>user/wa_accounts.php"
+                                                class="block rounded-lg px-4 py-2.5 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'wa_accounts.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> transition-colors"><?php echo __('wa_accounts'); ?></a>
+                                            <a href="<?php echo $prefix; ?>user/wa_bulk_send.php"
+                                                class="block rounded-lg px-4 py-2.5 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'wa_bulk_send.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> transition-colors"><?php echo __('wa_bulk_send'); ?></a>
+                                            <a href="<?php echo $prefix; ?>user/wa_settings.php"
+                                                class="block rounded-lg px-4 py-2.5 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'wa_settings.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> transition-colors"><?php echo __('wa_settings'); ?></a>
+                                        </div>
+                                    </div>
+
+                                    <!-- Campaign Reports -->
+                                    <a href="<?php echo $prefix; ?>user/campaign_reports.php"
+                                        class="-mx-3 block rounded-xl px-4 py-3 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'campaign_reports.php' ? 'text-indigo-400 bg-indigo-600/10 border border-indigo-500/20' : 'text-gray-300 hover:bg-gray-800 transition-colors'; ?>">
+                                        <?php echo __('campaign_reports'); ?>
                                     </a>
-                                    <a href="<?php echo $prefix; ?>register.php"
-                                        class="w-full text-center rounded-lg px-3 py-2.5 text-base font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-500/30">
-                                        <?php echo __('register'); ?>
+
+                                    <!-- Profile -->
+                                    <a href="<?php echo $prefix; ?>user/profile.php"
+                                        class="-mx-3 block rounded-xl px-4 py-3 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'profile.php' ? 'text-indigo-400 bg-indigo-600/10 border border-indigo-500/20' : 'text-gray-300 hover:bg-gray-800 transition-colors'; ?>">
+                                        <?php echo __('profile'); ?>
+                                    </a>
+
+                                    <!-- Notifications -->
+                                    <a href="<?php echo $prefix; ?>user/notifications.php"
+                                        class="-mx-3 block rounded-xl px-4 py-3 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'notifications.php' ? 'text-indigo-400 bg-indigo-600/10 border border-indigo-500/20' : 'text-gray-300 hover:bg-gray-800 transition-colors'; ?> flex justify-between items-center group">
+                                        <div class="flex items-center gap-3">
+                                            <span><?php echo __('notifications'); ?></span>
+                                        </div>
+                                        <?php if ($notifications_unread_count > 0): ?>
+                                            <span
+                                                class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                                                <?php echo $notifications_unread_count > 9 ? '9+' : $notifications_unread_count; ?>
+                                            </span>
+                                        <?php endif; ?>
+                                    </a>
+
+                                    <!-- Support Tickets -->
+                                    <a href="<?php echo $prefix; ?>user/support.php"
+                                        class="-mx-3 block rounded-xl px-4 py-3 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'support.php' || basename($_SERVER['PHP_SELF']) == 'create_ticket.php' || basename($_SERVER['PHP_SELF']) == 'view_ticket.php' ? 'text-indigo-400 bg-indigo-600/10 border border-indigo-500/20' : 'text-gray-300 hover:bg-gray-800 transition-colors'; ?> flex justify-between items-center group">
+                                        <span><?php echo __('support_tickets'); ?></span>
+                                        <?php
+                                        $m_user_ticket_unread = 0;
+                                        if (isset($_SESSION['user_id'])) {
+                                            $m_user_ticket_unread = getUserTicketUnreadCount($_SESSION['user_id']);
+                                        }
+                                        if ($m_user_ticket_unread > 0):
+                                            ?>
+                                            <span
+                                                class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                                                <?php echo $m_user_ticket_unread > 9 ? '9+' : $m_user_ticket_unread; ?>
+                                            </span>
+                                        <?php endif; ?>
                                     </a>
                                 </div>
                             <?php endif; ?>
-                        </div>
-                        <div class="py-6">
-                            <?php if (isLoggedIn()): ?>
-                                <a href="<?php echo $prefix; ?>logout.php"
-                                    class="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-red-400 hover:bg-gray-800 border border-red-500/20 text-center"><?php echo __('logout'); ?></a>
-                            <?php endif; ?>
+                        <?php endif; ?>
+
+                        <?php if (!isLoggedIn()): ?>
+                            <div class="mt-4 flex flex-col space-y-3">
+                                <a href="<?php echo $prefix; ?>login.php"
+                                    class="w-full text-center rounded-lg px-3 py-2.5 text-base font-bold text-white bg-gray-700 hover:bg-gray-600 shadow-md">
+                                    <?php echo __('login'); ?>
+                                </a>
+                                <a href="<?php echo $prefix; ?>register.php"
+                                    class="w-full text-center rounded-lg px-3 py-2.5 text-base font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-500/30">
+                                    <?php echo __('register'); ?>
+                                </a>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                    <div class="py-6">
+                        <?php if (isLoggedIn()): ?>
+                            <a href="<?php echo $prefix; ?>logout.php"
+                                class="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-red-400 hover:bg-gray-800 border border-red-500/20 text-center"><?php echo __('logout'); ?></a>
+                        <?php endif; ?>
 
 
-                        </div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <main class="flex-grow">
+    <main class="flex-grow">

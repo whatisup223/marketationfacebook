@@ -47,7 +47,7 @@
         </h3>
     </div>
     <nav class="space-y-2" x-data="{ 
-        fbOpen: <?php echo in_array(basename($_SERVER['PHP_SELF']), ['fb_accounts.php', 'page_inbox.php', 'create_campaign.php', 'campaign_reports.php', 'page_auto_reply.php', 'fb_scheduler.php', 'page_messenger_bot.php']) ? 'true' : 'false'; ?>,
+        fbOpen: <?php echo in_array(basename($_SERVER['PHP_SELF']), ['fb_accounts.php', 'page_inbox.php', 'create_campaign.php', 'campaign_reports.php', 'page_auto_reply.php', 'page_moderator.php', 'fb_scheduler.php', 'page_messenger_bot.php']) ? 'true' : 'false'; ?>,
         waOpen: <?php echo in_array(basename($_SERVER['PHP_SELF']), ['wa_accounts.php', 'wa_bulk_send.php', 'wa_settings.php']) ? 'true' : 'false'; ?> 
     }">
         <a href="dashboard.php"
@@ -94,11 +94,15 @@
                 </a>
                 <a href="page_messenger_bot.php"
                     class="block px-4 py-2.5 <?php echo basename($_SERVER['PHP_SELF']) == 'page_messenger_bot.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> rounded-lg text-sm font-medium transition-colors mb-1">
-                                <?php echo __('auto_reply_messages'); ?>
+                    <?php echo __('auto_reply_messages'); ?>
                 </a>
                 <a href="fb_scheduler.php"
                     class="block px-4 py-2.5 <?php echo basename($_SERVER['PHP_SELF']) == 'fb_scheduler.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> rounded-lg text-sm font-medium transition-colors mb-1">
-                         <?php echo __('post_scheduler'); ?>
+                    <?php echo __('post_scheduler'); ?>
+                </a>
+                <a href="page_moderator.php"
+                    class="block px-4 py-2.5 <?php echo basename($_SERVER['PHP_SELF']) == 'page_moderator.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> rounded-lg text-sm font-medium transition-colors mb-1">
+                    <?php echo __('auto_moderator'); ?>
                 </a>
             </div>
         </div>
