@@ -179,65 +179,100 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
 
         <!-- Main Body: Preview (Left) & Rules (Right) -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
             <!-- Left Side: Preview Card -->
             <div class="lg:col-span-4 order-2 lg:order-1">
                 <div class="sticky top-8 space-y-6">
                     <div
-                        class="glass-card rounded-[32px] border border-white/10 shadow-2xl overflow-hidden bg-[#0f172a]/80 backdrop-blur-3xl">
-                        <div class="bg-white/5 border-b border-white/5 px-6 py-4 flex items-center justify-between">
-                            <h3 class="text-xs font-bold text-white uppercase tracking-wider">
+                        class="glass-card rounded-[32px] border border-white/10 shadow-2xl overflow-hidden bg-[#18191a]">
+                        <!-- Title Bar -->
+                        <div class="bg-[#242526] border-b border-white/5 px-6 py-4 flex items-center justify-between">
+                            <h3 class="text-xs font-bold text-gray-300 uppercase tracking-wider">
                                 <?php echo __('message_preview'); ?>
                             </h3>
                             <div class="flex gap-1">
-                                <div class="w-2 h-2 rounded-full bg-red-500/50"></div>
-                                <div class="w-2 h-2 rounded-full bg-yellow-500/50"></div>
-                                <div class="w-2 h-2 rounded-full bg-green-500/50"></div>
+                                <div class="w-2 h-2 rounded-full bg-gray-600"></div>
+                                <div class="w-2 h-2 rounded-full bg-gray-600"></div>
                             </div>
                         </div>
 
-                        <div class="p-6 bg-black/40 h-[480px] flex flex-col">
-                            <div class="flex flex-col items-center mb-8 mt-4">
-                                <div
-                                    class="w-16 h-16 rounded-full bg-gradient-to-br from-[#1877F2] to-blue-600 border-4 border-white/10 mb-3 flex items-center justify-center text-white shadow-xl">
-                                    <span class="text-2xl font-black"
-                                        x-text="getPageName() ? getPageName().charAt(0).toUpperCase() : 'F'"></span>
-                                </div>
-                                <div class="font-bold text-white text-base" x-text="getPageName() || 'Marketation'">
-                                </div>
-                                <div
-                                    class="text-[10px] text-indigo-400 font-black uppercase tracking-[0.2em] mt-1.5 flex items-center gap-1.5">
-                                    <div class="w-1 h-1 rounded-full bg-indigo-500"></div>
-                                    <?php echo __('verified_page'); ?>
+                        <div class="p-4 bg-[#18191a] h-[480px] flex flex-col font-sans">
+                            <!-- Fake Post Header -->
+                            <div class="flex items-center gap-3 mb-4 px-2 opacity-60">
+                                <div class="w-10 h-10 bg-gray-700 rounded-full"></div>
+                                <div class="space-y-2">
+                                    <div class="w-32 h-2.5 bg-gray-700 rounded-full"></div>
+                                    <div class="w-20 h-2 bg-gray-700 rounded-full"></div>
                                 </div>
                             </div>
+                            <!-- Fake Post Content Lines -->
+                            <div class="px-2 space-y-2 mb-4 opacity-40">
+                                <div class="w-full h-2 bg-gray-700 rounded-full"></div>
+                                <div class="w-3/4 h-2 bg-gray-700 rounded-full"></div>
+                            </div>
 
-                            <div class="flex-1 space-y-6 overflow-y-auto px-2 messenger-scrollbar">
-                                <!-- Customer Sample Message -->
-                                <div class="flex justify-start">
+                            <div class="h-px bg-[#3e4042] w-full mb-4"></div>
+
+                            <!-- Comments Thread -->
+                            <div class="flex-1 overflow-y-auto pr-1 messenger-scrollbar space-y-4">
+
+                                <!-- User Comment -->
+                                <div class="flex gap-2">
                                     <div
-                                        class="bg-white/10 text-gray-300 rounded-2xl rounded-tl-none px-4 py-3 max-w-[85%] text-[13px] border border-white/5 leading-relaxed">
-                                        <span
-                                            x-text="previewMode === 'rule' ? previewCustomerMsg : '<?php echo __('customer_msg_sample'); ?>'"></span>
+                                        class="w-8 h-8 rounded-full bg-gradient-to-tr from-yellow-400 to-orange-500 flex-shrink-0 border border-black/20">
+                                    </div>
+                                    <div class="flex-1 max-w-[90%]">
+                                        <div class="bg-[#3a3b3c] rounded-2xl px-3 py-2 inline-block text-[#e4e6eb]">
+                                            <div class="font-bold text-xs mb-0.5 cursor-pointer hover:underline">
+                                                <?php echo __('customer_name_sample'); ?>
+                                            </div>
+                                            <div class="text-[13px]"
+                                                x-text="previewMode === 'rule' ? previewCustomerMsg : '<?php echo __('customer_msg_sample'); ?>'">
+                                            </div>
+                                        </div>
+                                        <div class="flex gap-4 mt-1 ml-1 text-[11px] font-bold text-[#b0b3b8]">
+                                            <span
+                                                class="cursor-pointer hover:underline"><?php echo __('like'); ?></span>
+                                            <span
+                                                class="cursor-pointer hover:underline"><?php echo __('reply'); ?></span>
+                                            <span>2m</span>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <!-- Our Reply Preview -->
-                                <div class="flex justify-end">
+                                <!-- Page Reply -->
+                                <div class="flex gap-2 ml-10">
                                     <div
-                                        class="bg-gradient-to-br from-[#0084ff] to-blue-600 text-white rounded-2xl rounded-tr-none px-4 py-3.5 max-w-[85%] shadow-xl relative group">
+                                        class="w-6 h-6 rounded-full bg-blue-600 flex-shrink-0 flex items-center justify-center border border-black/20 shadow-md">
+                                        <span class="text-[9px] font-bold text-white"
+                                            x-text="getPageName() ? getPageName().charAt(0).toUpperCase() : 'P'"></span>
+                                    </div>
+                                    <div class="flex-1 max-w-[90%]">
                                         <div
-                                            class="absolute -left-1 top-0 w-2 h-2 bg-[#0084ff] rotate-45 transform -translate-x-1/2 rounded-sm -z-10 group-hover:scale-110 transition-transform">
+                                            class="bg-[#3a3b3c] rounded-2xl px-3 py-2 inline-block text-[#e4e6eb] border border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.1)]">
+                                            <div class="flex items-center gap-1 mb-0.5">
+                                                <span class="font-bold text-xs cursor-pointer hover:underline"
+                                                    x-text="getPageName() || 'Page Name'"></span>
+                                                <svg class="w-3 h-3 text-blue-500" fill="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                                                </svg>
+                                            </div>
+                                            <div class="text-[13px] whitespace-pre-wrap leading-snug"
+                                                x-text="previewMode === 'rule' ? previewReplyMsg : (defaultReplyText || '<?php echo __('preview_empty_msg'); ?>')">
+                                            </div>
                                         </div>
-                                        <p class="text-[13px] leading-relaxed break-words whitespace-pre-wrap font-medium"
-                                            x-text="previewMode === 'rule' ? previewReplyMsg : (defaultReplyText || '<?php echo __('preview_empty_msg'); ?>')">
-                                        </p>
-                                        <div class="mt-1 text-[8px] text-blue-100/60 font-medium flex justify-end">
-                                            <?php echo __('just_now'); ?>
+                                        <div class="flex gap-4 mt-1 ml-1 text-[11px] font-bold text-[#b0b3b8]">
+                                            <span
+                                                class="text-blue-400 cursor-pointer hover:underline"><?php echo __('like'); ?></span>
+                                            <span
+                                                class="cursor-pointer hover:underline"><?php echo __('reply'); ?></span>
+                                            <span><?php echo __('just_now'); ?></span>
                                         </div>
                                     </div>
                                 </div>
+
                             </div>
                         </div>
                     </div>

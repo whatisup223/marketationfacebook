@@ -2336,6 +2336,13 @@ $translations = [
         'extraction_tools' => 'Tools',
         'features' => 'Features',
         'home' => 'Home',
+        'like' => 'Like',
+        'reply' => 'Reply',
+        'customer_name_sample' => 'Ahmed Mohamed',
+        'customer_msg_sample' => 'Hello, I want to know more details please?',
+        'verified_page' => 'Verified Page',
+        'preview_empty_msg' => 'Your reply will appear here...',
+        'just_now' => 'Just now',
     ],
 ];
 
