@@ -171,7 +171,7 @@ try {
                         }
 
                         // PRIORITY 1: Fetch Global API Key from Admin Settings
-                        $global_key_stmt = $pdo->query("SELECT setting_value FROM settings WHERE setting_key = 'wa_evolution_api_key'");
+                        $global_key_stmt = $pdo->query("SELECT setting_value FROM settings WHERE setting_key = 'wa_evolution_apikey'");
                         $global_api_key = $global_key_stmt->fetchColumn();
 
                         // PRIORITY 2: User specific key (Fallback)
