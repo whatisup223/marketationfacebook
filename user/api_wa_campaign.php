@@ -150,8 +150,19 @@ try {
                 return $options[array_rand($options)];
             }, $processed_message);
 
+            // RESOLVE GATEWAY MODE (Fix for 'official' generic mode)
+            // If mode is 'official', we need to check which provider is actually active in settings
+            if ($campaign['gateway_mode'] === 'official') {
+                $prov_stmt = $pdo->prepare("SELECT external_provider FROM user_wa_settings WHERE user_id = ?");
+                $prov_stmt->execute([$user_id]);
+                $active_provider = $prov_stmt->fetchColumn();
+                if ($active_provider) {
+                    $campaign['gateway_mode'] = $active_provider; // override to 'meta', 'twilio', etc.
+                }
+            }
+
             // Send message based on gateway mode
-            $result = ['success' => false, 'error' => 'Unknown error'];
+            $result = ['success' => false, 'error' => 'Unknown error (Invalid Gateway Mode: ' . $campaign['gateway_mode'] . ')'];
 
             if ($campaign['gateway_mode'] === 'qr') {
                 // Evolution API (QR Mode)
