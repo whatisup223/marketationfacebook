@@ -53,22 +53,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['start_campaign'])) {
         $numbers_raw = $_POST['numbers'] ?? '';
         $numbers = array_filter(array_map('trim', preg_split('/[\r\n,]+/', $numbers_raw)));
 
-        // Handle CSV Upload for Numbers
+        // Handle CSV Upload for Numbers (Robust Regex Method)
         if (isset($_FILES['numbers_csv']) && $_FILES['numbers_csv']['error'] === UPLOAD_ERR_OK) {
             $csvFile = $_FILES['numbers_csv']['tmp_name'];
-            if (($handle = fopen($csvFile, "r")) !== FALSE) {
-                while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
-                    // Assume phone number is in the first column
-                    if (isset($data[0])) {
-                        $csv_number = trim($data[0]);
-                        // Basic cleanup: remove BOM, non-numeric chars logic can be added here if needed
-                        // For now just trim
-                        if (!empty($csv_number)) {
-                            $numbers[] = $csv_number;
-                        }
-                    }
+
+            // Read entire file content
+            $fileContent = file_get_contents($csvFile);
+
+            if ($fileContent !== false) {
+                // Extract sequences of 10 to 15 digits
+                // This accounts for various separators (comma, newline, space, semicolon)
+                // and ignores surrounding text/headers implicitly.
+                preg_match_all('/\d{10,15}/', $fileContent, $matches);
+
+                if (!empty($matches[0])) {
+                    $numbers = array_merge($numbers, $matches[0]);
                 }
-                fclose($handle);
             }
         }
 
@@ -357,7 +357,8 @@ require_once __DIR__ . '/../includes/header.php';
                     <div x-show="importMode === 'csv'" class="animate-fade-in">
                         <div
                             class="border-2 border-dashed border-white/10 rounded-2xl p-8 text-center hover:border-indigo-500/30 transition-colors cursor-pointer relative group">
-                            <input type="file" name="numbers_csv" accept=".csv, .txt" class="absolute inset-0 opacity-0 cursor-pointer">
+                            <input type="file" name="numbers_csv" accept=".csv, .txt"
+                                class="absolute inset-0 opacity-0 cursor-pointer">
                             <svg class="w-12 h-12 text-gray-400 mx-auto mb-4 group-hover:scale-110 transition-transform"
                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
