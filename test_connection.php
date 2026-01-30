@@ -39,14 +39,17 @@ function run_cmd($cmd)
     echo "</pre></div>";
 }
 
-// 1. Curl Verbose (System Level, distinct from PHP cURL)
-run_cmd("curl -vk " . escapeshellarg($evo_url));
+// 1. Control Test: Connect to Google (to check general outbound connectivity)
+run_cmd("curl -I -m 5 https://www.google.com");
 
-// 2. Traceroute (try standard linux path)
-run_cmd("traceroute -n -m 20 " . escapeshellarg("72.62.236.129"));
+// 2. Curl Verbose (System Level) - Reduced timeout
+run_cmd("curl -vk -m 5 " . escapeshellarg($evo_url));
 
-// 3. Ping
-run_cmd("ping -c 4 " . escapeshellarg("72.62.236.129"));
+// 3. Traceroute (try standard linux path) - Reduced max hops
+run_cmd("traceroute -n -m 10 -w 1 " . escapeshellarg("72.62.236.129"));
+
+// 4. Ping - Reduced count
+run_cmd("ping -c 2 -W 2 " . escapeshellarg("72.62.236.129"));
 
 echo "<p><strong>Checking DNS Resolution...</strong></p>";
 
