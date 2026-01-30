@@ -583,6 +583,7 @@ $translations = [
         'status_failed_small' => 'فشل',
         'status_pending_small' => 'في الانتظار',
         'auto_reply_messages' => 'الرد الآلي على الرسائل',
+        'webhook_global_warning' => 'تنبيه: هذا الرابط والتوكن مشتركان لكل من الرد على التعليقات والرسائل. تجديد أي منهما سيتطلب منك إعادة ضبط الإعدادات في لوحة تحكم فيسبوك.',
         'service_error' => 'خطأ في الاتصال بخدمة الإرسال.',
         'export_error' => 'فشل إنشاء الصورة. يرجى محاولة أخذ لقطة شاشة.',
         'lead_info' => 'بيانات العميل',
@@ -2349,6 +2350,7 @@ $translations = [
         'verified_page' => 'Verified Page',
         'preview_empty_msg' => 'Your reply will appear here...',
         'just_now' => 'Just now',
+        'webhook_global_warning' => 'Warning: This URL and Token are shared for both Comments and Messages. Regenerating either will require updating your Facebook App dashboard settings.',
     ],
 ];
 
