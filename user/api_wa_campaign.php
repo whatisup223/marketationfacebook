@@ -170,12 +170,21 @@ try {
                             $evolution_url = $global_stmt->fetchColumn();
                         }
 
-                        $api_key = $user_settings['evolution_api_key'];
+                        // PRIORITY 1: Fetch Global API Key from Admin Settings
+                        $global_key_stmt = $pdo->query("SELECT setting_value FROM settings WHERE setting_key = 'wa_evolution_api_key'");
+                        $global_api_key = $global_key_stmt->fetchColumn();
 
-                        // Fallback: Use Global API Key if User Key is empty
+                        // PRIORITY 2: User specific key (Fallback)
+                        if (!empty($global_api_key)) {
+                            $api_key = $global_key_stmt->fetchColumn(); // Re-fetch or use variable
+                            $api_key = $global_api_key;
+                        } else {
+                            $api_key = $user_settings['evolution_api_key'];
+                        }
+
+                        // Final Check
                         if (empty($api_key)) {
-                            $global_key_stmt = $pdo->query("SELECT setting_value FROM settings WHERE setting_key = 'wa_evolution_api_key'");
-                            $api_key = $global_key_stmt->fetchColumn();
+                            error_log("CRITICAL: No API Key found in Global or User settings!");
                         }
 
                         $instance_name = $account['instance_name'];
