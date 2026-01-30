@@ -152,6 +152,9 @@ $translations = [
         'wa_txt_hint' => 'يجب أن يحتوي الملف على الأرقام فقط.',
         'wa_uploading' => 'جارِ رفع الملفات...',
         'wa_processing_campaign' => 'جاري معالجة الحملة، يرجى الانتظار...',
+        'wa_select_qr_accs' => 'اختر الحسابات المرسلة (شريحة أو أكثر)',
+        'wa_official_api_info' => 'حساب API الرسمي تكامل تلقائي',
+        'wa_using_official_api' => 'يتم استخدام إعدادات الـ API الرسمية المحفوظة تلقائياً.',
 
         // Modules
         'extraction_tools' => 'أدوات الاستخراج',
