@@ -163,9 +163,9 @@ if (isLoggedIn()) {
                 extend: {
                     fontFamily: {
                         <?php if ($lang === 'ar'): ?>
-                                                                                                                                    sans: ['IBM Plex Sans Arabic', 'sans-serif'],
+                                                                                                                                                    sans: ['IBM Plex Sans Arabic', 'sans-serif'],
                         <?php else: ?>
-                                                                                                                                    sans: ['Outfit', 'sans-serif'],
+                                                                                                                                                    sans: ['Outfit', 'sans-serif'],
                         <?php endif; ?>
                     },
                     colors: {
@@ -408,7 +408,7 @@ if (isLoggedIn()) {
 
                 <!-- Desktop Menu (Adjusted for many items) -->
                 <div
-                    class="hidden xl:flex flex-1 items-center justify-center rtl:space-x-reverse space-x-1 2xl:space-x-4">
+                    class="hidden lg:flex flex-1 items-center justify-center rtl:space-x-reverse space-x-1 2xl:space-x-4">
                     <?php if (basename($_SERVER['PHP_SELF']) == 'index.php'): ?>
                         <a href="<?php echo $prefix; ?>index.php"
                             class="text-[12px] 2xl:text-sm font-medium text-gray-300 hover:text-white transition-colors relative group whitespace-nowrap px-1">
@@ -488,219 +488,225 @@ if (isLoggedIn()) {
                     <?php endif; ?>
                 </div>
 
-                <div class="hidden xl:flex items-center space-x-4 rtl:space-x-reverse">
-                    <!-- Language Switcher -->
-                    <a href="?<?php echo htmlspecialchars(http_build_query(array_merge($_GET, ['lang' => ($lang === 'ar' ? 'en' : 'ar')]))); ?>"
-                        title="<?php echo $lang === 'ar' ? 'English' : 'عربي'; ?>"
-                        class="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-indigo-600 hover:border-indigo-500 transition-all duration-300 flex-shrink-0">
-                        <svg class="w-5 h-5 transition-transform duration-300 group-hover:scale-110" fill="none"
-                            stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129">
-                            </path>
-                        </svg>
-                    </a>
+                <div class="flex items-center space-x-2 sm:space-x-4 rtl:space-x-reverse">
+                    <!-- Global Persistent Icons -->
+                    <div class="flex items-center space-x-1.5 sm:space-x-2 rtl:space-x-reverse">
+                        <!-- Language Switcher -->
+                        <a href="?<?php echo htmlspecialchars(http_build_query(array_merge($_GET, ['lang' => ($lang === 'ar' ? 'en' : 'ar')]))); ?>"
+                            title="<?php echo $lang === 'ar' ? 'English' : 'عربي'; ?>"
+                            class="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-indigo-600 hover:border-indigo-500 transition-all duration-300 flex-shrink-0">
+                            <svg class="w-5 h-5 transition-transform duration-300 group-hover:scale-110" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129">
+                                </path>
+                            </svg>
+                        </a>
 
-                    <!-- Theme Toggle Removed -->
-
-                    <div class="w-px h-6 bg-gray-300 dark:bg-gray-700 mx-2"></div>
-
-                    <?php if (isLoggedIn()): ?>
-
-                        <!-- Notifications Dropdown -->
-                        <?php
-                        $notifications_unread_count = getUnreadCount($_SESSION['user_id']);
-                        $notifications_list = getUnreadNotifications($_SESSION['user_id'], 5);
-
-                        // Check mute status for header toggle
-                        $h_pdo = getDB();
-                        $h_stmt = $h_pdo->prepare("SELECT preferences FROM users WHERE id = ?");
-                        $h_stmt->execute([$_SESSION['user_id']]);
-                        $h_prefs = json_decode($h_stmt->fetchColumn() ?: '{}', true);
-                        $header_is_muted = $h_prefs['notifications_muted'] ?? false;
-                        ?>
-                        <div class="relative ml-2 rtl:mr-2 rtl:ml-0" x-data="{ openNotifications: false }">
-                            <button @click="openNotifications = !openNotifications"
-                                class="text-gray-300 hover:text-white transition-colors relative p-2">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
-                                    </path>
-                                </svg>
-                                <?php if ($notifications_unread_count > 0): ?>
-                                    <span
-                                        class="absolute top-1 right-1 rtl:left-1 rtl:right-auto bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-gray-900 leading-none">
-                                        <?php echo $notifications_unread_count > 9 ? '9+' : $notifications_unread_count; ?>
-                                    </span>
-                                <?php endif; ?>
-                            </button>
-
-                            <!-- Dropdown -->
-                            <div x-show="openNotifications" @click.away="openNotifications = false"
-                                x-transition:enter="transition ease-out duration-200"
-                                x-transition:enter-start="opacity-0 translate-y-2"
-                                x-transition:enter-end="opacity-100 translate-y-0"
-                                x-transition:leave="transition ease-in duration-150"
-                                x-transition:leave-start="opacity-100 translate-y-0"
-                                x-transition:leave-end="opacity-0 translate-y-2"
-                                class="absolute right-0 rtl:left-0 rtl:right-auto mt-2 w-80 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl z-50 overflow-hidden"
-                                style="display: none;">
-
-                                <div class="px-4 py-3 border-b border-gray-800 flex justify-between items-center">
-                                    <h3 class="text-sm font-bold text-white"><?php echo __('notifications'); ?></h3>
+                        <?php if (isLoggedIn()): ?>
+                            <!-- Notifications Dropdown -->
+                            <?php
+                            $notifications_unread_count = getUnreadCount($_SESSION['user_id']);
+                            $notifications_list = getUnreadNotifications($_SESSION['user_id'], 5);
+                            $h_pdo = getDB();
+                            $h_stmt = $h_pdo->prepare("SELECT preferences FROM users WHERE id = ?");
+                            $h_stmt->execute([$_SESSION['user_id']]);
+                            $h_prefs = json_decode($h_stmt->fetchColumn() ?: '{}', true);
+                            $header_is_muted = $h_prefs['notifications_muted'] ?? false;
+                            ?>
+                            <div class="relative" x-data="{ openNotifications: false }">
+                                <button @click="openNotifications = !openNotifications"
+                                    class="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-indigo-600 hover:border-indigo-500 transition-all duration-300 relative">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
+                                        </path>
+                                    </svg>
                                     <?php if ($notifications_unread_count > 0): ?>
-                                        <div class="flex items-center gap-3">
-                                            <span
-                                                class="text-xs text-indigo-400 font-bold bg-indigo-500/10 px-2 py-0.5 rounded-full border border-indigo-500/20">
-                                                <?php echo $notifications_unread_count > 9 ? '9+' : $notifications_unread_count; ?>
-                                            </span>
-                                            <button
-                                                @click="fetch('<?php echo $prefix; ?>includes/api/mark_all_notifications_read.php', {method: 'POST'}).then(() => window.location.reload());"
-                                                title="<?php echo __('mark_all_read'); ?>"
-                                                class="text-gray-500 hover:text-white transition-colors">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M5 13l4 4L19 7M5 13l4 4L19 7"></path>
-                                                </svg>
-                                            </button>
-                                        </div>
+                                        <span
+                                            class="absolute top-1.5 right-1.5 rtl:left-1.5 rtl:right-auto bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full border border-gray-900 leading-none">
+                                            <?php echo $notifications_unread_count > 9 ? '9+' : $notifications_unread_count; ?>
+                                        </span>
                                     <?php endif; ?>
+                                </button>
 
-                                    <!-- Mute Toggle (Always visible) -->
-                                    <button
-                                        @click="fetch('<?php echo $prefix; ?>includes/api/toggle_notifications_mute.php', {method: 'POST'}).then(() => window.location.reload());"
-                                        title="<?php echo $header_is_muted ? __('unmute_notifications') : __('mute_notifications'); ?>"
-                                        class="<?php echo $header_is_muted ? 'text-red-400 hover:text-red-300' : 'text-gray-500 hover:text-white'; ?> transition-colors ml-2 rtl:mr-2 rtl:ml-0">
-                                        <?php if ($header_is_muted): ?>
-                                            <svg class="w-4 h-4" fill="none" notification-muted stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
-                                                    clip-rule="evenodd" />
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
-                                            </svg>
-                                        <?php else: ?>
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
-                                                </path>
-                                            </svg>
-                                        <?php endif; ?>
-                                    </button>
-                                </div>
+                                <!-- Dropdown -->
+                                <div x-show="openNotifications" @click.away="openNotifications = false"
+                                    x-transition:enter="transition ease-out duration-200"
+                                    x-transition:enter-start="opacity-0 translate-y-2"
+                                    x-transition:enter-end="opacity-100 translate-y-0"
+                                    x-transition:leave="transition ease-in duration-150"
+                                    x-transition:leave-start="opacity-100 translate-y-0"
+                                    x-transition:leave-end="opacity-0 translate-y-2"
+                                    class="absolute right-0 rtl:left-0 rtl:right-auto mt-2 w-80 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl z-50 overflow-hidden"
+                                    style="display: none;">
 
-                                <div class="max-h-64 overflow-y-auto">
-                                    <?php if (count($notifications_list) > 0): ?>
-                                        <?php foreach ($notifications_list as $notif): ?>
-                                            <div
-                                                class="border-b border-gray-800 last:border-0 hover:bg-gray-800 transition-colors relative group">
-                                                <a href="<?php echo $prefix . $notif['link']; ?>" @click="fetch('<?php echo $prefix; ?>includes/api/mark_notification_read.php', {
-                                                        method: 'POST',
-                                                        headers: {'Content-Type': 'application/json'},
-                                                        body: JSON.stringify({id: <?php echo $notif['id']; ?>})
-                                                    });" class="block px-4 py-3">
-                                                    <p class="text-xs text-indigo-400 font-bold mb-1">
-                                                        <?php echo htmlspecialchars(__($notif['title'])); ?>
-                                                    </p>
-                                                    <p class="text-sm text-gray-300 line-clamp-2 leading-snug">
-                                                        <?php
-                                                        $msgText = $notif['message'];
-                                                        $decoded = json_decode($msgText, true);
-                                                        if ($decoded && is_array($decoded) && isset($decoded['key'])) {
-                                                            $params = $decoded['params'] ?? [];
-                                                            if (isset($decoded['param_keys']) && is_array($decoded['param_keys'])) {
-                                                                foreach ($decoded['param_keys'] as $idx) {
-                                                                    if (isset($params[$idx])) {
-                                                                        $params[$idx] = __($params[$idx]);
-                                                                    }
-                                                                }
-                                                            }
-                                                            $msgText = vsprintf(__($decoded['key']), $params);
-                                                        } else {
-                                                            $msgText = __($msgText);
-                                                        }
-                                                        echo htmlspecialchars($msgText);
-                                                        ?>
-                                                    </p>
-                                                    <p class="text-[10px] text-gray-500 mt-2">
-                                                        <?php echo date('M d, H:i', strtotime($notif['created_at'])); ?>
-                                                    </p>
-                                                </a>
-                                                <!-- Action to mark read without visiting -->
-                                                <button title="<?php echo __('mark_read'); ?>" @click.stop="fetch('<?php echo $prefix; ?>includes/api/mark_notification_read.php', {
-                                                        method: 'POST',
-                                                        headers: {'Content-Type': 'application/json'},
-                                                        body: JSON.stringify({id: <?php echo $notif['id']; ?>})
-                                                    }).then(() => $el.closest('div').remove());"
-                                                    class="absolute top-3 right-3 rtl:left-3 rtl:right-auto text-gray-600 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity p-1">
-                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <div class="px-4 py-3 border-b border-gray-800 flex justify-between items-center">
+                                        <h3 class="text-sm font-bold text-white"><?php echo __('notifications'); ?></h3>
+                                        <?php if ($notifications_unread_count > 0): ?>
+                                            <div class="flex items-center gap-3">
+                                                <span
+                                                    class="text-xs text-indigo-400 font-bold bg-indigo-500/10 px-2 py-0.5 rounded-full border border-indigo-500/20">
+                                                    <?php echo $notifications_unread_count > 9 ? '9+' : $notifications_unread_count; ?>
+                                                </span>
+                                                <button
+                                                    @click="fetch('<?php echo $prefix; ?>includes/api/mark_all_notifications_read.php', {method: 'POST'}).then(() => window.location.reload());"
+                                                    title="<?php echo __('mark_all_read'); ?>"
+                                                    class="text-gray-500 hover:text-white transition-colors">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                            d="M5 13l4 4L19 7"></path>
+                                                            d="M5 13l4 4L19 7M5 13l4 4L19 7"></path>
                                                     </svg>
                                                 </button>
                                             </div>
-                                        <?php endforeach; ?>
-                                    <?php else: ?>
-                                        <div class="px-4 py-8 text-center text-gray-500 text-sm">
-                                            <?php echo __('no_notifications'); ?>
-                                        </div>
-                                    <?php endif; ?>
-                                </div>
-                                <div class="bg-gray-800/50 p-2 text-center border-t border-gray-800">
-                                    <a href="<?php echo isAdmin() ? $prefix . 'admin/notifications.php' : $prefix . 'user/notifications.php'; ?>"
-                                        class="block text-center text-xs text-indigo-400 hover:text-indigo-300 font-bold py-1 transition-colors">
-                                        <?php echo __('view_all_notifications'); ?>
-                                    </a>
+                                        <?php endif; ?>
+
+                                        <!-- Mute Toggle -->
+                                        <button
+                                            @click="fetch('<?php echo $prefix; ?>includes/api/toggle_notifications_mute.php', {method: 'POST'}).then(() => window.location.reload());"
+                                            title="<?php echo $header_is_muted ? __('unmute_notifications') : __('mute_notifications'); ?>"
+                                            class="<?php echo $header_is_muted ? 'text-red-400 hover:text-red-300' : 'text-gray-500 hover:text-white'; ?> transition-colors ml-2 rtl:mr-2 rtl:ml-0">
+                                            <?php if ($header_is_muted): ?>
+                                                <svg class="w-4 h-4" fill="none" notification-muted stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
+                                                        clip-rule="evenodd" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+                                                </svg>
+                                            <?php else: ?>
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
+                                                    </path>
+                                                </svg>
+                                            <?php endif; ?>
+                                        </button>
+                                    </div>
+
+                                    <div class="max-h-64 overflow-y-auto">
+                                        <?php if (count($notifications_list) > 0): ?>
+                                            <?php foreach ($notifications_list as $notif): ?>
+                                                <div
+                                                    class="border-b border-gray-800 last:border-0 hover:bg-gray-800 transition-colors relative group">
+                                                    <a href="<?php echo $prefix . $notif['link']; ?>" @click="fetch('<?php echo $prefix; ?>includes/api/mark_notification_read.php', {
+                                                            method: 'POST',
+                                                            headers: {'Content-Type': 'application/json'},
+                                                            body: JSON.stringify({id: <?php echo $notif['id']; ?>})
+                                                        });" class="block px-4 py-3">
+                                                        <p class="text-xs text-indigo-400 font-bold mb-1">
+                                                            <?php echo htmlspecialchars(__($notif['title'])); ?>
+                                                        </p>
+                                                        <p class="text-sm text-gray-300 line-clamp-2 leading-snug">
+                                                            <?php
+                                                            $msgText = $notif['message'];
+                                                            $decoded = json_decode($msgText, true);
+                                                            if ($decoded && is_array($decoded) && isset($decoded['key'])) {
+                                                                $params = $decoded['params'] ?? [];
+                                                                if (isset($decoded['param_keys']) && is_array($decoded['param_keys'])) {
+                                                                    foreach ($decoded['param_keys'] as $idx) {
+                                                                        if (isset($params[$idx])) {
+                                                                            $params[$idx] = __($params[$idx]);
+                                                                        }
+                                                                    }
+                                                                }
+                                                                $msgText = vsprintf(__($decoded['key']), $params);
+                                                            } else {
+                                                                $msgText = __($msgText);
+                                                            }
+                                                            echo htmlspecialchars($msgText);
+                                                            ?>
+                                                        </p>
+                                                        <p class="text-[10px] text-gray-500 mt-2">
+                                                            <?php echo date('M d, H:i', strtotime($notif['created_at'])); ?>
+                                                        </p>
+                                                    </a>
+                                                    <button title="<?php echo __('mark_read'); ?>" @click.stop="fetch('<?php echo $prefix; ?>includes/api/mark_notification_read.php', {
+                                                            method: 'POST',
+                                                            headers: {'Content-Type': 'application/json'},
+                                                            body: JSON.stringify({id: <?php echo $notif['id']; ?>})
+                                                        }).then(() => $el.closest('div').remove());"
+                                                        class="absolute top-3 right-3 rtl:left-3 rtl:right-auto text-gray-600 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity p-1">
+                                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                d="M5 13l4 4L19 7"></path>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        <?php else: ?>
+                                            <div class="px-4 py-8 text-center text-gray-500 text-sm">
+                                                <?php echo __('no_notifications'); ?>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="bg-gray-800/50 p-2 text-center border-t border-gray-800">
+                                        <a href="<?php echo isAdmin() ? $prefix . 'admin/notifications.php' : $prefix . 'user/notifications.php'; ?>"
+                                            class="block text-center text-xs text-indigo-400 hover:text-indigo-300 font-bold py-1 transition-colors">
+                                            <?php echo __('view_all_notifications'); ?>
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <?php if (isAdmin()): ?>
-                            <a href="<?php echo $prefix; ?>admin/dashboard.php"
-                                class="text-yellow-600 dark:text-yellow-400 hover:text-yellow-700 dark:hover:text-yellow-300 transition-all font-medium border-b-2 border-transparent hover:border-yellow-400">
-                                <?php echo __('admin_panel'); ?>
+                            <!-- Profile Icon (Always Visible) -->
+                            <a href="<?php echo isAdmin() ? $prefix . 'admin/profile.php' : $prefix . 'user/profile.php'; ?>"
+                                class="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-indigo-600 hover:border-indigo-500 transition-all duration-300 overflow-hidden group"
+                                title="<?php echo __('profile'); ?>">
+                                <?php if (isset($current_user) && $current_user['avatar']): ?>
+                                    <img src="<?php echo $prefix . $current_user['avatar']; ?>"
+                                        class="w-full h-full object-cover transition-transform group-hover:scale-110">
+                                <?php else: ?>
+                                    <svg class="w-5 h-5 transition-transform group-hover:scale-110" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                    </svg>
+                                <?php endif; ?>
+                            </a>
+
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- Desktop Only Text Links -->
+                    <div class="hidden lg:flex items-center space-x-4 rtl:space-x-reverse">
+                        <?php if (isLoggedIn()): ?>
+                            <a href="<?php echo isAdmin() ? $prefix . 'admin/dashboard.php' : $prefix . 'user/dashboard.php'; ?>"
+                                class="text-sm font-bold text-gray-300 hover:text-white transition-all whitespace-nowrap">
+                                <?php echo isAdmin() ? __('admin_panel') : __('dashboard'); ?>
+                            </a>
+                            <a href="<?php echo $prefix; ?>logout.php"
+                                class="bg-white/10 text-white hover:bg-white/20 px-4 py-2 rounded-lg transition-all border border-white/10 text-sm font-bold flex-shrink-0">
+                                <?php echo __('logout'); ?>
                             </a>
                         <?php else: ?>
-                            <a href="<?php echo $prefix; ?>user/dashboard.php"
-                                class="flex items-center space-x-2 rtl:space-x-reverse text-gray-300 hover:text-white transition-all">
-                                <?php if (isset($current_user) && $current_user['avatar']): ?>
-                                    <img src="<?php echo $prefix; ?><?php echo $current_user['avatar']; ?>"
-                                        class="w-8 h-8 rounded-lg object-cover border border-indigo-500/30">
-                                <?php endif; ?>
-                                <span><?php echo __('dashboard'); ?></span>
+                            <a href="<?php echo $prefix; ?>login.php"
+                                class="text-sm font-bold text-white bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg transition-all shadow-md whitespace-nowrap flex-shrink-0">
+                                <?php echo __('login'); ?>
+                            </a>
+                            <a href="<?php echo $prefix; ?>register.php"
+                                class="text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg shadow-lg shadow-indigo-500/30 transition-all whitespace-nowrap flex-shrink-0">
+                                <?php echo __('register'); ?>
                             </a>
                         <?php endif; ?>
-                        <a href="<?php echo $prefix; ?>logout.php"
-                            class="bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-white/20 px-4 py-2 rounded-lg transition-all border border-gray-200 dark:border-white/10">
-                            <?php echo __('logout'); ?>
-                        </a>
-                    <?php else: ?>
-                        <a href="<?php echo $prefix; ?>login.php"
-                            class="text-sm font-bold text-white bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg transition-all shadow-md whitespace-nowrap flex-shrink-0">
-                            <?php echo __('login'); ?>
-                        </a>
-                        <a href="<?php echo $prefix; ?>register.php"
-                            class="text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg shadow-lg shadow-indigo-500/30 transition-all whitespace-nowrap flex-shrink-0">
-                            <?php echo __('register'); ?>
-                        </a>
-                    <?php endif; ?>
+                    </div>
 
-                </div>
-
-                <!-- Mobile menu button -->
-                <div class="-mr-2 flex xl:hidden items-center space-x-4 rtl:space-x-reverse">
-                    <button @click="mobileMenu = !mobileMenu" type="button"
-                        class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700/50 focus:outline-none">
-                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                            <path :class="{'hidden': mobileMenu, 'inline-flex': !mobileMenu }" class="inline-flex"
-                                stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M4 6h16M4 12h16M4 18h16" />
-                            <path :class="{'hidden': !mobileMenu, 'inline-flex': mobileMenu }" class="hidden"
-                                stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
+                    <!-- Mobile Sidebar Trigger -->
+                    <div class="flex lg:hidden items-center">
+                        <button @click="mobileMenu = !mobileMenu" type="button"
+                            class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700/50 focus:outline-none transition-colors border border-white/5 bg-white/5">
+                            <span class="sr-only">Open main menu</span>
+                            <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                                <path :class="{'hidden': mobileMenu, 'inline-flex': !mobileMenu }" class="inline-flex"
+                                    stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 6h16M4 12h16M4 18h16" />
+                                <path :class="{'hidden': !mobileMenu, 'inline-flex': mobileMenu }" class="hidden"
+                                    stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -708,7 +714,7 @@ if (isLoggedIn()) {
     </nav>
 
     <!-- Mobile Side Drawer -->
-    <div class="relative z-[60] xl:hidden" role="dialog" aria-modal="true" x-show="mobileMenu" style="display: none;">
+    <div class="relative z-[60] lg:hidden" role="dialog" aria-modal="true" x-show="mobileMenu" style="display: none;">
         <!-- Overlay -->
         <div class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" x-show="mobileMenu"
             x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0"
@@ -761,22 +767,22 @@ if (isLoggedIn()) {
             </div>
 
             <?php if (isset($current_user)): ?>
-                <div
-                    class="mt-4 flex items-center space-x-3 rtl:space-x-reverse p-3 bg-white/5 rounded-2xl border border-white/10">
+                <a href="<?php echo isAdmin() ? $prefix . 'admin/profile.php' : $prefix . 'user/profile.php'; ?>"
+                    class="mt-4 flex items-center space-x-3 rtl:space-x-reverse p-3 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-all group">
                     <div class="flex-shrink-0">
                         <?php if ($current_user['avatar']): ?>
                             <img src="<?php echo $prefix; ?><?php echo $current_user['avatar']; ?>"
-                                class="w-10 h-10 rounded-xl object-cover border border-indigo-500/30">
+                                class="w-10 h-10 rounded-xl object-cover border border-indigo-500/30 group-hover:scale-105 transition-transform">
                         <?php else: ?>
                             <div
-                                class="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center border border-indigo-500/30">
+                                class="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center border border-indigo-500/30 group-hover:scale-105 transition-transform">
                                 <span
                                     class="text-indigo-400 font-bold"><?php echo mb_substr($current_user['name'], 0, 1, 'UTF-8'); ?></span>
                             </div>
                         <?php endif; ?>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <p class="text-sm font-bold text-white truncate">
+                        <p class="text-sm font-bold text-white truncate group-hover:text-indigo-400 transition-colors">
                             <?php echo htmlspecialchars($current_user['name']); ?>
                         </p>
                         <p class="text-xs text-gray-500 truncate">
@@ -791,7 +797,7 @@ if (isLoggedIn()) {
                             </span>
                         </p>
                     </div>
-                </div>
+                </a>
             <?php endif; ?>
 
             <div class="mt-6 flow-root">
@@ -863,192 +869,257 @@ if (isLoggedIn()) {
 
                             <?php if (isAdmin()): ?>
                                 <h3
-                                    class="mt-4 text-xs font-semibold text-gray-500 uppercase tracking-wider pl-3 rtl:pr-3 border-t border-gray-800 pt-4">
+                                    class="text-xs font-bold text-gray-500 uppercase tracking-widest border-b border-gray-800 pb-2 mb-4 pl-3 rtl:pr-3">
                                     <?php echo __('admin_panel'); ?>
                                 </h3>
-                                <a href="<?php echo $prefix; ?>admin/dashboard.php"
-                                    class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'dashboard.php' ? 'text-indigo-400' : 'text-gray-300'; ?> hover:bg-gray-800 flex justify-between items-center">
-                                    <span><?php echo __('overview'); ?></span>
-                                </a>
-                                <!-- Admin Accounts Dropdown -->
-                                <div
-                                    x-data="{ mAdmAcc: <?php echo in_array(basename($_SERVER['PHP_SELF']), ['fb_accounts.php', 'users.php']) ? 'true' : 'false'; ?> }">
-                                    <button @click="mAdmAcc = !mAdmAcc"
-                                        class="-mx-3 w-full flex items-center justify-between rounded-lg px-3 py-2 text-base font-semibold text-gray-300 hover:bg-gray-800">
-                                        <span><?php echo __('accounts_management'); ?></span>
-                                        <svg class="w-4 h-4 transition-transform" :class="mAdmAcc ? 'rotate-180' : ''"
-                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path d="M19 9l-7 7-7-7" stroke-width="2" stroke-linecap="round"
-                                                stroke-linejoin="round" />
-                                        </svg>
-                                    </button>
-                                    <div x-show="mAdmAcc" x-transition class="pl-4 rtl:pr-4">
-                                        <a href="<?php echo $prefix; ?>admin/users.php"
-                                            class="block rounded-lg px-3 py-2 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'users.php' ? 'text-indigo-400' : 'text-gray-400'; ?> hover:bg-gray-800"><?php echo __('users'); ?></a>
-                                        <a href="<?php echo $prefix; ?>admin/fb_accounts.php"
-                                            class="block rounded-lg px-3 py-2 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'fb_accounts.php' ? 'text-indigo-400' : 'text-gray-400'; ?> hover:bg-gray-800"><?php echo __('fb_accounts'); ?></a>
+
+                                <div class="space-y-1">
+                                    <!-- Overview -->
+                                    <a href="<?php echo $prefix; ?>admin/dashboard.php"
+                                        class="-mx-3 block rounded-xl px-4 py-3 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'dashboard.php' ? 'text-indigo-400 bg-indigo-600/10 border border-indigo-500/20' : 'text-gray-300 hover:bg-gray-800 transition-colors'; ?>">
+                                        <?php echo __('overview'); ?>
+                                    </a>
+
+                                    <!-- Accounts Group -->
+                                    <div
+                                        x-data="{ mAdmAcc: <?php echo in_array(basename($_SERVER['PHP_SELF']), ['fb_accounts.php', 'users.php']) ? 'true' : 'false'; ?> }">
+                                        <button @click="mAdmAcc = !mAdmAcc"
+                                            class="-mx-3 w-full flex items-center justify-between rounded-xl px-4 py-3 text-base font-semibold text-gray-300 hover:bg-gray-800 transition-colors group">
+                                            <div class="flex items-center gap-3">
+                                                <svg class="w-5 h-5 text-gray-500 group-hover:text-indigo-400" fill="none"
+                                                    stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                                </svg>
+                                                <span><?php echo __('accounts_management'); ?></span>
+                                            </div>
+                                            <svg class="w-4 h-4 transition-transform duration-200"
+                                                :class="mAdmAcc ? 'rotate-180' : ''" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </button>
+                                        <div x-show="mAdmAcc" x-transition class="pl-4 rtl:pr-4 space-y-1 mt-1">
+                                            <a href="<?php echo $prefix; ?>admin/users.php"
+                                                class="block rounded-lg px-4 py-2.5 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'users.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> transition-colors"><?php echo __('users'); ?></a>
+                                            <a href="<?php echo $prefix; ?>admin/fb_accounts.php"
+                                                class="block rounded-lg px-4 py-2.5 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'fb_accounts.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> transition-colors"><?php echo __('fb_accounts'); ?></a>
+                                        </div>
                                     </div>
+
+                                    <!-- System Group -->
+                                    <div
+                                        x-data="{ mAdmSys: <?php echo in_array(basename($_SERVER['PHP_SELF']), ['settings.php', 'backup.php', 'system_update.php']) ? 'true' : 'false'; ?> }">
+                                        <button @click="mAdmSys = !mAdmSys"
+                                            class="-mx-3 w-full flex items-center justify-between rounded-xl px-4 py-3 text-base font-semibold text-gray-300 hover:bg-gray-800 transition-colors group">
+                                            <div class="flex items-center gap-3">
+                                                <svg class="w-5 h-5 text-gray-500 group-hover:text-indigo-400" fill="none"
+                                                    stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                </svg>
+                                                <span><?php echo __('system_management'); ?></span>
+                                            </div>
+                                            <svg class="w-4 h-4 transition-transform duration-200"
+                                                :class="mAdmSys ? 'rotate-180' : ''" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </button>
+                                        <div x-show="mAdmSys" x-transition class="pl-4 rtl:pr-4 space-y-1 mt-1">
+                                            <a href="<?php echo $prefix; ?>admin/settings.php"
+                                                class="block rounded-lg px-4 py-2.5 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'settings.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> transition-colors"><?php echo __('settings'); ?></a>
+                                            <a href="<?php echo $prefix; ?>admin/backup.php"
+                                                class="block rounded-lg px-4 py-2.5 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'backup.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> transition-colors"><?php echo __('backup_restore'); ?></a>
+                                            <a href="<?php echo $prefix; ?>admin/system_update.php"
+                                                class="block rounded-lg px-4 py-2.5 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'system_update.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> transition-colors flex items-center gap-2">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                                </svg>
+                                                <?php echo __('system_update'); ?>
+                                            </a>
+                                        </div>
+                                    </div>
+
+                                    <!-- Notifications -->
+                                    <a href="<?php echo $prefix; ?>admin/notifications.php"
+                                        class="-mx-3 block rounded-xl px-4 py-3 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'notifications.php' ? 'text-indigo-400 bg-indigo-600/10 border border-indigo-500/20' : 'text-gray-300 hover:bg-gray-800 transition-colors'; ?> flex justify-between items-center group">
+                                        <div class="flex items-center gap-3">
+                                            <svg class="w-5 h-5 text-gray-500 group-hover:text-indigo-400" fill="none"
+                                                stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                            </svg>
+                                            <span><?php echo __('notifications'); ?></span>
+                                        </div>
+                                        <?php if ($notifications_unread_count > 0): ?>
+                                            <span
+                                                class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                                                <?php echo $notifications_unread_count > 9 ? '9+' : $notifications_unread_count; ?>
+                                            </span>
+                                        <?php endif; ?>
+                                    </a>
+
+                                    <!-- Support Tickets -->
+                                    <a href="<?php echo $prefix; ?>admin/support.php"
+                                        class="-mx-3 block rounded-xl px-4 py-3 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'support.php' || basename($_SERVER['PHP_SELF']) == 'view_ticket.php' ? 'text-indigo-400 bg-indigo-600/10 border border-indigo-500/20' : 'text-gray-300 hover:bg-gray-800 transition-colors'; ?> flex justify-between items-center group">
+                                        <div class="flex items-center gap-3">
+                                            <svg class="w-5 h-5 text-gray-500 group-hover:text-indigo-400" fill="none"
+                                                stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+                                            </svg>
+                                            <span><?php echo __('support_tickets'); ?></span>
+                                        </div>
+                                        <?php
+                                        $m_admin_ticket_unread = getAdminTicketUnreadCount();
+                                        if ($m_admin_ticket_unread > 0):
+                                            ?>
+                                            <span
+                                                class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                                                <?php echo $m_admin_ticket_unread > 9 ? '9+' : $m_admin_ticket_unread; ?>
+                                            </span>
+                                        <?php endif; ?>
+                                    </a>
+
+                                    <!-- Profile -->
+                                    <a href="<?php echo $prefix; ?>admin/profile.php"
+                                        class="-mx-3 block rounded-xl px-4 py-3 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'profile.php' ? 'text-indigo-400 bg-indigo-600/10 border border-indigo-500/20' : 'text-gray-300 hover:bg-gray-800 transition-colors'; ?> flex items-center gap-3 group">
+                                        <svg class="w-5 h-5 text-gray-500 group-hover:text-indigo-400" fill="none"
+                                            stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                        </svg>
+                                        <span><?php echo __('profile'); ?></span>
+                                    </a>
                                 </div>
 
-                                <!-- Admin System Dropdown -->
-                                <div
-                                    x-data="{ mAdmSys: <?php echo in_array(basename($_SERVER['PHP_SELF']), ['settings.php', 'backup.php', 'system_update.php']) ? 'true' : 'false'; ?> }">
-                                    <button @click="mAdmSys = !mAdmSys"
-                                        class="-mx-3 w-full flex items-center justify-between rounded-lg px-3 py-2 text-base font-semibold text-gray-300 hover:bg-gray-800">
-                                        <span><?php echo __('system_management'); ?></span>
-                                        <svg class="w-4 h-4 transition-transform" :class="mAdmSys ? 'rotate-180' : ''"
-                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path d="M19 9l-7 7-7-7" stroke-width="2" stroke-linecap="round"
-                                                stroke-linejoin="round" />
-                                        </svg>
-                                    </button>
-                                    <div x-show="mAdmSys" x-transition class="pl-4 rtl:pr-4">
-                                        <a href="<?php echo $prefix; ?>admin/settings.php"
-                                            class="block rounded-lg px-3 py-2 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'settings.php' ? 'text-indigo-400' : 'text-gray-400'; ?> hover:bg-gray-800"><?php echo __('settings'); ?></a>
-                                        <a href="<?php echo $prefix; ?>admin/backup.php"
-                                            class="block rounded-lg px-3 py-2 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'backup.php' ? 'text-indigo-400' : 'text-gray-400'; ?> hover:bg-gray-800"><?php echo __('backup_restore'); ?></a>
-                                        <a href="<?php echo $prefix; ?>admin/system_update.php"
-                                            class="block rounded-lg px-3 py-2 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'system_update.php' ? 'text-indigo-400' : 'text-gray-400'; ?> hover:bg-gray-800"><?php echo __('system_update'); ?></a>
-                                    </div>
-                                </div>
-
-                                <a href="<?php echo $prefix; ?>admin/profile.php"
-                                    class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'profile.php' ? 'text-indigo-400' : 'text-gray-300'; ?> hover:bg-gray-800"><?php echo __('profile'); ?></a>
                             <?php else: ?>
                                 <h3
-                                    class="mt-4 text-xs font-semibold text-gray-500 uppercase tracking-wider pl-3 rtl:pr-3 border-t border-gray-800 pt-4">
+                                    class="text-xs font-bold text-gray-500 uppercase tracking-widest border-b border-gray-800 pb-2 mb-4 pl-3 rtl:pr-3">
                                     <?php echo __('user_panel'); ?>
                                 </h3>
-                                <a href="<?php echo $prefix; ?>user/dashboard.php"
-                                    class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'dashboard.php' ? 'text-indigo-400' : 'text-gray-300'; ?> hover:bg-gray-800"><?php echo __('overview'); ?></a>
 
-                                <!-- Facebook Mobile Dropdown -->
-                                <div
-                                    x-data="{ mFbOpen: <?php echo in_array(basename($_SERVER['PHP_SELF']), ['fb_accounts.php', 'page_inbox.php', 'create_campaign.php', 'campaign_reports.php', 'page_auto_reply.php', 'fb_scheduler.php']) ? 'true' : 'false'; ?> }">
-                                    <button @click="mFbOpen = !mFbOpen"
-                                        class="-mx-3 w-full flex items-center justify-between rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-300 hover:bg-gray-800">
-                                        <div class="flex items-center gap-2">
-                                            <svg class="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
-                                                <path
-                                                    d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                                <div class="space-y-1">
+                                    <!-- Overview -->
+                                    <a href="<?php echo $prefix; ?>user/dashboard.php"
+                                        class="-mx-3 block rounded-xl px-4 py-3 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'dashboard.php' ? 'text-indigo-400 bg-indigo-600/10 border border-indigo-500/20' : 'text-gray-300 hover:bg-gray-800 transition-colors'; ?>">
+                                        <?php echo __('overview'); ?>
+                                    </a>
+
+                                    <!-- Facebook Dropdown -->
+                                    <div
+                                        x-data="{ mFbOpen: <?php echo in_array(basename($_SERVER['PHP_SELF']), ['fb_accounts.php', 'page_inbox.php', 'create_campaign.php', 'campaign_reports.php', 'page_auto_reply.php', 'fb_scheduler.php']) ? 'true' : 'false'; ?> }">
+                                        <button @click="mFbOpen = !mFbOpen"
+                                            class="-mx-3 w-full flex items-center justify-between rounded-xl px-4 py-3 text-base font-semibold leading-7 text-gray-300 hover:bg-gray-800 transition-colors group">
+                                            <div class="flex items-center gap-3">
+                                                <svg class="w-5 h-5 text-gray-500 group-hover:text-indigo-400 transition-colors"
+                                                    fill="currentColor" viewBox="0 0 24 24">
+                                                    <path
+                                                        d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                                                </svg>
+                                                <span><?php echo __('facebook'); ?></span>
+                                            </div>
+                                            <svg class="w-4 h-4 transition-transform duration-200"
+                                                :class="mFbOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M19 9l-7 7-7-7" />
                                             </svg>
-                                            <span><?php echo __('facebook'); ?></span>
+                                        </button>
+                                        <div x-show="mFbOpen" x-transition class="pl-4 rtl:pr-4 space-y-1 mt-1">
+                                            <a href="<?php echo $prefix; ?>user/fb_accounts.php"
+                                                class="block rounded-lg px-4 py-2.5 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'fb_accounts.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> transition-colors"><?php echo __('fb_accounts'); ?></a>
+                                            <a href="<?php echo $prefix; ?>user/page_inbox.php"
+                                                class="block rounded-lg px-4 py-2.5 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'page_inbox.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> transition-colors"><?php echo __('manage_messages'); ?></a>
+                                            <a href="<?php echo $prefix; ?>user/create_campaign.php"
+                                                class="block rounded-lg px-4 py-2.5 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'create_campaign.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> transition-colors"><?php echo __('setup_campaign'); ?></a>
+                                            <a href="<?php echo $prefix; ?>user/page_auto_reply.php"
+                                                class="block rounded-lg px-4 py-2.5 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'page_auto_reply.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> transition-colors"><?php echo __('auto_reply'); ?></a>
+                                            <a href="<?php echo $prefix; ?>user/fb_scheduler.php"
+                                                class="block rounded-lg px-4 py-2.5 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'fb_scheduler.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> transition-colors"><?php echo __('post_scheduler'); ?></a>
                                         </div>
-                                        <svg class="w-4 h-4 transition-transform duration-200"
-                                            :class="mFbOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M19 9l-7 7-7-7" />
-                                        </svg>
-                                    </button>
-                                    <div x-show="mFbOpen" x-transition class="pl-4 rtl:pr-4">
-                                        <a href="<?php echo $prefix; ?>user/fb_accounts.php"
-                                            class="block rounded-lg px-3 py-2 text-sm font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'fb_accounts.php' ? 'text-indigo-400' : 'text-gray-400'; ?> hover:bg-gray-800"><?php echo __('fb_accounts'); ?></a>
-                                        <a href="<?php echo $prefix; ?>user/page_inbox.php"
-                                            class="block rounded-lg px-3 py-2 text-sm font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'page_inbox.php' ? 'text-indigo-400' : 'text-gray-400'; ?> hover:bg-gray-800"><?php echo __('manage_messages'); ?></a>
-                                        <a href="<?php echo $prefix; ?>user/create_campaign.php"
-                                            class="block rounded-lg px-3 py-2 text-sm font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'create_campaign.php' ? 'text-indigo-400' : 'text-gray-400'; ?> hover:bg-gray-800"><?php echo __('setup_campaign'); ?></a>
-                                        <a href="<?php echo $prefix; ?>user/page_auto_reply.php"
-                                            class="block rounded-lg px-3 py-2 text-sm font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'page_auto_reply.php' ? 'text-indigo-400' : 'text-gray-400'; ?> hover:bg-gray-800"><?php echo __('auto_reply'); ?></a>
-                                        <a href="<?php echo $prefix; ?>user/fb_scheduler.php"
-                                            class="block rounded-lg px-3 py-2 text-sm font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'fb_scheduler.php' ? 'text-indigo-400' : 'text-gray-400'; ?> hover:bg-gray-800"><?php echo __('post_scheduler'); ?></a>
                                     </div>
-                                </div>
 
-                                <!-- WhatsApp Mobile Dropdown -->
-                                <div
-                                    x-data="{ mWaOpen: <?php echo in_array(basename($_SERVER['PHP_SELF']), ['wa_accounts.php', 'wa_bulk_send.php', 'wa_settings.php']) ? 'true' : 'false'; ?> }">
-                                    <button @click="mWaOpen = !mWaOpen"
-                                        class="-mx-3 w-full flex items-center justify-between rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-300 hover:bg-gray-800">
-                                        <div class="flex items-center gap-2">
-                                            <svg class="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
-                                                <path
-                                                    d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+                                    <!-- WhatsApp Dropdown -->
+                                    <div
+                                        x-data="{ mWaOpen: <?php echo in_array(basename($_SERVER['PHP_SELF']), ['wa_accounts.php', 'wa_bulk_send.php', 'wa_settings.php']) ? 'true' : 'false'; ?> }">
+                                        <button @click="mWaOpen = !mWaOpen"
+                                            class="-mx-3 w-full flex items-center justify-between rounded-xl px-4 py-3 text-base font-semibold leading-7 text-gray-300 hover:bg-gray-800 transition-colors group">
+                                            <div class="flex items-center gap-3">
+                                                <svg class="w-5 h-5 text-gray-500 group-hover:text-green-400 transition-colors"
+                                                    fill="currentColor" viewBox="0 0 24 24">
+                                                    <path
+                                                        d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+                                                </svg>
+                                                <span><?php echo __('whatsapp'); ?></span>
+                                            </div>
+                                            <svg class="w-4 h-4 transition-transform duration-200"
+                                                :class="mWaOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M19 9l-7 7-7-7" />
                                             </svg>
-                                            <span><?php echo __('whatsapp'); ?></span>
+                                        </button>
+                                        <div x-show="mWaOpen" x-transition class="pl-4 rtl:pr-4 space-y-1 mt-1">
+                                            <a href="<?php echo $prefix; ?>user/wa_accounts.php"
+                                                class="block rounded-lg px-4 py-2.5 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'wa_accounts.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> transition-colors"><?php echo __('wa_accounts'); ?></a>
+                                            <a href="<?php echo $prefix; ?>user/wa_bulk_send.php"
+                                                class="block rounded-lg px-4 py-2.5 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'wa_bulk_send.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> transition-colors"><?php echo __('wa_bulk_send'); ?></a>
+                                            <a href="<?php echo $prefix; ?>user/wa_settings.php"
+                                                class="block rounded-lg px-4 py-2.5 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'wa_settings.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> transition-colors"><?php echo __('wa_settings'); ?></a>
                                         </div>
-                                        <svg class="w-4 h-4 transition-transform duration-200"
-                                            :class="mWaOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M19 9l-7 7-7-7" />
-                                        </svg>
-                                    </button>
-                                    <div x-show="mWaOpen" x-transition class="pl-4 rtl:pr-4">
-                                        <a href="<?php echo $prefix; ?>user/wa_accounts.php"
-                                            class="block rounded-lg px-3 py-2 text-sm font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'wa_accounts.php' ? 'text-indigo-400' : 'text-gray-400'; ?> hover:bg-gray-800"><?php echo __('wa_accounts'); ?></a>
-                                        <a href="<?php echo $prefix; ?>user/wa_bulk_send.php"
-                                            class="block rounded-lg px-3 py-2 text-sm font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'wa_bulk_send.php' ? 'text-indigo-400' : 'text-gray-400'; ?> hover:bg-gray-800"><?php echo __('wa_bulk_send'); ?></a>
-                                        <a href="<?php echo $prefix; ?>user/wa_settings.php"
-                                            class="block rounded-lg px-3 py-2 text-sm font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'wa_settings.php' ? 'text-indigo-400' : 'text-gray-400'; ?> hover:bg-gray-800"><?php echo __('wa_settings'); ?></a>
                                     </div>
+
+                                    <!-- Campaign Reports -->
+                                    <a href="<?php echo $prefix; ?>user/campaign_reports.php"
+                                        class="-mx-3 block rounded-xl px-4 py-3 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'campaign_reports.php' ? 'text-indigo-400 bg-indigo-600/10 border border-indigo-500/20' : 'text-gray-300 hover:bg-gray-800 transition-colors'; ?>">
+                                        <?php echo __('campaign_reports'); ?>
+                                    </a>
+
+                                    <!-- Profile -->
+                                    <a href="<?php echo $prefix; ?>user/profile.php"
+                                        class="-mx-3 block rounded-xl px-4 py-3 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'profile.php' ? 'text-indigo-400 bg-indigo-600/10 border border-indigo-500/20' : 'text-gray-300 hover:bg-gray-800 transition-colors'; ?>">
+                                        <?php echo __('profile'); ?>
+                                    </a>
+
+                                    <!-- Notifications -->
+                                    <a href="<?php echo $prefix; ?>user/notifications.php"
+                                        class="-mx-3 block rounded-xl px-4 py-3 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'notifications.php' ? 'text-indigo-400 bg-indigo-600/10 border border-indigo-500/20' : 'text-gray-300 hover:bg-gray-800 transition-colors'; ?> flex justify-between items-center group">
+                                        <div class="flex items-center gap-3">
+                                            <span><?php echo __('notifications'); ?></span>
+                                        </div>
+                                        <?php if ($notifications_unread_count > 0): ?>
+                                            <span
+                                                class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                                                <?php echo $notifications_unread_count > 9 ? '9+' : $notifications_unread_count; ?>
+                                            </span>
+                                        <?php endif; ?>
+                                    </a>
+
+                                    <!-- Support Tickets -->
+                                    <a href="<?php echo $prefix; ?>user/support.php"
+                                        class="-mx-3 block rounded-xl px-4 py-3 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'support.php' || basename($_SERVER['PHP_SELF']) == 'create_ticket.php' || basename($_SERVER['PHP_SELF']) == 'view_ticket.php' ? 'text-indigo-400 bg-indigo-600/10 border border-indigo-500/20' : 'text-gray-300 hover:bg-gray-800 transition-colors'; ?> flex justify-between items-center group">
+                                        <span><?php echo __('support_tickets'); ?></span>
+                                        <?php
+                                        $m_user_ticket_unread = 0;
+                                        if (isset($_SESSION['user_id'])) {
+                                            $m_user_ticket_unread = getUserTicketUnreadCount($_SESSION['user_id']);
+                                        }
+                                        if ($m_user_ticket_unread > 0):
+                                            ?>
+                                            <span
+                                                class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                                                <?php echo $m_user_ticket_unread > 9 ? '9+' : $m_user_ticket_unread; ?>
+                                            </span>
+                                        <?php endif; ?>
+                                    </a>
                                 </div>
-
-                                <!-- Campaign Reports moved outside -->
-                                <a href="<?php echo $prefix; ?>user/campaign_reports.php"
-                                    class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'campaign_reports.php' ? 'text-indigo-400' : 'text-gray-300'; ?> hover:bg-gray-800"><?php echo __('campaign_reports'); ?></a>
-
-                                <a href="<?php echo $prefix; ?>user/profile.php"
-                                    class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'profile.php' ? 'text-indigo-400' : 'text-gray-300'; ?> hover:bg-gray-800"><?php echo __('profile'); ?></a>
-                                <a href="<?php echo $prefix; ?>user/notifications.php"
-                                    class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'notifications.php' ? 'text-indigo-400' : 'text-gray-300'; ?> hover:bg-gray-800 flex justify-between items-center">
-                                    <span><?php echo __('notifications'); ?></span>
-                                    <?php if ($notifications_unread_count > 0): ?>
-                                        <span class="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-sm">
-                                            <?php echo $notifications_unread_count > 9 ? '9+' : $notifications_unread_count; ?>
-                                        </span>
-                                    <?php endif; ?>
-                                </a>
-                                <a href="<?php echo $prefix; ?>user/support.php"
-                                    class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'support.php' || basename($_SERVER['PHP_SELF']) == 'create_ticket.php' || basename($_SERVER['PHP_SELF']) == 'view_ticket.php' ? 'text-indigo-400' : 'text-gray-300'; ?> hover:bg-gray-800 flex justify-between items-center">
-                                    <span><?php echo __('support_tickets'); ?></span>
-                                    <?php
-                                    $m_user_ticket_unread = 0;
-                                    if (isset($_SESSION['user_id'])) {
-                                        $m_user_ticket_unread = getUserTicketUnreadCount($_SESSION['user_id']);
-                                    }
-                                    if ($m_user_ticket_unread > 0):
-                                        ?>
-                                        <span class="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-sm">
-                                            <?php echo $m_user_ticket_unread > 9 ? '9+' : $m_user_ticket_unread; ?>
-                                        </span>
-                                    <?php endif; ?>
-                                </a>
-                            <?php endif; ?>
-
-                            <?php if (isAdmin() && !$is_frontend): ?>
-                                <a href="<?php echo $prefix; ?>admin/notifications.php"
-                                    class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'notifications.php' ? 'text-indigo-400' : 'text-gray-300'; ?> hover:bg-gray-800 flex justify-between items-center">
-                                    <span><?php echo __('notifications'); ?></span>
-                                    <?php if ($notifications_unread_count > 0): ?>
-                                        <span class="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-sm">
-                                            <?php echo $notifications_unread_count > 9 ? '9+' : $notifications_unread_count; ?>
-                                        </span>
-                                    <?php endif; ?>
-                                </a>
-                                <a href="<?php echo $prefix; ?>admin/backup.php"
-                                    class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'backup.php' ? 'text-indigo-400' : 'text-gray-300'; ?> hover:bg-gray-800"><?php echo __('backup_restore'); ?></a>
-                                <a href="<?php echo $prefix; ?>admin/system_update.php"
-                                    class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'system_update.php' ? 'text-indigo-400' : 'text-gray-300'; ?> hover:bg-gray-800 flex items-center gap-2">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
-                                        </path>
-                                    </svg>
-                                    <?php echo __('system_update'); ?>
-                                </a>
-                                <a href="<?php echo $prefix; ?>admin/support.php"
-                                    class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'support.php' || basename($_SERVER['PHP_SELF']) == 'view_ticket.php' ? 'text-indigo-400' : 'text-gray-300'; ?> hover:bg-gray-800 flex justify-between items-center">
-                                    <span><?php echo __('support_tickets'); ?></span>
-                                    <?php
-                                    $m_admin_ticket_unread = getAdminTicketUnreadCount();
-                                    if ($m_admin_ticket_unread > 0):
-                                        ?>
-                                        <span class="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-sm">
-                                            <?php echo $m_admin_ticket_unread > 9 ? '9+' : $m_admin_ticket_unread; ?>
-                                        </span>
-                                    <?php endif; ?>
-                                </a>
                             <?php endif; ?>
                         <?php endif; ?>
 

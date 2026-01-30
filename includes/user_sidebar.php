@@ -19,26 +19,27 @@
         </a>
 
         <?php if (isset($current_user)): ?>
-            <div
-                class="flex items-center space-x-3 rtl:space-x-reverse mb-8 p-3 bg-white/5 rounded-2xl border border-white/10">
+            <a href="profile.php"
+                class="flex items-center space-x-3 rtl:space-x-reverse mb-8 p-3 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-all group">
                 <div class="flex-shrink-0">
                     <?php if ($current_user['avatar']): ?>
                         <img src="../<?php echo $current_user['avatar']; ?>"
-                            class="w-10 h-10 rounded-xl object-cover border border-indigo-500/30">
+                            class="w-10 h-10 rounded-xl object-cover border border-indigo-500/30 group-hover:scale-105 transition-transform">
                     <?php else: ?>
                         <div
-                            class="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center border border-indigo-500/30">
+                            class="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center border border-indigo-500/30 group-hover:scale-105 transition-transform">
                             <span
                                 class="text-indigo-400 font-bold"><?php echo mb_substr($current_user['name'], 0, 1, 'UTF-8'); ?></span>
                         </div>
                     <?php endif; ?>
                 </div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-sm font-bold text-white truncate"><?php echo htmlspecialchars($current_user['name']); ?>
+                    <p class="text-sm font-bold text-white truncate group-hover:text-indigo-400 transition-colors">
+                        <?php echo htmlspecialchars($current_user['name']); ?>
                     </p>
                     <p class="text-xs text-gray-500 truncate"><?php echo htmlspecialchars($current_user['email']); ?></p>
                 </div>
-            </div>
+            </a>
         <?php endif; ?>
 
         <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest border-b border-gray-800 pb-2">
