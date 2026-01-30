@@ -336,10 +336,10 @@ require_once __DIR__ . '/../includes/header.php';
                         </div>
 
                         <h2 class="text-3xl font-black text-white mb-4 tracking-tight">
-                            <?php echo ($lang == 'ar' ? 'ابدأ حملتك التسويقية الآن' : 'Start Your Marketing Campaign'); ?>
+                            <?php echo __('start_marketing_campaign'); ?>
                         </h2>
                         <p class="text-gray-400 max-w-lg mx-auto mb-10 text-lg leading-relaxed">
-                            <?php echo ($lang == 'ar' ? 'يرجى العودة لصندوق الوارد واختيار العملاء الذين ترغب في استهدافهم بجدول زمني أو رسائل فورية.' : 'Please go back to the inbox and select the leads you want to target with scheduled or instant messages.'); ?>
+                            <?php echo __('campaign_empty_desc'); ?>
                         </p>
 
                         <div class="flex flex-col sm:flex-row gap-4">
@@ -350,13 +350,13 @@ require_once __DIR__ . '/../includes/header.php';
                                         d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z">
                                     </path>
                                 </svg>
-                                <span><?php echo ($lang == 'ar' ? 'إدارة الرسائل' : 'Manage Messages'); ?></span>
+                                <span><?php echo __('manage_messages'); ?></span>
                             </a>
 
                             <?php if (!empty($page_history)): ?>
                                 <button onclick="document.getElementById('recent-history').scrollIntoView({behavior: 'smooth'})"
                                     class="inline-flex items-center gap-3 bg-white/5 hover:bg-white/10 text-white px-10 py-4 rounded-2xl font-bold transition-all border border-white/10 active:scale-95">
-                                    <span><?php echo ($lang == 'ar' ? 'مشاهدة الحملات السابقة' : 'View Recent History'); ?></span>
+                                    <span><?php echo __('view_recent_history'); ?></span>
                                 </button>
                             <?php endif; ?>
                         </div>
@@ -365,12 +365,12 @@ require_once __DIR__ . '/../includes/header.php';
                         <div class="mt-20 w-full text-left border-t border-white/5 pt-12" id="recent-history">
                             <div class="flex items-center justify-between mb-8">
                                 <h3 class="text-xs font-black text-gray-500 uppercase tracking-[0.3em]">
-                                    <?php echo ($lang == 'ar' ? 'آخر الحملات التي تم إنشاؤها' : 'Latest Created Campaigns'); ?>
+                                    <?php echo __('latest_campaigns'); ?>
                                 </h3>
                                 <div class="flex items-center gap-2">
                                     <span
                                         class="text-[10px] text-indigo-400 font-bold uppercase tracking-widest"><?php echo count($page_history); ?>
-                                        <?php echo ($lang == 'ar' ? 'حملات' : 'results'); ?></span>
+                                        <?php echo __('campaigns_count_label'); ?></span>
                                     <div class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></div>
                                 </div>
                             </div>
@@ -432,7 +432,7 @@ require_once __DIR__ . '/../includes/header.php';
                                             <div class="flex items-center gap-2 mt-2 pt-3 border-t border-white/5 relative z-10">
                                                 <a href="campaign_runner.php?id=<?php echo $hist['id']; ?>"
                                                     class="flex-1 flex justify-center items-center py-2 bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white rounded-xl text-[10px] font-bold transition-all border border-indigo-500/20">
-                                                    <?php echo ($lang == 'ar' ? 'فتح' : 'Open'); ?>
+                                                    <?php echo __('open_label'); ?>
                                                 </a>
                                                 <a href="create_campaign.php?id=<?php echo $hist['id']; ?>"
                                                     class="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all border border-white/5"
@@ -469,7 +469,7 @@ require_once __DIR__ . '/../includes/header.php';
                                         </svg>
                                     </div>
                                     <p class="text-sm text-gray-500 italic font-medium">
-                                        <?php echo ($lang == 'ar' ? 'لا توجد حملات سابقة لهذه الصفحة حتى الآن.' : 'No previous campaigns found for this page yet.'); ?>
+                                        <?php echo __('no_campaigns_found'); ?>
                                     </p>
                                 </div>
                             <?php endif; ?>
@@ -599,10 +599,10 @@ require_once __DIR__ . '/../includes/header.php';
                                     </div>
                                     <div>
                                         <p class="text-sm font-bold text-white">
-                                            <?php echo ($lang == 'ar' ? 'إرسال فوري ومباشر' : 'Immediate Direct Sending'); ?>
+                                            <?php echo __('immediate_sending'); ?>
                                         </p>
                                         <p class="text-xs text-indigo-200">
-                                            <?php echo ($lang == 'ar' ? 'سيتم بدء الإرسال فور الضغط على الزر أدناه.' : 'Sending will start immediately after clicking below.'); ?>
+                                            <?php echo __('immediate_sending_desc'); ?>
                                         </p>
                                     </div>
                                 </div>
@@ -685,11 +685,11 @@ require_once __DIR__ . '/../includes/header.php';
                             <div class="glass-card rounded-[2rem] border border-white/10 overflow-hidden shadow-2xl">
                                 <div class="bg-white/5 px-6 py-4 border-b border-white/5 flex items-center justify-between">
                                     <h3 class="text-xs font-bold text-white uppercase tracking-wider">
-                                        <?php echo ($lang == 'ar' ? 'تاريخ حملات الصفحة' : 'Page Campaign History'); ?>
+                                        <?php echo __('page_campaign_history'); ?>
                                     </h3>
                                     <a href="page_inbox.php?page_id=<?php echo $page_id; ?>"
                                         class="text-[10px] text-indigo-400 hover:underline">
-                                        <?php echo ($lang == 'ar' ? 'عرض الكل' : 'View All'); ?>
+                                        <?php echo __('view_all'); ?>
                                     </a>
                                 </div>
                                 <div class="p-4 space-y-2 max-h-[220px] overflow-y-auto messenger-scrollbar">
