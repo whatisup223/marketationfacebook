@@ -22,10 +22,10 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <div class="flex h-screen bg-gray-900 font-sans overflow-hidden" x-data="autoReplyApp()">
     <?php include '../includes/user_sidebar.php'; ?>
 
-    <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-900/50 backdrop-blur-md h-full relative p-6 pb-24 no-scrollbar">
+    <main class="flex-1 flex flex-col bg-gray-900/50 backdrop-blur-md h-full relative p-6 overflow-hidden">
 
         <!-- Header -->
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div class="flex-none flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <div>
                 <h1 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
                     <?php echo __('auto_reply_settings'); ?>
@@ -46,7 +46,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
 
         <!-- Top Row: Selector & Webhook -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <div class="flex-none grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
             <!-- Page Selector -->
             <div
                 class="glass-panel p-6 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl hover:border-indigo-500/20 transition-all shadow-xl">
@@ -179,7 +179,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
 
         <!-- Main Body: Preview (Left) & Rules (Right) -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div class="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-8">
 
             <!-- Left Side: Preview Card -->
             <div class="lg:col-span-4 order-2 lg:order-1">
@@ -280,7 +280,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </div>
 
             <!-- Right Side: Rules Area -->
-            <div class="lg:col-span-8 space-y-8 order-1 lg:order-2">
+            <div class="lg:col-span-8 space-y-8 order-1 lg:order-2 h-full overflow-y-auto pr-2 messenger-scrollbar">
 
                 <template x-if="!selectedPageId">
                     <div
@@ -433,6 +433,13 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         </div>
                     </div>
                 </div>
+
+                <!-- Footer Section (Inside Scrollable Area) -->
+                <div class="pt-8 pb-4 text-center text-xs text-gray-500/50">
+                    <p>&copy; <?php echo date('Y'); ?> <?php echo __('site_name'); ?>.
+                        <?php echo __('all_rights_reserved'); ?></p>
+                </div>
+
             </div>
         </div>
 
@@ -744,4 +751,8 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 </script>
 
-<?php require_once '../includes/footer.php'; ?>
+</script>
+
+</body>
+
+</html>
