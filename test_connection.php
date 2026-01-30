@@ -1,22 +1,14 @@
 <?php
 // test_connection.php
-// Diagnostic tool to check connectivity to Evolution API
+// Diagnostic tool to check connectivity to Evolution API (No DB Dependency)
 
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// Configuration - Load directly or hardcode for testing
-require_once __DIR__ . '/includes/db.php';
-$stmt = $pdo->query("SELECT setting_value FROM settings WHERE setting_key = 'wa_evolution_url'");
-$evo_url = $stmt->fetchColumn();
+// Hardcoded target URL
+$evo_url = 'https://api.n8nmarketation.online';
 
-// If not in DB, use hardcoded (fallback)
-if (!$evo_url) {
-    $evo_url = 'https://api.n8nmarketation.online';
-}
-$evo_url = rtrim($evo_url, '/');
-
-echo "<h1>Connectivity Test</h1>";
+echo "<h1>Connectivity Test (No DB)</h1>";
 echo "<p><strong>Target URL:</strong> $evo_url</p>";
 echo "<p><strong>Server IP:</strong> " . $_SERVER['SERVER_ADDR'] . "</p>";
 echo "<p><strong>Checking DNS Resolution...</strong></p>";
@@ -32,14 +24,13 @@ if ($ip == $host) {
 echo "<hr>";
 echo "<h3>cURL Verbose Output:</h3>";
 
-$ch = curl_init($evo_url); // Try root endpoint which usually returns a welcome message
+$ch = curl_init($evo_url);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-// Enable Verbose output to see handshake details
 curl_setopt($ch, CURLOPT_VERBOSE, true);
 $verbose = fopen('php://temp', 'w+');
 curl_setopt($ch, CURLOPT_STDERR, $verbose);
 
-// Common Fixes applied
+// Fixes applied
 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 15);
