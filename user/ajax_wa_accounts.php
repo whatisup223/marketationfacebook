@@ -68,6 +68,7 @@ try {
             ]);
 
             // Connectivity Fixes
+            curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4); // Force IPv4
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
             curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10); // Fail fast if no route
