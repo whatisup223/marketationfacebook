@@ -43,7 +43,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         :class="debugInfo?.valid ? 'bg-green-500' : 'bg-red-500'">
                     </div>
                     <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400"
-                        x-text="debugInfo?.valid ? 'ACTIVE' : 'INACTIVE'"></span>
+                        x-text="debugInfo?.valid ? '<?php echo __('active'); ?>' : '<?php echo __('inactive'); ?>'"></span>
                     <div class="h-4 w-px bg-white/10 mx-1"></div>
                     <span class="text-xs font-bold text-white" x-text="selectedPageName"></span>
                 </div>
@@ -210,7 +210,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                         x-text="selectedPageName || 'Marketation - ماركتيشن'">
                                     </div>
                                     <div class="flex items-center gap-1.5 text-[10px] text-gray-500 font-medium">
-                                        <span>Just now</span>
+                                        <span><?php echo __('just_now'); ?></span>
                                         <span class="text-xs">&middot;</span>
                                         <svg class="w-3 h-3 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
                                             <path fill-rule="evenodd"
@@ -244,7 +244,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                                     <?php echo __('customer_name_sample'); ?>
                                                 </div>
                                                 <input type="text" x-model="testComment"
-                                                    placeholder="اكتب هنا للمعاينة..."
+                                                    placeholder="<?php echo __('write_here_preview'); ?>"
                                                     class="bg-transparent border-none p-0 text-[13px] text-white focus:ring-0 w-full">
 
                                                 <!-- Red Overlay if violated -->
@@ -262,9 +262,11 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                             </div>
                                             <div
                                                 class="flex flex-wrap gap-4 mt-1 ml-1 text-[11px] font-bold text-[#b0b3b8] items-center">
-                                                <span class="cursor-pointer hover:underline">Like</span>
-                                                <span class="cursor-pointer hover:underline">Reply</span>
-                                                <span>2m</span>
+                                                <span
+                                                    class="cursor-pointer hover:underline"><?php echo __('fb_like'); ?></span>
+                                                <span
+                                                    class="cursor-pointer hover:underline"><?php echo __('fb_reply'); ?></span>
+                                                <span><?php echo __('fb_time_2m'); ?></span>
                                             </div>
                                         </div>
                                     </div>

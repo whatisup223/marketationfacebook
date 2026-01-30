@@ -79,21 +79,24 @@ function handleFacebookEvent($data, $pdo)
             foreach ($entry['changes'] as $change) {
                 if ($change['field'] === 'feed') {
                     $val = $change['value'];
-                    if ($val['item'] === 'comment' && $val['verb'] === 'add') {
-                        $sender_id = $val['from']['id'] ?? '';
-                        if ($sender_id == $page_id)
-                            continue;
+                    if ($val['item'] === 'comment') {
+                        $verb = $val['verb'] ?? '';
+                        if ($verb === 'add' || $verb === 'edited') {
+                            $sender_id = $val['from']['id'] ?? '';
+                            if ($sender_id == $page_id)
+                                continue;
 
-                        $comment_id = $val['comment_id'] ?? '';
-                        $message_text = $val['message'] ?? '';
-                        $sender_name = $val['from']['name'] ?? '';
+                            $comment_id = $val['comment_id'] ?? '';
+                            $message_text = $val['message'] ?? '';
+                            $sender_name = $val['from']['name'] ?? '';
 
-                        // 1. Check Moderation First
-                        $is_moderated = processModeration($pdo, $page_id, $comment_id, $message_text, $sender_name);
+                            // 1. Check Moderation (Must check for both additions and edits)
+                            $is_moderated = processModeration($pdo, $page_id, $comment_id, $message_text, $sender_name);
 
-                        // 2. If not moderated, proceed to Auto-Reply
-                        if (!$is_moderated) {
-                            processAutoReply($pdo, $page_id, $comment_id, $message_text, 'comment');
+                            // 2. Only Auto-Reply if it's a NEW comment and NOT moderated
+                            if ($verb === 'add' && !$is_moderated) {
+                                processAutoReply($pdo, $page_id, $comment_id, $message_text, 'comment');
+                            }
                         }
                     }
                 }

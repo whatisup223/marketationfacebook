@@ -543,9 +543,10 @@ require_once __DIR__ . '/../includes/header.php';
                                             </div>
                                             <div class="flex-1 min-w-0">
                                                 <div class="text-[12px] font-black text-white truncate"
-                                                    x-text="getPageName() || 'Facebook Page'"></div>
+                                                    x-text="getPageName() || '<?php echo __('site_name'); ?>'"></div>
                                                 <div class="flex items-center gap-1.5">
-                                                    <div class="text-[10px] text-gray-500">Just now</div>
+                                                    <div class="text-[10px] text-gray-500"><?php echo __('just_now'); ?>
+                                                    </div>
                                                     <div class="w-1 h-1 rounded-full bg-gray-600"></div>
                                                     <svg class="w-2.5 h-2.5 text-gray-600" fill="currentColor"
                                                         viewBox="0 0 24 24">
@@ -592,9 +593,12 @@ require_once __DIR__ . '/../includes/header.php';
                                         <div
                                             class="p-4 flex items-center justify-between border-t border-white/5 mt-auto bg-black/20">
                                             <div class="flex items-center gap-2 text-[10px] text-gray-400 font-black">
-                                                Like</div>
-                                            <div class="text-[10px] text-gray-400 font-black">Comment</div>
-                                            <div class="text-[10px] text-gray-400 font-black">Share</div>
+                                                <?php echo __('fb_like'); ?>
+                                            </div>
+                                            <div class="text-[10px] text-gray-400 font-black">
+                                                <?php echo __('fb_comment'); ?></div>
+                                            <div class="text-[10px] text-gray-400 font-black">
+                                                <?php echo __('fb_share'); ?></div>
                                         </div>
                                     </div>
                                 </div>
