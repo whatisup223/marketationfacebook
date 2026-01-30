@@ -171,6 +171,13 @@ try {
                         }
 
                         $api_key = $user_settings['evolution_api_key'];
+
+                        // Fallback: Use Global API Key if User Key is empty
+                        if (empty($api_key)) {
+                            $global_key_stmt = $pdo->query("SELECT setting_value FROM settings WHERE setting_key = 'wa_evolution_api_key'");
+                            $api_key = $global_key_stmt->fetchColumn();
+                        }
+
                         $instance_name = $account['instance_name'];
 
                         $endpoint = "$evolution_url/message/sendText/$instance_name";
