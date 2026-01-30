@@ -1,6 +1,15 @@
 <?php
 // test_send_msg.php - Debug Message Sending
-require_once 'includes/db.php';
+// Load the functions file robustly
+if (file_exists(__DIR__ . '/includes/functions.php')) {
+    require_once __DIR__ . '/includes/functions.php';
+} elseif (file_exists(__DIR__ . '/../includes/functions.php')) {
+    require_once __DIR__ . '/../includes/functions.php';
+} else {
+    die("Error: Could not find includes/functions.php");
+}
+
+$pdo = getDB();
 
 // 1. Fetch Settings
 $stmt = $pdo->query("SELECT setting_value FROM settings WHERE setting_key = 'wa_evolution_url'");
