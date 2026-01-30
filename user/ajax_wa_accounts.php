@@ -48,20 +48,14 @@ try {
                 'integration' => 'WHATSAPP-BAILEYS'
             ];
 
-            // Attach Webhook if configured
+            // Temporarily disable Webhook to isolate connectivity issue
+            /*
             if (!empty($webhook_url)) {
                 $payload_data['webhook'] = $webhook_url;
-                $payload_data['webhook_by_events'] = false; // Send all events or customize as needed
-                $payload_data['events'] = [
-                    'MESSAGES_UPSERT',
-                    'MESSAGES_UPDATE',
-                    'MESSAGES_DELETE',
-                    'SEND_MESSAGE',
-                    'CONNECTION_UPDATE',
-                    'HISTORY_SYNC',
-                    'QRCODE_UPDATED'
-                ];
+                $payload_data['webhook_by_events'] = false;
+                $payload_data['events'] = ['MESSAGES_UPSERT', 'CONNECTION_UPDATE', 'QRCODE_UPDATED'];
             }
+            */
 
             $payload = json_encode($payload_data);
 
@@ -72,6 +66,12 @@ try {
                 'Content-Type: application/json',
                 'apikey: ' . $evo_key
             ]);
+
+            // Connectivity Fixes
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10); // Fail fast if no route
+            curl_setopt($ch, CURLOPT_TIMEOUT, 30); // Max wait time
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // For local/dev environments
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 
