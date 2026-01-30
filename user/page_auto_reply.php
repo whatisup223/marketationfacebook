@@ -284,16 +284,23 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <!-- Page Reply -->
                                 <div class="flex gap-2 ml-10">
                                     <div
-                                        class="w-6 h-6 rounded-full bg-blue-600 flex-shrink-0 flex items-center justify-center border border-black/20 shadow-md">
-                                        <span class="text-[9px] font-bold text-white"
-                                            x-text="getPageName() ? getPageName().charAt(0).toUpperCase() : 'P'"></span>
+                                        class="w-6 h-6 rounded-full bg-blue-600 flex-shrink-0 flex items-center justify-center border border-black/20 shadow-md overflow-hidden">
+                                        <template x-if="getPageName()">
+                                            <span class="text-[9px] font-bold text-white" 
+                                                  x-text="getPageName().charAt(0).toUpperCase()"></span>
+                                        </template>
+                                        <template x-if="!getPageName()">
+                                            <svg class="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                                            </svg>
+                                        </template>
                                     </div>
                                     <div class="flex-1 max-w-[90%]">
                                         <div
                                             class="bg-[#3a3b3c] rounded-2xl px-3 py-2 inline-block text-[#e4e6eb] border border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.1)]">
                                             <div class="flex items-center gap-1 mb-0.5">
                                                 <span class="font-bold text-xs cursor-pointer hover:underline"
-                                                    x-text="getPageName() || 'Page Name'"></span>
+                                                    x-text="getPageName() || 'Marketation - ماركتيشن'"></span>
                                                 <svg class="w-3 h-3 text-blue-500" fill="currentColor"
                                                     viewBox="0 0 24 24">
                                                     <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
