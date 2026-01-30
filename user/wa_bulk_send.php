@@ -56,14 +56,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['start_campaign'])) {
         // Handle TXT Upload for Numbers (Robust Regex Method)
         if (isset($_FILES['numbers_txt']) && $_FILES['numbers_txt']['error'] === UPLOAD_ERR_OK) {
             $txtFile = $_FILES['numbers_txt']['tmp_name'];
-            
+
             // Read entire file content
             $fileContent = file_get_contents($txtFile);
-            
+
             if ($fileContent !== false) {
                 // Extract sequences of 10 to 15 digits
                 preg_match_all('/\d{10,15}/', $fileContent, $matches);
-                
+
                 if (!empty($matches[0])) {
                     $numbers = array_merge($numbers, $matches[0]);
                 }
@@ -147,12 +147,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['start_campaign'])) {
 
         $campaign_id = $pdo->lastInsertId();
 
-        // Redirect to campaign runner
+        // Handle AJAX Request (for Progress Bar)
+        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+            header('Content-Type: application/json');
+            echo json_encode(['status' => 'success', 'redirect' => "wa_campaign_runner.php?id=$campaign_id"]);
+            exit;
+        }
+
+        // Redirect to campaign runner (Standard POST)
         header("Location: wa_campaign_runner.php?id=$campaign_id");
         exit;
 
     } catch (Exception $e) {
         $error_message = $e->getMessage();
+
+        // Handle AJAX Error
+        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+            http_response_code(400);
+            header('Content-Type: application/json');
+            echo json_encode(['status' => 'error', 'message' => $error_message]);
+            exit;
+        }
     }
 }
 
@@ -170,7 +185,12 @@ require_once __DIR__ . '/../includes/header.php';
     mediaPreviewUrl: '',
     lat: '',
     lng: '',
-    gateway: '<?php echo $gateway_mode; ?>', // Initialize with PHP's gateway_mode
+    gateway: '<?php echo $gateway_mode; ?>',
+    
+    // Upload State
+    isUploading: false,
+    uploadProgress: 0,
+    errorMessage: '<?php echo htmlspecialchars($error_message ?? ''); ?>',
 
     updateMediaPreview(e) {
         if (this.mediaType.endsWith('_local')) {
@@ -184,29 +204,124 @@ require_once __DIR__ . '/../includes/header.php';
     processPreview(text) {
         if (!text) return '';
         let processed = text;
-        // Replace {{name}} with a sample name
         processed = processed.replace(/\{\{name\}\}/g, 'أحمد / Ahmed');
-        // Handle {hi|hello} spin syntax - pick first one for preview
         processed = processed.replace(/\{([^{}]+)\}/g, (match, options) => {
             return options.split('|')[0];
         });
         return processed;
+    },
+
+    submitCampaign(e) {
+        this.isUploading = true;
+        this.uploadProgress = 0;
+        this.errorMessage = '';
+
+        const formData = new FormData(e.target);
+        formData.append('start_campaign', '1');
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '', true);
+        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
+        xhr.upload.onprogress = (event) => {
+            if (event.lengthComputable) {
+                this.uploadProgress = Math.round((event.loaded / event.total) * 100);
+            }
+        };
+
+        xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                try {
+                    const res = JSON.parse(xhr.responseText);
+                    if (res.status === 'success') {
+                        window.location.href = res.redirect;
+                    } else {
+                        this.errorMessage = res.message || 'Unknown error occurred';
+                        this.isUploading = false;
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                } catch (err) {
+                    this.errorMessage = 'Invalid Server Response';
+                    this.isUploading = false;
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            } else {
+                try {
+                    const res = JSON.parse(xhr.responseText);
+                    this.errorMessage = res.message || 'Server Error';
+                } catch (err) {
+                    this.errorMessage = 'Server Error (' + xhr.status + ')';
+                }
+                this.isUploading = false;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        };
+
+        xhr.onerror = () => {
+            this.errorMessage = 'Network Connection Error';
+            this.isUploading = false;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        xhr.send(formData);
     }
-}">
+}" x-init="gateway = '<?php echo $gateway_mode; ?>'">
     <?php require_once __DIR__ . '/../includes/user_sidebar.php'; ?>
 
-    <form method="POST" enctype="multipart/form-data" class="flex-1 min-w-0 p-4 md:p-8 relative">
-        <?php if (isset($error_message)): ?>
-            <div class="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-sm animate-fade-in">
-                <div class="flex items-center gap-3">
-                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    <span><?php echo htmlspecialchars($error_message); ?></span>
+    <form method="POST" enctype="multipart/form-data" class="flex-1 min-w-0 p-4 md:p-8 relative"
+        @submit.prevent="submitCampaign">
+        <!-- Error Message (Alpine) -->
+        <div x-show="errorMessage" x-cloak
+            class="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-sm animate-fade-in flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span x-text="errorMessage"></span>
+            </div>
+            <button type="button" @click="errorMessage = ''" class="text-red-400 hover:text-white transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Upload Progress Overlay -->
+        <div x-show="isUploading" x-cloak
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm transition-all">
+            <div
+                class="bg-gray-900 border border-white/10 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl relative overflow-hidden">
+                <!-- Animated Blob -->
+                <div
+                    class="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-indigo-500 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-pulse">
+                </div>
+
+                <div class="relative z-10">
+                    <div class="w-16 h-16 mx-auto mb-6 relative">
+                        <svg class="animate-spin w-16 h-16 text-indigo-500" xmlns="http://www.w3.org/2000/svg"
+                            fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                            </circle>
+                            <path class="opacity-75" fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                            </path>
+                        </svg>
+                    </div>
+
+                    <h3 class="text-xl font-bold text-white mb-2"><?php echo __('wa_uploading'); ?></h3>
+                    <p class="text-gray-400 text-sm mb-6"><?php echo __('wa_processing_campaign'); ?></p>
+
+                    <!-- Progress Bar -->
+                    <div class="w-full bg-white/10 rounded-full h-2 mb-2 overflow-hidden">
+                        <div class="bg-indigo-500 h-2 rounded-full transition-all duration-300 ease-out"
+                            :style="'width: ' + uploadProgress + '%'"></div>
+                    </div>
+                    <p class="text-xs text-indigo-400 font-bold" x-text="uploadProgress + '%'"></p>
                 </div>
             </div>
-        <?php endif; ?>
+        </div>
 
         <!-- Animated Background Blobs -->
         <div

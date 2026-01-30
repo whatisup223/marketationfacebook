@@ -150,6 +150,8 @@ $translations = [
         'wa_import_txt' => 'استيراد من ملف نصي (TXT)',
         'wa_txt_drop' => 'اسحب ملف TXT هنا',
         'wa_txt_hint' => 'يجب أن يحتوي الملف على الأرقام فقط.',
+        'wa_uploading' => 'جارِ رفع الملفات...',
+        'wa_processing_campaign' => 'جاري معالجة الحملة، يرجى الانتظار...',
 
         // Modules
         'extraction_tools' => 'أدوات الاستخراج',
