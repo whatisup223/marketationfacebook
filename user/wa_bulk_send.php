@@ -49,12 +49,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['start_campaign'])) {
         // Get selected gateway mode from form
         $gateway_mode = $_POST['gateway_mode'] ?? 'qr';
 
-        // Parse numbers from textarea (one per line or comma-separated)
+        // Parse numbers from textarea
         $numbers_raw = $_POST['numbers'] ?? '';
         $numbers = array_filter(array_map('trim', preg_split('/[\r\n,]+/', $numbers_raw)));
 
+        // Handle CSV Upload for Numbers
+        if (isset($_FILES['numbers_csv']) && $_FILES['numbers_csv']['error'] === UPLOAD_ERR_OK) {
+            $csvFile = $_FILES['numbers_csv']['tmp_name'];
+            if (($handle = fopen($csvFile, "r")) !== FALSE) {
+                while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
+                    // Assume phone number is in the first column
+                    if (isset($data[0])) {
+                        $csv_number = trim($data[0]);
+                        // Basic cleanup: remove BOM, non-numeric chars logic can be added here if needed
+                        // For now just trim
+                        if (!empty($csv_number)) {
+                            $numbers[] = $csv_number;
+                        }
+                    }
+                }
+                fclose($handle);
+            }
+        }
+
+        // Unique and Filter Empty
+        $numbers = array_unique(array_filter($numbers));
+
         if (empty($numbers)) {
-            throw new Exception("Please provide at least one phone number");
+            throw new Exception(__('wa_no_leads_selected') ?: "Please provide at least one phone number");
         }
 
         // Handle file upload for local media
@@ -86,8 +108,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['start_campaign'])) {
                 user_id, campaign_name, gateway_mode, selected_accounts,
                 message, media_type, media_url, media_file_path,
                 numbers, delay_min, delay_max, switch_every,
+                batch_size, batch_delay,
                 total_count, status
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
         ");
 
         $stmt->execute([
@@ -103,6 +126,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['start_campaign'])) {
             $_POST['delay_min'] ?? 10,
             $_POST['delay_max'] ?? 25,
             $_POST['switch_every'] ?? null,
+            $_POST['batch_size'] ?? 50,
+            $_POST['batch_delay'] ?? 60,
             count($numbers)
         ]);
 
@@ -332,7 +357,7 @@ require_once __DIR__ . '/../includes/header.php';
                     <div x-show="importMode === 'csv'" class="animate-fade-in">
                         <div
                             class="border-2 border-dashed border-white/10 rounded-2xl p-8 text-center hover:border-indigo-500/30 transition-colors cursor-pointer relative group">
-                            <input type="file" class="absolute inset-0 opacity-0 cursor-pointer">
+                            <input type="file" name="numbers_csv" accept=".csv, .txt" class="absolute inset-0 opacity-0 cursor-pointer">
                             <svg class="w-12 h-12 text-gray-400 mx-auto mb-4 group-hover:scale-110 transition-transform"
                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -449,11 +474,34 @@ require_once __DIR__ . '/../includes/header.php';
                                     class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:border-indigo-500/50 outline-none">
                             </div>
                             <?php if ($gateway_mode === 'qr'): ?>
-                                <div x-show="selectedAccounts.length > 1" class="animate-fade-in">
-                                    <label
-                                        class="text-xs font-bold text-gray-500 block mb-2 uppercase tracking-widest"><?php echo __('wa_switch_every'); ?></label>
-                                    <input type="number" name="switch_every" value="5"
-                                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:border-indigo-500/50 outline-none">
+                                <div
+                                    class="animate-fade-in col-span-1 md:col-span-2 lg:col-span-3 border-t border-white/5 pt-4 mt-2">
+                                    <h4 class="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-4">Advanced
+                                        Sending Options</h4>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        <div>
+                                            <label
+                                                class="text-xs font-bold text-gray-500 block mb-2 uppercase tracking-widest"><?php echo __('wa_switch_every'); ?></label>
+                                            <input type="number" name="switch_every" value="5" min="1"
+                                                class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:border-indigo-500/50 outline-none"
+                                                title="Switch sender account after every X messages">
+                                            <p class="text-[9px] text-gray-600 mt-1">Leave empty to disable rotation</p>
+                                        </div>
+                                        <div>
+                                            <label
+                                                class="text-xs font-bold text-gray-500 block mb-2 uppercase tracking-widest">Messages
+                                                per Batch</label>
+                                            <input type="number" name="batch_size" value="50" min="1"
+                                                class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:border-indigo-500/50 outline-none">
+                                        </div>
+                                        <div>
+                                            <label
+                                                class="text-xs font-bold text-gray-500 block mb-2 uppercase tracking-widest">Delay
+                                                After Batch (Sec)</label>
+                                            <input type="number" name="batch_delay" value="60" min="0"
+                                                class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:border-indigo-500/50 outline-none">
+                                        </div>
+                                    </div>
                                 </div>
                             <?php endif; ?>
                         </div>

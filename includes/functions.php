@@ -145,6 +145,7 @@ $translations = [
         'footer_desc' => 'أقوى أداة لاستخراج واستهداف بيانات العملاء من فيسبوك.',
         'copyright' => 'جميع الحقوق محفوظة',
         'verified' => 'موثق',
+        'wa_error_no_numbers' => 'يرجى إدخال رقم هاتف واحد على الأقل أو رفع ملف CSV صحيح.',
 
         // Modules
         'extraction_tools' => 'أدوات الاستخراج',

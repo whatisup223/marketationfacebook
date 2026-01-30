@@ -581,6 +581,37 @@ require_once __DIR__ . '/../includes/header.php';
 
                 const data = await response.json();
 
+                // Check for forced wait (Batch Pause)
+                if (data.status === 'success' && data.force_wait > 0) {
+                    clearInterval(sendInterval);
+                    const waitSeconds = parseInt(data.force_wait);
+
+                    // Update status message
+                    const statusMsg = document.getElementById('status-msg');
+                    let remaining = waitSeconds;
+
+                    statusMsg.innerHTML = `<span class="text-orange-400">⏳ Paused for Batch Delay: ${remaining}s</span>`;
+
+                    const countdown = setInterval(() => {
+                        remaining--;
+                        if (remaining <= 0) {
+                            clearInterval(countdown);
+                            statusMsg.innerHTML = '<span class="text-green-400 font-bold animate-pulse">🚀 Resuming...</span>';
+                            startSending(); // Resume sending
+                        } else {
+                            statusMsg.innerHTML = `<span class="text-orange-400">⏳ Paused for Batch Delay: ${remaining}s</span>`;
+                        }
+                    }, 1000);
+
+                    // Update stats before pausing
+                    sentCount = data.sent_count;
+                    failedCount = data.failed_count;
+                    pendingCount = data.total_count - (sentCount + failedCount);
+                    updateStats();
+
+                    return; // Exit current loop and wait for resume
+                }
+
                 if (data.status === 'completed') {
                     // Campaign finished
                     isRunning = false;

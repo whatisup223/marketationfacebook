@@ -123,6 +123,20 @@ try {
                 exit;
             }
 
+            // ACCOUNT ROTATION LOGIC
+            $switch_every = (int) ($campaign['switch_every'] ?? 0);
+            if ($switch_every > 0 && ($campaign['sent_count'] > 0) && ($campaign['sent_count'] % $switch_every == 0) && $campaign['gateway_mode'] === 'qr') {
+                $campaign['current_account_index']++;
+                // Update DB to persist rotation
+                $upd = $pdo->prepare("UPDATE wa_campaigns SET current_account_index = ? WHERE id = ?");
+                $upd->execute([$campaign['current_account_index'], $campaign_id]);
+                error_log("Rotated Account to Index: " . $campaign['current_account_index']);
+            }
+
+            // BATCH PAUSE LOGIC (Check BEFORE sending)
+            // Ideally, we check after sending, but let's check if we just hit a batch limit in the previous turn
+            // Actually better to return "wait" flag IN the response of the current message.
+
             // Send to current number
             $number = $numbers[$current_index];
             $message = $campaign['message'];
@@ -415,6 +429,15 @@ try {
                 $campaign_id
             ]);
 
+            // Check for Batch Pause
+            $force_wait = 0;
+            $batch_size = (int) ($campaign['batch_size'] ?? 0);
+            $batch_delay = (int) ($campaign['batch_delay'] ?? 60);
+
+            if ($batch_size > 0 && $result['success'] && ($campaign['sent_count'] % $batch_size == 0)) {
+                $force_wait = $batch_delay;
+            }
+
             echo json_encode([
                 'status' => 'success',
                 'message' => $result['success'] ? 'Message sent' : 'Message failed',
@@ -423,7 +446,8 @@ try {
                 'sent_count' => (int) $campaign['sent_count'],
                 'failed_count' => (int) $campaign['failed_count'],
                 'current_index' => $current_index + 1,
-                'total_count' => count($numbers)
+                'total_count' => count($numbers),
+                'force_wait' => $force_wait
             ]);
             break;
 
