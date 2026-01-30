@@ -11,7 +11,10 @@ if (!isset($_SESSION['user_id'])) {
 
 $action = $_REQUEST['action'] ?? '';
 $pdo = getDB();
-
+if (!$pdo) {
+    echo json_encode(['success' => false, 'error' => 'Database connection failed']);
+    exit;
+}
 if ($action === 'get_webhook_info') {
     try {
         $stmt = $pdo->prepare("SELECT webhook_token, verify_token FROM users WHERE id = ?");
@@ -57,7 +60,67 @@ if ($action === 'fetch_rules') {
     exit;
 }
 
-// ... existing code ...
+if ($action === 'debug_token_info') {
+    $page_id = $_GET['page_id'] ?? '';
+    if (!$page_id) {
+        echo json_encode(['success' => false, 'error' => 'Page ID required']);
+        exit;
+    }
+
+    $stmt = $pdo->prepare("SELECT page_access_token FROM fb_pages WHERE page_id = ?");
+    $stmt->execute([$page_id]);
+    $page = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$page) {
+        echo json_encode(['success' => false, 'error' => 'Page not found']);
+        exit;
+    }
+
+    $token = $page['page_access_token'];
+    $masked_token = substr($token, 0, 8) . '...' . substr($token, -8);
+
+    echo json_encode([
+        'success' => true,
+        'masked_token' => $masked_token,
+        'length' => strlen($token)
+    ]);
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+    // Regenerate Webhook URL ID only
+    if ($action === 'regenerate_webhook') {
+        try {
+            $new_token = bin2hex(random_bytes(16));
+            $stmt = $pdo->prepare("UPDATE users SET webhook_token = ? WHERE id = ?");
+            $stmt->execute([$new_token, $_SESSION['user_id']]);
+
+            // Return new URL info
+            $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
+            $current_url = "$protocol://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+            $root_url = dirname(dirname($current_url));
+            $webhook_url = rtrim($root_url, '/') . '/webhook.php?uid=' . $new_token;
+
+            echo json_encode(['success' => true, 'webhook_url' => $webhook_url]);
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+        exit;
+    }
+
+    // Regenerate Verify Token only
+    if ($action === 'regenerate_verify') {
+        try {
+            $new_token = bin2hex(random_bytes(16));
+            $stmt = $pdo->prepare("UPDATE users SET verify_token = ? WHERE id = ?");
+            $stmt->execute([$new_token, $_SESSION['user_id']]);
+            echo json_encode(['success' => true, 'verify_token' => $new_token]);
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+        exit;
+    }
 
     if ($action === 'save_rule') {
         $page_id = $_POST['page_id'] ?? '';
@@ -97,8 +160,10 @@ if ($action === 'fetch_rules') {
                 $stmt->execute([$page_id, $type, $keywords, $reply, $hide_comment, $source]);
             }
             echo json_encode(['success' => true, 'message' => __('rule_saved')]);
+            exit;
         } catch (Exception $e) {
             echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+            exit;
         }
     }
 

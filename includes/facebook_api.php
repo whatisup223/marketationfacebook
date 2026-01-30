@@ -683,7 +683,7 @@ class FacebookAPI
     public function subscribeApp($page_id, $access_token)
     {
         return $this->makeRequest("$page_id/subscribed_apps", [
-            'subscribed_fields' => ['feed']
+            'subscribed_fields' => ['feed', 'messages', 'messaging_postbacks']
         ], $access_token, 'POST');
     }
 }

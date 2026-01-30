@@ -115,11 +115,16 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 </div>
 
                 <!-- Token Debug Info -->
-                <div x-show="debugInfo && selectedPageId" x-transition.opacity
-                    class="mt-4 p-3 bg-black/40 rounded-xl border border-white/5 text-[10px] font-mono text-gray-500 flex justify-between items-center">
-                    <span>Token: <span class="text-indigo-400/70" x-text="debugInfo.masked_token"></span></span>
-                    <span>Length: <span class="text-indigo-400/70" x-text="debugInfo.length"></span></span>
-                </div>
+                <!-- Token Debug Info -->
+                <template x-if="debugInfo && selectedPageId">
+                    <div x-transition.opacity
+                        class="mt-4 p-3 bg-black/40 rounded-xl border border-white/5 text-[10px] font-mono text-gray-500 flex justify-between items-center">
+                        <span>Token: <span class="text-indigo-400/70"
+                                x-text="debugInfo ? debugInfo.masked_token : ''"></span></span>
+                        <span>Length: <span class="text-indigo-400/70"
+                                x-text="debugInfo ? debugInfo.length : ''"></span></span>
+                    </div>
+                </template>
             </div>
 
             <!-- Webhook Settings -->
