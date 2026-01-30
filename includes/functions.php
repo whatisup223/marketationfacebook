@@ -156,6 +156,19 @@ $translations = [
         'wa_official_api_info' => 'حساب API الرسمي تكامل تلقائي',
         'wa_using_official_api' => 'يتم استخدام إعدادات الـ API الرسمية المحفوظة تلقائياً.',
 
+        // Status & Actions
+        'wa_status_connected' => 'متصل',
+        'wa_status_pairing' => 'جاري الاقتران...',
+        'wa_status_disconnected' => 'غير متصل',
+        'wa_action_restart' => 'إعادة التشغيل',
+        'wa_action_disconnect' => 'قطع الاتصال',
+        'wa_action_scan_again' => 'مسح الرمز مجدداً',
+        'wa_action_remove' => 'حذف الحساب',
+        'wa_generating_qr' => 'جاري إنشاء الرمز...',
+        'wa_connected_success' => 'تم الاتصال بنجاح!',
+        'wa_code_refresh' => 'تحديث الرمز خلال',
+        'wa_confirm_action' => 'هل أنت متأكد أنك تريد المتابعة؟',
+
         // Modules
         'extraction_tools' => 'أدوات الاستخراج',
         'extract_pages' => 'استخراج من الصفحات',

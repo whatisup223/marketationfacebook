@@ -144,7 +144,7 @@ require_once __DIR__ . '/../includes/header.php';
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                     </svg>
-                                    Restart
+                                    <?php echo __('wa_action_restart'); ?>
                                 </button>
                                 <button type="button" @click="handleAction('logout')"
                                     class="py-2.5 px-4 rounded-xl bg-orange-500/10 text-orange-400 hover:bg-orange-500 hover:text-white transition-all text-xs font-bold border border-orange-500/20 flex items-center justify-center gap-2">
@@ -152,7 +152,7 @@ require_once __DIR__ . '/../includes/header.php';
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                                     </svg>
-                                    Disconnect
+                                    <?php echo __('wa_action_disconnect'); ?>
                                 </button>
                             </div>
 
@@ -163,7 +163,7 @@ require_once __DIR__ . '/../includes/header.php';
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M12 4v16m8-8H4" />
                                     </svg>
-                                    Scan QR Again
+                                    <?php echo __('wa_action_scan_again'); ?>
                                 </button>
                             </div>
 
@@ -171,7 +171,7 @@ require_once __DIR__ . '/../includes/header.php';
                             <div class="mt-3 pt-3 border-t border-white/5 flex gap-2">
                                 <button type="button" @click="handleAction('delete')"
                                     class="w-full py-2 rounded-lg text-red-400/60 hover:text-red-400 text-[10px] font-bold uppercase tracking-wider hover:bg-red-500/5 transition-all">
-                                    Remove Account
+                                    <?php echo __('wa_action_remove'); ?>
                                 </button>
                             </div>
                         </div>
@@ -231,7 +231,7 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
 
         <!-- Add Account Modal -->
-        <div x-show="openAddModal" class="fixed inset-0 z-[100] overflow-y-auto" x-cloak>
+        <div x-show="openAddModal" class="fixed inset-0 z-[100] overflow-y-auto" x-cloak style="display: none;">
             <div class="flex items-center justify-center min-h-screen p-4">
                 <!-- Backdrop -->
                 <div class="fixed inset-0 bg-black/80 backdrop-blur-sm" @click="closeModal()"></div>
@@ -259,8 +259,8 @@ require_once __DIR__ . '/../includes/header.php';
                                 <div
                                     class="w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin mb-4">
                                 </div>
-                                <span class="text-xs text-gray-400 font-bold uppercase tracking-widest">Generating
-                                    QR...</span>
+                                <span
+                                    class="text-xs text-gray-400 font-bold uppercase tracking-widest"><?php echo __('wa_generating_qr'); ?></span>
                             </div>
 
                             <!-- Success: QR Code -->
@@ -277,7 +277,8 @@ require_once __DIR__ . '/../includes/header.php';
                                             d="M5 13l4 4L19 7" />
                                     </svg>
                                 </div>
-                                <span class="text-lg font-bold text-green-600">Connected!</span>
+                                <span
+                                    class="text-lg font-bold text-green-600"><?php echo __('wa_connected_success'); ?></span>
                             </div>
                         </div>
 
@@ -285,7 +286,8 @@ require_once __DIR__ . '/../includes/header.php';
                         <div x-show="qrCode && !loading && !connected" class="text-center">
                             <span
                                 class="px-3 py-1 rounded-full bg-gray-100 text-[10px] text-gray-500 font-bold uppercase tracking-wider">
-                                Code refreshes in <span x-text="countdown" class="text-indigo-500"></span>s
+                                <?php echo __('wa_code_refresh'); ?> <span x-text="countdown"
+                                    class="text-indigo-500"></span>s
                             </span>
                         </div>
                     </div>
@@ -519,9 +521,9 @@ require_once __DIR__ . '/../includes/header.php';
             processing: false,
 
             get statusText() {
-                if (this.status === 'connected') return 'Connected';
-                if (this.status === 'pairing') return 'Pairing...';
-                return 'Disconnected';
+                if (this.status === 'connected') return '<?php echo __('wa_status_connected'); ?>';
+                if (this.status === 'pairing') return '<?php echo __('wa_status_pairing'); ?>';
+                return '<?php echo __('wa_status_disconnected'); ?>';
             },
 
             init() {
@@ -564,7 +566,7 @@ require_once __DIR__ . '/../includes/header.php';
             },
 
             async handleAction(action) {
-                if (!confirm(`Are you sure you want to ${action} this account?`)) return;
+                if (!confirm('<?php echo __('wa_confirm_action'); ?>')) return;
 
                 this.processing = true;
                 try {
