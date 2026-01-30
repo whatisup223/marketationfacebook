@@ -14,7 +14,7 @@ $pdo = getDB();
 
 try {
     // Get Admin Settings for Evolution
-    $stmt = $pdo->query("SELECT * FROM settings WHERE setting_key IN ('wa_evolution_url', 'wa_evolution_apikey')");
+    $stmt = $pdo->query("SELECT * FROM settings WHERE setting_key IN ('wa_evolution_url', 'wa_evolution_apikey', 'wa_webhook_url')");
     $settings = [];
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $settings[$row['setting_key']] = $row['setting_value'];
@@ -22,6 +22,10 @@ try {
 
     $evo_url = rtrim($settings['wa_evolution_url'] ?? '', '/');
     $evo_key = $settings['wa_evolution_apikey'] ?? '';
+
+    // Auto-generate Webhook URL based on current server
+    $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
+    $webhook_url = $protocol . "://" . $_SERVER['HTTP_HOST'] . "/webhook.php";
 
     if (empty($evo_url) || empty($evo_key)) {
         echo json_encode(['status' => 'error', 'message' => 'WhatsApp Gateway not configured by Admin.']);
@@ -37,12 +41,29 @@ try {
             // 1. Create Instance with Evolution API v2 structure
             $ch = curl_init($evo_url . '/instance/create');
 
-            // Evolution API v2 expects this structure
-            $payload = json_encode([
+            // Build payload
+            $payload_data = [
                 'instanceName' => $instance_name,
                 'qrcode' => true,
                 'integration' => 'WHATSAPP-BAILEYS'
-            ]);
+            ];
+
+            // Attach Webhook if configured
+            if (!empty($webhook_url)) {
+                $payload_data['webhook'] = $webhook_url;
+                $payload_data['webhook_by_events'] = false; // Send all events or customize as needed
+                $payload_data['events'] = [
+                    'MESSAGES_UPSERT',
+                    'MESSAGES_UPDATE',
+                    'MESSAGES_DELETE',
+                    'SEND_MESSAGE',
+                    'CONNECTION_UPDATE',
+                    'HISTORY_SYNC',
+                    'QRCODE_UPDATED'
+                ];
+            }
+
+            $payload = json_encode($payload_data);
 
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_POST, true);
@@ -378,41 +399,50 @@ try {
             }
             break;
 
-        case 'check_status':
-            $instance_name = $_POST['instance_name'] ?? '';
-            if (empty($instance_name))
-                exit;
 
-            $ch = curl_init($evo_url . '/instance/connectionState/' . $instance_name);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, ['apikey: ' . $evo_key]);
-            $response = curl_exec($ch);
-            curl_close($ch);
 
-            $data = json_decode($response, true);
-            $state = $data['instance']['state'] ?? 'close';
+        case 'logout':
+            $id = (int) ($_POST['id'] ?? 0);
+            $stmt = $pdo->prepare("SELECT * FROM wa_accounts WHERE id = ? AND user_id = ?");
+            $stmt->execute([$id, $user_id]);
+            $acc = $stmt->fetch();
 
-            if ($state === 'open') {
-                // Update DB
-                // Get phone number if possible
-                $ch = curl_init($evo_url . '/instance/fetchInstances?instanceName=' . $instance_name);
+            if ($acc) {
+                // Call Evolution Logout
+                $ch = curl_init($evo_url . '/instance/logout/' . $acc['instance_name']);
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
+                curl_setopt($ch, CURLOPT_HTTPHEADER, ['apikey: ' . $evo_key]);
+                curl_exec($ch);
+                curl_close($ch);
+
+                // Update DB status
+                $pdo->prepare("UPDATE wa_accounts SET status = 'disconnected' WHERE id = ?")->execute([$id]);
+                echo json_encode(['status' => 'success']);
+            } else {
+                echo json_encode(['status' => 'error', 'message' => 'Account not found']);
+            }
+            break;
+
+        case 'restart':
+            $id = (int) ($_POST['id'] ?? 0);
+            $stmt = $pdo->prepare("SELECT * FROM wa_accounts WHERE id = ? AND user_id = ?");
+            $stmt->execute([$id, $user_id]);
+            $acc = $stmt->fetch();
+
+            if ($acc) {
+                // Call Evolution Restart
+                $ch = curl_init($evo_url . '/instance/restart/' . $acc['instance_name']);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT"); // Evolution usually uses PUT or POST for restart
                 curl_setopt($ch, CURLOPT_HTTPHEADER, ['apikey: ' . $evo_key]);
                 $res = curl_exec($ch);
                 curl_close($ch);
-                $inst_data = json_decode($res, true);
 
-                $phone = '';
-                if (isset($inst_data[0]['owner'])) {
-                    $phone = explode('@', $inst_data[0]['owner'])[0];
-                }
-
-                $stmt = $pdo->prepare("UPDATE wa_accounts SET status = 'connected', phone = ? WHERE instance_name = ? AND user_id = ?");
-                $stmt->execute([$phone, $instance_name, $user_id]);
-
-                echo json_encode(['connected' => true]);
+                // We don't change DB status on restart, just return success
+                echo json_encode(['status' => 'success', 'debug' => $res]);
             } else {
-                echo json_encode(['connected' => false]);
+                echo json_encode(['status' => 'error', 'message' => 'Account not found']);
             }
             break;
 
@@ -423,19 +453,115 @@ try {
             $acc = $stmt->fetch();
 
             if ($acc) {
-                // 1. Delete from Evolution
-                $ch = curl_init($evo_url . '/instance/delete/' . $acc['instance_name']);
+                $inst = trim($acc['instance_name']); // Trim whitespace
+
+                error_log("Attempting to delete instance: " . $inst);
+
+                // 1. Force Logout first (best practice)
+                $ch = curl_init($evo_url . '/instance/logout/' . $inst);
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
                 curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
                 curl_setopt($ch, CURLOPT_HTTPHEADER, ['apikey: ' . $evo_key]);
-                curl_exec($ch);
+                $logout_res = curl_exec($ch);
                 curl_close($ch);
 
-                // 2. Delete from DB
+                error_log("Logout result for $inst: $logout_res");
+
+                // Small delay to allow Evolution to process logout
+                usleep(500000); // 0.5s
+
+                // 2. Delete from Evolution
+                $ch = curl_init($evo_url . '/instance/delete/' . $inst);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
+                curl_setopt($ch, CURLOPT_HTTPHEADER, ['apikey: ' . $evo_key]);
+                $del_res = curl_exec($ch);
+                $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                curl_close($ch);
+
+                error_log("Delete result for $inst (HTTP $http_code): $del_res");
+
+                // 3. Delete from DB regardless of API success (to allow clearing stuck accounts)
                 $pdo->prepare("DELETE FROM wa_accounts WHERE id = ?")->execute([$id]);
                 echo json_encode(['status' => 'success']);
             } else {
                 echo json_encode(['status' => 'error', 'message' => 'Account not found']);
+            }
+            break;
+
+        case 'check_status':
+            $instance_name = $_POST['instance_name'] ?? '';
+            if (empty($instance_name))
+                exit;
+
+            // Strategy 1: Check connectionState
+            $ch = curl_init($evo_url . '/instance/connectionState/' . $instance_name);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, ['apikey: ' . $evo_key]);
+            $response = curl_exec($ch);
+            curl_close($ch);
+
+            $data = json_decode($response, true);
+            $state = $data['instance']['state'] ?? $data['state'] ?? 'close';
+
+            // Strategy 2: If state is 'close' or 'connecting', double check with fetchInstances
+            // (Sometimes connectionState lags behind)
+            if ($state !== 'open') {
+                $ch = curl_init($evo_url . '/instance/fetchInstances?instanceName=' . $instance_name);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, ['apikey: ' . $evo_key]);
+                $res = curl_exec($ch);
+                curl_close($ch);
+                $inst_data = json_decode($res, true);
+
+                // If we get an owner JID, it means we are definitely connected
+                $owner = null;
+                if (isset($inst_data['instance']['owner'])) {
+                    $owner = $inst_data['instance']['owner'];
+                } elseif (isset($inst_data[0]['owner'])) {
+                    $owner = $inst_data[0]['owner']; // Evolution v2 array response
+                } elseif (isset($inst_data['owner'])) { // Single object response
+                    $owner = $inst_data['owner'];
+                }
+
+                if ($owner) {
+                    $state = 'open'; // Force state to open because we have data
+                }
+            }
+
+            if ($state === 'open') {
+                // Connected! Get phone number if we haven't already
+                $phone = '';
+
+                // Fetch instance details again if we didn't do it in Strategy 2
+                if (!isset($inst_data)) {
+                    $ch = curl_init($evo_url . '/instance/fetchInstances?instanceName=' . $instance_name);
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                    curl_setopt($ch, CURLOPT_HTTPHEADER, ['apikey: ' . $evo_key]);
+                    $res = curl_exec($ch);
+                    curl_close($ch);
+                    $inst_data = json_decode($res, true);
+                }
+
+                if (isset($inst_data['instance']['owner'])) {
+                    $phone = explode('@', $inst_data['instance']['owner'])[0];
+                } elseif (isset($inst_data[0]['owner'])) {
+                    $phone = explode('@', $inst_data[0]['owner'])[0];
+                } elseif (isset($inst_data['owner'])) {
+                    $phone = explode('@', $inst_data['owner'])[0];
+                }
+
+                // Update DB only if valid phone found or state is confirmed open
+                if ($phone || $state === 'open') {
+                    $stmt = $pdo->prepare("UPDATE wa_accounts SET status = 'connected', phone = ? WHERE instance_name = ? AND user_id = ?");
+                    $stmt->execute([$phone, $instance_name, $user_id]);
+
+                    echo json_encode(['connected' => true, 'phone' => $phone]);
+                } else {
+                    echo json_encode(['connected' => false, 'state' => $state]);
+                }
+            } else {
+                echo json_encode(['connected' => false, 'state' => $state]);
             }
             break;
 

@@ -1,146 +1,75 @@
 <?php
-// Facebook Webhook Handler
-require_once __DIR__ . '/includes/functions.php';
-require_once __DIR__ . '/includes/facebook_api.php';
+/**
+ * Global Webhook Handler for Evolution API
+ * This file receives all events (messages, status updates) from Evolution API instances.
+ */
 
-// Get User ID from UID parameter (This is the webhook_token for routing)
-$webhook_route_id = $_GET['uid'] ?? '';
+// Basic security checks (Optional: verify secret header if configured)
+// header('Content-Type: application/json');
 
-// 1. Verification Request (GET)
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['hub_mode']) && $_GET['hub_mode'] === 'subscribe') {
-    $verify_token_sent = $_GET['hub_verify_token'];
+// Log incoming request (For debugging - Disable in production after testing)
+$logFile = __DIR__ . '/webhook_log.txt';
+$input = file_get_contents('php://input');
 
-    if (!$webhook_route_id) {
-        http_response_code(403);
-        echo 'Missing Webhook UID';
-        exit;
-    }
+// Append logs
+// file_put_contents($logFile, date('Y-m-d H:i:s') . " - Received: " . $input . "\n\n", FILE_APPEND);
 
-    $pdo = getDB();
-    // Find user by the route ID (webhook_token) AND check if verify_token matches
-    $stmt = $pdo->prepare("SELECT id FROM users WHERE webhook_token = ? AND verify_token = ?");
-    $stmt->execute([$webhook_route_id, $verify_token_sent]);
+$data = json_decode($input, true);
 
-    if ($stmt->fetch()) {
-        echo $_GET['hub_challenge'];
-        exit;
-    } else {
-        http_response_code(403);
-        echo 'Invalid Verify Token or Webhook UID';
-        exit;
-    }
-}
-
-// 2. Event Notification (POST)
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $input = file_get_contents('php://input');
-    $data = json_decode($input, true);
-
-    if ($webhook_route_id) {
-        // Optionally verify that this route ID exists to fail early
-        // But processing logic will filter by page anyway.
-    }
-
-    if (isset($data['object']) && $data['object'] === 'page') {
-        foreach ($data['entry'] as $entry) {
-            $page_id = $entry['id'];
-
-            // Get changes (feed)
-            if (isset($entry['changes'])) {
-                foreach ($entry['changes'] as $change) {
-                    if ($change['field'] === 'feed') {
-                        $value = $change['value'];
-
-                        // We are interested in Comments on our posts
-                        if ($value['item'] === 'comment' && $value['verb'] === 'add') {
-                            $comment_id = $value['comment_id'];
-                            $message = $value['message'];
-                            $sender_id = $value['from']['id'];
-
-                            // Ignore comments from the page itself
-                            if ($sender_id == $page_id)
-                                continue;
-
-                            processAutoReply($page_id, $comment_id, $message, $sender_id);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    http_response_code(200);
-    echo 'EVENT_RECEIVED';
+if (!$data) {
+    http_response_code(400);
+    echo json_encode(['status' => 'error', 'message' => 'Invalid JSON']);
     exit;
 }
 
-function processAutoReply($page_id, $comment_id, $user_message, $sender_id)
+// Extract Instance ID/Name to identify the user
+$instanceName = $data['instance'] ?? '';
+$eventType = $data['event'] ?? ''; // e.g. messages.upsert, connection.update
+
+// Required: Database connection to match instance with user and logic
+require_once __DIR__ . '/includes/db.php';
+
+// Route events
+switch ($eventType) {
+    case 'connection.update':
+        handleConnectionUpdate($data, $pdo);
+        break;
+
+    case 'messages.upsert':
+        handleMessagesUpsert($data, $pdo);
+        break;
+
+    // Add other cases like messages.update, etc.
+}
+
+echo json_encode(['status' => 'success']);
+
+// ----------------------------------------------------------------------
+// Handlers
+// ----------------------------------------------------------------------
+
+function handleConnectionUpdate($data, $pdo)
 {
-    global $pdo;
-    $pdo = getDB();
-    if (!$pdo)
-        return;
+    $instance = $data['instance'];
+    $state = $data['data']['state'] ?? ''; // open, close, connecting
+    $status = 'disconnected';
 
-    // Get Page Access Token
-    $stmt = $pdo->prepare("SELECT page_access_token FROM fb_pages WHERE page_id = ?");
-    $stmt->execute([$page_id]);
-    $page = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if (!$page)
-        return; // Page not found in our system
-
-    $access_token = $page['page_access_token'];
-
-    // Get Rules for this page
-    $stmt = $pdo->prepare("SELECT * FROM auto_reply_rules WHERE page_id = ? AND is_active = 1 ORDER BY trigger_type DESC");
-    $stmt->execute([$page_id]);
-    $rules = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    if (empty($rules))
-        return;
-
-    $matched_rule = null;
-    $default_rule = null;
-    $user_message_lower = mb_strtolower($user_message);
-
-    foreach ($rules as $rule) {
-        if ($rule['trigger_type'] === 'default') {
-            $default_rule = $rule;
-            continue;
-        }
-
-        // Check keywords
-        $keywords = explode(',', $rule['keywords']);
-        foreach ($keywords as $kw) {
-            $kw = trim(mb_strtolower($kw));
-            if (!empty($kw) && mb_strpos($user_message_lower, $kw) !== false) {
-                $matched_rule = $rule;
-                break 2;
-            }
-        }
+    if ($state === 'open') {
+        $status = 'connected';
+    } elseif ($state === 'connecting') {
+        $status = 'pairing';
     }
 
-    // Determine final rule
-    $final_rule = $matched_rule ?? $default_rule;
-
-    if ($final_rule) {
-        $fb = new FacebookAPI();
-
-        // 1. Hide Comment if requested
-        if (!empty($final_rule['hide_comment']) && $final_rule['hide_comment'] == 1) {
-            $fb->hideComment($comment_id, $access_token);
-        }
-
-        // 2. Reply to Comment
-        if (!empty($final_rule['reply_message'])) {
-            // Spintax support
-            $reply_text = preg_replace_callback('/\{([^{}]+)\}/', function ($matches) {
-                $options = explode('|', $matches[1]);
-                return $options[array_rand($options)];
-            }, $final_rule['reply_message']);
-
-            $fb->replyToComment($comment_id, $reply_text, $access_token);
-        }
+    // Update Database Status
+    if ($instance && $state) {
+        $stmt = $pdo->prepare("UPDATE wa_accounts SET status = ? WHERE instance_name = ?");
+        $stmt->execute([$status, $instance]);
     }
 }
 
+function handleMessagesUpsert($data, $pdo)
+{
+    // Logic to handle incoming messages (e.g. Chatbot, Auto-reply)
+    // $messages = $data['data']['messages'] ?? [];
+    // ...
+}

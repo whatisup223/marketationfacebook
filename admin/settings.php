@@ -2087,6 +2087,31 @@ require_once __DIR__ . '/../includes/header.php';
                                     value="<?php echo $settings['wa_evolution_apikey'] ?? ''; ?>"
                                     placeholder="Global API Key" class="setting-input">
                             </div>
+
+                            <div>
+                                <label class="block text-gray-400 text-sm font-medium mb-2">
+                                    Global Webhook URL (Auto-generated)
+                                </label>
+                                <?php
+                                $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
+                                $autoWebhook = $protocol . "://" . $_SERVER['HTTP_HOST'] . "/webhook.php";
+                                ?>
+                                <div class="relative">
+                                    <input type="url" value="<?php echo $autoWebhook; ?>" readonly
+                                        class="setting-input bg-gray-800 text-gray-500 cursor-not-allowed">
+                                    <div class="absolute right-3 top-3">
+                                        <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
+                                            </path>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <p class="text-[10px] text-gray-500 mt-1">
+                                    This URL is automatically assigned to all new instances.
+                                </p>
+                            </div>
                         </div>
                         <div class="p-6 bg-green-500/5 rounded-2xl border border-green-500/10">
                             <h4 class="text-green-400 font-bold mb-3 flex items-center gap-2">
