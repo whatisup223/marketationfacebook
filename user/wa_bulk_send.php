@@ -47,14 +47,20 @@ if (isset($_POST['action']) && $_POST['action'] === 'check_api_status') {
     {
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+        // Disable SSL verify only for localhost testing if needed, but risky for prod
+        // curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
+
         if ($auth_header) {
             curl_setopt($ch, CURLOPT_HTTPHEADER, $auth_header);
         }
+
         $response = curl_exec($ch);
         $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error_msg = curl_error($ch);
         curl_close($ch);
-        return ['code' => $http_code, 'body' => $response];
+
+        return ['code' => $http_code, 'body' => $response, 'error' => $error_msg];
     }
 
     try {
@@ -68,7 +74,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'check_api_status') {
 
         if ($provider === 'meta') {
             if (empty($config['phone_id']) || empty($config['token']))
-                throw new Exception("Missing Meta Config");
+                throw new Exception("Missing Meta Config (Phone ID or Token)");
             $url = "https://graph.facebook.com/v17.0/" . $config['phone_id'] . "?access_token=" . $config['token'];
             $res = check_url($url);
 
@@ -76,21 +82,27 @@ if (isset($_POST['action']) && $_POST['action'] === 'check_api_status') {
                 $body = json_decode($res['body'], true);
                 $status_data = ['name' => $body['verified_name'] ?? 'Meta Account', 'number' => $body['display_phone_number'] ?? ''];
             } else {
-                throw new Exception("Meta API Error: " . $res['code']);
+                $err_body = json_decode($res['body'], true);
+                $api_msg = $err_body['error']['message'] ?? 'Unknown API Error';
+                throw new Exception("Meta API Error ({$res['code']}): " . $res['error'] . " | " . $api_msg);
             }
 
         } elseif ($provider === 'twilio') {
             if (empty($config['sid']) || empty($config['token']))
-                throw new Exception("Missing Twilio Config");
+                throw new Exception("Missing Twilio Config (SID or Token)");
             $url = "https://api.twilio.com/2010-04-01/Accounts/" . $config['sid'] . ".json";
             $auth = ["Authorization: Basic " . base64_encode($config['sid'] . ":" . $config['token'])];
             $res = check_url($url, $auth);
 
             if ($res['code'] === 200) {
                 $body = json_decode($res['body'], true);
+                if (isset($body['status']) && $body['status'] == 404)
+                    throw new Exception("Twilio Account Not Found");
                 $status_data = ['name' => $body['friendly_name'] ?? 'Twilio Account', 'number' => 'Active'];
             } else {
-                throw new Exception("Twilio API Error: " . $res['code']);
+                $err_body = json_decode($res['body'], true);
+                $api_msg = $err_body['message'] ?? 'Check Credentials';
+                throw new Exception("Twilio API Error ({$res['code']}): " . $api_msg);
             }
 
         } elseif ($provider === 'ultramsg') {
@@ -103,7 +115,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'check_api_status') {
                 $body = json_decode($res['body'], true);
                 $status_data = ['name' => 'UltraMsg Instance', 'number' => $body['status']['text'] ?? 'Connected'];
             } else {
-                throw new Exception("UltraMsg API Error");
+                throw new Exception("UltraMsg API Error ({$res['code']}): " . $res['error']);
             }
         }
 
@@ -263,6 +275,7 @@ require_once __DIR__ . '/../includes/header.php';
     lat: '',
     lng: '',
     gateway: '<?php echo $gateway_mode; ?>',
+    provider: '<?php echo $user_settings['external_provider'] ?? 'meta'; ?>',
     
     // API Status Logic
     apiStatus: 'idle', // idle, checking, connected, error
@@ -591,8 +604,12 @@ require_once __DIR__ . '/../includes/header.php';
                                 <div class="absolute inset-0 rounded-full border-4 border-t-indigo-500 animate-spin">
                                 </div>
                             </div>
-                            <h4 class="text-white font-bold mb-1">Checking Connection...</h4>
-                            <p class="text-xs text-gray-500">Verifying your API credentials</p>
+                            <h4 class="text-white font-bold mb-1">
+                                <?php echo __('wa_api_checking'); ?>
+                            </h4>
+                            <p class="text-xs text-gray-500">
+                                <?php echo __('wa_api_verifying'); ?>
+                            </p>
                         </div>
 
                         <!-- Connected State -->
@@ -604,13 +621,29 @@ require_once __DIR__ . '/../includes/header.php';
 
                             <div
                                 class="w-16 h-16 rounded-full bg-emerald-500/20 mx-auto mb-4 flex items-center justify-center text-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
-                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <!-- Meta Icon -->
+                                <svg x-show="provider === 'meta'" class="w-8 h-8" fill="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path
+                                        d="M16.797 20.465C15.657 21.053 14.288 21.6 12.006 21.6 6.366 21.6 2.41 17.886 2.41 12.215c0-6 4.316-10.465 10.37-10.465 5.922 0 8.674 4.162 8.674 8.766 0 5.446-4.992 6.848-7.792 6.848-2.618 0-3.328-1.572-3.328-1.572.766-3.056 1.488-5.322 1.956-6.606.58-1.59 1.15-2.074 2.126-2.074 1.112 0 1.96.906 1.96 2.502 0 3.39-2.222 7.794-5.114 7.794-1.636 0-2.28-1.396-2.28-2.586 0-2.738 2.05-6.236 4.336-6.236.95 0 1.544.52 1.544 1.396 0 1.076-1.042 3.194-2.28 3.194-.486 0-.668-.224-.668-.224.282-1.082.686-2.31 1.258-2.31.066 0 .098.01.126.02-.3-.504-.556-.632-.906-.632-1.054 0-1.874 1.636-1.874 3.016 0 .8.27 1.58.916 1.58.986 0 2.92-1.748 2.92-4.254 0-.89-.576-1.37-1.326-1.37-1.168 0-2.392 1.168-2.392 2.768 0 .546.126 1.07.288 1.488-.936 3.636-1.556 5.564-1.556 5.564-.32 1.484-.044 2.124.088 2.378-1.812-.662-3.666-2.454-3.666-5.836 0-4.636 3.396-7.818 7.82-7.818 4.284 0 6.036 3.298 6.036 6.332 0 4.198-2.384 6.34-5.366 6.34-1.92 0-2.906-1.272-2.906-1.272s.542 2.668.644 3.036c.142.504.792 2.3 2.152 2.3 2.158 0 3.864-1.22 4.902-2.348l-1.054-1.666z" />
+                                </svg>
+                                <!-- Twilio Icon -->
+                                <svg x-show="provider === 'twilio'" class="w-8 h-8" fill="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path
+                                        d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm-2.079 17.585c-.947.548-2.146.223-2.693-.725-.548-.946-.224-2.145.724-2.693.948-.548 2.147-.223 2.694.725.548.947.224 2.146-.725 2.693zm-2.71-3.774c-1.424-.044-2.544-1.238-2.499-2.663.044-1.425 1.238-2.545 2.662-2.5 1.426.044 2.546 1.238 2.501 2.663-.045 1.425-1.239 2.545-2.664 2.5zm6.477 3.315c-1.378.369-2.802-.44-3.171-1.819-.37-1.378.439-2.802 1.818-3.171 1.379-.37 2.802.439 3.171 1.818.37 1.379-.439 2.802-1.818 3.172zm2.083-3.08c-1.121 1.054-2.895 1.01-3.95-.112-1.055-1.121-1.011-2.894.111-3.949 1.121-1.055 2.895-1.011 3.95.111 1.054 1.122 1.01 2.895-.111 3.95z" />
+                                </svg>
+                                <!-- UltraMsg/Generic Icon -->
+                                <svg x-show="provider === 'ultramsg' || !['meta','twilio'].includes(provider)"
+                                    class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M5 13l4 4L19 7" />
+                                        d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
                                 </svg>
                             </div>
 
-                            <h4 class="text-xl font-black text-white mb-1 tracking-tight">API Connected!</h4>
+                            <h4 class="text-xl font-black text-white mb-1 tracking-tight">
+                                <?php echo __('wa_api_connected'); ?>
+                            </h4>
                             <p class="text-emerald-400 font-bold text-sm mb-1"
                                 x-text="apiDetails?.name || 'Official Account'"></p>
                             <p class="text-gray-400 text-xs font-mono"
@@ -619,7 +652,9 @@ require_once __DIR__ . '/../includes/header.php';
                             <div
                                 class="mt-4 inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/20 rounded-full border border-emerald-500/20">
                                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                <span class="text-[10px] uppercase font-bold text-emerald-300">Operational</span>
+                                <span class="text-[10px] uppercase font-bold text-emerald-300">
+                                    <?php echo __('wa_api_operational'); ?>
+                                </span>
                             </div>
                         </div>
 
@@ -634,7 +669,9 @@ require_once __DIR__ . '/../includes/header.php';
                                 </svg>
                             </div>
 
-                            <h4 class="text-lg font-bold text-white mb-2">Connection Failed</h4>
+                            <h4 class="text-lg font-bold text-white mb-2">
+                                <?php echo __('wa_api_failed'); ?>
+                            </h4>
                             <p class="text-red-300 text-sm mb-4 px-4 bg-red-500/5 py-2 rounded-lg break-all font-mono"
                                 x-text="apiError"></p>
 
@@ -645,11 +682,15 @@ require_once __DIR__ . '/../includes/header.php';
                                         d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
                                     </path>
                                 </svg>
-                                Retry Connection
+                                <?php echo __('wa_retry_connection'); ?>
                             </button>
 
-                            <p class="text-[10px] text-gray-500 mt-4">Check your settings in <a href="wa_settings.php"
-                                    class="text-indigo-400 hover:underline">WhatsApp Settings</a></p>
+                            <p class="text-[10px] text-gray-500 mt-4">
+                                <?php echo __('wa_check_settings'); ?> <a href="wa_settings.php"
+                                    class="text-indigo-400 hover:underline">
+                                    <?php echo __('whatsapp_settings'); ?>
+                                </a>
+                            </p>
                         </div>
                     </div>
                 </div>

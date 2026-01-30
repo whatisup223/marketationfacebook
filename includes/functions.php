@@ -155,6 +155,15 @@ $translations = [
         'wa_select_qr_accs' => 'اختر الحسابات المرسلة (شريحة أو أكثر)',
         'wa_official_api_info' => 'حساب API الرسمي تكامل تلقائي',
         'wa_using_official_api' => 'يتم استخدام إعدادات الـ API الرسمية المحفوظة تلقائياً.',
+        'wa_api_checking' => 'جارِ التحقق من الاتصال...',
+        'wa_api_verifying' => 'يتم التحقق من صحة بيانات الاعتماد...',
+        'wa_api_connected' => 'تم الاتصال بنجاح!',
+        'wa_api_operational' => 'جاهز للعمل',
+        'wa_api_failed' => 'فشل الاتصال',
+        'wa_retry_connection' => 'أعد المحاولة',
+        'wa_check_settings' => 'تأكد من إعداداتك في',
+        'whatsapp_settings' => 'إعدادات واتساب',
+
 
         // Status & Actions
         'wa_status_connected' => 'متصل',
@@ -1857,6 +1866,14 @@ $translations = [
         'wa_phone_number_id' => 'معرف رقم الهاتف (Phone Number ID)',
         'wa_access_token' => 'رمز الوصول الدائم (Permanent Access Token)',
         'wa_instance_id' => 'معرف النسخة (Instance ID)',
+        'wa_api_checking' => 'جارِ التحقق من الاتصال...',
+        'wa_api_verifying' => 'يتم التحقق من صحة بيانات الاعتماد...',
+        'wa_api_connected' => 'تم الاتصال بنجاح!',
+        'wa_api_operational' => 'جاهز للعمل',
+        'wa_api_failed' => 'فشل الاتصال',
+        'wa_retry_connection' => 'أعد المحاولة',
+        'wa_check_settings' => 'تأكد من إعداداتك في',
+
         'wa_settings_saved' => 'Settings saved successfully!',
         'wa_switch_mode_warning' => 'Switching the mode will change how your campaigns operate.',
         'wa_gateway_qr_note' => 'In this mode, the platform default server will be used. You only need to link your accounts via QR Code. Perfect for speed and no extra costs.',
@@ -2146,6 +2163,14 @@ $translations = [
         'wa_auth_token' => 'Auth Token',
         'wa_sender_phone' => 'Sender Phone Number',
         'wa_token' => 'Token',
+        'wa_api_checking' => 'Checking Connection...',
+        'wa_api_verifying' => 'Verifying credentials...',
+        'wa_api_connected' => 'API Connected!',
+        'wa_api_operational' => 'Operational',
+        'wa_api_failed' => 'Connection Failed',
+        'wa_retry_connection' => 'Retry Connection',
+        'wa_check_settings' => 'Check your settings in',
+        'whatsapp_settings' => 'WhatsApp Settings',
     ],
 ];
 
