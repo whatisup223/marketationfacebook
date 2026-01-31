@@ -248,9 +248,22 @@ $translations = [
 
         // Modules
         'extraction_tools' => 'أدوات الاستخراج',
+        'bot_intelligence_settings' => 'إعدادات الذكاء المتقدمة والجدولة',
+        'bot_cooldown' => 'فترة صمت البوت (بعد رد الأدمن)',
+        'human_takeover_hint' => 'سيصمت البوت تماماً عن الرد التلقائي إذا اكتشف أن هناك "بشر" (أدمن الصفحة) قام بالرد على المحادثة.',
+        'hours' => 'ساعات',
+        'minutes' => 'دقائق',
+        'seconds' => 'ثواني',
+        'bot_schedule' => 'جدولة عمل البوت',
+        'bot_schedule_desc' => 'حدد الفترة الزمنية التي يعمل فيها البوت تلقائياً. خارج هذه الفترة، لن يرد البوت.',
+        'enable_schedule' => 'تفعيل الجدولة الزمنية',
+        'start_time' => 'وقت البدء',
+        'end_time' => 'وقت الانتهاء',
         'extract_pages' => 'استخراج من الصفحات',
         'extract_groups' => 'استخراج من الجروبات',
         'extract_posts' => 'استخراج من المنشورات',
+        'bot_exclude_keywords' => 'استثناء قواعد الكلمات المفتاحية من الصمت',
+        'bot_exclude_keywords_hint' => 'إذا تم التفعيل، سيرد البوت دائماً على الكلمات المفتاحية حتى لو كان الأدمن قد رد مؤخراً. سيطبق وقت الصمت فقط على "الرد الافتراضي".',
         'my_tasks' => 'مهامي',
         'fb_accounts' => 'إدارة الصفحات',
         'manage_messages' => 'إدارة الرسائل',
@@ -260,10 +273,8 @@ $translations = [
         'active_tasks' => 'مهام جارية',
 
         // Statuses
-        'status_pending' => 'قيد الانتظار',
-        'status_processing' => 'جاري العمل',
-        'status_completed' => 'مكتمل',
         'status_failed' => 'فشل',
+        'upload_interrupted' => 'توقف الرفع بسبب مغادرة الصفحة أو فقدان الاتصال',
 
         // Common
         'welcome' => 'مرحباً',
@@ -464,7 +475,6 @@ $translations = [
         'username_placeholder' => 'أدخل اسم مستخدم فريد',
         'pass_confirm_placeholder' => 'أعد كتابة كلمة السر',
         'pass_match_error' => 'كلمات المرور غير متطابقة',
-        'fill_all_fields' => 'يرجى ملء جميع الحقول',
         'username_exists' => 'اسم المستخدم هذا مستخدم بالفعل',
         'email_exists' => 'البريد الإلكتروني هذا مستخدم بالفعل',
         'register_success' => 'تم إنشاء الحساب بنجاح',
@@ -526,7 +536,6 @@ $translations = [
         'id' => 'المعرف',
         'page' => 'الصفحة',
         'delete_campaign' => 'حذف الحملة',
-        'confirm_delete' => 'هل أنت متأكد من حذف هذه الحملة؟ لا يمكن التراجع.',
         'campaign_deleted' => 'تم حذف الحملة بنجاح.',
         'system_update' => 'تحديث النظام',
         'check_updates' => 'التحقق من التحديثات',
@@ -559,7 +568,6 @@ $translations = [
         // WhatsApp Campaign
         'wa_campaign_runner' => 'تشغيل حملة واتساب',
         'campaign_status' => 'حالة الحملة',
-        'progress' => 'التقدم',
         'total_messages' => 'إجمالي الرسائل',
         'sent_successfully' => 'تم الإرسال بنجاح',
         'campaign_controls' => 'التحكم في الحملة',
@@ -596,7 +604,6 @@ $translations = [
         'preview_name_placeholder' => 'اسم العميل',
         'vars_hint' => 'المتغيرات المتاحة',
         'message_placeholder' => 'أهلاً {{name}}، كيف يمكنني مساعدتك؟',
-        'image_url_placeholder' => 'https://example.com/image.jpg',
         'online_status' => 'متصل الآن',
         'customer_msg_sample' => 'مرحباً! أنا مهتم بخدماتكم.',
         'scheduled_posts' => 'المنشورات المجدولة',
@@ -623,8 +630,6 @@ $translations = [
         'chars_unit' => 'حرف',
         'campaign_default_name' => 'حملة',
         'upload_image' => 'رفع صورة',
-        'use_url' => 'رابط مباشر',
-        'local_file' => 'ملف محلي',
         'campaign_not_found' => 'الحملة غير موجودة.',
         'campaign_label' => 'الحملة:',
         'empty_queue_title' => 'طابور الإرسال فارغ أو مكتمل.',
@@ -662,8 +667,6 @@ $translations = [
         'wa_get_started' => 'ابدأ الآن',
         'delay_min' => 'الحد الأدنى للتأخير',
         'delay_max' => 'الحد الأقصى للتأخير',
-        'queue_list' => 'قائمة الانتظار',
-        'lead_info' => 'الرقم',
 
         // Auto Reply Specific
         'select_page_to_configure' => 'يرجى اختيار صفحة لبدء الإعداد',
@@ -677,7 +680,6 @@ $translations = [
         'confirm_stop_auto_reply' => 'هل أنت متأكد من إيقاف الرد الآلي لهذه الصفحة؟',
         'confirm_delete_rule' => 'هل أنت متأكد من حذف هذه القاعدة؟',
         'default_reply_hint' => 'هذا الرد سيتم إرساله تلقائياً على أي تعليق لا يحتوي على كلمات مفتاحية مخصصة.',
-        'verified_page' => 'صفحة موثقة',
         'activate_auto_reply' => 'تفعيل الرد التلقائي',
         'stop_auto_reply_desc' => 'إيقاف وتعطيل الرد التلقائي لهذه الصفحة',
 
@@ -1357,10 +1359,8 @@ $translations = [
         'active_tasks' => 'Active Tasks',
 
         // Statuses
-        'status_pending' => 'Pending',
-        'status_processing' => 'Processing',
-        'status_completed' => 'Completed',
         'status_failed' => 'Failed',
+        'upload_interrupted' => 'Upload interrupted due to page exit or connection loss',
 
         // Common
         'welcome' => 'Welcome',
@@ -1601,7 +1601,6 @@ $translations = [
         'id' => 'ID',
         'page' => 'Page',
         'delete_campaign' => 'Delete Campaign',
-        'confirm_delete' => 'Are you sure you want to delete this campaign? This cannot be undone.',
         'campaign_deleted' => 'Campaign deleted successfully.',
         'date_created' => 'Date Created',
         'no_leads_selected' => 'No Leads Selected',
@@ -1622,18 +1621,11 @@ $translations = [
         'image_url' => 'Image URL (Optional)',
         'message_preview' => 'Message Preview',
         'message_placeholder' => 'Hi {{name}}, how can I help you?',
-        'image_url_placeholder' => 'https://example.com/image.jpg',
         'online_status' => 'Online',
-        'customer_msg_sample' => "Hello! I'm interested in your services.",
-        'customer_name_sample' => 'Potential Customer',
-        'hidden' => 'Hidden',
-        'verified_page' => 'Verified Page',
-        'preview_empty_msg' => 'Type your reply here to see preview...',
         'chars_unit' => 'chars',
         'campaign_default_name' => 'Campaign',
         'upload_image' => 'Upload Image',
-        'use_url' => 'Direct URL',
-        'local_file' => 'Local File',
+        'campaign_not_found' => 'Campaign not found.',
 
         // Auto Reply Specific
         'select_page_to_configure' => 'Select a Page to Configure',
@@ -1908,18 +1900,26 @@ $translations = [
         'test_email_address' => 'Test Email Address',
         'send_test_email' => 'Send Test Email',
         'smtp_info_note' => 'Note: Make sure SMTP details are correct to ensure emails reach users.',
-        'confirm_delete' => 'Confirm Delete',
 
         // Misc
+        'bot_intelligence_settings' => 'Advanced Intelligence & Scheduling',
+        'bot_cooldown' => 'Bot Cooldown (After Admin Reply)',
+        'human_takeover_hint' => 'The bot will remain silent if it detects a human (Page Admin) has replied to the conversation.',
+        'hours' => 'Hours',
+        'minutes' => 'Minutes',
+        'seconds' => 'Seconds',
+        'bot_schedule' => 'Bot Scheduling',
+        'bot_schedule_desc' => 'Set the time period when the bot is active. Outside this range, the bot will not reply.',
+        'enable_schedule' => 'Enable Time Scheduling',
+        'start_time' => 'Start Time',
+        'end_time' => 'End Time',
+
+        'bot_exclude_keywords' => 'Exclude Keyword Rules from Cooldown',
+        'bot_exclude_keywords_hint' => 'If enabled, the bot will always reply to keywords even if an admin recently replied. Cooldown will only apply to the "Default Reply".',
         'wa_get_started' => 'Get Started',
         'delay_min' => 'Min Delay',
         'delay_max' => 'Max Delay',
-        'queue_list' => 'Queue List',
-        'lead_info' => 'Recipient',
         'last_update' => 'Status',
-        'status_sent_small' => 'SENT',
-        'status_failed_small' => 'FAILED',
-        'status_pending_small' => 'PENDING',
         'empty_queue_title' => 'Queue is Empty',
         'empty_queue_desc' => 'No numbers currently in queue.',
 

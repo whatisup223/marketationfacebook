@@ -1019,6 +1019,67 @@ require_once __DIR__ . '/../includes/header.php';
                 if (this.formData.page_id) {
                     this.fetchTokenDebug();
                 }
+
+                // Load active uploads from localStorage
+                const saved = localStorage.getItem('scheduler_active_uploads');
+                if (saved) {
+                    try {
+                        const tasks = JSON.parse(saved);
+                        // Any task that was "uploading" is now "failed" because the session died
+                        this.activeUploads = tasks.map(t => {
+                            if (t.status === 'uploading') {
+                                return { ...t, status: 'error', error: '<?php echo __("upload_interrupted"); ?>', progress: t.progress, xhr: null };
+                            }
+                            return { ...t, xhr: null };
+                        });
+
+                        // Clean up old successful/failed tasks after 1 minute of being loaded
+                        setTimeout(() => {
+                            this.activeUploads = this.activeUploads.filter(u => u.status === 'uploading');
+                            this.saveUploads();
+                        }, 60000);
+                    } catch (e) {
+                        console.error('Failed to load uploads', e);
+                    }
+                }
+
+                // Setup persistence watcher
+                this.$watch('activeUploads', () => {
+                    this.saveUploads();
+                });
+                // Check if any "interrupted" tasks actually succeeded
+                setTimeout(() => this.checkInterruptedTasks(), 1000);
+            },
+
+            async checkInterruptedTasks() {
+                const interrupted = this.activeUploads.filter(u => u.status === 'error' && u.error.includes('<?php echo __("status_failed"); ?>') || u.error.includes('توقف') || u.error.includes('interrupted'));
+                if (interrupted.length === 0) return;
+
+                await this.refreshPostList();
+
+                interrupted.forEach(task => {
+                    // Try to find a post in the database that matches this task
+                    const match = this.scheduledPosts.find(p =>
+                        p.content === task.content &&
+                        p.page_id == task.pageId &&
+                        p.post_type === task.postType
+                        // We could also check scheduled_at but it might be formatted differently
+                    );
+
+                    if (match) {
+                        // Found it! So it wasn't actually an error, it just finished after the user left.
+                        this.activeUploads = this.activeUploads.filter(u => u.id !== task.id);
+                    }
+                });
+            },
+
+            saveUploads() {
+                // Save task metadata but NOT the XHR object
+                const toSave = this.activeUploads.map(u => {
+                    const { xhr, ...meta } = u;
+                    return meta;
+                });
+                localStorage.setItem('scheduler_active_uploads', JSON.stringify(toSave));
             },
 
             cancelUpload() {
@@ -1342,8 +1403,11 @@ require_once __DIR__ . '/../includes/header.php';
                 const uploadId = Date.now();
                 const uploadTask = {
                     id: uploadId,
+                    pageId: this.formData.page_id,
                     pageName: this.getPageName(),
                     content: this.formData.content,
+                    postType: this.formData.post_type,
+                    scheduledAt: this.formData.scheduled_at,
                     preview: null,
                     progress: 0,
                     status: 'uploading',
@@ -1417,7 +1481,10 @@ require_once __DIR__ . '/../includes/header.php';
                         const percentComplete = Math.round((e.loaded / e.total) * 100);
                         // Update specific task
                         const task = this.activeUploads.find(u => u.id === uploadId);
-                        if (task) task.progress = percentComplete;
+                        if (task) {
+                            task.progress = percentComplete;
+                            this.saveUploads();
+                        }
                     }
                 });
 

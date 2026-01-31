@@ -60,6 +60,30 @@ if ($action === 'fetch_rules') {
     exit;
 }
 
+if ($action === 'fetch_page_settings') {
+    $page_id = $_GET['page_id'] ?? '';
+    if (!$page_id) {
+        echo json_encode(['success' => false, 'error' => 'Page ID is required']);
+        exit;
+    }
+
+    try {
+        $stmt = $pdo->prepare("SELECT bot_cooldown_seconds, bot_schedule_enabled, bot_schedule_start, bot_schedule_end, bot_exclude_keywords FROM fb_pages WHERE page_id = ?");
+        $stmt->execute([$page_id]);
+        $settings = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$settings) {
+            echo json_encode(['success' => false, 'error' => 'Page not found']);
+            exit;
+        }
+
+        echo json_encode(['success' => true, 'settings' => $settings]);
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+    exit;
+}
+
 if ($action === 'debug_token_info') {
     $page_id = $_GET['page_id'] ?? '';
     if (!$page_id) {
@@ -207,6 +231,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $err = isset($res['error']['message']) ? $res['error']['message'] : json_encode($res);
                 echo json_encode(['success' => false, 'error' => 'FB Error: ' . $err]);
             }
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+        exit;
+    }
+
+    if ($action === 'save_page_settings') {
+        $page_id = $_POST['page_id'] ?? '';
+        $cooldown = (int) ($_POST['cooldown_seconds'] ?? 0);
+        $sch_enabled = (int) ($_POST['schedule_enabled'] ?? 0);
+        $sch_start = $_POST['schedule_start'] ?? '00:00';
+        $sch_end = $_POST['schedule_end'] ?? '23:59';
+        $exclude_kw = (int) ($_POST['exclude_keywords'] ?? 0);
+
+        if (!$page_id) {
+            echo json_encode(['success' => false, 'error' => 'Page ID is required']);
+            exit;
+        }
+
+        try {
+            $stmt = $pdo->prepare("UPDATE fb_pages SET 
+                bot_cooldown_seconds = ?, 
+                bot_schedule_enabled = ?, 
+                bot_schedule_start = ?, 
+                bot_schedule_end = ?,
+                bot_exclude_keywords = ?
+                WHERE page_id = ?");
+            $stmt->execute([$cooldown, $sch_enabled, $sch_start, $sch_end, $exclude_kw, $page_id]);
+            echo json_encode(['success' => true, 'message' => __('settings_updated')]);
         } catch (Exception $e) {
             echo json_encode(['success' => false, 'error' => $e->getMessage()]);
         }

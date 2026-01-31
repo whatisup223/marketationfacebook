@@ -95,7 +95,7 @@ function handleFacebookEvent($data, $pdo)
 
                             // 2. Only Auto-Reply if it's a NEW comment and NOT moderated
                             if ($verb === 'add' && !$is_moderated) {
-                                processAutoReply($pdo, $page_id, $comment_id, $message_text, 'comment');
+                                processAutoReply($pdo, $page_id, $comment_id, $message_text, 'comment', $sender_id);
                             }
                         }
                     }
@@ -105,22 +105,38 @@ function handleFacebookEvent($data, $pdo)
     }
 }
 
-function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source)
+function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $actual_sender_id = null)
 {
-    // 1. Get Page Token
-    $stmt = $pdo->prepare("SELECT page_access_token FROM fb_pages WHERE page_id = ?");
+    // 1. Fetch Page Settings (Token, Schedule, Cooldown)
+    $stmt = $pdo->prepare("SELECT page_access_token, bot_cooldown_seconds, bot_schedule_enabled, bot_schedule_start, bot_schedule_end, bot_exclude_keywords FROM fb_pages WHERE page_id = ?");
     $stmt->execute([$page_id]);
-    $access_token = $stmt->fetchColumn();
-    if (!$access_token)
+    $page = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$page || !$page['page_access_token'])
         return;
 
-    // 2. Fetch Rules (Keyword First)
+    // 2. Global Schedule Check (Always applies)
+    if ($page['bot_schedule_enabled']) {
+        date_default_timezone_set('Africa/Cairo');
+        $now = date('H:i');
+        $start = substr($page['bot_schedule_start'], 0, 5);
+        $end = substr($page['bot_schedule_end'], 0, 5);
+
+        $is_inside = ($start <= $end) ? ($now >= $start && $now <= $end) : ($now >= $start || $now <= $end);
+        if (!$is_inside)
+            return;
+    }
+
+    $access_token = $page['page_access_token'];
+
+    // 3. Find Rule Match
+    // 3.1 Try Keywords First
     $stmt = $pdo->prepare("SELECT * FROM auto_reply_rules WHERE page_id = ? AND reply_source = ? AND trigger_type = 'keyword' ORDER BY created_at DESC");
     $stmt->execute([$page_id, $source]);
     $rules = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     $reply_msg = '';
     $hide_comment = 0;
+    $is_keyword_match = false;
 
     foreach ($rules as $rule) {
         $keywords = explode(',', $rule['keywords']);
@@ -128,16 +144,16 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source)
             $kw = trim($kw);
             if (empty($kw))
                 continue;
-            // Case-insensitive match
             if (mb_stripos($incoming_text, $kw) !== false) {
                 $reply_msg = $rule['reply_message'];
                 $hide_comment = $rule['hide_comment'];
+                $is_keyword_match = true;
                 break 2;
             }
         }
     }
 
-    // 3. If no keyword match, try Default
+    // 3.2 If no keyword match, try Default Rule
     if (!$reply_msg) {
         $stmt = $pdo->prepare("SELECT * FROM auto_reply_rules WHERE page_id = ? AND reply_source = ? AND trigger_type = 'default' LIMIT 1");
         $stmt->execute([$page_id, $source]);
@@ -151,15 +167,47 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source)
     if (!$reply_msg)
         return;
 
+    // 4. Cooldown / Human Takeover Logic
+    // Apply cooldown if:
+    // - Setting is > 0
+    // - AND (it's a default reply OR it's a keyword reply but bot_exclude_keywords is OFF)
+    $should_check_cooldown = ($page['bot_cooldown_seconds'] > 0);
+    if ($is_keyword_match && $page['bot_exclude_keywords']) {
+        $should_check_cooldown = false; // Bypass cooldown for keywords if requested
+    }
+
+    if ($should_check_cooldown) {
+        // Cooldown check is only relevant for Messenger or identification-based sources
+        // For comments, we check the user thread via target_id (sender_id)
+        $thread_user_id = ($source === 'message') ? $target_id : $actual_sender_id;
+
+        if ($thread_user_id) {
+            $fb = new FacebookAPI();
+            $convs = $fb->makeRequest("{$page_id}/conversations", [
+                'user_id' => $thread_user_id,
+                'fields' => 'messages.limit(1){from,created_time}'
+            ], $access_token);
+
+            if (isset($convs['data'][0]['messages']['data'][0])) {
+                $last_msg = $convs['data'][0]['messages']['data'][0];
+                $last_sender_id = $last_msg['from']['id'] ?? '';
+
+                if ($last_sender_id == $page_id) {
+                    $created_time = strtotime($last_msg['created_time']);
+                    if ((time() - $created_time) < $page['bot_cooldown_seconds']) {
+                        return; // SILENCE
+                    }
+                }
+            }
+        }
+    }
+
+    // 5. Execute Reply
     $fb = new FacebookAPI();
     if ($source === 'message') {
-        // Send Messenger Reply
         $fb->sendMessage($page_id, $access_token, $target_id, $reply_msg);
     } else {
-        // Handle Comment
-        // 1. Reply to comment
         $fb->replyToComment($target_id, $reply_msg, $access_token);
-        // 2. Hide if needed
         if ($hide_comment) {
             $fb->hideComment($target_id, $access_token, true);
         }
@@ -231,6 +279,8 @@ function processModeration($pdo, $page_id, $comment_id, $message_text, $sender_n
 
     return false;
 }
+
+
 
 // ----------------------------------------------------------------------
 // Evolution API (WhatsApp) Handler

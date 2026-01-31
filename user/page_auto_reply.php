@@ -366,6 +366,107 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 </template>
 
                 <div x-show="selectedPageId" x-transition.opacity class="space-y-8" style="display: none;">
+
+                    <!-- Advanced Intelligence & Scheduling -->
+                    <div
+                        class="glass-panel p-8 rounded-[2rem] border border-white/10 bg-indigo-500/10 backdrop-blur-2xl hover:border-indigo-400/30 transition-all shadow-2xl relative overflow-hidden group">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-indigo-500"></div>
+
+                        <div class="flex justify-between items-start mb-6">
+                            <div>
+                                <h3 class="text-2xl font-bold text-white mb-2">
+                                    <?php echo __('bot_intelligence_settings'); ?></h3>
+                                <p class="text-gray-400 text-sm max-w-md"><?php echo __('human_takeover_hint'); ?></p>
+                            </div>
+                            <button @click="savePageSettings()" :disabled="savingPageSettings"
+                                class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition-all shadow-lg shadow-indigo-600/20 font-bold flex items-center gap-2">
+                                <span x-show="!savingPageSettings"><?php echo __('save_changes'); ?></span>
+                                <svg x-show="savingPageSettings" class="animate-spin h-4 w-4" fill="none"
+                                    viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                        stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                    </path>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <!-- Cooldown Section -->
+                            <div class="space-y-4">
+                                <label
+                                    class="block text-sm font-bold text-white"><?php echo __('bot_cooldown'); ?></label>
+                                <div class="flex gap-4">
+                                    <div class="flex-1">
+                                        <input type="number" x-model="cooldownHours" min="0"
+                                            class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-center focus:ring-2 focus:ring-indigo-500">
+                                        <span
+                                            class="block text-[10px] text-gray-500 text-center mt-1 uppercase"><?php echo __('hours'); ?></span>
+                                    </div>
+                                    <div class="flex-1">
+                                        <input type="number" x-model="cooldownMinutes" min="0" max="59"
+                                            class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-center focus:ring-2 focus:ring-indigo-500">
+                                        <span
+                                            class="block text-[10px] text-gray-500 text-center mt-1 uppercase"><?php echo __('minutes'); ?></span>
+                                    </div>
+                                    <div class="flex-1">
+                                        <input type="number" x-model="cooldownSeconds" min="0" max="59"
+                                            class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-center focus:ring-2 focus:ring-indigo-500">
+                                        <span
+                                            class="block text-[10px] text-gray-500 text-center mt-1 uppercase"><?php echo __('seconds'); ?></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Schedule & Keywords Section -->
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <label
+                                        class="block text-sm font-bold text-white"><?php echo __('bot_schedule'); ?></label>
+                                    <div
+                                        class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                                        <input type="checkbox" x-model="schEnabled" id="toggleSchedule"
+                                            class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
+                                        <label for="toggleSchedule"
+                                            :class="schEnabled ? 'bg-indigo-600' : 'bg-gray-700'"
+                                            class="toggle-label block overflow-hidden h-5 rounded-full cursor-pointer transition-colors"></label>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4 mb-4"
+                                    :class="!schEnabled ? 'opacity-40 pointer-events-none' : ''">
+                                    <div>
+                                        <input type="time" x-model="schStart"
+                                            class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:ring-2 focus:ring-indigo-500">
+                                        <span
+                                            class="block text-[10px] text-gray-500 mt-1 uppercase"><?php echo __('start_time'); ?></span>
+                                    </div>
+                                    <div>
+                                        <input type="time" x-model="schEnd"
+                                            class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:ring-2 focus:ring-indigo-500">
+                                        <span
+                                            class="block text-[10px] text-gray-500 mt-1 uppercase"><?php echo __('end_time'); ?></span>
+                                    </div>
+                                </div>
+
+                                <div class="pt-4 border-t border-white/5">
+                                    <label class="flex items-center gap-3 cursor-pointer group/toggle text-left">
+                                        <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in flex-shrink-0">
+                                            <input type="checkbox" x-model="botExcludeKeywords" id="toggleExcludeKeywords"
+                                                class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
+                                            <label for="toggleExcludeKeywords" :class="botExcludeKeywords ? 'bg-indigo-600' : 'bg-gray-700'"
+                                                class="toggle-label block overflow-hidden h-5 rounded-full cursor-pointer transition-colors"></label>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <span class="text-sm font-bold text-white block group-hover/toggle:text-indigo-400 transition-colors"><?php echo __('bot_exclude_keywords'); ?></span>
+                                            <span class="text-[10px] text-gray-500 block leading-tight mt-0.5"><?php echo __('bot_exclude_keywords_hint'); ?></span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Default Reply Card -->
                     <div
                         class="glass-panel p-8 rounded-[2rem] border border-white/10 bg-gray-800/40 backdrop-blur-2xl hover:border-indigo-500/30 transition-all shadow-2xl relative overflow-hidden group">
@@ -641,6 +742,16 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
             verifyToken: 'Loading...',
             pages: <?php echo json_encode($pages); ?>,
 
+            // Bot Intelligence Settings
+            cooldownHours: 0,
+            cooldownMinutes: 0,
+            cooldownSeconds: 0,
+            schEnabled: false,
+            schStart: '00:00',
+            schEnd: '23:59',
+            botExcludeKeywords: false,
+            savingPageSettings: false,
+
             // Preview State
             previewMode: 'default', // 'default' or 'rule'
             previewCustomerMsg: '',
@@ -659,6 +770,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     this.selectedPageId = lastPage;
                     this.fetchRules();
                     this.fetchTokenDebug();
+                    this.fetchPageSettings();
                 }
 
                 this.$watch('defaultReplyText', () => {
@@ -731,6 +843,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 localStorage.setItem('ar_last_page', this.selectedPageId);
                 this.rules = [];
                 this.defaultReplyText = '';
+                this.fetchPageSettings();
                 fetch(`ajax_auto_reply.php?action=fetch_rules&page_id=${this.selectedPageId}`)
                     .then(res => res.json())
                     .then(data => {
@@ -807,6 +920,45 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 fetch('ajax_auto_reply.php?action=delete_rule', { method: 'POST', body: formData })
                     .then(res => res.json())
                     .then(data => { if (data.success) this.fetchRules(); });
+            },
+
+            fetchPageSettings() {
+                if (!this.selectedPageId) return;
+                fetch(`ajax_auto_reply.php?action=fetch_page_settings&page_id=${this.selectedPageId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            const s = data.settings;
+                            const totalSec = parseInt(s.bot_cooldown_seconds || 0);
+                            this.cooldownHours = Math.floor(totalSec / 3600);
+                            this.cooldownMinutes = Math.floor((totalSec % 3600) / 60);
+                            this.cooldownSeconds = totalSec % 60;
+                            this.schEnabled = (s.bot_schedule_enabled == 1);
+                            this.schStart = s.bot_schedule_start ? s.bot_schedule_start.substring(0, 5) : '00:00';
+                            this.schEnd = s.bot_schedule_end ? s.bot_schedule_end.substring(0, 5) : '23:59';
+                            this.botExcludeKeywords = (s.bot_exclude_keywords == 1);
+                        }
+                    });
+            },
+
+            savePageSettings() {
+                if (!this.selectedPageId) return;
+                this.savingPageSettings = true;
+                const totalSec = (parseInt(this.cooldownHours) * 3600) + (parseInt(this.cooldownMinutes) * 60) + parseInt(this.cooldownSeconds);
+                let formData = new FormData();
+                formData.append('page_id', this.selectedPageId);
+                formData.append('cooldown_seconds', totalSec);
+                formData.append('schedule_enabled', this.schEnabled ? '1' : '0');
+                formData.append('schedule_start', this.schStart);
+                formData.append('schedule_end', this.schEnd);
+                formData.append('exclude_keywords', this.botExcludeKeywords ? '1' : '0');
+
+                fetch('ajax_auto_reply.php?action=save_page_settings', { method: 'POST', body: formData })
+                    .then(res => res.json())
+                    .then(data => {
+                        this.savingPageSettings = false;
+                        if (!data.success) alert(data.error);
+                    }).catch(() => { this.savingPageSettings = false; });
             }
         }
     }
