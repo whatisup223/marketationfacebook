@@ -1,0 +1,345 @@
+2026-01-31 09:50:58 - NEW Post. PageID: 114759763777160. Media Count: 1
+Image 0: CURLFile
+NEW FB Response: Array
+(
+    [id] => 1478913974242390
+)
+
+
+2026-01-31 09:51:58 - NEW Post. PageID: 114759763777160. Media Count: 1
+Image 0: CURLFile
+NEW FB Response: Array
+(
+    [id] => 1478914497575671
+)
+
+
+2026-01-31 09:55:02 - NEW Post. PageID: 114759763777160. Media Count: 1
+Image 0: CURLFile
+NEW FB Response: Array
+(
+    [id] => 1478916367575484
+)
+
+
+2026-01-31 09:59:17 - NEW Post. PageID: 114759763777160. Media Count: 1
+Image 0: CURLFile
+NEW FB Response: Array
+(
+    [id] => 1478919450908509
+)
+
+
+2026-01-31 10:00:02 - NEW Post. PageID: 114759763777160. Media Count: 0
+NEW FB Response: Array
+(
+    [id] => 114759763777160_1478919947575126
+)
+
+
+2026-01-31 10:01:34 - NEW Post. PageID: 114759763777160. Media Count: 1
+Image 0: CURLFile
+   - Photo Upload Internal Res: Array
+(
+    [id] => 1478921167575004
+)
+
+   - All Photo IDs: 1478921167575004
+NEW FB Response: Array
+(
+    [id] => 114759763777160_1478921197575001
+    [post_supports_client_mutation_id] => 1
+)
+
+
+2026-01-31 10:06:57 - NEW Post. PageID: 114759763777160. Media Count: 1
+Image 0: CURLFile
+   - Photo Upload Internal Res: Array
+(
+    [id] => 1478925050907949
+)
+
+   - All Photo IDs: 1478925050907949
+NEW FB Response: Array
+(
+    [id] => 114759763777160_1478925100907944
+    [post_supports_client_mutation_id] => 1
+)
+
+
+2026-01-31 10:07:45 - NEW Post. PageID: 114759763777160. Media Count: 4
+Image 0: CURLFile
+Image 1: CURLFile
+Image 2: CURLFile
+Image 3: CURLFile
+   - Photo Upload Internal Res: Array
+(
+    [id] => 1478925724241215
+)
+
+   - Photo Upload Internal Res: Array
+(
+    [id] => 1478925877574533
+)
+
+2026-01-31 10:08:43 - NEW Post. PageID: 114759763777160. Media Count: 2
+Image 0: CURLFile
+Image 1: CURLFile
+   - Photo Upload Internal Res: Array
+(
+    [id] => 1478926400907814
+)
+
+   - Photo Upload Internal Res: Array
+(
+    [id] => 1478926584241129
+)
+
+   - All Photo IDs: 1478926400907814, 1478926584241129
+NEW FB Response: Array
+(
+    [id] => 114759763777160_1478926634241124
+    [post_supports_client_mutation_id] => 1
+)
+
+
+2026-01-31 10:09:29 - NEW Post. PageID: 114759763777160. Media Count: 6
+Image 0: CURLFile
+Image 1: CURLFile
+Image 2: CURLFile
+Image 3: CURLFile
+Image 4: CURLFile
+Image 5: CURLFile
+   - Photo Upload Internal Res: Array
+(
+    [id] => 1478927000907754
+)
+
+   - Photo Upload Internal Res: Array
+(
+    [id] => 1478927240907730
+)
+
+2026-01-31 10:10:24 - NEW Post. PageID: 114759763777160. Media Count: 6
+Image 0: CURLFile
+Image 1: CURLFile
+Image 2: CURLFile
+Image 3: CURLFile
+Image 4: CURLFile
+Image 5: CURLFile
+   - Photo Upload Internal Res: Array
+(
+    [id] => 1478927737574347
+)
+
+   - Photo Upload Internal Res: Array
+(
+    [id] => 1478927897574331
+)
+
+2026-01-31 10:12:21 - NEW Post. PageID: 114759763777160. Media Count: 1
+Image 0: CURLFile
+   - Photo Upload Internal Res: Array
+(
+    [id] => 1478929000907554
+)
+
+   - All Photo IDs: 1478929000907554
+NEW FB Response: Array
+(
+    [id] => 114759763777160_1478929040907550
+    [post_supports_client_mutation_id] => 1
+)
+
+
+2026-01-31 10:18:19 - NEW Post. PageID: 114759763777160. Media Count: 0
+NEW FB Response: Array
+(
+    [id] => 114759763777160_1478932460907208
+)
+
+
+2026-01-31 10:24:59 - NEW Post. PageID: 101502499706193. Media Count: 0
+NEW FB Response: Array
+(
+    [id] => 101502499706193_750325884815937
+)
+
+
+2026-01-31 10:25:20 - NEW Post. PageID: 101502499706193. Media Count: 1
+Image 0: CURLFile
+   - Photo Upload Internal Res: Array
+(
+    [id] => 750326344815891
+)
+
+   - All Photo IDs: 750326344815891
+NEW FB Response: Array
+(
+    [id] => 101502499706193_750326371482555
+    [post_supports_client_mutation_id] => 1
+)
+
+
+2026-01-31 10:28:44 - NEW Post. PageID: 114759763777160. Media Count: 0
+NEW FB Response: Array
+(
+    [id] => 114759763777160_1478938674239920
+)
+
+
+2026-01-31 10:30:45 - NEW Post. PageID: 114759763777160. Media Count: 0
+NEW FB Response: Array
+(
+    [id] => 114759763777160_1478940030906451
+)
+
+
+2026-01-31 10:31:20 - NEW Post. PageID: 114759763777160. Media Count: 0
+NEW FB Response: Array
+(
+    [id] => 114759763777160_1478940380906416
+)
+
+
+2026-01-31 10:32:05 - NEW Post. PageID: 114759763777160. Media Count: 0
+NEW FB Response: Array
+(
+    [id] => 114759763777160_1478940824239705
+)
+
+
+2026-01-31 10:32:41 - NEW Post. PageID: 114759763777160. Media Count: 0
+NEW FB Response: Array
+(
+    [id] => 114759763777160_1478941307572990
+)
+
+
+2026-01-31 10:33:29 - NEW Post. PageID: 114759763777160. Media Count: 0
+NEW FB Response: Array
+(
+    [id] => 114759763777160_1478941804239607
+)
+
+
+2026-01-31 10:34:26 - NEW Post. PageID: 114759763777160. Media Count: 0
+NEW FB Response: Array
+(
+    [id] => 114759763777160_1478942454239542
+)
+
+
+2026-01-31 10:35:52 - NEW Post. PageID: 114759763777160. Media Count: 0
+NEW FB Response: Array
+(
+    [id] => 114759763777160_1478943320906122
+)
+
+
+2026-01-31 10:36:11 - NEW Post. PageID: 114759763777160. Media Count: 0
+NEW FB Response: Array
+(
+    [id] => 114759763777160_1478943570906097
+)
+
+
+2026-01-31 10:38:43 - NEW Post. PageID: 114759763777160. Media Count: 1
+Image 0: CURLFile
+   - Photo Upload Internal Res: Array
+(
+    [id] => 1478945430905911
+)
+
+   - All Photo IDs: 1478945430905911
+NEW FB Response: Array
+(
+    [id] => 114759763777160_1478945490905905
+    [post_supports_client_mutation_id] => 1
+)
+
+
+2026-01-31 10:53:19 - NEW Post. PageID: 114759763777160. Media Count: 2
+Image 0: CURLFile
+Image 1: CURLFile
+   - Photo Upload Internal Res: Array
+(
+    [id] => 1478953984238389
+)
+
+   - Photo Upload Internal Res: Array
+(
+    [id] => 1478954037571717
+)
+
+   - All Photo IDs: 1478953984238389, 1478954037571717
+NEW FB Response: Array
+(
+    [id] => 114759763777160_1478954080905046
+    [post_supports_client_mutation_id] => 1
+)
+
+
+2026-01-31 10:56:46 - Scheduling Post. PageID: 114759763777160. Media Count: 1
+Image 0: CURLFile
+   - Photo Upload Internal Res: Array
+(
+    [id] => 1478956450904809
+)
+
+   - All Photo IDs: 1478956450904809
+FB Response: Array
+(
+    [id] => 114759763777160_1478956490904805
+    [post_supports_client_mutation_id] => 1
+)
+
+
+2026-01-31 10:57:20 - Scheduling Post. PageID: 114759763777160. Media Count: 2
+Image 0: CURLFile
+Image 1: CURLFile
+   - Photo Upload Internal Res: Array
+(
+    [id] => 1478956890904765
+)
+
+   - Photo Upload Internal Res: Array
+(
+    [id] => 1478956970904757
+)
+
+   - All Photo IDs: 1478956890904765, 1478956970904757
+FB Response: Array
+(
+    [id] => 114759763777160_1478957020904752
+    [post_supports_client_mutation_id] => 1
+)
+
+
+2026-01-31 11:01:23 - Scheduling Post. PageID: 114759763777160. Media Count: 3
+Image 0: CURLFile
+Image 1: CURLFile
+Image 2: CURLFile
+   - Photo Upload Internal Res: Array
+(
+    [id] => 1478959537571167
+)
+
+   - Photo Upload Internal Res: Array
+(
+    [id] => 1478959590904495
+)
+
+   - Photo Upload Internal Res: Array
+(
+    [id] => 1478959714237816
+)
+
+   - All Photo IDs: 1478959537571167, 1478959590904495, 1478959714237816
+FB Response: Array
+(
+    [id] => 114759763777160_1478959737571147
+    [post_supports_client_mutation_id] => 1
+)
+
+

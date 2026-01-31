@@ -358,8 +358,9 @@ class FacebookAPI
         $params = [];
         $endpoint = "$page_id/feed";
 
-        // Check if array of media (Album)
-        if (is_array($image) && count($image) > 1) {
+        // Check if array of media (Album or Single via Array)
+        // Fix: Allow count >= 1 because scheduler sends array even for single file
+        if (is_array($image) && count($image) >= 1) {
             // Upload each photo independently to get ID
             $media_ids = [];
             foreach ($image as $img_file) {
@@ -367,10 +368,14 @@ class FacebookAPI
                 $img_param = [];
                 if ($img_file instanceof CURLFile) {
                     $img_param['source'] = $img_file;
-                } elseif (is_string($img_file) && !filter_var($img_file, FILTER_VALIDATE_URL)) {
-                    $abs_path = realpath($img_file);
-                    if ($abs_path) {
-                        $img_param['source'] = new CURLFile($abs_path);
+                } elseif (is_string($img_file)) {
+                    if (filter_var($img_file, FILTER_VALIDATE_URL)) {
+                        $img_param['url'] = $img_file;
+                    } else {
+                        $abs_path = realpath($img_file);
+                        if ($abs_path) {
+                            $img_param['source'] = new CURLFile($abs_path);
+                        }
                     }
                 }
 
@@ -378,17 +383,27 @@ class FacebookAPI
                     $img_param['published'] = 'false';
                     // Upload to /photos
                     $res = $this->makeRequest("$page_id/photos", $img_param, $access_token, 'POST');
+
+                    // DEBUG 
+                    $debug_log = __DIR__ . '/../debug_log.txt';
+                    file_put_contents($debug_log, "   - Photo Upload Internal Res: " . print_r($res, true) . "\n", FILE_APPEND);
+
                     if (isset($res['id'])) {
                         $media_ids[] = $res['id'];
                     }
                 }
             }
 
+            // DEBUG 
+            $debug_log = __DIR__ . '/../debug_log.txt';
+            file_put_contents($debug_log, "   - All Photo IDs: " . implode(', ', $media_ids) . "\n", FILE_APPEND);
+
             if (!empty($media_ids)) {
                 // Publish Feed Post with attached_media
                 $feed_params = ['message' => $message];
-                foreach ($media_ids as $index => $fbid) {
-                    $feed_params["attached_media[$index]"] = json_encode(['media_fbid' => $fbid]);
+                $feed_params['attached_media'] = [];
+                foreach ($media_ids as $fbid) {
+                    $feed_params['attached_media'][] = ['media_fbid' => $fbid];
                 }
 
                 if ($scheduled_at) {
@@ -397,6 +412,8 @@ class FacebookAPI
                 }
 
                 return $this->makeRequest("$page_id/feed", $feed_params, $access_token, 'POST');
+            } else {
+                return ['error' => ['message' => 'Failed to upload any media files to Facebook. Check debug_log.txt for internal errors.']];
             }
         }
 
@@ -435,8 +452,9 @@ class FacebookAPI
             }
         } elseif ($image) {
             if (is_string($image) && filter_var($image, FILTER_VALIDATE_URL)) {
-                $params['message'] = $message;
-                $params['link'] = $image;
+                $endpoint = "$page_id/photos";
+                $params['caption'] = $message;
+                $params['url'] = $image;
             } else {
                 $endpoint = "$page_id/photos";
                 $params['caption'] = $message;
@@ -444,7 +462,9 @@ class FacebookAPI
                     $params['source'] = $image;
                 } else {
                     $abs_path = realpath($image);
-                    $params['source'] = new CURLFile($abs_path);
+                    if ($abs_path) {
+                        $params['source'] = new CURLFile($abs_path);
+                    }
                 }
             }
         } else {
@@ -535,6 +555,11 @@ class FacebookAPI
     public function deleteScheduledPost($post_id, $access_token)
     {
         return $this->makeRequest($post_id, [], $access_token, 'DELETE');
+    }
+
+    public function updatePost($post_id, $access_token, $message)
+    {
+        return $this->makeRequest($post_id, ['message' => $message], $access_token, 'POST');
     }
 
     public function debugToken($input_token, $app_access_token)

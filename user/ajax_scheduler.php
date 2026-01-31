@@ -1,5 +1,6 @@
 <?php
 // user/ajax_scheduler.php
+error_reporting(0);
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/facebook_api.php';
 
@@ -16,6 +17,18 @@ $fb = new FacebookAPI();
 
 // 1. Handle GET Actions
 $action_get = $_GET['action'] ?? '';
+
+if ($action_get === 'list') {
+    $stmt = $pdo->prepare("SELECT s.*, p.page_name 
+    FROM fb_scheduled_posts s 
+    LEFT JOIN (SELECT page_id, page_name FROM fb_pages GROUP BY page_id) p ON s.page_id = p.page_id 
+    WHERE s.user_id = ? 
+    ORDER BY s.scheduled_at DESC");
+    $stmt->execute([$user_id]);
+    $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    echo json_encode(['status' => 'success', 'posts' => $posts]);
+    exit;
+}
 
 if ($action_get === 'sync') {
     $id = $_GET['id'] ?? 0;
@@ -38,7 +51,7 @@ if ($action_get === 'sync') {
     }
 
     // Check FB Status
-    $fb_res = $fb->getObject($post['fb_post_id'], $token);
+    $fb_res = $fb->getObject($post['fb_post_id'], $token, ['message', 'attachments']);
 
     if (isset($fb_res['error'])) {
         $err_code = $fb_res['error']['code'] ?? 0;
@@ -51,10 +64,46 @@ if ($action_get === 'sync') {
             echo json_encode(['status' => 'error', 'message' => $fb_res['error']['message']]);
         }
     } else {
-        // Post is alive
-        $stmt = $pdo->prepare("UPDATE fb_scheduled_posts SET status = 'success' WHERE id = ?");
-        $stmt->execute([$id]);
-        echo json_encode(['status' => 'success', 'new_state' => 'alive']);
+        // Post is alive - FETCH CURRENT CONTENT
+        $new_content = $fb_res['message'] ?? ($fb_res['description'] ?? ($fb_res['caption'] ?? $post['content']));
+
+        // --- MEDIA SYNC ---
+        $new_media_url = $post['media_url']; // Default to current
+        if (isset($fb_res['attachments']['data'][0])) {
+            $attachment = $fb_res['attachments']['data'][0];
+            $media_items = [];
+
+            // If it's an album (multiple photos)
+            if ($attachment['type'] === 'album' && isset($attachment['subattachments']['data'])) {
+                foreach ($attachment['subattachments']['data'] as $sub) {
+                    if (isset($sub['media']['image']['src'])) {
+                        $media_items[] = $sub['media']['image']['src'];
+                    }
+                }
+            }
+            // If it's a single image/video that has a source
+            elseif (isset($attachment['media']['image']['src'])) {
+                $media_items[] = $attachment['media']['image']['src'];
+            }
+
+            if (!empty($media_items)) {
+                if (count($media_items) === 1) {
+                    $new_media_url = $media_items[0];
+                } else {
+                    $new_media_url = json_encode($media_items);
+                }
+            }
+        }
+
+        $stmt = $pdo->prepare("UPDATE fb_scheduled_posts SET status = 'success', content = ?, media_url = ? WHERE id = ?");
+        $stmt->execute([$new_content, $new_media_url, $id]);
+
+        echo json_encode([
+            'status' => 'success',
+            'new_state' => 'alive',
+            'content_updated' => ($new_content !== $post['content']),
+            'media_updated' => ($new_media_url !== $post['media_url'])
+        ]);
     }
     exit;
 }
@@ -81,9 +130,44 @@ if ($action_get === 'delete') {
         }
     }
 
-    $stmt = $pdo->prepare("DELETE FROM fb_scheduled_posts WHERE id = ?");
-    $stmt->execute([$id]);
     echo json_encode(['status' => 'success']);
+    exit;
+}
+
+if ($action_get === 'delete_bulk') {
+    $ids_str = $_GET['ids'] ?? '';
+    $from_fb = ($_GET['from_fb'] ?? '0') === '1';
+
+    if (empty($ids_str)) {
+        echo json_encode(['status' => 'error', 'message' => 'No IDs provided']);
+        exit;
+    }
+
+    $ids = explode(',', $ids_str);
+    $deleted_count = 0;
+
+    foreach ($ids as $id) {
+        $id = (int) $id;
+        $stmt = $pdo->prepare("SELECT * FROM fb_scheduled_posts WHERE id = ? AND user_id = ?");
+        $stmt->execute([$id, $user_id]);
+        $post = $stmt->fetch();
+
+        if ($post) {
+            if ($from_fb && $post['fb_post_id']) {
+                $stmt_token = $pdo->prepare("SELECT page_access_token FROM fb_pages WHERE page_id = ?");
+                $stmt_token->execute([$post['page_id']]);
+                $token = $stmt_token->fetchColumn();
+                if ($token) {
+                    $fb->deleteScheduledPost($post['fb_post_id'], $token);
+                }
+            }
+            $stmt_del = $pdo->prepare("DELETE FROM fb_scheduled_posts WHERE id = ?");
+            $stmt_del->execute([$id]);
+            $deleted_count++;
+        }
+    }
+
+    echo json_encode(['status' => 'success', 'deleted_count' => $deleted_count]);
     exit;
 }
 
@@ -146,37 +230,76 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         // Handle uploaded files
-        if (isset($_FILES['media_file'])) {
+        // Helper to normalize file input
+        $uploaded_files = null;
+        if (isset($_FILES['media_files'])) {
+            $uploaded_files = $_FILES['media_files'];
+        } elseif (isset($_FILES['media_file'])) {
+            $uploaded_files = $_FILES['media_file'];
+        }
+
+        if ($uploaded_files) {
             $upload_dir = __DIR__ . '/../uploads/scheduler/';
             if (!is_dir($upload_dir))
                 mkdir($upload_dir, 0777, true);
 
-            // Check if multiple files
-            if (is_array($_FILES['media_file']['name'])) {
-                $count = count($_FILES['media_file']['name']);
+            // Check if standard array structure (from multiple file input)
+            if (is_array($uploaded_files['name'])) {
+                $count = count($uploaded_files['name']);
                 for ($i = 0; $i < $count; $i++) {
-                    if ($_FILES['media_file']['error'][$i] === UPLOAD_ERR_OK) {
-                        $ext = pathinfo($_FILES['media_file']['name'][$i], PATHINFO_EXTENSION);
+                    $err = $uploaded_files['error'][$i];
+                    if ($err === UPLOAD_ERR_OK) {
+                        $ext = pathinfo($uploaded_files['name'][$i], PATHINFO_EXTENSION);
                         $filename = 'post_' . time() . '_' . uniqid() . '_' . $i . '.' . $ext;
                         $target = $upload_dir . $filename;
-                        if (move_uploaded_file($_FILES['media_file']['tmp_name'][$i], $target)) {
-                            $images_to_fb[] = new CURLFile($target);
+                        if (move_uploaded_file($uploaded_files['tmp_name'][$i], $target)) {
+                            $images_to_fb[] = new CURLFile(realpath($target));
                             $local_paths[] = '../uploads/scheduler/' . $filename;
+                        } else {
+                            // move_uploaded_file failed
+                            echo json_encode(['status' => 'error', 'message' => "Failed to save file on server."]);
+                            exit;
                         }
+                    } elseif ($err !== UPLOAD_ERR_NO_FILE) {
+                        // Real upload error (e.g. size)
+                        echo json_encode(['status' => 'error', 'message' => "Upload Error Code: $err. Check post_max_size."]);
+                        exit;
                     }
                 }
             } else {
-                // Single file
-                if ($_FILES['media_file']['error'] === UPLOAD_ERR_OK) {
-                    $ext = pathinfo($_FILES['media_file']['name'], PATHINFO_EXTENSION);
+                // Single file structure
+                $err = $uploaded_files['error'];
+                if ($err === UPLOAD_ERR_OK) {
+                    $ext = pathinfo($uploaded_files['name'], PATHINFO_EXTENSION);
                     $filename = 'post_' . time() . '_' . uniqid() . '.' . $ext;
                     $target = $upload_dir . $filename;
-                    if (move_uploaded_file($_FILES['media_file']['tmp_name'], $target)) {
-                        $images_to_fb[] = new CURLFile($target);
+                    if (move_uploaded_file($uploaded_files['tmp_name'], $target)) {
+                        $images_to_fb[] = new CURLFile(realpath($target));
                         $local_paths[] = '../uploads/scheduler/' . $filename;
+                    } else {
+                        echo json_encode(['status' => 'error', 'message' => "Failed to save file on server."]);
+                        exit;
                     }
+                } elseif ($err !== UPLOAD_ERR_NO_FILE) {
+                    echo json_encode(['status' => 'error', 'message' => "Upload Error Code: $err"]);
+                    exit;
                 }
             }
+
+            if (empty($images_to_fb)) {
+                echo json_encode(['status' => 'error', 'message' => "No valid images could be processed."]);
+                exit;
+            }
+        }
+
+        // Verify if we expected media but got none
+        $media_expected = $_POST['media_expected'] ?? 'false';
+        if ($media_expected === 'true' && empty($images_to_fb)) {
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'فشل رفع الوسائط. الخادم لم يستقبل أي صور. يرجى التحقق من حجم الملفات أو الاتصال بالإنترنت.'
+            ]);
+            exit;
         }
 
         // Determine what to pass to FB
@@ -184,7 +307,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // For PROPER support, we'd need to update FB Class.
         // For now, if > 1, pass the array and let FB Class deal with it (or assume first one if not supported yet).
 
-        $image_to_pass = (count($images_to_fb) > 1) ? $images_to_fb : ($images_to_fb[0] ?? null);
+        $image_to_pass = $images_to_fb; // Always pass as array for consistent FB API handling
         $final_local_path = (count($local_paths) > 1) ? json_encode($local_paths) : ($local_paths[0] ?? '');
 
         if ($action_post === 'edit' && $id) {
@@ -204,8 +327,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $final_local_path = $old_post['media_url'];
                 $image_to_pass = $old_post['media_url'];
 
-                // If old valid JSON, decode it? For now assume handled by FB API or is single string
-                // Ideally we should decode here if we want to work with array, but FB API takes URL string too.
+                // Handle old multi-image JSON
+                if (is_string($image_to_pass) && strpos($image_to_pass, '[') === 0) {
+                    $decoded = json_decode($image_to_pass, true);
+                    if (is_array($decoded)) {
+                        $image_to_pass = $decoded;
+                    }
+                }
             }
 
             // Check if media actually changed
@@ -217,26 +345,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $fb->deleteScheduledPost($old_post['fb_post_id'], $token);
                 }
                 // CREATE NEW ON FB
+                // DEBUGGING LOG
+                $debug_log = __DIR__ . '/../debug_log.txt';
+                $log_msg = date('Y-m-d H:i:s') . " - Scheduling Post. PageID: $page_id. Media Count: " . count($images_to_fb) . "\n";
+                // Capture image types
+                foreach ($images_to_fb as $k => $v) {
+                    $type = is_object($v) ? get_class($v) : gettype($v);
+                    $log_msg .= "Image $k: $type\n";
+                }
+                file_put_contents($debug_log, $log_msg, FILE_APPEND);
+
                 $fb_res = $fb->publishPost($page_id, $token, $content, $image_to_pass, $timestamp, $post_type);
+
+                // Log Response
+                file_put_contents($debug_log, "FB Response: " . print_r($fb_res, true) . "\n\n", FILE_APPEND);
+
                 if (isset($fb_res['id'])) {
                     $stmt = $pdo->prepare("UPDATE fb_scheduled_posts SET post_type = ?, content = ?, media_url = ?, scheduled_at = ?, fb_post_id = ? WHERE id = ?");
                     $stmt->execute([$post_type, $content, $final_local_path, date('Y-m-d H:i:s', $timestamp), $fb_res['id'], $id]);
                     echo json_encode(['status' => 'success']);
                 } else {
                     $error_msg = $fb_res['error']['message'] ?? 'Facebook API Error';
+                    // Return the FULL debug to the user for now
                     echo json_encode(['status' => 'error', 'message' => $error_msg, 'debug' => $fb_res]);
                 }
             } else {
                 // NOT CHANGED MEDIA, just update fields
+                $is_published = (strtotime($old_post['scheduled_at']) <= time()) || ($old_post['status'] === 'success');
+
                 $params = [
                     'message' => $content,
                     'caption' => $content,
-                    'description' => $content,
-                    'scheduled_publish_time' => (string) $timestamp
+                    'description' => $content
                 ];
+
+                // Only send scheduling if it's still in the future across both indicators
+                if (!$is_published && $timestamp > time()) {
+                    $params['scheduled_publish_time'] = (string) $timestamp;
+                }
+
                 $fb_res = $fb->makeRequest($old_post['fb_post_id'], $params, $token, 'POST');
 
-                if (isset($fb_res['success']) && ($fb_res['success'] === true || $fb_res['success'] === 'true') || isset($fb_res['id'])) {
+                if (isset($fb_res['success']) && ($fb_res['success'] === true || $fb_res['success'] === 'true' || $fb_res['success'] == 1) || isset($fb_res['id'])) {
                     $stmt = $pdo->prepare("UPDATE fb_scheduled_posts SET content = ?, scheduled_at = ? WHERE id = ?");
                     $stmt->execute([$content, date('Y-m-d H:i:s', $timestamp), $id]);
                     echo json_encode(['status' => 'success']);
@@ -264,7 +414,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         } else {
             // NEW POST
+            // DEBUGGING LOG
+            $debug_log = __DIR__ . '/../debug_log.txt';
+            $log_msg = date('Y-m-d H:i:s') . " - NEW Post. PageID: $page_id. Media Count: " . count($images_to_fb) . "\n";
+            foreach ($images_to_fb as $k => $v) {
+                $type = is_object($v) ? get_class($v) : gettype($v);
+                $log_msg .= "Image $k: $type\n";
+            }
+            file_put_contents($debug_log, $log_msg, FILE_APPEND);
+
             $fb_res = $fb->publishPost($page_id, $token, $content, $image_to_pass, $timestamp, $post_type);
+
+            file_put_contents($debug_log, "NEW FB Response: " . print_r($fb_res, true) . "\n\n", FILE_APPEND);
+
             if (isset($fb_res['id'])) {
                 $stmt = $pdo->prepare("INSERT INTO fb_scheduled_posts (user_id, page_id, post_type, content, media_url, scheduled_at, fb_post_id, status) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')");
                 $stmt->execute([$user_id, $page_id, $post_type, $content, $final_local_path, date('Y-m-d H:i:s', $timestamp), $fb_res['id']]);
