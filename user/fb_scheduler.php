@@ -596,9 +596,11 @@ require_once __DIR__ . '/../includes/header.php';
                                                 <?php echo __('fb_like'); ?>
                                             </div>
                                             <div class="text-[10px] text-gray-400 font-black">
-                                                <?php echo __('fb_comment'); ?></div>
+                                                <?php echo __('fb_comment'); ?>
+                                            </div>
                                             <div class="text-[10px] text-gray-400 font-black">
-                                                <?php echo __('fb_share'); ?></div>
+                                                <?php echo __('fb_share'); ?>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -753,23 +755,25 @@ require_once __DIR__ . '/../includes/header.php';
                 if (files.length === 0) return;
 
                 files.forEach(file => {
-                    const reader = new FileReader();
-                    reader.onload = (ev) => {
-                        file.preview = ev.target.result;
-                        this.filesSelected.push(file);
+                    // Use createObjectURL instead of FileReader for performance with large files
+                    file.preview = URL.createObjectURL(file);
+                    this.filesSelected.push(file);
 
-                        // Set first image as main preview if empty
-                        if (!this.formData.media_url) {
-                            this.formData.media_url = file.preview;
-                        }
-                    };
-                    reader.readAsDataURL(file);
+                    // Set first image/video as main preview if empty
+                    if (!this.formData.media_url) {
+                        this.formData.media_url = file.preview;
+                    }
                 });
 
                 e.target.value = '';
             },
 
             removeFile(index) {
+                // Free memory
+                if (this.filesSelected[index].preview && this.filesSelected[index].preview.startsWith('blob:')) {
+                    URL.revokeObjectURL(this.filesSelected[index].preview);
+                }
+
                 this.filesSelected.splice(index, 1);
                 // Update main preview if needed
                 if (this.filesSelected.length > 0) {
