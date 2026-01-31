@@ -187,22 +187,44 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
         // Cooldown check is only relevant for Messenger or identification-based sources
         // For comments, we check the user thread via target_id (sender_id)
         $thread_user_id = ($source === 'message') ? $target_id : $actual_sender_id;
+        $fb = new FacebookAPI();
 
+        // A. Check Messenger Conversation for Admin activity
         if ($thread_user_id) {
-            $fb = new FacebookAPI();
             $convs = $fb->makeRequest("{$page_id}/conversations", [
                 'user_id' => $thread_user_id,
-                'fields' => 'messages.limit(1){from,created_time}'
+                'fields' => 'messages.limit(5){from,created_time}'
             ], $access_token);
 
-            if (isset($convs['data'][0]['messages']['data'][0])) {
-                $last_msg = $convs['data'][0]['messages']['data'][0];
-                $last_sender_id = $last_msg['from']['id'] ?? '';
+            if (isset($convs['data'][0]['messages']['data'])) {
+                foreach ($convs['data'][0]['messages']['data'] as $msg) {
+                    $msg_sender_id = $msg['from']['id'] ?? '';
+                    if ($msg_sender_id == $page_id) {
+                        $created_time = strtotime($msg['created_time']);
+                        if ((time() - $created_time) < $cooldown_seconds) {
+                            return; // SILENCE - Admin spoke recently in Messenger
+                        }
+                        break; // Stop at first page message (newest)
+                    }
+                }
+            }
+        }
 
-                if ($last_sender_id == $page_id) {
-                    $created_time = strtotime($last_msg['created_time']);
-                    if ((time() - $created_time) < $page['bot_cooldown_seconds']) {
-                        return; // SILENCE
+        // B. Check Comment Replies if source is comment
+        if ($source === 'comment') {
+            $replies = $fb->makeRequest("{$target_id}/comments", [
+                'fields' => 'from,created_time',
+                'limit' => 5
+            ], $access_token);
+
+            if (isset($replies['data'])) {
+                foreach ($replies['data'] as $reply) {
+                    if (($reply['from']['id'] ?? '') == $page_id) {
+                        $created_time = strtotime($reply['created_time']);
+                        if ((time() - $created_time) < $cooldown_seconds) {
+                            return; // SILENCE - Admin replied to this comment on the post
+                        }
+                        break;
                     }
                 }
             }
