@@ -342,4 +342,50 @@ if ($action === 'mark_as_resolved') {
     }
     exit;
 }
+
+if ($action === 'fetch_page_stats') {
+    $page_id = $_GET['page_id'] ?? '';
+    if (!$page_id) {
+        echo json_encode(['success' => false, 'error' => 'No page ID']);
+        exit;
+    }
+
+    try {
+        // 1. Total Interacted (Bot Sent Messages)
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM bot_sent_messages WHERE page_id = ?");
+        $stmt->execute([$page_id]);
+        $total_interacted = $stmt->fetchColumn();
+
+        // 2. Active Handovers
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM bot_conversation_states WHERE page_id = ? AND conversation_state = 'handover'");
+        $stmt->execute([$page_id]);
+        $active_handovers = $stmt->fetchColumn();
+
+        // 3. AI Filtered (Let's count sentiment detections or total AI interactions)
+        // For simplicity, we use total interacted as "AI handled"
+        $ai_filtered = $total_interacted;
+
+        // 4. Avg Response Speed
+        // TIMESTAMPDIFF(SECOND, last_user_message_at, updated_at) where updated_at is bot response time
+        $stmt = $pdo->prepare("SELECT AVG(TIMESTAMPDIFF(SECOND, last_user_message_at, updated_at)) 
+                               FROM bot_conversation_states 
+                               WHERE page_id = ? AND last_user_message_at IS NOT NULL");
+        $stmt->execute([$page_id]);
+        $avg_speed = $stmt->fetchColumn();
+        $avg_speed = $avg_speed ? round($avg_speed, 1) : 0;
+
+        echo json_encode([
+            'success' => true,
+            'stats' => [
+                'total_interacted' => (int) $total_interacted,
+                'active_handovers' => (int) $active_handovers,
+                'ai_filtered' => (int) $ai_filtered,
+                'avg_response_speed' => $avg_speed . 's'
+            ]
+        ]);
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+    exit;
+}
 ?>

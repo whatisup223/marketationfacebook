@@ -65,7 +65,8 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                 <div class="flex flex-col sm:flex-row gap-4 items-stretch">
                     <div class="relative group flex-1">
-                        <select x-model="selectedPageId" @change="fetchRules(); fetchTokenDebug();"
+                        <select x-model="selectedPageId"
+                            @change="localStorage.setItem('ar_last_page_msg', selectedPageId); fetchRules(); fetchTokenDebug(); fetchPageSettings(); fetchStats(); fetchHandover();"
                             class="w-full bg-black/40 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-3.5 pr-10 appearance-none transition-all group-hover:border-white/20">
                             <option value=""><?php echo __('select_page'); ?>...</option>
                             <?php foreach ($pages as $page): ?>
@@ -229,7 +230,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     <?php echo __('total_interacted'); ?>
                                 </p>
                                 <h4 class="text-3xl font-black text-white group-hover:scale-110 transition-transform origin-left"
-                                    x-text="Math.floor(Math.random() * 500) + 200"></h4>
+                                    x-text="stats.total_interacted"></h4>
                             </div>
                             <div
                                 class="p-3 bg-indigo-500/10 rounded-2xl text-indigo-400 group-hover:rotate-12 transition-all">
@@ -287,7 +288,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     <?php echo __('ai_filtered'); ?>
                                 </p>
                                 <h4 class="text-3xl font-black text-white group-hover:scale-110 transition-transform origin-left"
-                                    x-text="Math.floor(Math.random() * 80) + 10"></h4>
+                                    x-text="stats.ai_filtered"></h4>
                             </div>
                             <div
                                 class="p-3 bg-indigo-500/10 rounded-2xl text-indigo-400 group-hover:rotate-12 transition-all">
@@ -312,9 +313,8 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
                                     <?php echo __('avg_response_speed'); ?>
                                 </p>
-                                <h4
-                                    class="text-3xl font-black text-white group-hover:scale-110 transition-transform origin-left">
-                                    0.2s</h4>
+                                <h4 class="text-3xl font-black text-white group-hover:scale-110 transition-transform origin-left"
+                                    x-text="stats.avg_response_speed"></h4>
                             </div>
                             <div
                                 class="p-3 bg-indigo-500/10 rounded-2xl text-indigo-400 group-hover:rotate-12 transition-all">
@@ -1099,6 +1099,12 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
             fetchingHandover: false,
             savingPageSettings: false,
             isGlobalSaving: false,
+            stats: {
+                total_interacted: 0,
+                active_handovers: 0,
+                ai_filtered: 0,
+                avg_response_speed: '0s'
+            },
 
             // Preview State
             previewMode: 'default', // 'default' or 'rule'
@@ -1119,6 +1125,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     this.fetchTokenDebug();
                     this.fetchPageSettings();
                     this.fetchHandover();
+                    this.fetchStats();
                 }
 
                 this.$watch('defaultReplyText', () => {
@@ -1128,6 +1135,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 // Auto-refresh Handover Alerts every 30 seconds
                 setInterval(() => {
                     this.fetchHandover();
+                    this.fetchStats();
                 }, 30000);
             },
 
@@ -1296,6 +1304,17 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     .then(data => {
                         if (data.success) { this.closeModal(); this.fetchRules(); }
                         else alert(data.error);
+                    });
+            },
+
+            fetchStats() {
+                if (!this.selectedPageId) return;
+                fetch(`ajax_auto_reply.php?action=fetch_page_stats&page_id=${this.selectedPageId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            this.stats = data.stats;
+                        }
                     });
             },
 
