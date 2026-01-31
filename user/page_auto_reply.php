@@ -393,11 +393,12 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                             <div class="min-w-0">
                                                 <div class="flex flex-wrap items-center gap-2 mb-1">
                                                     <span class="text-sm font-black text-white truncate"
-                                                        x-text="'User #' + conv.user_id.substring(0,8)"></span>
+                                                        x-text="conv.user_name || 'User #' + conv.user_id.substring(0,8)"></span>
                                                     <template x-if="conv.is_anger_detected == 1">
                                                         <span
-                                                            class="px-2 py-0.5 bg-red-500/10 text-red-500 text-[8px] font-black rounded-lg border border-red-500/20 uppercase tracking-widest">Sentiment:
-                                                            Angry</span>
+                                                            class="px-2 py-0.5 bg-red-500/10 text-red-500 text-[8px] font-black rounded-lg border border-red-500/20 uppercase tracking-widest">
+                                                            <?php echo __('danger_alert'); ?>
+                                                        </span>
                                                     </template>
                                                     <template x-if="conv.repeat_count >= 3">
                                                         <span
@@ -405,7 +406,10 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                                             Alert</span>
                                                     </template>
                                                 </div>
-                                                <p class="text-[11px] text-gray-500 truncate"
+                                                <p class="text-[11px] text-gray-400 font-bold mb-1"
+                                                    x-show="conv.last_user_message"
+                                                    x-text="'Message: ' + conv.last_user_message"></p>
+                                                <p class="text-[9px] text-gray-500 truncate"
                                                     x-text="'Last Interaction: ' + (conv.last_bot_reply_text || 'Waiting for first response...')">
                                                 </p>
                                             </div>

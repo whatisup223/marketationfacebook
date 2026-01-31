@@ -70,7 +70,7 @@ function handleFacebookEvent($data, $pdo)
                 if (!$message_text)
                     continue;
 
-                processAutoReply($pdo, $page_id, $sender_id, $message_text, 'message');
+                processAutoReply($pdo, $page_id, $sender_id, $message_text, 'message', null, '');
             }
         }
 
@@ -95,7 +95,7 @@ function handleFacebookEvent($data, $pdo)
 
                             // 2. Only Auto-Reply if it's a NEW comment and NOT moderated
                             if ($verb === 'add' && !$is_moderated) {
-                                processAutoReply($pdo, $page_id, $comment_id, $message_text, 'comment', $sender_id);
+                                processAutoReply($pdo, $page_id, $comment_id, $message_text, 'comment', $sender_id, $sender_name);
                             }
                         }
                     }
@@ -105,7 +105,7 @@ function handleFacebookEvent($data, $pdo)
     }
 }
 
-function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $actual_sender_id = null)
+function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $actual_sender_id = null, $sender_name = '')
 {
     // 1. Fetch Page Settings (Token, Schedule, Cooldown, AI Intelligence)
     $stmt = $pdo->prepare("SELECT page_access_token, bot_cooldown_seconds, bot_schedule_enabled, bot_schedule_start, bot_schedule_end, bot_exclude_keywords, bot_ai_sentiment_enabled, bot_anger_keywords FROM fb_pages WHERE page_id = ?");
@@ -116,6 +116,14 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 
     $access_token = $page['page_access_token'];
     $customer_id = ($source === 'message') ? $target_id : $actual_sender_id;
+
+    // Fetch user name for Messenger if empty
+    if ($source === 'message' && empty($sender_name) && $customer_id) {
+        $fb = new FacebookAPI();
+        $res = $fb->makeRequest($customer_id, ['fields' => 'name'], $access_token);
+        if (isset($res['name']))
+            $sender_name = $res['name'];
+    }
 
     // 2. Check Conversation State (Handover Protocol)
     if ($customer_id) {
@@ -186,10 +194,10 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
                 $akw = trim($akw);
                 if (!empty($akw) && mb_stripos($incoming_text, $akw) !== false) {
                     // Anger detected! Switch to handover
-                    $stmt = $pdo->prepare("INSERT INTO bot_conversation_states (page_id, user_id, conversation_state, is_anger_detected) 
-                                           VALUES (?, ?, 'handover', 1) 
-                                           ON DUPLICATE KEY UPDATE conversation_state = 'handover', is_anger_detected = 1");
-                    $stmt->execute([$page_id, $customer_id]);
+                    $stmt = $pdo->prepare("INSERT INTO bot_conversation_states (page_id, user_id, user_name, last_user_message, conversation_state, is_anger_detected) 
+                                           VALUES (?, ?, ?, ?, 'handover', 1) 
+                                           ON DUPLICATE KEY UPDATE user_name = VALUES(user_name), last_user_message = VALUES(last_user_message), conversation_state = 'handover', is_anger_detected = 1");
+                    $stmt->execute([$page_id, $customer_id, $sender_name, $incoming_text]);
                     return; // SILENCE
                 }
             }
@@ -200,8 +208,8 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
             $new_count = $state['repeat_count'] + 1;
             if ($new_count >= 3) {
                 // Too many repeats! Switch to handover
-                $stmt = $pdo->prepare("UPDATE bot_conversation_states SET conversation_state = 'handover', repeat_count = ? WHERE id = ?");
-                $stmt->execute([$new_count, $state['id']]);
+                $stmt = $pdo->prepare("UPDATE bot_conversation_states SET conversation_state = 'handover', repeat_count = ?, last_user_message = ?, user_name = ? WHERE id = ?");
+                $stmt->execute([$new_count, $incoming_text, $sender_name, $state['id']]);
                 return; // SILENCE
             }
         }
@@ -242,7 +250,6 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
         // A. Check Messenger Conversation for Admin activity
         if ($thread_user_id) {
             $convs = $fb->makeRequest("{$page_id}/conversations", [
-                'user_id' => $thread_user_id,
                 'fields' => 'messages.limit(5){id,from,created_time}'
             ], $access_token);
 
@@ -322,10 +329,10 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 
     if ($customer_id) {
         $repeat_val = ($state && $state['last_bot_reply_text'] === $reply_msg) ? $state['repeat_count'] + 1 : 1;
-        $stmt = $pdo->prepare("INSERT INTO bot_conversation_states (page_id, user_id, conversation_state, last_bot_reply_text, repeat_count) 
-                               VALUES (?, ?, 'active', ?, 1) 
-                               ON DUPLICATE KEY UPDATE last_bot_reply_text = ?, repeat_count = ?, conversation_state = 'active'");
-        $stmt->execute([$page_id, $customer_id, $reply_msg, $reply_msg, $repeat_val]);
+        $stmt = $pdo->prepare("INSERT INTO bot_conversation_states (page_id, user_id, user_name, last_user_message, conversation_state, last_bot_reply_text, repeat_count) 
+                               VALUES (?, ?, ?, ?, 'active', ?, 1) 
+                               ON DUPLICATE KEY UPDATE user_name = VALUES(user_name), last_user_message = VALUES(last_user_message), last_bot_reply_text = ?, repeat_count = ?, conversation_state = 'active'");
+        $stmt->execute([$page_id, $customer_id, $sender_name, $incoming_text, $reply_msg, $reply_msg, $repeat_val]);
     }
 }
 

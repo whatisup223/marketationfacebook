@@ -1363,6 +1363,8 @@ $translations = [
         'monitor_alerts_desc' => 'مراقبة تنبيهات النظام وطلبات التدخل البشري في الوقت الفعلي',
         'unsaved_changes_hint' => 'راجع تغييراتك بدقة قبل الحفظ',
         'saving' => 'جاري الحفظ',
+        'wa_settings_ready' => 'الإعدادات جاهزة للحفظ',
+        'danger_alert' => 'تنبيه خطر',
 
     ],
     'en' => [
@@ -1838,6 +1840,8 @@ $translations = [
         'search_placeholder' => 'Search by name or PSID...',
         'unsaved_changes_hint' => 'Review your changes carefully before saving',
         'saving' => 'Saving',
+        'wa_settings_ready' => 'Settings Ready to Save',
+        'danger_alert' => 'Danger Alert',
 
         'negative_sentiment_blocked' => 'Negative sentiment blocked',
         'instant_replies' => 'Instant Replies',

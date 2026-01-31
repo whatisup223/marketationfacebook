@@ -384,14 +384,20 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                                                 <?php echo __('human_intervention_needed'); ?>
                                                             </p>
                                                             <p class="text-xs font-bold text-white truncate"
-                                                                x-text="'ID: ' + conv.user_id"></p>
+                                                                x-text="conv.user_name || 'ID: ' + conv.user_id"></p>
                                                         </div>
+                                                    </div>
+                                                    <div class="mb-4" x-show="conv.last_user_message">
+                                                        <p
+                                                            class="text-[10px] text-red-400 font-bold mb-1 uppercase tracking-tighter">
+                                                            Last Message:</p>
+                                                        <p class="text-xs text-gray-300 line-clamp-2 italic"
+                                                            x-text="'&quot;' + conv.last_user_message + '&quot;'"></p>
                                                     </div>
                                                     <div class="flex flex-wrap gap-2 mb-4">
                                                         <template x-if="conv.is_anger_detected == 1">
                                                             <span
-                                                                class="px-2 py-1 bg-red-500/20 text-red-400 text-[8px] font-black rounded-lg border border-red-500/20 uppercase">Anger
-                                                                Alert</span>
+                                                                class="px-2 py-1 bg-red-500/20 text-red-400 text-[8px] font-black rounded-lg border border-red-500/20 uppercase"><?php echo __('danger_alert'); ?></span>
                                                         </template>
                                                         <template x-if="conv.repeat_count >= 3">
                                                             <span
