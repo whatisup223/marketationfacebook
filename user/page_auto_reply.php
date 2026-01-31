@@ -205,7 +205,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 </div>
 
                 <!-- Section Header -->
-                <div class="flex flex-col md:flex-row justify-between items-end gap-6">
+                <div class="flex flex-col md:flex-row justify-between items-end gap-6 relative z-30">
                     <div>
                         <div class="flex items-center gap-2 mb-3">
                             <span class="w-8 h-[2px] bg-indigo-500 rounded-full"></span>
@@ -215,6 +215,31 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <h2 class="text-3xl font-black text-white leading-tight">
                             <?php echo __('insight_control_center'); ?>
                         </h2>
+                    </div>
+
+                    <!-- Range Filter -->
+                    <div
+                        class="flex items-center gap-2 bg-white/5 p-1 rounded-2xl border border-white/10 backdrop-blur-md">
+                        <button @click="statsRange = 'today'; fetchStats()"
+                            :class="statsRange === 'today' ? 'bg-indigo-600 text-white shadow-lg' : 'text-gray-500 hover:text-white'"
+                            class="px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all transition-all duration-300">
+                            <?php echo __('today'); ?>
+                        </button>
+                        <button @click="statsRange = 'week'; fetchStats()"
+                            :class="statsRange === 'week' ? 'bg-indigo-600 text-white shadow-lg' : 'text-gray-500 hover:text-white'"
+                            class="px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all duration-300">
+                            <?php echo __('last_7_days'); ?>
+                        </button>
+                        <button @click="statsRange = 'month'; fetchStats()"
+                            :class="statsRange === 'month' ? 'bg-indigo-600 text-white shadow-lg' : 'text-gray-500 hover:text-white'"
+                            class="px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all duration-300">
+                            <?php echo __('last_30_days'); ?>
+                        </button>
+                        <button @click="statsRange = 'all'; fetchStats()"
+                            :class="statsRange === 'all' ? 'bg-indigo-600 text-white shadow-lg' : 'text-gray-500 hover:text-white'"
+                            class="px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all duration-300">
+                            <?php echo __('all_time'); ?>
+                        </button>
                     </div>
                 </div>
 
@@ -241,14 +266,39 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             </div>
                         </div>
                         <div class="mt-4 flex items-center gap-2">
-                            <span class="text-[10px] font-bold text-green-400">+12%</span>
+                            <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
                             <span
-                                class="text-[10px] text-gray-600 uppercase font-bold tracking-tighter"><?php echo __('vs_last_week'); ?></span>
-
+                                class="text-[9px] text-gray-500 font-bold uppercase tracking-tighter"><?php echo __('live_database_feed'); ?></span>
                         </div>
                     </div>
 
-                    <!-- Active Handovers -->
+                    <!-- AI Success Rate -->
+                    <div
+                        class="glass-panel p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all group overflow-hidden relative">
+                        <div class="relative z-10 flex justify-between items-start">
+                            <div>
+                                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
+                                    <?php echo __('ai_success_rate'); ?>
+                                </p>
+                                <h4 class="text-3xl font-black text-white group-hover:scale-110 transition-transform origin-left"
+                                    x-text="stats.ai_success_rate"></h4>
+                            </div>
+                            <div
+                                class="p-3 bg-green-500/10 rounded-2xl text-green-400 group-hover:rotate-12 transition-all">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-center gap-2">
+                            <div class="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
+                                <div class="h-full bg-green-500" :style="'width: ' + stats.ai_success_rate"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- active handovers -->
                     <div class="glass-panel p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all group overflow-hidden relative"
                         :class="handoverConversations.length > 0 ? 'border-red-500/20' : ''">
                         <div class="relative z-10 flex justify-between items-start">
@@ -257,7 +307,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     <?php echo __('active_handovers'); ?>
                                 </p>
                                 <h4 class="text-3xl font-black text-white group-hover:scale-110 transition-transform origin-left"
-                                    x-text="handoverConversations.length"></h4>
+                                    x-text="stats.active_handovers"></h4>
                             </div>
                             <div class="p-3 bg-red-500/10 rounded-2xl text-red-500 group-hover:rotate-12 transition-all"
                                 :class="handoverConversations.length > 0 ? 'animate-pulse' : ''">
@@ -274,34 +324,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             </div>
                             <span class="text-[10px] text-gray-600 uppercase font-bold tracking-tighter"
                                 x-text="handoverConversations.length > 0 ? '<?php echo __('human_intervention_needed'); ?>' : '<?php echo __('system_healthy'); ?>'"></span>
-
                         </div>
-                    </div>
-
-                    <!-- AI Filtered -->
-                    <div
-                        class="glass-panel p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all group overflow-hidden relative">
-                        <div class="relative z-10 flex justify-between items-start">
-                            <div>
-                                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
-                                    <?php echo __('ai_filtered'); ?>
-                                </p>
-                                <h4 class="text-3xl font-black text-white group-hover:scale-110 transition-transform origin-left"
-                                    x-text="stats.ai_filtered"></h4>
-                            </div>
-                            <div
-                                class="p-3 bg-indigo-500/10 rounded-2xl text-indigo-400 group-hover:rotate-12 transition-all">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="mt-4 flex items-center gap-2">
-                            <span
-                                class="text-[10px] text-gray-600 uppercase font-bold tracking-tighter"><?php echo __('negative_sentiment_blocked'); ?></span>
-                        </div>
-
                     </div>
 
                     <!-- Response Speed -->
@@ -327,7 +350,80 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <span
                                 class="text-[10px] text-indigo-400 uppercase font-black tracking-tighter"><?php echo __('instant_replies'); ?></span>
                         </div>
+                    </div>
 
+                    <!-- Most Active Rule -->
+                    <div
+                        class="glass-panel p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all group overflow-hidden relative">
+                        <div class="relative z-10 flex justify-between items-start">
+                            <div class="min-w-0">
+                                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
+                                    <?php echo __('most_active_rule'); ?>
+                                </p>
+                                <h4 class="text-xl font-black text-white truncate" x-text="stats.top_rule"></h4>
+                            </div>
+                            <div
+                                class="p-3 bg-fuchsia-500/10 rounded-2xl text-fuchsia-400 group-hover:rotate-12 transition-all">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-center gap-2">
+                            <span
+                                class="text-[9px] text-gray-500 font-bold uppercase tracking-tighter"><?php echo __('top_performing_logic'); ?></span>
+                        </div>
+                    </div>
+
+                    <!-- Peak Hour -->
+                    <div
+                        class="glass-panel p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all group overflow-hidden relative">
+                        <div class="relative z-10 flex justify-between items-start">
+                            <div>
+                                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
+                                    <?php echo __('peak_hour'); ?>
+                                </p>
+                                <h4 class="text-3xl font-black text-white" x-text="stats.peak_hour"></h4>
+                            </div>
+                            <div
+                                class="p-3 bg-amber-500/10 rounded-2xl text-amber-500 group-hover:rotate-12 transition-all">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-center gap-2">
+                            <span
+                                class="text-[9px] text-gray-500 font-bold uppercase tracking-tighter"><?php echo __('highest_traffic_period'); ?></span>
+                        </div>
+                    </div>
+
+                    <!-- System Health -->
+                    <div
+                        class="glass-panel p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all group overflow-hidden relative">
+                        <div class="relative z-10 flex justify-between items-start">
+                            <div>
+                                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
+                                    <?php echo __('system_health'); ?>
+                                </p>
+                                <h4 class="text-3xl font-black text-green-400" x-text="stats.system_health"></h4>
+                            </div>
+                            <div
+                                class="p-3 bg-cyan-500/10 rounded-2xl text-cyan-400 group-hover:scale-110 transition-all">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
+                                    </path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                            <span
+                                class="text-[9px] text-gray-500 font-bold uppercase tracking-tighter"><?php echo __('api_status_operational'); ?></span>
+                        </div>
                     </div>
                 </div>
 
@@ -440,7 +536,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 pb-20">
 
             <!-- Left Side: Preview Card -->
-            <div class="lg:col-span-4 order-2 lg:order-1">
+            <div class="lg:col-span-4 order-last lg:order-1">
                 <div class="sticky top-24 space-y-6">
                     <div
                         class="glass-card rounded-[32px] border border-white/10 shadow-2xl overflow-hidden bg-[#18191a]">
@@ -586,7 +682,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </div>
 
             <!-- Right Side: Rules Area -->
-            <div class="lg:col-span-8 space-y-8 order-1 lg:order-2">
+            <div class="lg:col-span-8 space-y-8 order-first lg:order-2">
 
                 <template x-if="!selectedPageId">
                     <div
@@ -607,194 +703,6 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 </template>
 
                 <div x-show="selectedPageId" x-transition.opacity class="space-y-8" style="display: none;">
-
-                    <!-- AI Protection Card (Moved) -->
-                    <div
-                        class="glass-panel p-8 rounded-[2rem] border border-white/10 bg-indigo-500/10 backdrop-blur-2xl hover:border-indigo-400/30 transition-all shadow-2xl relative overflow-hidden group">
-                        <div class="absolute top-0 left-0 w-1 h-full bg-indigo-500"></div>
-
-                        <div class="flex justify-between items-start mb-6">
-                            <div>
-                                <h3 class="text-2xl font-bold text-white mb-2">
-                                    <?php echo __('bot_intelligence_settings'); ?>
-                                </h3>
-                                <p class="text-gray-400 text-sm max-w-md"><?php echo __('human_takeover_hint'); ?></p>
-                            </div>
-
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <!-- Cooldown Section -->
-                            <div class="space-y-4">
-                                <label
-                                    class="block text-sm font-bold text-white"><?php echo __('bot_cooldown'); ?></label>
-                                <div class="flex gap-4">
-                                    <div class="flex-1">
-                                        <input type="number" x-model="cooldownHours" min="0"
-                                            class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-center focus:ring-2 focus:ring-indigo-500">
-                                        <span
-                                            class="block text-[10px] text-gray-500 text-center mt-1 uppercase"><?php echo __('hours'); ?></span>
-                                    </div>
-                                    <div class="flex-1">
-                                        <input type="number" x-model="cooldownMinutes" min="0" max="59"
-                                            class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-center focus:ring-2 focus:ring-indigo-500">
-                                        <span
-                                            class="block text-[10px] text-gray-500 text-center mt-1 uppercase"><?php echo __('minutes'); ?></span>
-                                    </div>
-                                    <div class="flex-1">
-                                        <input type="number" x-model="cooldownSeconds" min="0" max="59"
-                                            class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-center focus:ring-2 focus:ring-indigo-500">
-                                        <span
-                                            class="block text-[10px] text-gray-500 text-center mt-1 uppercase"><?php echo __('seconds'); ?></span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Schedule & Keywords Section -->
-                            <div class="space-y-4">
-                                <div class="flex items-center justify-between">
-                                    <label
-                                        class="block text-sm font-bold text-white"><?php echo __('bot_schedule'); ?></label>
-                                    <div
-                                        class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
-                                        <input type="checkbox" x-model="schEnabled" id="toggleSchedule"
-                                            class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
-                                        <label for="toggleSchedule"
-                                            :class="schEnabled ? 'bg-indigo-600' : 'bg-gray-700'"
-                                            class="toggle-label block overflow-hidden h-5 rounded-full cursor-pointer transition-colors"></label>
-                                    </div>
-                                </div>
-                                <div class="grid grid-cols-2 gap-4 mb-4"
-                                    :class="!schEnabled ? 'opacity-40 pointer-events-none' : ''">
-                                    <div>
-                                        <input type="time" x-model="schStart"
-                                            class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:ring-2 focus:ring-indigo-500">
-                                        <span
-                                            class="block text-[10px] text-gray-500 mt-1 uppercase"><?php echo __('start_time'); ?></span>
-                                    </div>
-                                    <div>
-                                        <input type="time" x-model="schEnd"
-                                            class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:ring-2 focus:ring-indigo-500">
-                                        <span
-                                            class="block text-[10px] text-gray-500 mt-1 uppercase"><?php echo __('end_time'); ?></span>
-                                    </div>
-                                </div>
-
-
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- AI Protection Card (Moved) -->
-                    <div
-                        class="glass-panel p-8 rounded-[2rem] border border-white/10 bg-white/5 backdrop-blur-2xl hover:border-indigo-500/20 transition-all shadow-2xl relative overflow-hidden group">
-                        <!-- Decorative Background -->
-                        <div
-                            class="absolute top-0 right-0 w-32 h-32 bg-indigo-600/10 blur-3xl -mr-16 -mt-16 pointer-events-none">
-                        </div>
-
-                        <div class="flex flex-col md:flex-row gap-8">
-                            <!-- Left Side: Toggle & Info -->
-                            <div class="flex-shrink-0 w-full md:w-64">
-                                <div class="flex items-center gap-3 mb-4">
-                                    <div class="p-3 bg-indigo-500/20 rounded-xl">
-                                        <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                                        </svg>
-                                    </div>
-                                    <h3 class="text-xl font-bold text-white"><?php echo __('ai_protection'); ?></h3>
-                                </div>
-
-                                <div class="bg-black/20 p-5 rounded-2xl border border-white/5 space-y-4">
-                                    <div class="flex items-center justify-between">
-                                        <span
-                                            class="text-xs font-bold text-gray-400 uppercase tracking-wider"><?php echo __('status'); ?></span>
-                                        <div
-                                            class="relative inline-block w-11 align-middle select-none transition duration-200 ease-in">
-                                            <input type="checkbox" x-model="aiSentimentEnabled"
-                                                id="toggleAiSentimentCard"
-                                                class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
-                                            <label for="toggleAiSentimentCard"
-                                                :class="aiSentimentEnabled ? 'bg-indigo-600' : 'bg-gray-700'"
-                                                class="toggle-label block overflow-hidden h-6 rounded-full cursor-pointer transition-colors"></label>
-                                        </div>
-                                    </div>
-                                    <p class="text-xs text-gray-500 leading-relaxed">
-                                        <?php echo __('human_takeover_hint'); ?>
-                                    </p>
-                                </div>
-
-                                <!-- Compact Exclude Toggle -->
-                                <div
-                                    class="mt-4 flex items-center justify-between gap-3 p-3 rounded-xl border border-white/5 bg-white/5 hover:border-indigo-500/30 transition-all group">
-                                    <div class="flex items-center gap-2.5 min-w-0">
-                                        <div
-                                            class="w-1.5 h-1.5 rounded-full bg-indigo-500/50 group-hover:bg-indigo-400 group-hover:scale-125 transition-all flex-shrink-0">
-                                        </div>
-                                        <span
-                                            class="text-[11px] font-bold text-gray-400 uppercase tracking-widest truncate group-hover:text-gray-200 transition-colors">
-                                            <?php echo __('exclude_keyword_rules'); ?>
-                                        </span>
-                                    </div>
-
-                                    <div
-                                        class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in flex-shrink-0">
-                                        <input type="checkbox" x-model="botExcludeKeywords" id="toggleGlobalExclCard"
-                                            class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-2 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
-                                        <label for="toggleGlobalExclCard"
-                                            :class="botExcludeKeywords ? 'bg-indigo-600' : 'bg-gray-700'"
-                                            class="toggle-label block overflow-hidden h-5 rounded-full cursor-pointer transition-colors"></label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Right Side: Keywords & Settings -->
-                            <div class="flex-1" x-show="aiSentimentEnabled" x-transition.opacity>
-                                <div class="space-y-4">
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex items-center gap-2">
-                                            <div class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
-                                            <label
-                                                class="text-xs font-bold text-gray-300 uppercase tracking-widest"><?php echo __('bot_anger_keywords'); ?></label>
-                                        </div>
-                                        <span
-                                            class="text-[10px] text-indigo-400 font-mono"><?php echo __('comma_separated'); ?></span>
-                                    </div>
-
-                                    <div class="relative group">
-                                        <textarea x-model="angerKeywords" rows="5"
-                                            placeholder="<?php echo __('anger_keywords_placeholder'); ?>"
-                                            class="w-full bg-black/40 border border-white/10 rounded-2xl p-5 text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all resize-none font-medium leading-relaxed group-hover:border-white/20"></textarea>
-                                    </div>
-
-                                    <div
-                                        class="flex items-start gap-3 text-xs text-gray-500 bg-white/5 p-4 rounded-xl border border-white/5">
-                                        <svg class="w-4 h-4 text-indigo-400 flex-shrink-0 mt-0.5" fill="none"
-                                            stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                        </svg>
-                                        <span><?php echo __('bot_anger_keywords_help'); ?></span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Disabled State -->
-                            <div class="flex-1 flex flex-col items-center justify-center p-8 border-2 border-white/5 border-dashed rounded-2xl bg-black/10 min-h-[200px]"
-                                x-show="!aiSentimentEnabled" x-transition.opacity>
-                                <div class="p-4 bg-gray-800/50 rounded-full mb-4 text-gray-600">
-                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636">
-                                        </path>
-                                    </svg>
-                                </div>
-                                <p class="text-sm text-gray-500 font-medium"><?php echo __('ai_system_disabled'); ?></p>
-                            </div>
-                        </div>
-                    </div>
 
                     <!-- Default Reply Card -->
                     <div
@@ -914,6 +822,194 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     </p>
                                 </div>
                             </template>
+                        </div>
+                    </div>
+
+                    <!-- Advanced Intelligence & Scheduling -->
+                    <div
+                        class="glass-panel p-8 rounded-[2rem] border border-white/10 bg-indigo-500/10 backdrop-blur-2xl hover:border-indigo-400/30 transition-all shadow-2xl relative overflow-hidden group">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-indigo-500"></div>
+
+                        <div class="flex justify-between items-start mb-6">
+                            <div>
+                                <h3 class="text-2xl font-bold text-white mb-2">
+                                    <?php echo __('bot_intelligence_settings'); ?>
+                                </h3>
+                                <p class="text-gray-400 text-sm max-w-md"><?php echo __('human_takeover_hint'); ?></p>
+                            </div>
+
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <!-- Cooldown Section -->
+                            <div class="space-y-4">
+                                <label
+                                    class="block text-sm font-bold text-white"><?php echo __('bot_cooldown'); ?></label>
+                                <div class="flex gap-4">
+                                    <div class="flex-1">
+                                        <input type="number" x-model="cooldownHours" min="0"
+                                            class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-center focus:ring-2 focus:ring-indigo-500">
+                                        <span
+                                            class="block text-[10px] text-gray-500 text-center mt-1 uppercase"><?php echo __('hours'); ?></span>
+                                    </div>
+                                    <div class="flex-1">
+                                        <input type="number" x-model="cooldownMinutes" min="0" max="59"
+                                            class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-center focus:ring-2 focus:ring-indigo-500">
+                                        <span
+                                            class="block text-[10px] text-gray-500 text-center mt-1 uppercase"><?php echo __('minutes'); ?></span>
+                                    </div>
+                                    <div class="flex-1">
+                                        <input type="number" x-model="cooldownSeconds" min="0" max="59"
+                                            class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-center focus:ring-2 focus:ring-indigo-500">
+                                        <span
+                                            class="block text-[10px] text-gray-500 text-center mt-1 uppercase"><?php echo __('seconds'); ?></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Schedule & Keywords Section -->
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <label
+                                        class="block text-sm font-bold text-white"><?php echo __('bot_schedule'); ?></label>
+                                    <div
+                                        class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                                        <input type="checkbox" x-model="schEnabled" id="toggleSchedule"
+                                            class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
+                                        <label for="toggleSchedule"
+                                            :class="schEnabled ? 'bg-indigo-600' : 'bg-gray-700'"
+                                            class="toggle-label block overflow-hidden h-5 rounded-full cursor-pointer transition-colors"></label>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4 mb-4"
+                                    :class="!schEnabled ? 'opacity-40 pointer-events-none' : ''">
+                                    <div>
+                                        <input type="time" x-model="schStart"
+                                            class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:ring-2 focus:ring-indigo-500">
+                                        <span
+                                            class="block text-[10px] text-gray-500 mt-1 uppercase"><?php echo __('start_time'); ?></span>
+                                    </div>
+                                    <div>
+                                        <input type="time" x-model="schEnd"
+                                            class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:ring-2 focus:ring-indigo-500">
+                                        <span
+                                            class="block text-[10px] text-gray-500 mt-1 uppercase"><?php echo __('end_time'); ?></span>
+                                    </div>
+                                </div>
+
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Protection Card -->
+                    <div
+                        class="glass-panel p-8 rounded-[2rem] border border-white/10 bg-white/5 backdrop-blur-2xl hover:border-indigo-500/20 transition-all shadow-2xl relative overflow-hidden group">
+                        <!-- Decorative Background -->
+                        <div
+                            class="absolute top-0 right-0 w-32 h-32 bg-indigo-600/10 blur-3xl -mr-16 -mt-16 pointer-events-none">
+                        </div>
+
+                        <div class="flex flex-col md:flex-row gap-8">
+                            <!-- Left Side: Toggle & Info -->
+                            <div class="flex-shrink-0 w-full md:w-64">
+                                <div class="flex items-center gap-3 mb-4">
+                                    <div class="p-3 bg-indigo-500/20 rounded-xl">
+                                        <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                        </svg>
+                                    </div>
+                                    <h3 class="text-xl font-bold text-white"><?php echo __('ai_protection'); ?></h3>
+                                </div>
+
+                                <div class="bg-black/20 p-5 rounded-2xl border border-white/5 space-y-4">
+                                    <div class="flex items-center justify-between">
+                                        <span
+                                            class="text-xs font-bold text-gray-400 uppercase tracking-wider"><?php echo __('status'); ?></span>
+                                        <div
+                                            class="relative inline-block w-11 align-middle select-none transition duration-200 ease-in">
+                                            <input type="checkbox" x-model="aiSentimentEnabled"
+                                                id="toggleAiSentimentCard"
+                                                class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
+                                            <label for="toggleAiSentimentCard"
+                                                :class="aiSentimentEnabled ? 'bg-indigo-600' : 'bg-gray-700'"
+                                                class="toggle-label block overflow-hidden h-6 rounded-full cursor-pointer transition-colors"></label>
+                                        </div>
+                                    </div>
+                                    <p class="text-xs text-gray-500 leading-relaxed">
+                                        <?php echo __('human_takeover_hint'); ?>
+                                    </p>
+                                </div>
+
+                                <!-- Compact Exclude Toggle -->
+                                <div
+                                    class="mt-4 flex items-center justify-between gap-3 p-3 rounded-xl border border-white/5 bg-white/5 hover:border-indigo-500/30 transition-all group">
+                                    <div class="flex items-center gap-2.5 min-w-0">
+                                        <div
+                                            class="w-1.5 h-1.5 rounded-full bg-indigo-500/50 group-hover:bg-indigo-400 group-hover:scale-125 transition-all flex-shrink-0">
+                                        </div>
+                                        <span
+                                            class="text-[11px] font-bold text-gray-400 uppercase tracking-widest truncate group-hover:text-gray-200 transition-colors">
+                                            <?php echo __('exclude_keyword_rules'); ?>
+                                        </span>
+                                    </div>
+
+                                    <div
+                                        class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in flex-shrink-0">
+                                        <input type="checkbox" x-model="botExcludeKeywords" id="toggleGlobalExclCard"
+                                            class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-2 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
+                                        <label for="toggleGlobalExclCard"
+                                            :class="botExcludeKeywords ? 'bg-indigo-600' : 'bg-gray-700'"
+                                            class="toggle-label block overflow-hidden h-5 rounded-full cursor-pointer transition-colors"></label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right Side: Keywords & Settings -->
+                            <div class="flex-1" x-show="aiSentimentEnabled" x-transition.opacity>
+                                <div class="space-y-4">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+                                            <label
+                                                class="text-xs font-bold text-gray-300 uppercase tracking-widest"><?php echo __('bot_anger_keywords'); ?></label>
+                                        </div>
+                                        <span
+                                            class="text-[10px] text-indigo-400 font-mono"><?php echo __('comma_separated'); ?></span>
+                                    </div>
+
+                                    <div class="relative group">
+                                        <textarea x-model="angerKeywords" rows="5"
+                                            placeholder="<?php echo __('anger_keywords_placeholder'); ?>"
+                                            class="w-full bg-black/40 border border-white/10 rounded-2xl p-5 text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all resize-none font-medium leading-relaxed group-hover:border-white/20"></textarea>
+                                    </div>
+
+                                    <div
+                                        class="flex items-start gap-3 text-xs text-gray-500 bg-white/5 p-4 rounded-xl border border-white/5">
+                                        <svg class="w-4 h-4 text-indigo-400 flex-shrink-0 mt-0.5" fill="none"
+                                            stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        <span><?php echo __('bot_anger_keywords_help'); ?></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Disabled State -->
+                            <div class="flex-1 flex flex-col items-center justify-center p-8 border-2 border-white/5 border-dashed rounded-2xl bg-black/10 min-h-[200px]"
+                                x-show="!aiSentimentEnabled" x-transition.opacity>
+                                <div class="p-4 bg-gray-800/50 rounded-full mb-4 text-gray-600">
+                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636">
+                                        </path>
+                                    </svg>
+                                </div>
+                                <p class="text-sm text-gray-500 font-medium"><?php echo __('ai_system_disabled'); ?></p>
+                            </div>
                         </div>
                     </div>
 
@@ -1204,11 +1300,16 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
             fetchingHandover: false,
             savingPageSettings: false,
             isGlobalSaving: false,
+            statsRange: 'all',
             stats: {
                 total_interacted: 0,
                 active_handovers: 0,
-                ai_filtered: 0,
-                avg_response_speed: '0s'
+                ai_success_rate: '0%',
+                avg_response_speed: '0s',
+                top_rule: '--',
+                peak_hour: '--:--',
+                system_health: '100%',
+                ai_filtered: 0
             },
 
             // Preview State
@@ -1397,7 +1498,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             fetchStats() {
                 if (!this.selectedPageId) return;
-                fetch(`ajax_auto_reply.php?action=fetch_page_stats&page_id=${this.selectedPageId}`)
+                fetch(`ajax_auto_reply.php?action=fetch_page_stats&page_id=${this.selectedPageId}&range=${this.statsRange}&source=comment`)
                     .then(res => res.json())
                     .then(data => {
                         if (data.success) {

@@ -323,8 +323,9 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
     // 7. Update Tracking (ID Log & Conversation State)
     $sent_id = $res['id'] ?? $res['message_id'] ?? null;
     if ($sent_id) {
-        $stmt = $pdo->prepare("INSERT IGNORE INTO bot_sent_messages (message_id, page_id) VALUES (?, ?)");
-        $stmt->execute([$sent_id, $page_id]);
+        $rule_id = $matched_rule['id'] ?? null;
+        $stmt = $pdo->prepare("INSERT IGNORE INTO bot_sent_messages (message_id, page_id, rule_id, reply_source, user_id) VALUES (?, ?, ?, ?, ?)");
+        $stmt->execute([$sent_id, $page_id, $rule_id, $source, $customer_id]);
     }
 
     if ($customer_id) {
