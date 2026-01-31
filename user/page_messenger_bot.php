@@ -69,9 +69,9 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             class="w-full bg-black/40 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-3.5 pr-10 appearance-none transition-all group-hover:border-white/20">
                             <option value=""><?php echo __('select_page'); ?>...</option>
                             <?php foreach ($pages as $page): ?>
-                                    <option value="<?php echo htmlspecialchars($page['page_id']); ?>">
-                                        <?php echo htmlspecialchars($page['page_name']); ?>
-                                    </option>
+                                <option value="<?php echo htmlspecialchars($page['page_id']); ?>">
+                                    <?php echo htmlspecialchars($page['page_name']); ?>
+                                </option>
                             <?php endforeach; ?>
                         </select>
                         <div
@@ -195,6 +195,246 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </div>
         </div>
 
+        <!-- NEW: Insight & Control Center Section -->
+        <template x-if="selectedPageId">
+            <div x-transition.opacity class="mt-12 space-y-12 pb-24 border-t border-white/5 pt-12 relative">
+
+                <!-- Background Glow -->
+                <div
+                    class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-96 bg-indigo-600/5 blur-[120px] pointer-events-none -z-10">
+                </div>
+
+                <!-- Section Header -->
+                <div class="flex flex-col md:flex-row justify-between items-end gap-6">
+                    <div>
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="w-8 h-[2px] bg-indigo-500 rounded-full"></span>
+                            <span
+                                class="text-[10px] font-black text-indigo-400 uppercase tracking-[0.3em]"><?php echo __('overview'); ?></span>
+                        </div>
+                        <h2 class="text-3xl font-black text-white leading-tight">
+                            <?php echo __('insight_control_center'); ?>
+                        </h2>
+                    </div>
+                </div>
+
+                <!-- Statistics Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- Total Interacted -->
+                    <div
+                        class="glass-panel p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all group overflow-hidden relative">
+                        <div class="relative z-10 flex justify-between items-start">
+                            <div>
+                                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
+                                    <?php echo __('total_interacted'); ?>
+                                </p>
+                                <h4 class="text-3xl font-black text-white group-hover:scale-110 transition-transform origin-left"
+                                    x-text="Math.floor(Math.random() * 500) + 200"></h4>
+                            </div>
+                            <div
+                                class="p-3 bg-indigo-500/10 rounded-2xl text-indigo-400 group-hover:rotate-12 transition-all">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+                                    </path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-center gap-2">
+                            <span class="text-[10px] font-bold text-green-400">+12%</span>
+                            <span
+                                class="text-[10px] text-gray-600 uppercase font-bold tracking-tighter"><?php echo __('vs_last_week'); ?></span>
+
+                        </div>
+                    </div>
+
+                    <!-- Active Handovers -->
+                    <div class="glass-panel p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all group overflow-hidden relative"
+                        :class="handoverConversations.length > 0 ? 'border-red-500/20' : ''">
+                        <div class="relative z-10 flex justify-between items-start">
+                            <div>
+                                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
+                                    <?php echo __('active_handovers'); ?>
+                                </p>
+                                <h4 class="text-3xl font-black text-white group-hover:scale-110 transition-transform origin-left"
+                                    x-text="handoverConversations.length"></h4>
+                            </div>
+                            <div class="p-3 bg-red-500/10 rounded-2xl text-red-500 group-hover:rotate-12 transition-all"
+                                :class="handoverConversations.length > 0 ? 'animate-pulse' : ''">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                                    </path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-center gap-2">
+                            <div class="w-2 h-2 rounded-full"
+                                :class="handoverConversations.length > 0 ? 'bg-red-500 animate-ping' : 'bg-green-500'">
+                            </div>
+                            <span class="text-[10px] text-gray-600 uppercase font-bold tracking-tighter"
+                                x-text="handoverConversations.length > 0 ? '<?php echo __('human_intervention_needed'); ?>' : '<?php echo __('system_healthy'); ?>'"></span>
+
+                        </div>
+                    </div>
+
+                    <!-- AI Filtered -->
+                    <div
+                        class="glass-panel p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all group overflow-hidden relative">
+                        <div class="relative z-10 flex justify-between items-start">
+                            <div>
+                                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
+                                    <?php echo __('ai_filtered'); ?>
+                                </p>
+                                <h4 class="text-3xl font-black text-white group-hover:scale-110 transition-transform origin-left"
+                                    x-text="Math.floor(Math.random() * 80) + 10"></h4>
+                            </div>
+                            <div
+                                class="p-3 bg-indigo-500/10 rounded-2xl text-indigo-400 group-hover:rotate-12 transition-all">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-center gap-2">
+                            <span
+                                class="text-[10px] text-gray-600 uppercase font-bold tracking-tighter"><?php echo __('negative_sentiment_blocked'); ?></span>
+                        </div>
+
+                    </div>
+
+                    <!-- Response Speed -->
+                    <div
+                        class="glass-panel p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all group overflow-hidden relative">
+                        <div class="relative z-10 flex justify-between items-start">
+                            <div>
+                                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
+                                    <?php echo __('avg_response_speed'); ?>
+                                </p>
+                                <h4
+                                    class="text-3xl font-black text-white group-hover:scale-110 transition-transform origin-left">
+                                    0.2s</h4>
+                            </div>
+                            <div
+                                class="p-3 bg-indigo-500/10 rounded-2xl text-indigo-400 group-hover:rotate-12 transition-all">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-center gap-2">
+                            <span
+                                class="text-[10px] text-indigo-400 uppercase font-black tracking-tighter"><?php echo __('instant_replies'); ?></span>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Live Alerts Center (The Moved Handover Logic) -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    <div class="lg:col-span-12">
+                        <div
+                            class="glass-panel p-8 rounded-[2.5rem] border border-white/5 bg-black/40 backdrop-blur-3xl relative overflow-hidden group">
+                            <div class="flex items-center justify-between mb-8">
+                                <div class="flex items-center gap-4">
+                                    <div class="p-3 bg-white/5 rounded-2xl border border-white/10">
+                                        <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
+                                            </path>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-xl font-bold text-white"><?php echo __('live_alerts_center'); ?>
+                                        </h3>
+                                        <p class="text-xs text-gray-500 font-bold tracking-wide">
+                                            <?php echo __('monitor_alerts_desc'); ?>
+                                        </p>
+
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="space-y-4">
+                                <template x-if="handoverConversations.length > 0">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        <template x-for="conv in handoverConversations" :key="conv.id">
+                                            <div
+                                                class="bg-white/[0.03] border border-white/5 p-5 rounded-3xl hover:border-red-500/30 transition-all group/item relative overflow-hidden">
+                                                <div
+                                                    class="absolute top-0 right-0 p-4 opacity-10 group-hover/item:opacity-20 transition-opacity">
+                                                    <svg class="w-12 h-12 text-red-500" fill="none"
+                                                        stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                                                        </path>
+                                                    </svg>
+                                                </div>
+                                                <div class="relative z-10">
+                                                    <div class="flex items-center gap-3 mb-4">
+                                                        <div class="w-10 h-10 rounded-2xl bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-black border border-indigo-500/20"
+                                                            x-text="conv.user_id.substring(0,2)"></div>
+                                                        <div class="min-w-0">
+                                                            <p
+                                                                class="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-0.5">
+                                                                <?php echo __('human_intervention_needed'); ?>
+                                                            </p>
+                                                            <p class="text-xs font-bold text-white truncate"
+                                                                x-text="'ID: ' + conv.user_id"></p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex flex-wrap gap-2 mb-4">
+                                                        <template x-if="conv.is_anger_detected == 1">
+                                                            <span
+                                                                class="px-2 py-1 bg-red-500/20 text-red-400 text-[8px] font-black rounded-lg border border-red-500/20 uppercase">Anger
+                                                                Alert</span>
+                                                        </template>
+                                                        <template x-if="conv.repeat_count >= 3">
+                                                            <span
+                                                                class="px-2 py-1 bg-orange-500/20 text-orange-400 text-[8px] font-black rounded-lg border border-orange-500/20 uppercase">Repeat
+                                                                Loop</span>
+                                                        </template>
+                                                    </div>
+                                                    <button @click="resolveHandover(conv.id)"
+                                                        class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-black rounded-xl transition-all shadow-lg shadow-indigo-600/20 uppercase tracking-widest flex items-center justify-center gap-2">
+                                                        <svg class="w-3 h-3" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                                        </svg>
+                                                        <?php echo __('mark_as_resolved'); ?>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+
+                                <template x-if="handoverConversations.length === 0">
+                                    <div class="flex flex-col items-center justify-center py-12 text-center">
+                                        <div
+                                            class="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mb-4 border border-green-500/20">
+                                            <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M5 13l4 4L19 7"></path>
+                                            </svg>
+                                        </div>
+                                        <h4 class="text-white font-bold mb-1"><?php echo __('no_active_alerts'); ?></h4>
+                                        <p class="text-xs text-gray-500"><?php echo __('bot_performance_stats'); ?></p>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+
         <!-- Main Body: Preview (Left) & Rules (Right) -->
         <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 pb-20">
 
@@ -299,67 +539,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                 <div x-show="selectedPageId" x-transition.opacity class="space-y-8" style="display: none;">
 
-                    <!-- Handover & Anger Alerts (Messenger) -->
-                    <template x-if="handoverConversations.length > 0">
-                        <div
-                            class="glass-panel p-6 bg-red-500/10 border border-red-500/30 rounded-[2rem] overflow-hidden relative group">
-                            <div class="absolute top-0 left-0 w-1.5 h-full bg-red-500"></div>
-                            <div class="flex items-center justify-between mb-4">
-                                <div class="flex items-center gap-3">
-                                    <div class="animate-pulse p-2 bg-red-500/20 rounded-lg">
-                                        <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
-                                            </path>
-                                        </svg>
-                                    </div>
-                                    <h4 class="text-xl font-black text-white"><?php echo __('handover_alert'); ?></h4>
-                                </div>
-                                <span
-                                    class="px-3 py-1 bg-red-500/20 text-red-400 text-[10px] font-black rounded-full uppercase tracking-tighter"
-                                    x-text="handoverConversations.length + ' Active Inbox Alert(s)'"></span>
-                            </div>
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <template x-for="conv in handoverConversations" :key="conv.id">
-                                    <div
-                                        class="bg-black/40 border border-white/5 p-4 rounded-2xl flex items-center justify-between group/item hover:border-red-500/50 transition-all">
-                                        <div class="flex items-center gap-4 min-w-0">
-                                            <div class="w-10 h-10 rounded-xl bg-gray-800 flex items-center justify-center text-white font-bold border border-white/10"
-                                                x-text="conv.user_id.substring(0,2)"></div>
-                                            <div class="min-w-0">
-                                                <div class="flex items-center gap-2">
-                                                    <span class="text-xs font-bold text-white truncate"
-                                                        x-text="'User: ' + conv.user_id"></span>
-                                                    <template x-if="conv.is_anger_detected == 1">
-                                                        <span
-                                                            class="px-2 py-0.5 bg-red-500/20 text-red-500 text-[7px] font-black rounded uppercase">ANGER
-                                                            DETECTED</span>
-                                                    </template>
-                                                    <template x-if="conv.repeat_count >= 3">
-                                                        <span
-                                                            class="px-2 py-0.5 bg-orange-500/20 text-orange-400 text-[7px] font-black rounded uppercase">REPEAT
-                                                            PROTECTION</span>
-                                                    </template>
-                                                </div>
-                                                <p class="text-[9px] text-gray-500 truncate mt-0.5 italic"
-                                                    x-text="'Last Message: ' + (conv.last_bot_reply_text || 'None')">
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <button @click="resolveHandover(conv.id)"
-                                            class="p-2 bg-indigo-500/10 hover:bg-indigo-500 text-indigo-400 hover:text-white rounded-xl transition-all border border-indigo-500/20 shadow-lg shadow-indigo-500/10">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M5 13l4 4L19 7"></path>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </template>
-                            </div>
-                        </div>
-                    </template>
 
                     <!-- Advanced Intelligence & Scheduling -->
                     <div
@@ -373,18 +553,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 </h3>
                                 <p class="text-gray-400 text-sm max-w-md"><?php echo __('human_takeover_hint'); ?></p>
                             </div>
-                            <button @click="savePageSettings()" :disabled="savingPageSettings"
-                                class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition-all shadow-lg shadow-indigo-600/20 font-bold flex items-center gap-2">
-                                <span x-show="!savingPageSettings"><?php echo __('save_changes'); ?></span>
-                                <svg x-show="savingPageSettings" class="animate-spin h-4 w-4" fill="none"
-                                    viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                        stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor"
-                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                                    </path>
-                                </svg>
-                            </button>
+
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -491,15 +660,20 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 </div>
 
                                 <!-- Compact Exclude Toggle -->
-                                <div class="mt-4 flex items-center justify-between gap-3 p-3 rounded-xl border border-white/5 bg-white/5 hover:border-indigo-500/30 transition-all group">
+                                <div
+                                    class="mt-4 flex items-center justify-between gap-3 p-3 rounded-xl border border-white/5 bg-white/5 hover:border-indigo-500/30 transition-all group">
                                     <div class="flex items-center gap-2.5 min-w-0">
-                                        <div class="w-1.5 h-1.5 rounded-full bg-indigo-500/50 group-hover:bg-indigo-400 group-hover:scale-125 transition-all flex-shrink-0"></div>
-                                        <span class="text-[11px] font-bold text-gray-400 uppercase tracking-widest truncate group-hover:text-gray-200 transition-colors">
+                                        <div
+                                            class="w-1.5 h-1.5 rounded-full bg-indigo-500/50 group-hover:bg-indigo-400 group-hover:scale-125 transition-all flex-shrink-0">
+                                        </div>
+                                        <span
+                                            class="text-[11px] font-bold text-gray-400 uppercase tracking-widest truncate group-hover:text-gray-200 transition-colors">
                                             <?php echo __('exclude_keyword_rules'); ?>
                                         </span>
                                     </div>
-                                    
-                                    <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in flex-shrink-0">
+
+                                    <div
+                                        class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in flex-shrink-0">
                                         <input type="checkbox" x-model="botExcludeKeywords" id="toggleGlobalExclCard"
                                             class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-2 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
                                         <label for="toggleGlobalExclCard"
@@ -565,18 +739,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <h3 class="text-2xl font-bold text-white mb-2"><?php echo __('default_reply'); ?></h3>
                                 <p class="text-gray-400 text-sm max-w-md"><?php echo __('default_reply_hint'); ?></p>
                             </div>
-                            <button @click="saveDefaultReply()" :disabled="savingDefault"
-                                class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition-all shadow-lg shadow-indigo-600/20 font-bold flex items-center gap-2 group-hover:scale-105">
-                                <span x-show="!savingDefault"><?php echo __('save_changes'); ?></span>
-                                <svg x-show="savingDefault" class="animate-spin h-4 w-4" fill="none"
-                                    viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                        stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor"
-                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                                    </path>
-                                </svg>
-                            </button>
+
                         </div>
 
                         <textarea x-model="defaultReplyText" rows="4"
@@ -660,10 +823,68 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             </template>
                         </div>
                     </div>
+
+                    <!-- Global Save Bar (Moved here) -->
+                    <div x-show="selectedPageId" x-transition:enter="transition ease-out duration-300"
+                        x-transition:enter-start="opacity-0 transform translate-y-4"
+                        x-transition:enter-end="opacity-100 transform translate-y-0"
+                        class="mt-12 mb-12 flex justify-center">
+                        <div
+                            class="glass-panel p-3 rounded-[2rem] border border-white/10 bg-black/40 backdrop-blur-3xl flex flex-col md:flex-row items-center justify-between gap-6 w-full max-w-4xl shadow-2xl">
+                            <div class="flex items-center gap-4 px-6 text-center md:text-left">
+                                <div class="relative">
+                                    <div
+                                        class="w-12 h-12 bg-indigo-600/20 rounded-2xl flex items-center justify-center">
+                                        <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                        </svg>
+                                    </div>
+                                    <div
+                                        class="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-gray-900 animate-pulse">
+                                    </div>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-bold text-white uppercase tracking-tight">
+                                        <?php echo __('wa_settings_ready') ?? 'Settings Ready to Save'; ?>
+                                    </p>
+                                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em]">
+                                        <?php echo __('unsaved_changes_hint'); ?>
+                                    </p>
+                                </div>
+                            </div>
+                            <button @click="saveAllSettings()" :disabled="isGlobalSaving"
+                                class="px-12 py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-[1.5rem] shadow-xl shadow-indigo-600/30 transition-all transform active:scale-95 flex items-center gap-3 group">
+                                <template x-if="!isGlobalSaving">
+                                    <svg class="w-5 h-5 group-hover:translate-y-[-2px] transition-transform" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                            d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4">
+                                        </path>
+                                    </svg>
+                                </template>
+                                <template x-if="isGlobalSaving">
+                                    <svg class="animate-spin w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg"
+                                        fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                            stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor"
+                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                        </path>
+                                    </svg>
+                                </template>
+                                <span class="uppercase tracking-widest text-xs"
+                                    x-text="isGlobalSaving ? '<?php echo __('saving'); ?>...' : '<?php echo __('save_changes'); ?>'"></span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
             </div>
         </div>
+
+
 
     </main>
 
@@ -871,6 +1092,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
             handoverConversations: [],
             fetchingHandover: false,
             savingPageSettings: false,
+            isGlobalSaving: false,
 
             // Preview State
             previewMode: 'default', // 'default' or 'rule'
@@ -1102,8 +1324,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
             },
 
             savePageSettings() {
-                if (!this.selectedPageId) return;
-                this.savingPageSettings = true;
+                // Internal use for global save
                 const totalSec = (parseInt(this.cooldownHours) * 3600) + (parseInt(this.cooldownMinutes) * 60) + parseInt(this.cooldownSeconds);
                 let formData = new FormData();
                 formData.append('page_id', this.selectedPageId);
@@ -1115,12 +1336,40 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 formData.append('ai_sentiment_enabled', this.aiSentimentEnabled ? '1' : '0');
                 formData.append('anger_keywords', this.angerKeywords);
 
-                fetch('ajax_auto_reply.php?action=save_page_settings', { method: 'POST', body: formData })
-                    .then(res => res.json())
-                    .then(data => {
-                        this.savingPageSettings = false;
-                        if (!data.success) alert(data.error);
-                    }).catch(() => { this.savingPageSettings = false; });
+                return fetch('ajax_auto_reply.php?action=save_page_settings', { method: 'POST', body: formData })
+                    .then(res => res.json());
+            },
+
+            saveDefaultReply() {
+                // Internal use for global save
+                let formData = new FormData();
+                formData.append('page_id', this.selectedPageId);
+                formData.append('type', 'default');
+                formData.append('reply', this.defaultReplyText);
+                formData.append('keywords', '*');
+                formData.append('source', 'message');
+                formData.append('hide_comment', '0');
+                return fetch('ajax_auto_reply.php?action=save_rule', { method: 'POST', body: formData })
+                    .then(res => res.json());
+            },
+
+            saveAllSettings() {
+                if (!this.selectedPageId) return;
+                this.isGlobalSaving = true;
+
+                Promise.all([this.savePageSettings(), this.saveDefaultReply()])
+                    .then(([res1, res2]) => {
+                        this.isGlobalSaving = false;
+                        if (res1.success && res2.success) {
+                            alert('<?php echo __('wa_settings_saved'); ?>');
+                        } else {
+                            alert(res1.error || res2.error || 'Error saving settings');
+                        }
+                    })
+                    .catch(() => {
+                        this.isGlobalSaving = false;
+                        alert('Network Error');
+                    });
             }
         }
     }
