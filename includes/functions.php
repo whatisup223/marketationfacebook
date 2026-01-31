@@ -1365,6 +1365,10 @@ $translations = [
         'saving' => 'جاري الحفظ',
         'wa_settings_ready' => 'الإعدادات جاهزة للحفظ',
         'danger_alert' => 'تنبيه خطر',
+        'repetition_alert' => 'تنبيه تكرار',
+        'last_message' => 'آخر رسالة',
+        'last_interaction' => 'آخر تفاعل',
+        'waiting_response' => 'في انتظار أول رد...',
 
     ],
     'en' => [
@@ -1842,6 +1846,10 @@ $translations = [
         'saving' => 'Saving',
         'wa_settings_ready' => 'Settings Ready to Save',
         'danger_alert' => 'Danger Alert',
+        'repetition_alert' => 'Repetition Alert',
+        'last_message' => 'Last Message',
+        'last_interaction' => 'Last Interaction',
+        'waiting_response' => 'Waiting for first response...',
 
         'negative_sentiment_blocked' => 'Negative sentiment blocked',
         'instant_replies' => 'Instant Replies',

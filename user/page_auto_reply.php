@@ -402,15 +402,17 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                                     </template>
                                                     <template x-if="conv.repeat_count >= 3">
                                                         <span
-                                                            class="px-2 py-0.5 bg-orange-500/10 text-orange-400 text-[8px] font-black rounded-lg border border-orange-500/20 uppercase tracking-widest">Repetition
-                                                            Alert</span>
+                                                            class="px-2 py-0.5 bg-orange-500/10 text-orange-400 text-[8px] font-black rounded-lg border border-orange-500/20 uppercase tracking-widest">
+                                                            <?php echo __('repetition_alert'); ?>
+                                                        </span>
                                                     </template>
                                                 </div>
                                                 <p class="text-[11px] text-gray-400 font-bold mb-1"
                                                     x-show="conv.last_user_message"
-                                                    x-text="'Message: ' + conv.last_user_message"></p>
+                                                    x-text="'<?php echo __('last_message'); ?>: ' + conv.last_user_message">
+                                                </p>
                                                 <p class="text-[9px] text-gray-500 truncate"
-                                                    x-text="'Last Interaction: ' + (conv.last_bot_reply_text || 'Waiting for first response...')">
+                                                    x-text="'<?php echo __('last_interaction'); ?>: ' + (conv.last_bot_reply_text || '<?php echo __('waiting_response'); ?>')">
                                                 </p>
                                             </div>
                                         </div>

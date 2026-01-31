@@ -390,9 +390,15 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                                     <div class="mb-4" x-show="conv.last_user_message">
                                                         <p
                                                             class="text-[10px] text-red-400 font-bold mb-1 uppercase tracking-tighter">
-                                                            Last Message:</p>
+                                                            <?php echo __('last_message'); ?>:
+                                                        </p>
                                                         <p class="text-xs text-gray-300 line-clamp-2 italic"
                                                             x-text="'&quot;' + conv.last_user_message + '&quot;'"></p>
+                                                    </div>
+                                                    <div class="mb-4">
+                                                        <p class="text-[9px] text-gray-500 uppercase tracking-tighter mb-1"><?php echo __('last_interaction'); ?>:</p>
+                                                        <p class="text-[10px] text-gray-400 truncate italic"
+                                                            x-text="conv.last_bot_reply_text || '<?php echo __('waiting_response'); ?>'"></p>
                                                     </div>
                                                     <div class="flex flex-wrap gap-2 mb-4">
                                                         <template x-if="conv.is_anger_detected == 1">
@@ -401,8 +407,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                                         </template>
                                                         <template x-if="conv.repeat_count >= 3">
                                                             <span
-                                                                class="px-2 py-1 bg-orange-500/20 text-orange-400 text-[8px] font-black rounded-lg border border-orange-500/20 uppercase">Repeat
-                                                                Loop</span>
+                                                                class="px-2 py-1 bg-orange-500/20 text-orange-400 text-[8px] font-black rounded-lg border border-orange-500/20 uppercase"><?php echo __('repetition_alert'); ?></span>
                                                         </template>
                                                     </div>
                                                     <button @click="resolveHandover(conv.id)"
