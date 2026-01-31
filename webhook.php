@@ -206,7 +206,7 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
                     $notify_title = __('handover_notification_title');
                     $section_name = ($source === 'message') ? __('nav_messenger_bot') : __('nav_auto_reply');
                     $notify_msg = sprintf(__('handover_notification_msg'), $page['page_name'], $section_name);
-                    $notify_link = ($source === 'message') ? 'page_messenger_bot.php' : 'page_auto_reply.php';
+                    $notify_link = ($source === 'message') ? 'user/page_messenger_bot.php' : 'user/page_auto_reply.php';
                     addNotification($page['user_id'], $notify_title, $notify_msg, $notify_link);
 
                     return; // SILENCE
@@ -226,7 +226,7 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
                 $notify_title = __('handover_notification_title');
                 $section_name = ($source === 'message') ? __('nav_messenger_bot') : __('nav_auto_reply');
                 $notify_msg = sprintf(__('handover_notification_msg'), $page['page_name'], $section_name);
-                $notify_link = ($source === 'message') ? 'page_messenger_bot.php' : 'page_auto_reply.php';
+                $notify_link = ($source === 'message') ? 'user/page_messenger_bot.php' : 'user/page_auto_reply.php';
                 addNotification($page['user_id'], $notify_title, $notify_msg, $notify_link);
 
                 return; // SILENCE

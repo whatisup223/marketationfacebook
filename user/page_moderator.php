@@ -26,57 +26,53 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <div class="flex min-h-screen bg-gray-900 font-sans" x-data="autoModerator()">
     <?php include '../includes/user_sidebar.php'; ?>
 
-    <main class="flex-1 flex flex-col bg-gray-900/50 backdrop-blur-md relative p-6">
-
-        <!-- Modals moved to top for scope reliability -->
-        <div x-show="showDeleteModal" x-cloak x-transition.opacity
-            class="fixed inset-0 z-[500] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
-            <div @click.away="showDeleteModal = false"
-                class="bg-gray-900 border border-white/10 rounded-[2.5rem] p-8 max-w-sm w-full shadow-2xl text-center">
-                <div class="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <svg class="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+    <!-- Modals moved outside main to fix containing block issues (backdrop-filter) -->
+    <div x-show="showDeleteModal" x-cloak x-transition.opacity
+        class="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
+        <div @click.away="showDeleteModal = false"
+            class="bg-gray-900 border border-white/10 rounded-[2.5rem] p-8 max-w-sm w-full shadow-2xl text-center">
+            <div class="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg class="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2"><?php echo __('confirm_delete'); ?></h3>
+            <p class="text-gray-500 text-sm mb-8"><?php echo __('delete_log_hint'); ?></p>
+            <div class="flex gap-4">
+                <button @click="showDeleteModal = false"
+                    class="flex-1 py-4 bg-white/5 hover:bg-white/10 text-gray-300 rounded-2xl font-bold transition-all">
+                    <?php echo __('cancel'); ?>
+                </button>
+                <button @click="deleteLog()" :disabled="deleting"
+                    class="flex-1 py-4 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-bold transition-all flex items-center justify-center gap-2">
+                    <svg x-show="deleting" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                        </circle>
+                        <path class="opacity-75" fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                        </path>
                     </svg>
-                </div>
-                <h3 class="text-xl font-bold text-white mb-2"><?php echo __('confirm_delete'); ?></h3>
-                <p class="text-gray-500 text-sm mb-8"><?php echo __('delete_log_hint'); ?></p>
-                <div class="flex gap-4">
-                    <button @click="showDeleteModal = false"
-                        class="flex-1 py-4 bg-white/5 hover:bg-white/10 text-gray-300 rounded-2xl font-bold transition-all">
-                        <?php echo __('cancel'); ?>
-                    </button>
-                    <button @click="deleteLog()" :disabled="deleting"
-                        class="flex-1 py-4 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-bold transition-all flex items-center justify-center gap-2">
-                        <svg x-show="deleting" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
-                            </circle>
-                            <path class="opacity-75" fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                            </path>
-                        </svg>
-                        <span x-text="deleting ? '...' : '<?php echo __('confirm'); ?>'"></span>
-                    </button>
-                </div>
+                    <span x-text="deleting ? '...' : '<?php echo __('confirm'); ?>'"></span>
+                </button>
             </div>
         </div>
+    </div>
 
-        <!-- Success Modal -->
-        <template x-if="showSuccessModal">
-            <div class="fixed inset-0 z-[500] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md"
-                x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0"
-                x-transition:enter-end="opacity-100">
+    <!-- Success Modal -->
+    <div x-show="showSuccessModal" x-cloak x-transition.opacity
+        class="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
+        <div @click.away="showSuccessModal = false"
+            class="bg-[#0b0e14] border border-indigo-500/30 rounded-[3rem] p-10 max-w-sm w-full shadow-[0_0_50px_rgba(79,70,229,0.3)] text-center relative overflow-hidden group">
+            <h3 class="text-2xl font-black text-white mb-4 tracking-tight" x-text="successMessage"></h3>
+            <button @click="showSuccessModal = false"
+                class="w-full py-4 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-2xl font-black text-sm transition-all">
+                <?php echo __('continue'); ?>
+            </button>
+        </div>
+    </div>
 
-                <div @click.away="showSuccessModal = false"
-                    class="bg-[#0b0e14] border border-indigo-500/30 rounded-[3rem] p-10 max-w-sm w-full shadow-[0_0_50px_rgba(79,70,229,0.3)] text-center relative overflow-hidden group">
-                    <h3 class="text-2xl font-black text-white mb-4 tracking-tight" x-text="successMessage"></h3>
-                    <button @click="showSuccessModal = false"
-                        class="w-full py-4 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-2xl font-black text-sm transition-all">
-                        <?php echo __('continue'); ?>
-                    </button>
-                </div>
-            </div>
-        </template>
+    <main class="flex-1 flex flex-col bg-gray-900/50 backdrop-blur-md relative p-6">
 
         <!-- Header -->
         <div class="flex-none flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
@@ -123,9 +119,9 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             class="w-full bg-black/40 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-3.5 pr-10 appearance-none transition-all group-hover:border-white/20">
                             <option value=""><?php echo __('select_page'); ?>...</option>
                             <?php foreach ($pages as $page): ?>
-                                        <option value="<?php echo htmlspecialchars($page['page_id']); ?>">
-                                            <?php echo htmlspecialchars($page['page_name']); ?>
-                                        </option>
+                                <option value="<?php echo htmlspecialchars($page['page_id']); ?>">
+                                    <?php echo htmlspecialchars($page['page_name']); ?>
+                                </option>
                             <?php endforeach; ?>
                         </select>
                         <div
@@ -806,9 +802,9 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     this.showDeleteModal = false;
                     this.loadLogs();
                     this.logToDelete = null;
-                } catch (e) { 
+                } catch (e) {
                     console.error('Delete error:', e);
-                    alert('Error deleting log'); 
+                    alert('Error deleting log');
                 }
                 finally { this.deleting = false; }
             }
