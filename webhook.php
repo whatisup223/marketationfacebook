@@ -114,22 +114,10 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
     if (!$page || !$page['page_access_token'])
         return;
 
-    // 2. Global Schedule Check (Always applies if enabled)
-    if ($page['bot_schedule_enabled']) {
-        date_default_timezone_set('Africa/Cairo');
-        $now = date('H:i');
-        $start = !empty($page['bot_schedule_start']) ? substr($page['bot_schedule_start'], 0, 5) : '00:00';
-        $end = !empty($page['bot_schedule_end']) ? substr($page['bot_schedule_end'], 0, 5) : '23:59';
-
-        $is_inside = ($start <= $end) ? ($now >= $start && $now <= $end) : ($now >= $start || $now <= $end);
-        if (!$is_inside)
-            return;
-    }
-
     $access_token = $page['page_access_token'];
 
-    // 3. Find Rule Match
-    // 3.1 Try Keywords First
+    // 2. Find Rule Match
+    // 2.1 Try Keywords First
     $stmt = $pdo->prepare("SELECT * FROM auto_reply_rules WHERE page_id = ? AND reply_source = ? AND trigger_type = 'keyword' ORDER BY created_at DESC");
     $stmt->execute([$page_id, $source]);
     $rules = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -158,7 +146,7 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
         }
     }
 
-    // 3.2 If no keyword match, try Default Rule
+    // 2.2 If no keyword match, try Default Rule
     if (!$reply_msg) {
         $stmt = $pdo->prepare("SELECT * FROM auto_reply_rules WHERE page_id = ? AND reply_source = ? AND trigger_type = 'default' LIMIT 1");
         $stmt->execute([$page_id, $source]);
@@ -172,19 +160,25 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
     if (!$reply_msg)
         return;
 
-    // 4. Cooldown / Human Takeover Logic
-    // Apply cooldown if:
-    // - Cooldown setting is > 0
-    // - AND (it's NOT a keyword match OR the user specifically wants to apply cooldown even to keywords)
-    $cooldown_seconds = (int) ($page['bot_cooldown_seconds'] ?? 0);
+    // 3. Decision Logic: Can we bypass Schedule and Cooldown?
     $exclude_keywords = (int) ($page['bot_exclude_keywords'] ?? 0);
+    $is_exempt = ($is_keyword_match && $exclude_keywords === 1);
 
-    $should_check_cooldown = ($cooldown_seconds > 0);
+    // 4. Global Schedule Check (Skip if it's an exempt keyword)
+    if (!$is_exempt && $page['bot_schedule_enabled']) {
+        date_default_timezone_set('Africa/Cairo');
+        $now = date('H:i');
+        $start = !empty($page['bot_schedule_start']) ? substr($page['bot_schedule_start'], 0, 5) : '00:00';
+        $end = !empty($page['bot_schedule_end']) ? substr($page['bot_schedule_end'], 0, 5) : '23:59';
 
-    // Bypass cooldown ONLY if it's a keyword match AND exclusion is enabled
-    if ($is_keyword_match && $exclude_keywords === 1) {
-        $should_check_cooldown = false;
+        $is_inside = ($start <= $end) ? ($now >= $start && $now <= $end) : ($now >= $start || $now <= $end);
+        if (!$is_inside)
+            return;
     }
+
+    // 6. Cooldown / Human Takeover Logic
+    $cooldown_seconds = (int) ($page['bot_cooldown_seconds'] ?? 0);
+    $should_check_cooldown = ($cooldown_seconds > 0 && !$is_exempt);
 
     if ($should_check_cooldown) {
         // Cooldown check is only relevant for Messenger or identification-based sources
