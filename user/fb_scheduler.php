@@ -563,17 +563,18 @@ require_once __DIR__ . '/../includes/header.php';
                                                 x-text="formData.content || '<?php echo __('post_content_placeholder'); ?>'">
                                             </div>
 
-                                            <div class="relative bg-gray-900 overflow-hidden border-y border-white/5"
+                                            <div class="relative bg-black w-full overflow-hidden flex items-center justify-center border-y border-white/5"
                                                 :class="(formData.post_type === 'story' || formData.post_type === 'reel') ? 'aspect-[9/16]' : 'aspect-video'"
                                                 x-show="formData.media_url">
                                                 <template x-if="isVideoUrl(formData.media_url)">
-                                                    <div class="relative w-full h-full">
-                                                        <video :src="formData.media_url"
-                                                            class="absolute inset-0 w-full h-full object-cover"
-                                                            muted></video>
+                                                    <div
+                                                        class="relative w-full h-full flex items-center justify-center">
+                                                        <video :src="formData.media_url + '#t=0.1'"
+                                                            class="max-w-full max-h-full object-contain" muted
+                                                            playsinline loop></video>
                                                         <div
-                                                            class="absolute inset-0 flex items-center justify-center bg-black/20">
-                                                            <svg class="w-12 h-12 text-white opacity-70"
+                                                            class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                                            <svg class="w-12 h-12 text-white opacity-70 drop-shadow-lg"
                                                                 fill="currentColor" viewBox="0 0 20 20">
                                                                 <path
                                                                     d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z">
@@ -584,7 +585,7 @@ require_once __DIR__ . '/../includes/header.php';
                                                 </template>
                                                 <template x-if="!isVideoUrl(formData.media_url)">
                                                     <img :src="formData.media_url"
-                                                        class="absolute inset-0 w-full h-full object-cover">
+                                                        class="max-w-full max-h-full object-contain">
                                                 </template>
                                             </div>
                                         </div>
@@ -620,6 +621,24 @@ require_once __DIR__ . '/../includes/header.php';
                                         :style="'width: ' + uploadPercent + '%'">
                                         <div class="absolute inset-0 bg-white/20 animate-[shimmer_2s_infinite]"></div>
                                     </div>
+                                </div>
+                                <!-- Upload Stats -->
+                                <!-- Upload Stats -->
+                                <div x-show="uploading && uploadStats"
+                                    class="flex justify-between items-center mt-2 text-[10px] text-gray-400 font-mono">
+                                    <template x-if="uploadStats">
+                                        <div class="flex justify-between w-full">
+                                            <span>
+                                                <span x-text="formatBytes(uploadStats.loaded)"></span> /
+                                                <span x-text="formatBytes(uploadStats.total)"></span>
+                                            </span>
+                                            <span class="flex gap-3">
+                                                <span x-text="formatBytes(uploadStats.speed) + '/s'"></span>
+                                                <span class="text-indigo-400"
+                                                    x-text="'ETA: ' + formatTime(uploadStats.eta)"></span>
+                                            </span>
+                                        </div>
+                                    </template>
                                 </div>
                             </div>
 
@@ -668,6 +687,7 @@ require_once __DIR__ . '/../includes/header.php';
                 scheduled_at: '',
                 media_url: ''
             },
+            uploadStats: null,
             init() {
                 if (this.formData.page_id) {
                     this.fetchTokenDebug();
@@ -682,14 +702,40 @@ require_once __DIR__ . '/../includes/header.php';
 
             isVideoUrl(url) {
                 if (!url) return false;
+
+                // Check if it's a blob url from local selection
+                if (url.startsWith('blob:')) {
+                    const file = this.filesSelected.find(f => f.preview === url);
+                    if (file) {
+                        return file.type.startsWith('video/');
+                    }
+                }
+
                 const videoExtensions = ['.mp4', '.mov', '.avi', '.webm', '.mkv'];
                 return videoExtensions.some(ext => url.toLowerCase().includes(ext));
             },
 
             progressText() {
-                if (this.uploading && this.uploadPercent < 100) return 'Uploading Media...';
-                if (this.uploadPercent >= 100 || this.processing) return 'Processing with Facebook...';
+                if (this.uploading && this.uploadPercent < 100) return '<?php echo __('uploading_media'); ?> ' + this.uploadPercent + '%';
+                if (this.uploadPercent >= 100 || this.processing) return '<?php echo __('processing_facebook'); ?>';
                 return '';
+            },
+
+            formatBytes(bytes, decimals = 2) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const dm = decimals < 0 ? 0 : decimals;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+            },
+
+            formatTime(seconds) {
+                if (!isFinite(seconds) || seconds < 0) return '...';
+                if (seconds < 60) return Math.round(seconds) + 's';
+                const m = Math.floor(seconds / 60);
+                const s = Math.round(seconds % 60);
+                return `${m}m ${s}s`;
             },
 
             async fetchTokenDebug() {
@@ -828,6 +874,13 @@ require_once __DIR__ . '/../includes/header.php';
                 this.uploading = true;
                 this.processing = false;
                 this.uploadPercent = 0;
+                this.uploadStats = {
+                    total: 0,
+                    loaded: 0,
+                    speed: 0,
+                    eta: 0,
+                    startTime: Date.now()
+                };
 
                 const sendData = new FormData();
                 sendData.append('page_id', this.formData.page_id);
@@ -854,6 +907,21 @@ require_once __DIR__ . '/../includes/header.php';
 
                 xhr.upload.addEventListener('progress', (e) => {
                     if (e.lengthComputable) {
+                        const now = Date.now();
+                        const timeElapsed = (now - this.uploadStats.startTime) / 1000; // seconds
+
+                        // Calculate Speed (bytes per second)
+                        const speed = timeElapsed > 0 ? e.loaded / timeElapsed : 0;
+
+                        // Calculate ETA (seconds)
+                        const remainingBytes = e.total - e.loaded;
+                        const eta = speed > 0 ? remainingBytes / speed : 0;
+
+                        this.uploadStats.total = e.total;
+                        this.uploadStats.loaded = e.loaded;
+                        this.uploadStats.speed = speed;
+                        this.uploadStats.eta = eta;
+
                         const percentComplete = Math.round((e.loaded / e.total) * 100);
                         this.uploadPercent = percentComplete;
                         if (percentComplete >= 100) {

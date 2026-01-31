@@ -426,6 +426,8 @@ $translations = [
         'yearly' => 'سنوياً',
         'one_feature_per_line' => 'ميزة واحدة في كل سطر',
         'most_popular' => 'الأكثر شعبية',
+        'uploading_media' => 'جاري رفع الوسائط...',
+        'processing_facebook' => 'جاري المعالجة مع فيسبوك...',
 
 
         // Auth & Profile
@@ -1469,6 +1471,8 @@ $translations = [
         'yearly' => 'Yearly',
         'one_feature_per_line' => 'One feature per line',
         'most_popular' => 'Most Popular',
+        'uploading_media' => 'Uploading Media...',
+        'processing_facebook' => 'Processing with Facebook...',
 
 
         // Auth & Profile

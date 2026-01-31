@@ -476,7 +476,7 @@ class FacebookAPI
             $ext = strtolower(pathinfo($media->getFilename(), PATHINFO_EXTENSION));
             if (in_array($ext, ['mp4', 'mov', 'avi']))
                 $is_video = true;
-        } else {
+        } elseif (!empty($media)) {
             $abs_file = realpath($media);
             if ($abs_file && file_exists($abs_file)) {
                 $media_item = new CURLFile($abs_file);
@@ -516,7 +516,7 @@ class FacebookAPI
 
         if ($media instanceof CURLFile) {
             $params['source'] = $media;
-        } else {
+        } elseif (!empty($media)) {
             $abs_path = realpath($media);
             if ($abs_path) {
                 $params['source'] = new CURLFile($abs_path);
