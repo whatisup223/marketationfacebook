@@ -190,7 +190,7 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
         if ($thread_user_id) {
             $convs = $fb->makeRequest("{$page_id}/conversations", [
                 'user_id' => $thread_user_id,
-                'fields' => 'messages.limit(5){from,created_time}'
+                'fields' => 'messages.limit(5){id,from,created_time}'
             ], $access_token);
 
             if (isset($convs['data'][0]['messages']['data'])) {
@@ -200,8 +200,8 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 
                     if ($msg_sender_id == $page_id) {
                         // Check if this ID is in our bot_sent_messages table
-                        $chk = $pdo->prepare("SELECT id FROM bot_sent_messages WHERE message_id = ?");
-                        $chk->execute([$fb_msg_id]);
+                        $chk = $pdo->prepare("SELECT id FROM bot_sent_messages WHERE message_id = ? OR ? LIKE CONCAT('%', message_id, '%') OR message_id LIKE CONCAT('%', ?, '%') LIMIT 1");
+                        $chk->execute([$fb_msg_id, $fb_msg_id, $fb_msg_id]);
 
                         if (!$chk->fetch()) {
                             // Message from Page, NOT in Bot database -> It's a Human Admin
@@ -220,7 +220,7 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
         // B. Check Comment Replies if source is comment
         if ($source === 'comment') {
             $replies = $fb->makeRequest("{$target_id}/comments", [
-                'fields' => 'from,created_time',
+                'fields' => 'id,from,created_time',
                 'limit' => 5
             ], $access_token);
 
@@ -230,9 +230,9 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
                     $fb_reply_id = $reply['id'] ?? '';
 
                     if ($reply_sender_id == $page_id) {
-                        // Check if this ID is in our bot_sent_messages table
-                        $chk = $pdo->prepare("SELECT id FROM bot_sent_messages WHERE message_id = ?");
-                        $chk->execute([$fb_reply_id]);
+                        // Robust check for comment IDs
+                        $chk = $pdo->prepare("SELECT id FROM bot_sent_messages WHERE message_id = ? OR ? LIKE CONCAT('%', message_id, '%') OR message_id LIKE CONCAT('%', ?, '%') LIMIT 1");
+                        $chk->execute([$fb_reply_id, $fb_reply_id, $fb_reply_id]);
 
                         if (!$chk->fetch()) {
                             // Reply from Page, NOT in Bot database -> It's a Human Admin
@@ -261,9 +261,10 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
     }
 
     // 6. Log Bot Reply ID to database
-    if (isset($res['id'])) {
+    $sent_id = $res['id'] ?? $res['message_id'] ?? null;
+    if ($sent_id) {
         $stmt = $pdo->prepare("INSERT IGNORE INTO bot_sent_messages (message_id, page_id) VALUES (?, ?)");
-        $stmt->execute([$res['id'], $page_id]);
+        $stmt->execute([$sent_id, $page_id]);
     }
 }
 
