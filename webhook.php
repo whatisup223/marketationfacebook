@@ -114,12 +114,12 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
     if (!$page || !$page['page_access_token'])
         return;
 
-    // 2. Global Schedule Check (Always applies)
+    // 2. Global Schedule Check (Always applies if enabled)
     if ($page['bot_schedule_enabled']) {
         date_default_timezone_set('Africa/Cairo');
         $now = date('H:i');
-        $start = substr($page['bot_schedule_start'], 0, 5);
-        $end = substr($page['bot_schedule_end'], 0, 5);
+        $start = !empty($page['bot_schedule_start']) ? substr($page['bot_schedule_start'], 0, 5) : '00:00';
+        $end = !empty($page['bot_schedule_end']) ? substr($page['bot_schedule_end'], 0, 5) : '23:59';
 
         $is_inside = ($start <= $end) ? ($now >= $start && $now <= $end) : ($now >= $start || $now <= $end);
         if (!$is_inside)
@@ -144,7 +144,9 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
             $kw = trim($kw);
             if (empty($kw))
                 continue;
-            if (mb_stripos($incoming_text, $kw) !== false) {
+
+            // Robust matching: trim and case-insensitive check
+            if (mb_stripos(trim($incoming_text), $kw) !== false) {
                 $reply_msg = $rule['reply_message'];
                 $hide_comment = $rule['hide_comment'];
                 $is_keyword_match = true;
@@ -169,11 +171,16 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 
     // 4. Cooldown / Human Takeover Logic
     // Apply cooldown if:
-    // - Setting is > 0
-    // - AND (it's a default reply OR it's a keyword reply but bot_exclude_keywords is OFF)
-    $should_check_cooldown = ($page['bot_cooldown_seconds'] > 0);
-    if ($is_keyword_match && $page['bot_exclude_keywords']) {
-        $should_check_cooldown = false; // Bypass cooldown for keywords if requested
+    // - Cooldown setting is > 0
+    // - AND (it's NOT a keyword match OR the user specifically wants to apply cooldown even to keywords)
+    $cooldown_seconds = (int) ($page['bot_cooldown_seconds'] ?? 0);
+    $exclude_keywords = (int) ($page['bot_exclude_keywords'] ?? 0);
+
+    $should_check_cooldown = ($cooldown_seconds > 0);
+
+    // Bypass cooldown ONLY if it's a keyword match AND exclusion is enabled
+    if ($is_keyword_match && $exclude_keywords === 1) {
+        $should_check_cooldown = false;
     }
 
     if ($should_check_cooldown) {
