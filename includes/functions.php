@@ -466,6 +466,14 @@ $translations = [
         'live_alerts_center' => 'مركز التنبيهات المباشرة',
         'human_intervention_needed' => 'تدخل بشري مطلوب فوراً',
         'no_active_alerts' => 'لا توجد تنبيهات نشطة حالياً. البوت يعمل بكفاءة!',
+        'live_database_feed' => 'تحديث مباشر من قاعدة البيانات',
+        'highest_traffic_period' => 'فترة الذروة للتفاعل',
+        'top_performing_logic' => 'القاعدة الأكثر استجابة',
+        'api_status_operational' => 'جاهز للعمل',
+        'resolved_conversations_count' => 'المحادثات التي تم حلها',
+        'resolution_efficiency' => 'كفاءة حل المحادثات',
+        'safety_alerts' => 'تنبيهات السلبية السامة',
+        'all_rules' => 'كافة القواعد',
 
 
         // Auth & Profile
@@ -2629,6 +2637,15 @@ $translations = [
         'preview_empty_msg' => 'Your reply will appear here...',
         'just_now' => 'Just now',
         'webhook_global_warning' => 'Warning: This URL and Token are shared for both Comments and Messages. Regenerating either will require updating your Facebook App dashboard settings.',
+        'bulk_delete_desc' => 'You are about to delete %d posts. Delete from Facebook as well?',
+        'safety_alerts' => 'Safety & Toxicity Alerts',
+        'all_rules' => 'All Rules',
+        'live_database_feed' => 'Live Database Feed',
+        'highest_traffic_period' => 'Highest Traffic Period',
+        'top_performing_logic' => 'Top Performing Logic',
+        'api_status_operational' => 'API Status Operational',
+        'resolved_conversations_count' => 'Resolved Conversations',
+        'resolution_efficiency' => 'Resolution Efficiency',
         'post_scheduler' => 'Post Scheduler',
         'new_post_btn' => 'New Post',
         'sync_all' => 'Sync All',
@@ -2640,7 +2657,6 @@ $translations = [
         'selection_mode' => 'Selection Mode',
         'exit_selection' => 'Exit Selection',
         'bulk_delete_title' => 'Bulk Delete',
-        'bulk_delete_desc' => 'You are about to delete %d posts. Delete from Facebook as well?',
     ],
 ];
 

@@ -441,6 +441,11 @@ if ($action === 'fetch_page_stats') {
         // 7. System Health (Simulation based on successful replies)
         $health = $total_interacted > 0 ? "99.9%" : "100%";
 
+        // 8. Anger/Negative Sentiment Blocks
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM bot_conversation_states WHERE page_id = ? AND is_anger_detected = 1 $state_time_query");
+        $stmt->execute([$page_id]);
+        $anger_alerts = $stmt->fetchColumn();
+
         echo json_encode([
             'success' => true,
             'stats' => [
@@ -451,6 +456,7 @@ if ($action === 'fetch_page_stats') {
                 'top_rule' => $top_rule_name,
                 'peak_hour' => $peak_hour,
                 'system_health' => $health,
+                'anger_alerts' => (int) $anger_alerts,
                 'ai_filtered' => (int) $total_interacted // Keeping old key for compatibility
             ]
         ]);
