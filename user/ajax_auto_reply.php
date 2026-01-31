@@ -68,7 +68,7 @@ if ($action === 'fetch_page_settings') {
     }
 
     try {
-        $stmt = $pdo->prepare("SELECT bot_cooldown_seconds, bot_schedule_enabled, bot_schedule_start, bot_schedule_end, bot_exclude_keywords FROM fb_pages WHERE page_id = ?");
+        $stmt = $pdo->prepare("SELECT bot_cooldown_seconds, bot_schedule_enabled, bot_schedule_start, bot_schedule_end, bot_exclude_keywords, bot_ai_sentiment_enabled, bot_anger_keywords FROM fb_pages WHERE page_id = ?");
         $stmt->execute([$page_id]);
         $settings = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -153,6 +153,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $reply = $_POST['reply'] ?? '';
         $rule_id = $_POST['rule_id'] ?? '';
         $hide_comment = isset($_POST['hide_comment']) ? (int) $_POST['hide_comment'] : 0;
+        $is_ai_safe = isset($_POST['is_ai_safe']) ? (int) $_POST['is_ai_safe'] : 1;
+        $bypass_schedule = isset($_POST['bypass_schedule']) ? (int) $_POST['bypass_schedule'] : 0;
+        $bypass_cooldown = isset($_POST['bypass_cooldown']) ? (int) $_POST['bypass_cooldown'] : 0;
         $source = $_POST['source'] ?? 'comment';
 
         // Allow empty reply ONLY for default type (to disable it)
@@ -164,8 +167,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             if ($rule_id) {
                 // Update
-                $stmt = $pdo->prepare("UPDATE auto_reply_rules SET trigger_type = ?, keywords = ?, reply_message = ?, hide_comment = ?, reply_source = ? WHERE id = ? AND page_id = ?");
-                $stmt->execute([$type, $keywords, $reply, $hide_comment, $source, $rule_id, $page_id]);
+                $stmt = $pdo->prepare("UPDATE auto_reply_rules SET trigger_type = ?, keywords = ?, reply_message = ?, hide_comment = ?, is_ai_safe = ?, bypass_schedule = ?, bypass_cooldown = ?, reply_source = ? WHERE id = ? AND page_id = ?");
+                $stmt->execute([$type, $keywords, $reply, $hide_comment, $is_ai_safe, $bypass_schedule, $bypass_cooldown, $source, $rule_id, $page_id]);
             } else {
                 // Check if existing default rule
                 if ($type === 'default') {
@@ -180,8 +183,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 // Insert
-                $stmt = $pdo->prepare("INSERT INTO auto_reply_rules (page_id, trigger_type, keywords, reply_message, hide_comment, reply_source) VALUES (?, ?, ?, ?, ?, ?)");
-                $stmt->execute([$page_id, $type, $keywords, $reply, $hide_comment, $source]);
+                $stmt = $pdo->prepare("INSERT INTO auto_reply_rules (page_id, trigger_type, keywords, reply_message, hide_comment, is_ai_safe, bypass_schedule, bypass_cooldown, reply_source) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->execute([$page_id, $type, $keywords, $reply, $hide_comment, $is_ai_safe, $bypass_schedule, $bypass_cooldown, $source]);
             }
             echo json_encode(['success' => true, 'message' => __('rule_saved')]);
             exit;
@@ -244,6 +247,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $sch_start = $_POST['schedule_start'] ?? '00:00';
         $sch_end = $_POST['schedule_end'] ?? '23:59';
         $exclude_kw = (int) ($_POST['exclude_keywords'] ?? 0);
+        $ai_enabled = (int) ($_POST['ai_sentiment_enabled'] ?? 1);
+        $anger_kws = $_POST['anger_keywords'] ?? '';
 
         if (!$page_id) {
             echo json_encode(['success' => false, 'error' => 'Page ID is required']);
@@ -256,9 +261,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 bot_schedule_enabled = ?, 
                 bot_schedule_start = ?, 
                 bot_schedule_end = ?,
-                bot_exclude_keywords = ?
+                bot_exclude_keywords = ?,
+                bot_ai_sentiment_enabled = ?,
+                bot_anger_keywords = ?
                 WHERE page_id = ?");
-            $stmt->execute([$cooldown, $sch_enabled, $sch_start, $sch_end, $exclude_kw, $page_id]);
+            $stmt->execute([$cooldown, $sch_enabled, $sch_start, $sch_end, $exclude_kw, $ai_enabled, $anger_kws, $page_id]);
             echo json_encode(['success' => true, 'message' => __('settings_updated')]);
         } catch (Exception $e) {
             echo json_encode(['success' => false, 'error' => $e->getMessage()]);
@@ -301,5 +308,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         exit;
     }
+}
+
+if ($action === 'fetch_handover_conversations') {
+    $page_id = $_GET['page_id'] ?? '';
+    if (!$page_id) {
+        echo json_encode(['success' => false, 'error' => 'No page ID']);
+        exit;
+    }
+    try {
+        $stmt = $pdo->prepare("SELECT * FROM bot_conversation_states WHERE page_id = ? AND conversation_state = 'handover' ORDER BY updated_at DESC");
+        $stmt->execute([$page_id]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        echo json_encode(['success' => true, 'conversations' => $rows]);
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+    exit;
+}
+
+if ($action === 'mark_as_resolved') {
+    $id = $_POST['id'] ?? '';
+    if (!$id) {
+        echo json_encode(['success' => false, 'error' => 'No state ID']);
+        exit;
+    }
+    try {
+        $stmt = $pdo->prepare("UPDATE bot_conversation_states SET conversation_state = 'active', repeat_count = 0, is_anger_detected = 0 WHERE id = ?");
+        $stmt->execute([$id]);
+        echo json_encode(['success' => true]);
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+    exit;
 }
 ?>

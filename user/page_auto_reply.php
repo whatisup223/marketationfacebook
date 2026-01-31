@@ -367,6 +367,66 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                 <div x-show="selectedPageId" x-transition.opacity class="space-y-8" style="display: none;">
 
+                    <!-- Handover & Anger Alerts -->
+                    <template x-if="handoverConversations.length > 0">
+                        <div
+                            class="glass-panel p-6 bg-red-500/10 border border-red-500/30 rounded-[2rem] overflow-hidden relative group">
+                            <div class="absolute top-0 left-0 w-1.5 h-full bg-red-500"></div>
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="animate-pulse p-2 bg-red-500/20 rounded-lg">
+                                        <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                                            </path>
+                                        </svg>
+                                    </div>
+                                    <h4 class="text-xl font-black text-white"><?php echo __('handover_alert'); ?></h4>
+                                </div>
+                                <span
+                                    class="px-3 py-1 bg-red-500/20 text-red-400 text-[10px] font-black rounded-full uppercase tracking-tighter"
+                                    x-text="handoverConversations.length + ' Active Handover(s)'"></span>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <template x-for="conv in handoverConversations" :key="conv.id">
+                                    <div
+                                        class="bg-black/40 border border-white/5 p-4 rounded-2xl flex items-center justify-between group/item hover:border-red-500/50 transition-all">
+                                        <div class="flex items-center gap-4 min-w-0">
+                                            <div class="w-10 h-10 rounded-xl bg-gray-800 flex items-center justify-center text-white font-bold border border-white/10"
+                                                x-text="conv.user_id.substring(0,2)"></div>
+                                            <div class="min-w-0">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="text-sm font-bold text-white truncate"
+                                                        x-text="conv.user_id"></span>
+                                                    <template x-if="conv.is_anger_detected == 1">
+                                                        <span
+                                                            class="px-2 py-0.5 bg-red-500/20 text-red-500 text-[8px] font-black rounded uppercase">ANGER</span>
+                                                    </template>
+                                                    <template x-if="conv.repeat_count >= 3">
+                                                        <span
+                                                            class="px-2 py-0.5 bg-orange-500/20 text-orange-400 text-[8px] font-black rounded uppercase">REPEAT
+                                                            (3X)</span>
+                                                    </template>
+                                                </div>
+                                                <p class="text-[10px] text-gray-500 truncate mt-0.5 italic"
+                                                    x-text="'Last reply: ' + (conv.last_bot_reply_text || 'None')"></p>
+                                            </div>
+                                        </div>
+                                        <button @click="resolveHandover(conv.id)"
+                                            class="p-2 bg-indigo-500/10 hover:bg-indigo-500 text-indigo-400 hover:text-white rounded-xl transition-all border border-indigo-500/20">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M5 13l4 4L19 7"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+
                     <!-- Advanced Intelligence & Scheduling -->
                     <div
                         class="glass-panel p-8 rounded-[2rem] border border-white/10 bg-indigo-500/10 backdrop-blur-2xl hover:border-indigo-400/30 transition-all shadow-2xl relative overflow-hidden group">
@@ -375,7 +435,8 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <div class="flex justify-between items-start mb-6">
                             <div>
                                 <h3 class="text-2xl font-bold text-white mb-2">
-                                    <?php echo __('bot_intelligence_settings'); ?></h3>
+                                    <?php echo __('bot_intelligence_settings'); ?>
+                                </h3>
                                 <p class="text-gray-400 text-sm max-w-md"><?php echo __('human_takeover_hint'); ?></p>
                             </div>
                             <button @click="savePageSettings()" :disabled="savingPageSettings"
@@ -449,20 +510,118 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     </div>
                                 </div>
 
-                                <div class="pt-4 border-t border-white/5">
-                                    <label class="flex items-center gap-3 cursor-pointer group/toggle text-left">
-                                        <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in flex-shrink-0">
-                                            <input type="checkbox" x-model="botExcludeKeywords" id="toggleExcludeKeywords"
-                                                class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
-                                            <label for="toggleExcludeKeywords" :class="botExcludeKeywords ? 'bg-indigo-600' : 'bg-gray-700'"
-                                                class="toggle-label block overflow-hidden h-5 rounded-full cursor-pointer transition-colors"></label>
-                                        </div>
-                                        <div class="flex-1 min-w-0">
-                                            <span class="text-sm font-bold text-white block group-hover/toggle:text-indigo-400 transition-colors"><?php echo __('bot_exclude_keywords'); ?></span>
-                                            <span class="text-[10px] text-gray-500 block leading-tight mt-0.5"><?php echo __('bot_exclude_keywords_hint'); ?></span>
-                                        </div>
-                                    </label>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Protection Card (Moved) -->
+                    <div
+                        class="glass-panel p-8 rounded-[2rem] border border-white/10 bg-white/5 backdrop-blur-2xl hover:border-indigo-500/20 transition-all shadow-2xl relative overflow-hidden group">
+                        <!-- Decorative Background -->
+                        <div
+                            class="absolute top-0 right-0 w-32 h-32 bg-indigo-600/10 blur-3xl -mr-16 -mt-16 pointer-events-none">
+                        </div>
+
+                        <div class="flex flex-col md:flex-row gap-8">
+                            <!-- Left Side: Toggle & Info -->
+                            <div class="flex-shrink-0 w-full md:w-64">
+                                <div class="flex items-center gap-3 mb-4">
+                                    <div class="p-3 bg-indigo-500/20 rounded-xl">
+                                        <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                        </svg>
+                                    </div>
+                                    <h3 class="text-xl font-bold text-white"><?php echo __('ai_protection'); ?></h3>
                                 </div>
+
+                                <div class="bg-black/20 p-5 rounded-2xl border border-white/5 space-y-4">
+                                    <div class="flex items-center justify-between">
+                                        <span
+                                            class="text-xs font-bold text-gray-400 uppercase tracking-wider"><?php echo __('status'); ?></span>
+                                        <div
+                                            class="relative inline-block w-11 align-middle select-none transition duration-200 ease-in">
+                                            <input type="checkbox" x-model="aiSentimentEnabled"
+                                                id="toggleAiSentimentCard"
+                                                class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
+                                            <label for="toggleAiSentimentCard"
+                                                :class="aiSentimentEnabled ? 'bg-indigo-600' : 'bg-gray-700'"
+                                                class="toggle-label block overflow-hidden h-6 rounded-full cursor-pointer transition-colors"></label>
+                                        </div>
+                                    </div>
+                                    <p class="text-xs text-gray-500 leading-relaxed">
+                                        <?php echo __('human_takeover_hint'); ?>
+                                    </p>
+                                </div>
+
+                                <!-- Compact Exclude Toggle -->
+                                <div
+                                    class="mt-4 flex items-center justify-between gap-3 p-3 rounded-xl border border-white/5 bg-white/5 hover:border-indigo-500/30 transition-all group">
+                                    <div class="flex items-center gap-2.5 min-w-0">
+                                        <div
+                                            class="w-1.5 h-1.5 rounded-full bg-indigo-500/50 group-hover:bg-indigo-400 group-hover:scale-125 transition-all flex-shrink-0">
+                                        </div>
+                                        <span
+                                            class="text-[11px] font-bold text-gray-400 uppercase tracking-widest truncate group-hover:text-gray-200 transition-colors">
+                                            <?php echo __('exclude_keyword_rules'); ?>
+                                        </span>
+                                    </div>
+
+                                    <div
+                                        class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in flex-shrink-0">
+                                        <input type="checkbox" x-model="botExcludeKeywords" id="toggleGlobalExclCard"
+                                            class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-2 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
+                                        <label for="toggleGlobalExclCard"
+                                            :class="botExcludeKeywords ? 'bg-indigo-600' : 'bg-gray-700'"
+                                            class="toggle-label block overflow-hidden h-5 rounded-full cursor-pointer transition-colors"></label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right Side: Keywords & Settings -->
+                            <div class="flex-1" x-show="aiSentimentEnabled" x-transition.opacity>
+                                <div class="space-y-4">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+                                            <label
+                                                class="text-xs font-bold text-gray-300 uppercase tracking-widest"><?php echo __('bot_anger_keywords'); ?></label>
+                                        </div>
+                                        <span
+                                            class="text-[10px] text-indigo-400 font-mono"><?php echo __('comma_separated'); ?></span>
+                                    </div>
+
+                                    <div class="relative group">
+                                        <textarea x-model="angerKeywords" rows="5"
+                                            placeholder="<?php echo __('anger_keywords_placeholder'); ?>"
+                                            class="w-full bg-black/40 border border-white/10 rounded-2xl p-5 text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all resize-none font-medium leading-relaxed group-hover:border-white/20"></textarea>
+                                    </div>
+
+                                    <div
+                                        class="flex items-start gap-3 text-xs text-gray-500 bg-white/5 p-4 rounded-xl border border-white/5">
+                                        <svg class="w-4 h-4 text-indigo-400 flex-shrink-0 mt-0.5" fill="none"
+                                            stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        <span><?php echo __('bot_anger_keywords_help'); ?></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Disabled State -->
+                            <div class="flex-1 flex flex-col items-center justify-center p-8 border-2 border-white/5 border-dashed rounded-2xl bg-black/10 min-h-[200px]"
+                                x-show="!aiSentimentEnabled" x-transition.opacity>
+                                <div class="p-4 bg-gray-800/50 rounded-full mb-4 text-gray-600">
+                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636">
+                                        </path>
+                                    </svg>
+                                </div>
+                                <p class="text-sm text-gray-500 font-medium"><?php echo __('ai_system_disabled'); ?></p>
                             </div>
                         </div>
                     </div>
@@ -673,6 +832,76 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         </div>
                     </div>
 
+                    <!-- New Advanced Feature Flags -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <!-- AI Safe Toggle -->
+                        <div class="flex flex-col gap-3 p-4 bg-white/5 rounded-2xl border border-white/5">
+                            <div class="flex items-center justify-between">
+                                <div class="p-2.5 bg-indigo-500/10 rounded-xl text-indigo-400">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z">
+                                        </path>
+                                    </svg>
+                                </div>
+                                <div
+                                    class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                                    <input type="checkbox" x-model="modalAiSafe" id="toggleAiSafe"
+                                        class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
+                                    <label for="toggleAiSafe" :class="modalAiSafe ? 'bg-indigo-600' : 'bg-gray-700'"
+                                        class="toggle-label block overflow-hidden h-5 rounded-full cursor-pointer transition-colors"></label>
+                                </div>
+                            </div>
+                            <span
+                                class="text-[10px] font-black text-white uppercase tracking-wider"><?php echo __('ai_safe_rule'); ?></span>
+                        </div>
+
+                        <!-- Bypass Schedule Toggle -->
+                        <div class="flex flex-col gap-3 p-4 bg-white/5 rounded-2xl border border-white/5">
+                            <div class="flex items-center justify-between">
+                                <div class="p-2.5 bg-orange-500/10 rounded-xl text-orange-400">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </div>
+                                <div
+                                    class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                                    <input type="checkbox" x-model="modalBypassSchedule" id="toggleBypassSch"
+                                        class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
+                                    <label for="toggleBypassSch"
+                                        :class="modalBypassSchedule ? 'bg-indigo-600' : 'bg-gray-700'"
+                                        class="toggle-label block overflow-hidden h-5 rounded-full cursor-pointer transition-colors"></label>
+                                </div>
+                            </div>
+                            <span
+                                class="text-[10px] font-black text-white uppercase tracking-wider"><?php echo __('bypass_schedule_rule'); ?></span>
+                        </div>
+
+                        <!-- Bypass Cooldown Toggle -->
+                        <div class="flex flex-col gap-3 p-4 bg-white/5 rounded-2xl border border-white/5">
+                            <div class="flex items-center justify-between">
+                                <div class="p-2.5 bg-green-500/10 rounded-xl text-green-400">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z">
+                                        </path>
+                                    </svg>
+                                </div>
+                                <div
+                                    class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                                    <input type="checkbox" x-model="modalBypassCooldown" id="toggleBypassCool"
+                                        class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
+                                    <label for="toggleBypassCool"
+                                        :class="modalBypassCooldown ? 'bg-indigo-600' : 'bg-gray-700'"
+                                        class="toggle-label block overflow-hidden h-5 rounded-full cursor-pointer transition-colors"></label>
+                                </div>
+                            </div>
+                            <span
+                                class="text-[10px] font-black text-white uppercase tracking-wider"><?php echo __('bypass_cooldown_rule'); ?></span>
+                        </div>
+                    </div>
+
                     <button @click="saveRule()"
                         class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-2xl shadow-xl shadow-indigo-600/20 transition-all transform active:scale-95 text-lg">
                         <?php echo __('save_rule'); ?>
@@ -750,6 +979,10 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
             schStart: '00:00',
             schEnd: '23:59',
             botExcludeKeywords: false,
+            aiSentimentEnabled: true,
+            angerKeywords: '',
+            handoverConversations: [],
+            fetchingHandover: false,
             savingPageSettings: false,
 
             // Preview State
@@ -768,14 +1001,19 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 const lastPage = localStorage.getItem('ar_last_page');
                 if (lastPage) {
                     this.selectedPageId = lastPage;
-                    this.fetchRules();
                     this.fetchTokenDebug();
                     this.fetchPageSettings();
+                    this.fetchRules();
                 }
 
                 this.$watch('defaultReplyText', () => {
                     this.previewMode = 'default';
                 });
+
+                // Auto-refresh Handover Alerts every 30 seconds
+                setInterval(() => {
+                    this.fetchHandover();
+                }, 30000);
             },
 
             previewRule(rule) {
@@ -834,6 +1072,46 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     });
             },
 
+            fetchPageSettings() {
+                if (!this.selectedPageId) return;
+                fetch(`ajax_auto_reply.php?action=fetch_page_settings&page_id=${this.selectedPageId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            this.botCooldown = data.settings.bot_cooldown_seconds;
+                            this.botScheduleEnabled = (data.settings.bot_schedule_enabled == 1);
+                            this.schStart = data.settings.bot_schedule_start ? data.settings.bot_schedule_start.substring(0, 5) : '00:00';
+                            this.schEnd = data.settings.bot_schedule_end ? data.settings.bot_schedule_end.substring(0, 5) : '23:59';
+                            this.botExcludeKeywords = (data.settings.bot_exclude_keywords == 1);
+                            this.aiSentimentEnabled = (data.settings.bot_ai_sentiment_enabled == 1);
+                            this.angerKeywords = data.settings.bot_anger_keywords || '';
+                        }
+                    });
+            },
+
+            savePageSettings() {
+                if (!this.selectedPageId) return;
+                this.savingPageSettings = true;
+                let formData = new FormData();
+                formData.append('page_id', this.selectedPageId);
+                formData.append('cooldown_seconds', this.botCooldown);
+                formData.append('schedule_enabled', this.botScheduleEnabled ? '1' : '0');
+                formData.append('schedule_start', this.schStart);
+                formData.append('schedule_end', this.schEnd);
+                formData.append('exclude_keywords', this.botExcludeKeywords ? '1' : '0');
+                formData.append('ai_sentiment_enabled', this.aiSentimentEnabled ? '1' : '0');
+                formData.append('anger_keywords', this.angerKeywords);
+
+                fetch('ajax_auto_reply.php?action=save_page_settings', { method: 'POST', body: formData })
+                    .then(res => res.json())
+                    .then(data => {
+                        this.savingPageSettings = false;
+                        if (data.success) {
+                            // Success notification if needed
+                        } else alert(data.error);
+                    }).catch(() => { this.savingPageSettings = false; });
+            },
+
             copyToClipboard(text) {
                 navigator.clipboard.writeText(text).then(() => { alert('<?php echo __('copied'); ?>'); });
             },
@@ -855,6 +1133,30 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 this.defaultHideComment = (defRule.hide_comment == 1);
                             }
                         }
+                    });
+                this.fetchHandover();
+            },
+
+            fetchHandover() {
+                if (!this.selectedPageId) return;
+                this.fetchingHandover = true;
+                fetch(`ajax_auto_reply.php?action=fetch_handover_conversations&page_id=${this.selectedPageId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        this.fetchingHandover = false;
+                        if (data.success) {
+                            this.handoverConversations = data.conversations;
+                        }
+                    }).catch(() => { this.fetchingHandover = false; });
+            },
+
+            resolveHandover(id) {
+                let formData = new FormData();
+                formData.append('id', id);
+                fetch('ajax_auto_reply.php?action=mark_as_resolved', { method: 'POST', body: formData })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) this.fetchHandover();
                     });
             },
 
@@ -882,6 +1184,9 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 this.modalKeywords = '';
                 this.modalReply = '';
                 this.modalHideComment = false;
+                this.modalAiSafe = true;
+                this.modalBypassSchedule = false;
+                this.modalBypassCooldown = false;
                 this.showModal = true;
             },
 
@@ -891,6 +1196,9 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 this.modalKeywords = rule.keywords;
                 this.modalReply = rule.reply_message;
                 this.modalHideComment = (rule.hide_comment == 1);
+                this.modalAiSafe = (rule.is_ai_safe == 1);
+                this.modalBypassSchedule = (rule.bypass_schedule == 1);
+                this.modalBypassCooldown = (rule.bypass_cooldown == 1);
                 this.showModal = true;
             },
 

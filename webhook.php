@@ -107,14 +107,27 @@ function handleFacebookEvent($data, $pdo)
 
 function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $actual_sender_id = null)
 {
-    // 1. Fetch Page Settings (Token, Schedule, Cooldown)
-    $stmt = $pdo->prepare("SELECT page_access_token, bot_cooldown_seconds, bot_schedule_enabled, bot_schedule_start, bot_schedule_end, bot_exclude_keywords FROM fb_pages WHERE page_id = ?");
+    // 1. Fetch Page Settings (Token, Schedule, Cooldown, AI Intelligence)
+    $stmt = $pdo->prepare("SELECT page_access_token, bot_cooldown_seconds, bot_schedule_enabled, bot_schedule_start, bot_schedule_end, bot_exclude_keywords, bot_ai_sentiment_enabled, bot_anger_keywords FROM fb_pages WHERE page_id = ?");
     $stmt->execute([$page_id]);
     $page = $stmt->fetch(PDO::FETCH_ASSOC);
     if (!$page || !$page['page_access_token'])
         return;
 
     $access_token = $page['page_access_token'];
+    $customer_id = ($source === 'message') ? $target_id : $actual_sender_id;
+
+    // 2. Check Conversation State (Handover Protocol)
+    if ($customer_id) {
+        $stmt = $pdo->prepare("SELECT * FROM bot_conversation_states WHERE page_id = ? AND user_id = ? LIMIT 1");
+        $stmt->execute([$page_id, $customer_id]);
+        $state = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        // If state is handover, bot is manually silenced for this user
+        if ($state && $state['conversation_state'] === 'handover') {
+            return;
+        }
+    }
 
     // 2. Find Rule Match
     // 2.1 Try Keywords First
@@ -141,6 +154,7 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
                 $reply_msg = $rule['reply_message'];
                 $hide_comment = $rule['hide_comment'];
                 $is_keyword_match = true;
+                $matched_rule = $rule;
                 break 2;
             }
         }
@@ -154,18 +168,57 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
         if ($def) {
             $reply_msg = $def['reply_message'];
             $hide_comment = $def['hide_comment'];
+            $matched_rule = $def;
         }
     }
 
     if (!$reply_msg)
         return;
 
-    // 3. Decision Logic: Can we bypass Schedule and Cooldown?
-    $exclude_keywords = (int) ($page['bot_exclude_keywords'] ?? 0);
-    $is_exempt = ($is_keyword_match && $exclude_keywords === 1);
+    // 4. Advanced SaaS Logic (AI Sentiment & Repeat Detection)
+    $is_ai_safe = (int) ($matched_rule['is_ai_safe'] ?? 1);
 
-    // 4. Global Schedule Check (Skip if it's an exempt keyword)
-    if (!$is_exempt && $page['bot_schedule_enabled']) {
+    if ($page['bot_ai_sentiment_enabled'] && $is_ai_safe && $customer_id) {
+        // A. Detection Anger Keywords
+        if (!empty($page['bot_anger_keywords'])) {
+            $anger_kws = explode(',', $page['bot_anger_keywords']);
+            foreach ($anger_kws as $akw) {
+                $akw = trim($akw);
+                if (!empty($akw) && mb_stripos($incoming_text, $akw) !== false) {
+                    // Anger detected! Switch to handover
+                    $stmt = $pdo->prepare("INSERT INTO bot_conversation_states (page_id, user_id, conversation_state, is_anger_detected) 
+                                           VALUES (?, ?, 'handover', 1) 
+                                           ON DUPLICATE KEY UPDATE conversation_state = 'handover', is_anger_detected = 1");
+                    $stmt->execute([$page_id, $customer_id]);
+                    return; // SILENCE
+                }
+            }
+        }
+
+        // B. Repeat Detection (3 times same rule)
+        if ($state && $state['last_bot_reply_text'] === $reply_msg) {
+            $new_count = $state['repeat_count'] + 1;
+            if ($new_count >= 3) {
+                // Too many repeats! Switch to handover
+                $stmt = $pdo->prepare("UPDATE bot_conversation_states SET conversation_state = 'handover', repeat_count = ? WHERE id = ?");
+                $stmt->execute([$new_count, $state['id']]);
+                return; // SILENCE
+            }
+        }
+    }
+
+    // 5. Decision Logic: Schedule & Cooldown
+    $bypass_schedule = (int) ($matched_rule['bypass_schedule'] ?? 0);
+    $bypass_cooldown = (int) ($matched_rule['bypass_cooldown'] ?? 0);
+
+    // Compatibility: If it's a keyword match and old global exclude is ON, force bypass
+    if ($is_keyword_match && (int) $page['bot_exclude_keywords'] === 1) {
+        $bypass_schedule = 1;
+        $bypass_cooldown = 1;
+    }
+
+    // 5.1 Schedule Check
+    if (!$bypass_schedule && $page['bot_schedule_enabled']) {
         date_default_timezone_set('Africa/Cairo');
         $now = date('H:i');
         $start = !empty($page['bot_schedule_start']) ? substr($page['bot_schedule_start'], 0, 5) : '00:00';
@@ -176,9 +229,9 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
             return;
     }
 
-    // 6. Cooldown / Human Takeover Logic
+    // 5.2 Cooldown / Human Takeover Logic
     $cooldown_seconds = (int) ($page['bot_cooldown_seconds'] ?? 0);
-    $should_check_cooldown = ($cooldown_seconds > 0 && !$is_exempt);
+    $should_check_cooldown = ($cooldown_seconds > 0 && !$bypass_cooldown);
 
     if ($should_check_cooldown) {
         // Cooldown check is only relevant for Messenger or identification-based sources
@@ -260,11 +313,19 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
         }
     }
 
-    // 6. Log Bot Reply ID to database
+    // 7. Update Tracking (ID Log & Conversation State)
     $sent_id = $res['id'] ?? $res['message_id'] ?? null;
     if ($sent_id) {
         $stmt = $pdo->prepare("INSERT IGNORE INTO bot_sent_messages (message_id, page_id) VALUES (?, ?)");
         $stmt->execute([$sent_id, $page_id]);
+    }
+
+    if ($customer_id) {
+        $repeat_val = ($state && $state['last_bot_reply_text'] === $reply_msg) ? $state['repeat_count'] + 1 : 1;
+        $stmt = $pdo->prepare("INSERT INTO bot_conversation_states (page_id, user_id, conversation_state, last_bot_reply_text, repeat_count) 
+                               VALUES (?, ?, 'active', ?, 1) 
+                               ON DUPLICATE KEY UPDATE last_bot_reply_text = ?, repeat_count = ?, conversation_state = 'active'");
+        $stmt->execute([$page_id, $customer_id, $reply_msg, $reply_msg, $repeat_val]);
     }
 }
 
