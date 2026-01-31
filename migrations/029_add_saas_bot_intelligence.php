@@ -53,7 +53,7 @@ try {
         is_anger_detected TINYINT(1) DEFAULT 0,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         UNIQUE KEY page_user (page_id, user_id),
-        INDEX (state),
+        INDEX (conversation_state),
         INDEX (is_anger_detected)
     )");
     echo "Table 'bot_conversation_states' created/checked successfully.<br>";
