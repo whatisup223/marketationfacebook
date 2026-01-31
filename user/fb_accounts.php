@@ -322,51 +322,52 @@ require_once __DIR__ . '/../includes/header.php';
                                                     <span
                                                         class="text-[9px] text-gray-500 font-bold uppercase"><?php echo __('verifying'); ?>...</span>
                                                 </div>
-                                                <?php if (!empty($acc['token_type'])): ?>
-                                                    <?php
-                                                    $is_long = ($acc['token_type'] !== 'Short-lived');
-                                                    $localized_type = $acc['token_type'];
-                                                    if ($acc['token_type'] === 'Long-lived')
-                                                        $localized_type = __('token_long_lived');
-                                                    elseif ($acc['token_type'] === 'Short-lived')
-                                                        $localized_type = __('token_short_lived');
-                                                    elseif ($acc['token_type'] === 'Long-lived / Indefinite')
-                                                        $localized_type = __('token_static');
+                                                <?php
+                                                $type = !empty($acc['token_type']) ? $acc['token_type'] : 'Active';
+                                                $is_long = ($type !== 'Short-lived');
+                                                $localized_type = $type;
+                                                if ($type === 'Long-lived')
+                                                    $localized_type = __('token_long_lived');
+                                                elseif ($type === 'Short-lived')
+                                                    $localized_type = __('token_short_lived');
+                                                elseif ($type === 'Long-lived / Indefinite' || $type === 'Static')
+                                                    $localized_type = __('token_static');
+                                                elseif ($type === 'Active')
+                                                    $localized_type = __('active');
 
-                                                    $theme_color = $is_long ? 'blue' : 'purple';
-                                                    ?>
-                                                    <div
-                                                        class="flex items-center gap-1.5 bg-<?php echo $theme_color; ?>-500/5 px-2 py-0.5 rounded border border-<?php echo $theme_color; ?>-500/10">
-                                                        <span
-                                                            class="text-[9px] font-bold text-<?php echo $theme_color; ?>-400 uppercase">
-                                                            <?php echo $localized_type; ?>
-                                                        </span>
-                                                    </div>
-                                                    <div
-                                                        class="flex items-center gap-1.5 bg-gray-500/5 px-2 py-0.5 rounded border border-white/5">
-                                                        <svg class="w-2.5 h-2.5 text-gray-400" fill="none" stroke="currentColor"
-                                                            viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                        </svg>
-                                                        <span class="text-[9px] text-gray-400 font-bold">
-                                                            <?php echo __('token_expiry'); ?>:
-                                                            <?php echo $acc['expires_at'] ? date('Y-m-d', strtotime($acc['expires_at'])) : __('token_never'); ?>
-                                                        </span>
-                                                    </div>
+                                                $theme_color = $is_long ? 'blue' : 'purple';
+                                                ?>
+                                                <div
+                                                    class="flex items-center gap-1.5 bg-<?php echo $theme_color; ?>-500/5 px-2 py-0.5 rounded border border-<?php echo $theme_color; ?>-500/10">
+                                                    <span
+                                                        class="text-[9px] font-bold text-<?php echo $theme_color; ?>-400 uppercase">
+                                                        <?php echo $localized_type; ?>
+                                                    </span>
+                                                </div>
+                                                <div
+                                                    class="flex items-center gap-1.5 bg-gray-500/5 px-2 py-0.5 rounded border border-white/5">
+                                                    <svg class="w-2.5 h-2.5 text-gray-400" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                    </svg>
+                                                    <span class="text-[9px] text-gray-400 font-bold">
+                                                        <?php echo __('token_expiry'); ?>:
+                                                        <?php echo $acc['expires_at'] ? date('Y-m-d', strtotime($acc['expires_at'])) : __('token_never'); ?>
+                                                    </span>
+                                                </div>
 
-                                                    <a href="https://developers.facebook.com/tools/debug/accesstoken/?access_token=<?php echo urlencode($acc['access_token']); ?>"
-                                                        target="_blank"
-                                                        class="flex items-center gap-1 bg-white/5 hover:bg-white/10 px-2 py-0.5 rounded border border-white/5 text-[9px] text-gray-400 transition-all group/link"
-                                                        title="Open in Official Facebook Token Debugger">
-                                                        <svg class="w-2.5 h-2.5 group-hover/link:text-[#1877F2]" fill="currentColor"
-                                                            viewBox="0 0 24 24">
-                                                            <path
-                                                                d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                                                        </svg>
-                                                        <span><?php echo __('token_debugger'); ?></span>
-                                                    </a>
-                                                <?php endif; ?>
+                                                <a href="https://developers.facebook.com/tools/debug/accesstoken/?access_token=<?php echo urlencode($acc['access_token']); ?>"
+                                                    target="_blank"
+                                                    class="flex items-center gap-1 bg-white/5 hover:bg-white/10 px-2 py-0.5 rounded border border-white/5 text-[9px] text-gray-400 transition-all group/link"
+                                                    title="Open in Official Facebook Token Debugger">
+                                                    <svg class="w-2.5 h-2.5 group-hover/link:text-[#1877F2]" fill="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path
+                                                            d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                                                    </svg>
+                                                    <span><?php echo __('token_debugger'); ?></span>
+                                                </a>
                                             </div>
                                         <?php else: ?>
                                             <span
@@ -630,35 +631,35 @@ require_once __DIR__ . '/../includes/header.php';
                 if (spinner) spinner.remove();
 
                 if (data.status === 'active') {
+                    const isLongLived = data.is_long_lived !== undefined ? data.is_long_lived : true;
                     badge.innerHTML = `
                         <div class="flex flex-wrap items-center gap-2 mt-1">
                             <div class="flex items-center gap-1.5 bg-indigo-500/5 px-2 py-0.5 rounded border border-indigo-500/10">
                                 <div class="w-1.5 h-1.5 rounded-full bg-indigo-400"></div>
                                 <span class="text-[10px] text-indigo-400 font-bold uppercase tracking-wider"><?php echo __('active'); ?></span>
                             </div>
-                            ${data.token_type ? `
-                                <div class="flex items-center gap-1.5 bg-${data.is_long_lived ? 'blue' : 'purple'}-500/5 px-2 py-0.5 rounded border border-${data.is_long_lived ? 'blue' : 'purple'}-500/10">
-                                    <span class="text-[9px] font-bold text-${data.is_long_lived ? 'blue' : 'purple'}-400 uppercase">
-                                        ${data.token_type}
-                                    </span>
-                                </div>
-                                <div class="flex items-center gap-1.5 bg-gray-500/5 px-2 py-0.5 rounded border border-white/5">
-                                    <svg class="w-2.5 h-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                    <span class="text-[9px] text-gray-400 font-bold">
-                                        ${data.expiry_prefix || 'Expiry'}: ${data.expires_at || 'Never'}
-                                    </span>
-                                </div>
-                                                    <a href="https://developers.facebook.com/tools/debug/accesstoken/?access_token=${encodeURIComponent(badge.closest('.glass-card').querySelector('.account-current-token')?.value || '')}" 
-                                                       target="_blank"
-                                                       class="flex items-center gap-1 bg-white/5 hover:bg-white/10 px-2 py-0.5 rounded border border-white/5 text-[9px] text-gray-400 transition-all group/link"
-                                                       onclick="this.href='https://developers.facebook.com/tools/debug/accesstoken/?access_token=' + encodeURIComponent(this.closest('.glass-card').querySelector('.account-current-token')?.value || '');"
-                                                       title="Open in Official Facebook Token Debugger">
-                                                        <svg class="w-2.5 h-2.5 group-hover/link:text-[#1877F2]" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-                                                        <span><?php echo __('token_debugger'); ?></span>
-                                                    </a>
-                            ` : ''}
+                            <div class="flex items-center gap-1.5 bg-${isLongLived ? 'blue' : 'purple'}-500/5 px-2 py-0.5 rounded border border-${isLongLived ? 'blue' : 'purple'}-500/10">
+                                <span class="text-[9px] font-bold text-${isLongLived ? 'blue' : 'purple'}-400 uppercase">
+                                    ${data.token_type || 'Active'}
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-1.5 bg-gray-500/5 px-2 py-0.5 rounded border border-white/5">
+                                <svg class="w-2.5 h-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                <span class="text-[9px] text-gray-400 font-bold">
+                                    ${data.expiry_prefix || 'Expiry'}: ${data.expires_at || 'Never'}
+                                </span>
+                            </div>
+                            <a href="https://developers.facebook.com/tools/debug/accesstoken/?access_token=${encodeURIComponent(badge.closest('.glass-card').querySelector('.account-current-token')?.value || '')}" 
+                                target="_blank"
+                                class="flex items-center gap-1 bg-white/5 hover:bg-white/10 px-2 py-0.5 rounded border border-white/5 text-[9px] text-gray-400 transition-all group/link"
+                                onclick="this.href='https://developers.facebook.com/tools/debug/accesstoken/?access_token=' + encodeURIComponent(this.closest('.glass-card').querySelector('.account-current-token')?.value || '');"
+                                title="Open in Official Facebook Token Debugger">
+                                <svg class="w-2.5 h-2.5 group-hover/link:text-[#1877F2]" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                                <span><?php echo __('token_debugger'); ?></span>
+                            </a>
                         </div>`;
-                } else if (data.status === 'expired') {
+                }
+                else if (data.status === 'expired') {
                     badge.innerHTML = `
                         <span class="text-[10px] text-red-400 font-bold bg-red-500/10 px-2 py-0.5 rounded border border-red-500/20 uppercase flex items-center gap-1">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
