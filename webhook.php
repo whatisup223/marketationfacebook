@@ -190,18 +190,19 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
         if ($thread_user_id) {
             $convs = $fb->makeRequest("{$page_id}/conversations", [
                 'user_id' => $thread_user_id,
-                'fields' => 'messages.limit(5){from,created_time}'
+                'fields' => 'messages.limit(5){from,created_time,application}'
             ], $access_token);
 
             if (isset($convs['data'][0]['messages']['data'])) {
                 foreach ($convs['data'][0]['messages']['data'] as $msg) {
                     $msg_sender_id = $msg['from']['id'] ?? '';
-                    if ($msg_sender_id == $page_id) {
+                    // Only SILENCE if it's a message from the page AND NOT sent via an application (Human Admin)
+                    if ($msg_sender_id == $page_id && empty($msg['application'])) {
                         $created_time = strtotime($msg['created_time']);
                         if ((time() - $created_time) < $cooldown_seconds) {
                             return; // SILENCE - Admin spoke recently in Messenger
                         }
-                        break; // Stop at first page message (newest)
+                        break;
                     }
                 }
             }
@@ -210,13 +211,15 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
         // B. Check Comment Replies if source is comment
         if ($source === 'comment') {
             $replies = $fb->makeRequest("{$target_id}/comments", [
-                'fields' => 'from,created_time',
+                'fields' => 'from,created_time,application',
                 'limit' => 5
             ], $access_token);
 
             if (isset($replies['data'])) {
                 foreach ($replies['data'] as $reply) {
-                    if (($reply['from']['id'] ?? '') == $page_id) {
+                    $reply_sender_id = $reply['from']['id'] ?? '';
+                    // Only SILENCE if it's a comment from the page AND NOT sent via an application (Human Admin)
+                    if ($reply_sender_id == $page_id && empty($reply['application'])) {
                         $created_time = strtotime($reply['created_time']);
                         if ((time() - $created_time) < $cooldown_seconds) {
                             return; // SILENCE - Admin replied to this comment on the post
