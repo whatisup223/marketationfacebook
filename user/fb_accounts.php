@@ -22,8 +22,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_account'])) {
         $error = __('error_fields_required');
     } else {
         try {
+            // If name or ID is empty, we will try to fill them in ajax_check_status later, 
+            // but for initial insert we use a placeholder if empty.
+            $insert_name = !empty($fb_name) ? $fb_name : 'New Account';
             $stmt = $pdo->prepare("INSERT INTO fb_accounts (user_id, fb_name, fb_id, access_token, is_active) VALUES (?, ?, ?, ?, 1)");
-            $stmt->execute([$user_id, $fb_name, $fb_id, $access_token]);
+            $stmt->execute([$user_id, $insert_name, $fb_id, $access_token]);
             // Redirect to prevent resubmission
             header("Location: fb_accounts.php?msg=added");
             exit;
@@ -306,6 +309,19 @@ require_once __DIR__ . '/../includes/header.php';
                                                     <span
                                                         class="text-[10px] text-indigo-400 font-bold uppercase tracking-wider"><?php echo __('active'); ?></span>
                                                 </div>
+                                                <div id="check-spinner-<?php echo $acc['id']; ?>"
+                                                    class="flex items-center gap-1.5 opacity-50">
+                                                    <svg class="animate-spin h-2.5 w-2.5 text-gray-400" fill="none"
+                                                        viewBox="0 0 24 24">
+                                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                                            stroke-width="4"></circle>
+                                                        <path class="opacity-75" fill="currentColor"
+                                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                                        </path>
+                                                    </svg>
+                                                    <span
+                                                        class="text-[9px] text-gray-500 font-bold uppercase"><?php echo __('verifying'); ?>...</span>
+                                                </div>
                                                 <?php if (!empty($acc['token_type'])): ?>
                                                     <?php
                                                     $is_long = ($acc['token_type'] !== 'Short-lived');
@@ -438,10 +454,11 @@ require_once __DIR__ . '/../includes/header.php';
                     <form method="POST" class="space-y-5">
                         <div>
                             <label
-                                class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2"><?php echo __('account_name_label'); ?></label>
+                                class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2"><?php echo __('account_name_label'); ?>
+                                (<?php echo __('optional'); ?>)</label>
                             <input type="text" name="fb_name"
                                 class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"
-                                placeholder="<?php echo __('account_name_placeholder'); ?>" required>
+                                placeholder="<?php echo __('account_name_placeholder'); ?>">
                         </div>
                         <div>
                             <label
@@ -607,6 +624,10 @@ require_once __DIR__ . '/../includes/header.php';
                     body: formData
                 });
                 const data = await response.json();
+
+                // Remove spinner
+                const spinner = document.getElementById('check-spinner-' + accId);
+                if (spinner) spinner.remove();
 
                 if (data.status === 'active') {
                     badge.innerHTML = `

@@ -90,13 +90,20 @@ try {
 
         if (isset($response['id'])) {
             // Valid but maybe couldn't get debug info
-            $pdo->prepare("UPDATE fb_accounts SET is_active = 1 WHERE id = ?")->execute([$acc_id]);
+            $fb_id = $response['id'];
+            $fb_name = $response['name'] ?? '';
+
+            // Update DB with latest name/ID if they differ or were empty
+            $stmt = $pdo->prepare("UPDATE fb_accounts SET is_active = 1, fb_id = COALESCE(NULLIF(fb_id, ''), ?), fb_name = COALESCE(NULLIF(fb_name, ''), ?) WHERE id = ?");
+            $stmt->execute([$fb_id, $fb_name, $acc_id]);
+
             echo json_encode([
                 'status' => 'active',
                 'message' => __('valid_token'),
-                'token_type' => __('active'),
-                'expires_at' => __('token_unknown'),
-                'expiry_prefix' => __('token_expiry')
+                'token_type' => ($token_type !== 'Unknown' ? $token_type : __('active')),
+                'expires_at' => ($expiry_label ? ($expiry_label === 'No Expiry' ? __('token_never') : $expiry_label) : __('token_unknown')),
+                'expiry_prefix' => __('token_expiry'),
+                'is_long_lived' => ($token_type !== 'Short-lived')
             ]);
         } else {
             // Invalid
