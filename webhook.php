@@ -145,8 +145,11 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
             if (empty($kw))
                 continue;
 
-            // Robust matching: trim and case-insensitive check
-            if (mb_stripos(trim($incoming_text), $kw) !== false) {
+            // Improved matching: Whole Word Match using Regex (supports Arabic/UTF-8)
+            // This ensures "تم" matches as a whole word but not inside "تمام"
+            $pattern = '/(?<![\p{L}\p{N}])' . preg_quote($kw, '/') . '(?![\p{L}\p{N}])/ui';
+
+            if (preg_match($pattern, $incoming_text)) {
                 $reply_msg = $rule['reply_message'];
                 $hide_comment = $rule['hide_comment'];
                 $is_keyword_match = true;
