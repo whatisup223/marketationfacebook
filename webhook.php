@@ -36,7 +36,7 @@ if (!$data) {
     exit;
 }
 
-require_once __DIR__ . '/includes/db_config.php';
+require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/facebook_api.php';
 
 // A. Check if it's Facebook Webhook
@@ -108,7 +108,10 @@ function handleFacebookEvent($data, $pdo)
 function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $actual_sender_id = null, $sender_name = '')
 {
     // 1. Fetch Page Settings (Token, Schedule, Cooldown, AI Intelligence)
-    $stmt = $pdo->prepare("SELECT page_access_token, bot_cooldown_seconds, bot_schedule_enabled, bot_schedule_start, bot_schedule_end, bot_exclude_keywords, bot_ai_sentiment_enabled, bot_anger_keywords FROM fb_pages WHERE page_id = ?");
+    $stmt = $pdo->prepare("SELECT p.page_access_token, p.page_name, p.bot_cooldown_seconds, p.bot_schedule_enabled, p.bot_schedule_start, p.bot_schedule_end, p.bot_exclude_keywords, p.bot_ai_sentiment_enabled, p.bot_anger_keywords, a.user_id 
+                           FROM fb_pages p 
+                           JOIN fb_accounts a ON p.account_id = a.id 
+                           WHERE p.page_id = ?");
     $stmt->execute([$page_id]);
     $page = $stmt->fetch(PDO::FETCH_ASSOC);
     if (!$page || !$page['page_access_token'])
@@ -198,6 +201,14 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
                                            VALUES (?, ?, ?, ?, NOW(), 'handover', 1) 
                                            ON DUPLICATE KEY UPDATE user_name = VALUES(user_name), last_user_message = VALUES(last_user_message), last_user_message_at = NOW(), conversation_state = 'handover', is_anger_detected = 1");
                     $stmt->execute([$page_id, $customer_id, $sender_name, $incoming_text]);
+
+                    // Add Internal Notification
+                    $notify_title = __('handover_notification_title');
+                    $section_name = ($source === 'message') ? __('nav_messenger_bot') : __('nav_auto_reply');
+                    $notify_msg = sprintf(__('handover_notification_msg'), $page['page_name'], $section_name);
+                    $notify_link = ($source === 'message') ? 'page_messenger_bot.php' : 'page_auto_reply.php';
+                    addNotification($page['user_id'], $notify_title, $notify_msg, $notify_link);
+
                     return; // SILENCE
                 }
             }
@@ -210,6 +221,14 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
                 // Too many repeats! Switch to handover
                 $stmt = $pdo->prepare("UPDATE bot_conversation_states SET conversation_state = 'handover', repeat_count = ?, last_user_message = ?, last_user_message_at = NOW(), user_name = ? WHERE id = ?");
                 $stmt->execute([$new_count, $incoming_text, $sender_name, $state['id']]);
+
+                // Add Internal Notification
+                $notify_title = __('handover_notification_title');
+                $section_name = ($source === 'message') ? __('nav_messenger_bot') : __('nav_auto_reply');
+                $notify_msg = sprintf(__('handover_notification_msg'), $page['page_name'], $section_name);
+                $notify_link = ($source === 'message') ? 'page_messenger_bot.php' : 'page_auto_reply.php';
+                addNotification($page['user_id'], $notify_title, $notify_msg, $notify_link);
+
                 return; // SILENCE
             }
         }

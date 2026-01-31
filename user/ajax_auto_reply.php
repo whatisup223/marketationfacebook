@@ -436,7 +436,17 @@ if ($action === 'fetch_page_stats') {
                                GROUP BY h ORDER BY cnt DESC LIMIT 1");
         $stmt->execute([$page_id, $source]);
         $peak_data = $stmt->fetch(PDO::FETCH_ASSOC);
-        $peak_hour = $peak_data ? $peak_data['h'] . ":00" : "--:--";
+
+        if ($peak_data) {
+            $h = (int) $peak_data['h'];
+            $suffix = $h >= 12 ? ' ' . __('pm') : ' ' . __('am');
+            $h_display = $h % 12;
+            if ($h_display == 0)
+                $h_display = 12;
+            $peak_hour = $h_display . ":00" . $suffix;
+        } else {
+            $peak_hour = "--:--";
+        }
 
         // 7. System Health (Simulation based on successful replies)
         $health = $total_interacted > 0 ? "99.9%" : "100%";

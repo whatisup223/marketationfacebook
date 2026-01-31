@@ -474,6 +474,17 @@ $translations = [
         'resolution_efficiency' => 'كفاءة حل المحادثات',
         'safety_alerts' => 'تنبيهات السلبية السامة',
         'all_rules' => 'كافة القواعد',
+        'handover_notification_title' => 'مطلوب تدخل بشري',
+        'handover_notification_msg' => 'هناك تفاعل من عميل على صفحة "%s" يتطلب رد يدوي منك (قسم: %s).',
+        'am' => 'صباحاً',
+        'pm' => 'مساءً',
+        'system_healthy' => 'النظام يعمل بكفاءة',
+        'instant_replies' => 'ردود فورية',
+        'nav_auto_reply' => 'الرد الآلي (تعليقات)',
+        'nav_messenger_bot' => 'الرد الآلي (رسائل)',
+
+
+
 
 
         // Auth & Profile
@@ -2646,6 +2657,30 @@ $translations = [
         'api_status_operational' => 'API Status Operational',
         'resolved_conversations_count' => 'Resolved Conversations',
         'resolution_efficiency' => 'Resolution Efficiency',
+        'insight_control_center' => 'Smart Insight Control Center',
+        'bot_performance_stats' => 'Bot Performance Statistics',
+        'total_interacted' => 'Total Interacted',
+        'active_handovers' => 'Active Handovers',
+        'ai_filtered' => 'AI Filtered',
+        'avg_response_speed' => 'Avg Response Speed',
+        'live_alerts_center' => 'Live Alerts Center',
+        'human_intervention_needed' => 'Human Intervention Required',
+        'no_active_alerts' => 'No active alerts. Bot is running smoothly!',
+        'most_active_rule' => 'Most Active Rule',
+        'ai_success_rate' => 'AI Success Rate',
+        'peak_hour' => 'Peak Hour',
+        'system_health' => 'System Health',
+        'handover_notification_title' => 'Human Intervention Required',
+        'handover_notification_msg' => 'A customer interaction on page "%s" requires your manual response (Section: %s).',
+        'am' => 'AM',
+        'pm' => 'PM',
+        'system_healthy' => 'System Healthy',
+        'instant_replies' => 'Instant Replies',
+        'nav_auto_reply' => 'Auto-Reply',
+        'nav_messenger_bot' => 'Messenger Bot',
+
+
+
         'post_scheduler' => 'Post Scheduler',
         'new_post_btn' => 'New Post',
         'sync_all' => 'Sync All',
