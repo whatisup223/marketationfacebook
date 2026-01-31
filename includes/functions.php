@@ -1378,6 +1378,11 @@ $translations = [
         'last_7_days' => 'آخر 7 أيام',
         'last_30_days' => 'آخر 30 يوم',
         'all_time' => 'كل الأوقات',
+        'all_rules' => 'كل القواعد',
+        'custom_period' => 'فترة مخصصة',
+        'start_date' => 'تاريخ البدء',
+        'end_date' => 'تاريخ الانتهاء',
+        'apply_filter' => 'تطبيق الفلتر',
 
     ],
     'en' => [
@@ -1868,10 +1873,15 @@ $translations = [
         'last_7_days' => 'Last 7 Days',
         'last_30_days' => 'Last 30 Days',
         'all_time' => 'All Time',
+        'all_rules' => 'All Rules',
+        'custom_period' => 'Custom Period',
+        'start_date' => 'Start Date',
+        'end_date' => 'End Date',
+        'apply_filter' => 'Apply Filter',
 
         'negative_sentiment_blocked' => 'Negative sentiment blocked',
         'instant_replies' => 'Instant Replies',
-        'system_healthy' => 'System healthy',
+        'system_healthy' => 'System Operational',
         'vs_last_week' => 'vs last week',
         'monitor_alerts_desc' => 'Monitor real-time system alerts and human requests',
         'token_expired_title' => 'Session Expired!',

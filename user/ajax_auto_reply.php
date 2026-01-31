@@ -348,6 +348,9 @@ if ($action === 'fetch_page_stats') {
     $range = $_GET['range'] ?? 'all';
     $source = $_GET['source'] ?? 'comment';
 
+    $rule_id = $_GET['rule_id'] ?? '';
+    $sentiment = $_GET['sentiment'] ?? '';
+
     if (!$page_id) {
         echo json_encode(['success' => false, 'error' => 'No page ID']);
         exit;
@@ -360,6 +363,26 @@ if ($action === 'fetch_page_stats') {
         $time_query = " AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) ";
     if ($range === 'month')
         $time_query = " AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) ";
+    if ($range === 'custom') {
+        $start = $_GET['start'] ?? '';
+        $end = $_GET['end'] ?? '';
+        if ($start && $end) {
+            // Check if time is already present, if not add defaults
+            if (strlen($start) <= 10)
+                $start .= " 00:00:00";
+            if (strlen($end) <= 10)
+                $end .= " 23:59:59";
+
+            $time_query = " AND created_at BETWEEN '$start' AND '$end' ";
+        }
+    }
+
+    if ($rule_id) {
+        $time_query .= " AND rule_id = " . intval($rule_id);
+    }
+
+    // Sentiment filter placeholder (assuming sentiment column exists in bot_sent_messages or joining conversation_states)
+    // For now we'll just keep it as a structure placeholder
 
     $state_time_query = str_replace('created_at', 'updated_at', $time_query);
 

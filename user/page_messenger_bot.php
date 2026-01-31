@@ -206,41 +206,60 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 </div>
 
                 <!-- Section Header -->
-                <div class="flex flex-col md:flex-row justify-between items-end gap-6 relative z-30">
-                    <div>
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 relative z-30">
+                    <div class="w-full md:w-auto">
                         <div class="flex items-center gap-2 mb-3">
                             <span class="w-8 h-[2px] bg-indigo-500 rounded-full"></span>
                             <span
                                 class="text-[10px] font-black text-indigo-400 uppercase tracking-[0.3em]"><?php echo __('overview'); ?></span>
                         </div>
-                        <h2 class="text-3xl font-black text-white leading-tight">
+                        <h2 class="text-3xl font-black text-white leading-tightrtl:text-right">
                             <?php echo __('insight_control_center'); ?>
                         </h2>
                     </div>
 
                     <!-- Range Filter -->
                     <div
-                        class="flex items-center gap-2 bg-white/5 p-1 rounded-2xl border border-white/10 backdrop-blur-md">
+                        class="flex flex-wrap items-center gap-2 bg-white/5 p-1 rounded-2xl border border-white/10 backdrop-blur-md w-full md:w-auto">
                         <button @click="statsRange = 'today'; fetchStats()"
                             :class="statsRange === 'today' ? 'bg-indigo-600 text-white shadow-lg' : 'text-gray-500 hover:text-white'"
-                            class="px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all duration-300">
+                            class="flex-1 md:flex-none px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all duration-300">
                             <?php echo __('today'); ?>
                         </button>
                         <button @click="statsRange = 'week'; fetchStats()"
                             :class="statsRange === 'week' ? 'bg-indigo-600 text-white shadow-lg' : 'text-gray-500 hover:text-white'"
-                            class="px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all duration-300">
+                            class="flex-1 md:flex-none px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all duration-300">
                             <?php echo __('last_7_days'); ?>
                         </button>
                         <button @click="statsRange = 'month'; fetchStats()"
                             :class="statsRange === 'month' ? 'bg-indigo-600 text-white shadow-lg' : 'text-gray-500 hover:text-white'"
-                            class="px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all duration-300">
+                            class="flex-1 md:flex-none px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all duration-300">
                             <?php echo __('last_30_days'); ?>
                         </button>
                         <button @click="statsRange = 'all'; fetchStats()"
                             :class="statsRange === 'all' ? 'bg-indigo-600 text-white shadow-lg' : 'text-gray-500 hover:text-white'"
-                            class="px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all duration-300">
+                            class="flex-1 md:flex-none px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all duration-300">
                             <?php echo __('all_time'); ?>
                         </button>
+                        <div class="w-px h-4 bg-white/10 mx-1 hidden md:block"></div>
+                        <button @click="openCustomRangeModal()"
+                            class="flex-1 md:flex-none px-4 py-2 rounded-xl text-[10px] font-black uppercase text-indigo-400 hover:bg-white/5 transition-all">
+                            <?php echo __('custom_period') ?? 'Custom Range'; ?>
+                        </button>
+                    </div>
+
+                    <!-- Additional Filters -->
+                    <div
+                        class="flex items-center gap-3 bg-white/5 p-1 rounded-2xl border border-white/10 backdrop-blur-md w-full md:w-auto">
+                        <select x-model="statsRule" @change="fetchStats()"
+                            class="bg-transparent text-gray-400 text-[10px] font-black uppercase px-4 py-2 border-none focus:ring-0 cursor-pointer hover:text-white transition-colors w-full md:w-48">
+                            <option value="" class="bg-gray-900"><?php echo __('all_rules') ?? 'All Rules'; ?></option>
+                            <option value="0" class="bg-gray-900"><?php echo __('default_reply'); ?></option>
+                            <template x-for="rule in rules" :key="rule.id">
+                                <option :value="rule.id" class="bg-gray-900" x-text="rule.keywords.split(',')[0]">
+                                </option>
+                            </template>
+                        </select>
                     </div>
                 </div>
 
@@ -550,7 +569,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 pb-20">
 
             <!-- Left Side: Preview Card -->
-            <div class="lg:col-span-4 order-last lg:order-1">
+            <div id="messenger-preview-section" class="lg:col-span-4 order-last lg:order-1">
                 <div class="sticky top-24 space-y-6">
                     <div
                         class="glass-card rounded-[32px] border border-white/10 shadow-2xl overflow-hidden bg-[#18191a]">
@@ -662,7 +681,18 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <h3 class="text-2xl font-bold text-white mb-2"><?php echo __('default_reply'); ?></h3>
                                 <p class="text-gray-400 text-sm max-w-md"><?php echo __('default_reply_hint'); ?></p>
                             </div>
-
+                            <button @click="scrollToPreview()"
+                                class="p-3 bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white rounded-2xl transition-all border border-indigo-500/20 group/eye"
+                                title="<?php echo __('message_preview'); ?>">
+                                <svg class="w-6 h-6 group-hover/eye:scale-110 transition-transform" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                    </path>
+                                </svg>
+                            </button>
                         </div>
 
                         <textarea x-model="defaultReplyText" rows="4"
@@ -706,7 +736,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     </div>
                                     <div
                                         class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button @click="previewRule(rule)"
+                                        <button @click="previewRule(rule); scrollToPreview()"
                                             class="p-2.5 bg-indigo-600/10 hover:bg-indigo-600 rounded-xl text-indigo-400 hover:text-white transition-all border border-indigo-500/10"
                                             title="<?php echo __('message_preview'); ?>">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -749,15 +779,17 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                     <!-- Advanced Intelligence & Scheduling -->
                     <div
-                        class="glass-panel p-8 rounded-[2rem] border border-white/10 bg-indigo-500/10 backdrop-blur-2xl hover:border-indigo-400/30 transition-all shadow-2xl relative overflow-hidden group text-left">
+                        class="glass-panel p-8 rounded-[2rem] border border-white/10 bg-indigo-500/10 backdrop-blur-2xl hover:border-indigo-400/30 transition-all shadow-2xl relative overflow-hidden group">
                         <div class="absolute top-0 left-0 w-1 h-full bg-indigo-500"></div>
 
                         <div class="flex justify-between items-start mb-6">
                             <div>
-                                <h3 class="text-2xl font-bold text-white mb-2">
+                                <h3 class="text-2xl font-bold text-white mb-2 rtl:text-right">
                                     <?php echo __('bot_intelligence_settings'); ?>
                                 </h3>
-                                <p class="text-gray-400 text-sm max-w-md"><?php echo __('human_takeover_hint'); ?></p>
+                                <p class="text-gray-400 text-sm max-w-md rtl:text-right">
+                                    <?php echo __('human_takeover_hint'); ?>
+                                </p>
                             </div>
 
                         </div>
@@ -991,11 +1023,8 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
-
-
 
     </main>
 
@@ -1126,6 +1155,75 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </div>
         </div>
     </div>
+
+    <!-- Custom Range Modal -->
+    <div x-show="showCustomRangeModal" class="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6"
+        style="display: none;" x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+        x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 scale-100"
+        x-transition:leave-end="opacity-0 scale-95">
+        <div class="fixed inset-0 bg-black/80 backdrop-blur-xl" @click="closeCustomRangeModal()"></div>
+
+        <div
+            class="glass-panel p-6 sm:p-10 rounded-[3rem] border border-white/10 bg-gray-900 w-full max-w-2xl relative z-10 shadow-[0_32px_120px_-15px_rgba(0,0,0,0.8)] max-h-[90vh] overflow-y-auto messenger-scrollbar">
+            <div class="flex items-center justify-between mb-10">
+                <div class="flex items-center gap-4">
+                    <div class="p-3 bg-indigo-500/10 rounded-2xl text-indigo-400">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002-2z">
+                            </path>
+                        </svg>
+                    </div>
+                    <h3 class="text-3xl font-black text-white leading-none"><?php echo __('custom_period'); ?></h3>
+                </div>
+                <button @click="closeCustomRangeModal()"
+                    class="p-3 bg-white/5 hover:bg-white/10 rounded-2xl text-gray-500 hover:text-white transition-all">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="space-y-12">
+                <!-- Start Date & Time -->
+                <div class="space-y-6">
+                    <div class="flex items-center gap-3">
+                        <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                        <span
+                            class="text-sm font-black text-gray-400 uppercase tracking-widest"><?php echo __('start_date'); ?></span>
+                    </div>
+                    <div class="relative group">
+                        <input type="datetime-local" x-model="customStartDate"
+                            class="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-sm">
+                    </div>
+                </div>
+
+                <!-- End Date & Time -->
+                <div class="space-y-6">
+                    <div class="flex items-center gap-3">
+                        <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                        <span
+                            class="text-sm font-black text-gray-400 uppercase tracking-widest"><?php echo __('end_date'); ?></span>
+                    </div>
+                    <div class="relative group">
+                        <input type="datetime-local" x-model="customEndDate"
+                            class="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-sm">
+                    </div>
+                </div>
+
+                <button @click="applyCustomRange()"
+                    class="w-full py-6 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-[2rem] shadow-2xl shadow-indigo-600/40 transition-all transform active:scale-[0.98] uppercase tracking-[0.2em] text-sm flex items-center justify-center gap-3">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7">
+                        </path>
+                    </svg>
+                    <?php echo __('apply_filter'); ?>
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <style>
@@ -1215,6 +1313,17 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 system_health: '100%',
                 ai_filtered: 0
             },
+            showCustomRangeModal: false,
+            customStartDate: '',
+            customEndDate: '',
+            statsRule: '',
+
+            scrollToPreview() {
+                const element = document.getElementById('messenger-preview-section');
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            },
 
             // Preview State
             previewMode: 'default', // 'default' or 'rule'
@@ -1236,6 +1345,10 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     this.fetchPageSettings();
                     this.fetchHandover();
                     this.fetchStats();
+                    const urlParams = new URLSearchParams(window.location.search);
+                    if (urlParams.has('preview')) {
+                        setTimeout(() => this.scrollToPreview(), 1000);
+                    }
                 }
 
                 this.$watch('defaultReplyText', () => {
@@ -1417,15 +1530,45 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     });
             },
 
-            fetchStats() {
+            fetchStats(customStart = '', customEnd = '') {
                 if (!this.selectedPageId) return;
-                fetch(`ajax_auto_reply.php?action=fetch_page_stats&page_id=${this.selectedPageId}&range=${this.statsRange}&source=message`)
+                let url = `ajax_auto_reply.php?action=fetch_page_stats&page_id=${this.selectedPageId}&range=${this.statsRange}&source=message`;
+                if (this.statsRange === 'custom') {
+                    url += `&start=${customStart}&end=${customEnd}`;
+                }
+                if (this.statsRule !== '') {
+                    url += `&rule_id=${this.statsRule}`;
+                }
+                fetch(url)
                     .then(res => res.json())
                     .then(data => {
                         if (data.success) {
                             this.stats = data.stats;
                         }
                     });
+            },
+
+            openCustomRangeModal() {
+                const now = new Date();
+                const pad = (n) => n.toString().padStart(2, '0');
+                const formatDate = (date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+                this.customStartDate = formatDate(new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0));
+                this.customEndDate = formatDate(new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59));
+                this.showCustomRangeModal = true;
+            },
+
+            closeCustomRangeModal() {
+                this.showCustomRangeModal = false;
+            },
+
+            applyCustomRange() {
+                if (!this.customStartDate || !this.customEndDate) return;
+                const startStr = this.customStartDate.replace('T', ' ') + ':00';
+                const endStr = this.customEndDate.replace('T', ' ') + ':59';
+
+                this.statsRange = 'custom';
+                this.fetchStats(startStr, endStr);
+                this.closeCustomRangeModal();
             },
 
             deleteRule(id) {
