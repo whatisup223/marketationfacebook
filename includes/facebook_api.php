@@ -11,6 +11,7 @@ class FacebookAPI
 
     public function makeRequest($endpoint, $params = [], $access_token = '', $method = 'GET')
     {
+        @set_time_limit(0);
         $url = $this->base_url . $this->api_version . '/' . ltrim($endpoint, '/');
 
         $ch = curl_init();
@@ -60,7 +61,7 @@ class FacebookAPI
         // Debugging Production (SSL Bypass)
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 60);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 300);
 
         $response = curl_exec($ch);
         $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -358,48 +359,82 @@ class FacebookAPI
         $params = [];
         $endpoint = "$page_id/feed";
 
-        // Check if array of media (Album or Single via Array)
-        // Fix: Allow count >= 1 because scheduler sends array even for single file
+        // Check if array of media
         if (is_array($image) && count($image) >= 1) {
-            // Upload each photo independently to get ID
+            // Check if it's a single video in an array (from scheduler)
+            if (count($image) === 1) {
+                $img_file = $image[0];
+                $is_video = false;
+                $filename = '';
+                if ($img_file instanceof CURLFile) {
+                    $filename = $img_file->getFilename();
+                } elseif (is_string($img_file)) {
+                    $filename = $img_file;
+                }
+
+                if ($filename) {
+                    $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+                    if (in_array($ext, ['mp4', 'mov', 'avi', 'mkv'])) {
+                        $is_video = true;
+                    }
+                }
+
+                if ($is_video) {
+                    // Re-route to standard video logic below by making $image a single item
+                    $image = $img_file;
+                    goto post_process_single;
+                }
+            }
+
+            // Multiple items (Usually Photos for Feed)
             $media_ids = [];
             foreach ($image as $img_file) {
-                // Determine if it's CURLFile or path
                 $img_param = [];
+                $is_item_video = false;
+
                 if ($img_file instanceof CURLFile) {
                     $img_param['source'] = $img_file;
+                    $ext = strtolower(pathinfo($img_file->getFilename(), PATHINFO_EXTENSION));
+                    if (in_array($ext, ['mp4', 'mov', 'avi', 'mkv']))
+                        $is_item_video = true;
                 } elseif (is_string($img_file)) {
                     if (filter_var($img_file, FILTER_VALIDATE_URL)) {
                         $img_param['url'] = $img_file;
+                        // URL hard to detect video without head request, assume photo for feed albums
                     } else {
                         $abs_path = realpath($img_file);
                         if ($abs_path) {
                             $img_param['source'] = new CURLFile($abs_path);
+                            $ext = strtolower(pathinfo($abs_path, PATHINFO_EXTENSION));
+                            if (in_array($ext, ['mp4', 'mov', 'avi', 'mkv']))
+                                $is_item_video = true;
                         }
                     }
                 }
 
                 if (!empty($img_param)) {
                     $img_param['published'] = 'false';
-                    // Upload to /photos
-                    $res = $this->makeRequest("$page_id/photos", $img_param, $access_token, 'POST');
+                    $upload_endpoint = $is_item_video ? "$page_id/videos" : "$page_id/photos";
+                    if ($is_item_video) {
+                        $img_param['description'] = $message;
+                    } else {
+                        $img_param['caption'] = $message;
+                    }
+                    $res = $this->makeRequest($upload_endpoint, $img_param, $access_token, 'POST');
 
                     // DEBUG 
                     $debug_log = __DIR__ . '/../debug_log.txt';
-                    file_put_contents($debug_log, "   - Photo Upload Internal Res: " . print_r($res, true) . "\n", FILE_APPEND);
+                    file_put_contents($debug_log, date('Y-m-d H:i:s') . " - Media Upload Internal Res: " . print_r($res, true) . "\n", FILE_APPEND);
 
                     if (isset($res['id'])) {
                         $media_ids[] = $res['id'];
+                    } else {
+                        file_put_contents($debug_log, date('Y-m-d H:i:s') . " - Media Upload ERROR: " . ($res['error']['message'] ?? 'Unknown') . "\n", FILE_APPEND);
                     }
                 }
             }
 
-            // DEBUG 
-            $debug_log = __DIR__ . '/../debug_log.txt';
-            file_put_contents($debug_log, "   - All Photo IDs: " . implode(', ', $media_ids) . "\n", FILE_APPEND);
-
             if (!empty($media_ids)) {
-                // Publish Feed Post with attached_media
                 $feed_params = ['message' => $message];
                 $feed_params['attached_media'] = [];
                 foreach ($media_ids as $fbid) {
@@ -417,14 +452,19 @@ class FacebookAPI
             }
         }
 
+        post_process_single:
+
+
         // Determine File Type if $image is a file
         $is_video = false;
         if ($image && !is_array($image) && !is_string($image)) {
             // Check CURLFile mime or filename
-            $filename = $image->getFilename();
-            $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
-            if (in_array($ext, ['mp4', 'mov', 'avi', 'mkv'])) {
-                $is_video = true;
+            if ($image instanceof CURLFile) {
+                $filename = $image->getFilename();
+                $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+                if (in_array($ext, ['mp4', 'mov', 'avi', 'mkv'])) {
+                    $is_video = true;
+                }
             }
         } elseif (is_string($image) && !filter_var($image, FILTER_VALIDATE_URL)) {
             $ext = strtolower(pathinfo($image, PATHINFO_EXTENSION));
@@ -488,6 +528,10 @@ class FacebookAPI
         // For broad compatibility, we use the photos/videos endpoint but tagged for stories where possible.
         // Currently, most apps use current photo_stories/video_stories.
 
+        if (is_array($media) && count($media) >= 1) {
+            $media = $media[0];
+        }
+
         $params = [];
         $is_video = false;
 
@@ -528,6 +572,10 @@ class FacebookAPI
      */
     public function publishReel($page_id, $access_token, $media, $caption = '', $scheduled_at = null)
     {
+        if (is_array($media) && count($media) >= 1) {
+            $media = $media[0];
+        }
+
         $endpoint = "$page_id/videos";
         $params = [
             'description' => $caption,

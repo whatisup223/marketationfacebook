@@ -385,14 +385,14 @@ require_once __DIR__ . '/../includes/header.php';
                                                         x-if="(mediaMode === 'url' && formData.media_url && !formData.media_url.startsWith('[')) || (mediaMode === 'file' && filesSelected.length === 1)">
                                                         <div class="w-full h-full">
                                                             <template
-                                                                x-if="isVideoUrl(formData.media_url || (filesSelected[0] && filesSelected[0].preview))">
+                                                                x-if="isVideoUrl(formData.media_url || (filesSelected[0] ? filesSelected[0].preview : ''))">
                                                                 <video
-                                                                    :src="(formData.media_url || filesSelected[0].preview) + '#t=0.1'"
+                                                                    :src="(formData.media_url || (filesSelected[0] ? filesSelected[0].preview : '')) + '#t=0.1'"
                                                                     class="w-full h-full object-cover" muted></video>
                                                             </template>
                                                             <template
-                                                                x-if="!isVideoUrl(formData.media_url || (filesSelected[0] && filesSelected[0].preview))">
-                                                                <img :src="formData.media_url || filesSelected[0].preview"
+                                                                x-if="!isVideoUrl(formData.media_url || (filesSelected[0] ? filesSelected[0].preview : ''))">
+                                                                <img :src="formData.media_url || (filesSelected[0] ? filesSelected[0].preview : '')"
                                                                     class="w-full h-full object-cover">
                                                             </template>
                                                         </div>
@@ -598,11 +598,18 @@ require_once __DIR__ . '/../includes/header.php';
                             </div>
                         </div>
                         <div class="flex flex-col items-end gap-2">
-                            <span class="px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider"
-                                :class="upload.status === 'success' ? 'bg-green-500/20 text-green-400' : (upload.status === 'error' ? 'bg-red-500/20 text-red-400' : 'bg-orange-500/20 text-orange-400')">
-                                <span
-                                    x-text="upload.status === 'success' ? '<?php echo __('success_status'); ?>' : (upload.status === 'error' ? '<?php echo __('error_status'); ?>' : '<?php echo __('pending_status'); ?>')"></span>
+                            <span
+                                x-text="upload.status === 'success' ? '<?php echo __('success_status'); ?>' : (upload.status === 'error' ? '<?php echo __('error_status'); ?>' : '<?php echo __('pending_status'); ?>')"></span>
                             </span>
+                            <!-- Abort Button -->
+                            <button x-show="upload.status === 'uploading'" @click="abortUpload(upload.id)"
+                                class="p-2 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-xl transition-all border border-red-500/20 group/btn"
+                                title="إيقاف الرفع">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path d="M6 18L18 6M6 6l12 12" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" />
+                                </svg>
+                            </button>
                         </div>
                     </div>
 
@@ -618,7 +625,8 @@ require_once __DIR__ . '/../includes/header.php';
                                 <template x-for="(m, i) in upload.previews.slice(0, 4)" :key="i">
                                     <div class="relative h-full w-full bg-gray-900 overflow-hidden">
                                         <template x-if="isVideoUrl(m)">
-                                            <video :src="m" class="w-full h-full object-cover" muted></video>
+                                            <video :src="m" class="w-full h-full object-cover" preload="metadata"
+                                                playsinline muted onloadedmetadata="this.currentTime=0.1"></video>
                                         </template>
                                         <template x-if="!isVideoUrl(m)">
                                             <img :src="m" class="w-full h-full object-cover">
@@ -687,6 +695,16 @@ require_once __DIR__ . '/../includes/header.php';
                         x-show="upload.status === 'uploading'">
                         <div class="bg-indigo-500 h-1.5 rounded-full transition-all duration-300"
                             :style="'width: ' + upload.progress + '%'"></div>
+                    </div>
+
+                    <!-- Background Info Notice -->
+                    <div x-show="upload.progress >= 100 && upload.status === 'uploading'"
+                        class="mt-2 p-2 bg-blue-500/10 border border-blue-500/20 rounded-xl text-[10px] text-blue-400 flex items-center gap-2">
+                        <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2"
+                                stroke-linecap="round" />
+                        </svg>
+                        <span>تم الرفع للخادم. يمكنك مغادرة الصفحة الآن، العملية ستستمر في الخلفية.</span>
                     </div>
 
                     <div x-show="upload.status === 'success'" class="mt-2 text-center text-xs text-green-400">
@@ -805,7 +823,8 @@ require_once __DIR__ . '/../includes/header.php';
                                 <template x-for="(m, i) in getMediaList(post.media_url).slice(0, 4)" :key="i">
                                     <div class="relative h-full w-full bg-gray-900 overflow-hidden">
                                         <template x-if="isVideoUrl(m)">
-                                            <video :src="m" class="w-full h-full object-cover" muted></video>
+                                            <video :src="m" class="w-full h-full object-cover" preload="metadata"
+                                                playsinline muted onloadedmetadata="this.currentTime=0.1"></video>
                                         </template>
                                         <template x-if="!isVideoUrl(m)">
                                             <img :src="m" class="w-full h-full object-cover">
@@ -1118,6 +1137,7 @@ require_once __DIR__ . '/../includes/header.php';
 
             isVideoUrl(url) {
                 if (!url) return false;
+                if (typeof url !== 'string') return false;
 
                 // Check if it's a blob url from local selection
                 if (url.startsWith('blob:')) {
@@ -1127,7 +1147,16 @@ require_once __DIR__ . '/../includes/header.php';
                     }
                 }
 
-                const videoExtensions = ['.mp4', '.mov', '.avi', '.webm', '.mkv'];
+                // If it's a Facebook CDN URL, it's very likely a thumbnail (image) unless it explicitly has video traits
+                if (url.includes('fbcdn.net')) {
+                    // FB thumbnails often have /v/t... but they are images. 
+                    // Direct video files usually have different signatures or .mp4
+                    if (url.toLowerCase().includes('.mp4')) return true;
+                    // If it's a FB URL and doesn't explicitly end with common video formats, assume it's an image/thumbnail
+                    return false;
+                }
+
+                const videoExtensions = ['.mp4', '.mov', '.avi', '.webm', '.mkv', '.m4v'];
                 return videoExtensions.some(ext => url.toLowerCase().includes(ext));
             },
 
@@ -1318,7 +1347,8 @@ require_once __DIR__ . '/../includes/header.php';
                     preview: null,
                     progress: 0,
                     status: 'uploading',
-                    error: null
+                    error: null,
+                    xhr: null
                 };
 
                 // Store files locally before resetting logic
@@ -1431,6 +1461,17 @@ require_once __DIR__ . '/../includes/header.php';
 
 
                 xhr.send(sendData);
+                uploadTask.xhr = xhr;
+            },
+
+            abortUpload(uploadId) {
+                const task = this.activeUploads.find(u => u.id === uploadId);
+                if (task) {
+                    if (task.xhr) {
+                        task.xhr.abort();
+                    }
+                    this.activeUploads = this.activeUploads.filter(u => u.id !== uploadId);
+                }
             },
 
             async syncPost(id) {
@@ -1523,19 +1564,30 @@ require_once __DIR__ . '/../includes/header.php';
             },
             async executeBulkDelete(fromFb) {
                 if (this.postsToBulkDelete.length === 0) return;
+                const count = this.postsToBulkDelete.length;
                 this.showDeleteModal = false;
                 const ids = this.postsToBulkDelete.join(',');
+
+                // Use background mode for more than 3 posts to avoid browser hanging
+                const isBg = count > 3;
+                const url = `ajax_scheduler.php?action=delete_bulk&ids=${ids}&from_fb=${fromFb ? 1 : 0}${isBg ? '&background=1' : ''}`;
+
                 try {
-                    const response = await fetch(`ajax_scheduler.php?action=delete_bulk&ids=${ids}&from_fb=${fromFb ? 1 : 0}`);
+                    const response = await fetch(url);
                     const result = await response.json();
-                    if (result.status === 'success') {
+
+                    if (result.status === 'success' || result.status === 'background') {
+                        if (result.status === 'background') {
+                            alert('تم تشغيل الحذف الجماعي في الخلفية بنجاح. يمكنك التنقل في الموقع بحرية، وقد تستغرق العملية بضع دقائق لتكتمل بالكامل على فيسبوك.');
+                        }
                         await this.refreshPostList();
                         this.exitSelectionMode();
                     } else {
                         alert(result.message);
                     }
                 } catch (e) {
-                    alert('Bulk delete failed');
+                    console.error('Bulk delete failed', e);
+                    alert('Bulk delete request failed');
                 } finally {
                     this.isBulkDelete = false;
                     this.postsToBulkDelete = [];

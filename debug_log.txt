@@ -343,3 +343,166 @@ FB Response: Array
 )
 
 
+2026-01-31 11:05:38 - NEW Post. PageID: 114759763777160. Media Count: 1
+Image 0: CURLFile
+   - Photo Upload Internal Res: Array
+(
+    [error] => Array
+        (
+            [message] => Invalid parameter
+            [type] => OAuthException
+            [code] => 100
+            [error_subcode] => 1366046
+            [is_transient] => 
+            [error_user_title] => لا يمكن قراءة الملفات
+            [error_user_msg] => تعذر تحميل صورك. يجب أن يكون حجم الصور أقل من 10 ميجابايت ومحفوظة بتنسيق JPG أو PNG أو GIF أو TIFF أو HEIF أو WebP.
+            [fbtrace_id] => AS4kgAIZmkYm3Tu8iBwhiZa
+        )
+
+)
+
+   - All Photo IDs: 
+NEW FB Response: Array
+(
+    [error] => Array
+        (
+            [message] => Failed to upload any media files to Facebook. Check debug_log.txt for internal errors.
+        )
+
+)
+
+
+2026-01-31 11:06:54 - NEW Post. PageID: 114759763777160. Media Count: 1
+Image 0: CURLFile
+   - Photo Upload Internal Res: Array
+(
+    [error] => Array
+        (
+            [message] => Invalid parameter
+            [type] => OAuthException
+            [code] => 100
+            [error_subcode] => 1366046
+            [is_transient] => 
+            [error_user_title] => لا يمكن قراءة الملفات
+            [error_user_msg] => تعذر تحميل صورك. يجب أن يكون حجم الصور أقل من 10 ميجابايت ومحفوظة بتنسيق JPG أو PNG أو GIF أو TIFF أو HEIF أو WebP.
+            [fbtrace_id] => AtsOsQTRNqrJ-p8BHOJtYtx
+        )
+
+)
+
+   - All Photo IDs: 
+NEW FB Response: Array
+(
+    [error] => Array
+        (
+            [message] => Failed to upload any media files to Facebook. Check debug_log.txt for internal errors.
+        )
+
+)
+
+
+2026-01-31 11:08:40 - NEW Post. PageID: 114759763777160. Media Count: 1
+Image 0: CURLFile
+   - Photo Upload Internal Res: Array
+(
+    [id] => 1478964524237335
+)
+
+   - All Photo IDs: 1478964524237335
+NEW FB Response: Array
+(
+    [id] => 114759763777160_1478964557570665
+    [post_supports_client_mutation_id] => 1
+)
+
+
+2026-01-31 11:11:00 - NEW Post. PageID: 114759763777160. Media Count: 1
+Image 0: CURLFile
+2026-01-31 11:15:40 - NEW Post. PageID: 114759763777160. Media Count: 1
+Image 0: CURLFile
+2026-01-31 11:18:09 - NEW Post. PageID: 114759763777160. Media Count: 1
+Image 0: CURLFile
+2026-01-31 11:19:55 - NEW Post. PageID: 114759763777160. Media Count: 1
+Image 0: CURLFile
+NEW FB Response: Array
+(
+    [id] => 1428793922235127
+)
+
+
+2026-01-31 11:25:41 - NEW Post. PageID: 114759763777160. Media Count: 1
+Image 0: CURLFile
+NEW FB Response: Array
+(
+    [id] => 1259106082703445
+)
+
+
+2026-01-31 11:28:44 - NEW Post. PageID: 114759763777160. Media Count: 1
+Image 0: CURLFile
+NEW FB Response: Array
+(
+    [id] => 927301709640833
+)
+
+
+2026-01-31 11:30:50 - NEW Post. PageID: 114759763777160. Media Count: 1
+Image 0: CURLFile
+NEW FB Response: Array
+(
+    [id] => 888950820560601
+)
+
+
+2026-01-31 11:39:03 - START BULK DELETE. Items: 5 From FB: YES
+2026-01-31 11:39:08 - Deleting ID: 72 (FB: 888950820560601) | FB Res: {"success":true}
+2026-01-31 11:39:13 - Deleting ID: 73 (FB: 1453478149545466) | FB Res: {"success":true}
+2026-01-31 11:39:18 - Deleting ID: 71 (FB: 927301709640833) | FB Res: {"success":true}
+2026-01-31 11:39:22 - Deleting ID: 74 (FB: 886185541071485) | FB Res: {"success":true}
+2026-01-31 11:39:28 - Deleting ID: 70 (FB: 1259106082703445) | FB Res: {"success":true}
+2026-01-31 11:39:28 - BULK DELETE FINISHED. Total: 5
+2026-01-31 11:44:14 - Media Upload Internal Res: Array
+(
+    [id] => 1478987874235000
+)
+
+2026-01-31 11:45:19 - START BULK DELETE. Items: 3 From FB: YES
+2026-01-31 11:45:24 - Deleting ID: 75 (FB: 3326167090895011) | FB Res: {"success":true}
+2026-01-31 11:45:25 - Deleting ID: 76 (FB: 1165896855389107) | FB Res: {"error":{"message":"Unsupported delete request. Object with ID '1165896855389107' does not exist, cannot be loaded due to missing permissions, or does not support this operation. Please read the Graph API documentation at https:\/\/developers.facebook.com\/docs\/graph-api","type":"GraphMethodException","code":100,"error_subcode":33,"fbtrace_id":"AHmDk7h7Pr7TWXmQkiCazuu"}}
+2026-01-31 11:45:26 - Deleting ID: 77 (FB: 114759763777160_1478987964234991) | FB Res: {"error":{"message":"Unsupported delete request. Object with ID '114759763777160_1478987964234991' does not exist, cannot be loaded due to missing permissions, or does not support this operation. Please read the Graph API documentation at https:\/\/developers.facebook.com\/docs\/graph-api","type":"GraphMethodException","code":100,"error_subcode":33,"fbtrace_id":"An3m5xFCuLPw7WiaMOztQXr"}}
+2026-01-31 11:45:26 - BULK DELETE FINISHED. Total: 3
+2026-01-31 11:46:16 - Media Upload Internal Res: Array
+(
+    [id] => 1478989110901543
+)
+
+2026-01-31 11:46:30 - Media Upload Internal Res: Array
+(
+    [id] => 1478989280901526
+)
+
+2026-01-31 11:48:53 - Media Upload Internal Res: Array
+(
+    [id] => 1478991037568017
+)
+
+2026-01-31 11:58:35 - SYNC FAILED for ID 78 (FB ID: 4289614841356162). Error: (#100) Tried accessing nonexisting field (message) on node type (Video) (Code: 100)
+2026-01-31 11:58:45 - SYNC FAILED for ID 78 (FB ID: 4289614841356162). Error: (#100) Tried accessing nonexisting field (message) on node type (Video) (Code: 100)
+2026-01-31 11:58:54 - SYNC FAILED for ID 81 (FB ID: 889287077405112). Error: (#100) Tried accessing nonexisting field (message) on node type (Video) (Code: 100)
+2026-01-31 11:59:04 - SYNC FAILED for ID 78 (FB ID: 4289614841356162). Error: (#100) Tried accessing nonexisting field (message) on node type (Video) (Code: 100)
+2026-01-31 11:59:13 - SYNC FAILED for ID 81 (FB ID: 889287077405112). Error: (#100) Tried accessing nonexisting field (message) on node type (Video) (Code: 100)
+2026-01-31 11:59:42 - SYNC FAILED for ID 78 (FB ID: 4289614841356162). Error: (#100) Tried accessing nonexisting field (message) on node type (Video) (Code: 100)
+2026-01-31 11:59:52 - SYNC FAILED for ID 81 (FB ID: 889287077405112). Error: (#100) Tried accessing nonexisting field (message) on node type (Video) (Code: 100)
+2026-01-31 11:59:57 - START BULK DELETE. Items: 5 From FB: YES
+2026-01-31 12:00:01 - Deleting ID: 78 (FB: 4289614841356162) | FB Res: {"success":true}
+2026-01-31 12:00:08 - Deleting ID: 79 (FB: 114759763777160_1478989154234872) | FB Res: {"success":true}
+2026-01-31 12:00:15 - Deleting ID: 80 (FB: 114759763777160_1478991067568014) | FB Res: {"success":true}
+2026-01-31 12:00:19 - Deleting ID: 81 (FB: 889287077405112) | FB Res: {"success":true}
+2026-01-31 12:00:25 - Deleting ID: 82 (FB: 114759763777160_1478990390901415) | FB Res: {"success":true}
+2026-01-31 12:00:25 - BULK DELETE FINISHED. Total: 5
+2026-01-31 12:00:25 - START BULK DELETE. Items: 5 From FB: YES
+2026-01-31 12:00:25 - BULK DELETE FINISHED. Total: 0
+2026-01-31 12:05:11 - SYNC FAILED for ID 83 (FB ID: 2368661900285773). Error: (#100) Tried accessing nonexisting field (message) on node type (Video) (Code: 100)
+2026-01-31 12:05:48 - SYNC FAILED for ID 83 (FB ID: 2368661900285773). Error: (#100) Tried accessing nonexisting field (message) on node type (Video) (Code: 100)
+2026-01-31 12:08:57 - SYNC FAILED for ID 83 (FB ID: 114759763777160_2368661900285773). Error: (#10) Object does not exist, cannot be loaded due to missing permission or reviewable feature, or does not support this operation. This endpoint requires the 'pages_read_engagement' permission or the 'Page Public Content Access' feature. Refer to https://developers.facebook.com/docs/apps/review/login-permissions#manage-pages and https://developers.facebook.com/docs/apps/review/feature#reference-PAGES_ACCESS for details.  (Code: 10)
+2026-01-31 12:10:56 - SYNC FAILED for ID 83 (FB ID: 114759763777160_2368661900285773). Error: (#10) Object does not exist, cannot be loaded due to missing permission or reviewable feature, or does not support this operation. This endpoint requires the 'pages_read_engagement' permission or the 'Page Public Content Access' feature. Refer to https://developers.facebook.com/docs/apps/review/login-permissions#manage-pages and https://developers.facebook.com/docs/apps/review/feature#reference-PAGES_ACCESS for details.  (Code: 10)
