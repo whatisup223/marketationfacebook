@@ -66,7 +66,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <div class="flex flex-col sm:flex-row gap-4 items-stretch">
                     <div class="relative group flex-1">
                         <select x-model="selectedPageId"
-                            @change="localStorage.setItem('ar_last_page', selectedPageId); fetchRules(); fetchTokenDebug(); fetchPageSettings(); fetchStats(); fetchHandover();"
+                            @change="localStorage.setItem('ar_last_page', selectedPageId); fetchRules(); fetchTokenDebug(); fetchPageSettings(); fetchStats(); fetchRecentActivity();"
                             class="w-full bg-black/40 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-3.5 pr-10 appearance-none transition-all group-hover:border-white/20">
                             <option value=""><?php echo __('select_page'); ?>...</option>
                             <?php foreach ($pages as $page): ?>
@@ -317,32 +317,29 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         </div>
                     </div>
 
-                    <!-- active handovers -->
-                    <div class="glass-panel p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all group overflow-hidden relative"
-                        :class="handoverConversations.length > 0 ? 'border-red-500/20' : ''">
+                    <!-- Hidden Comments Stat -->
+                    <div
+                        class="glass-panel p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all group overflow-hidden relative">
                         <div class="relative z-10 flex justify-between items-start">
                             <div>
                                 <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
-                                    <?php echo __('active_handovers'); ?>
+                                    <?php echo __('hidden_comments'); ?>
                                 </p>
                                 <h4 class="text-3xl font-black text-white group-hover:scale-110 transition-transform origin-left"
-                                    x-text="stats.active_handovers"></h4>
+                                    x-text="stats.hidden_comments || 0"></h4>
                             </div>
-                            <div class="p-3 bg-red-500/10 rounded-2xl text-red-500 group-hover:rotate-12 transition-all"
-                                :class="handoverConversations.length > 0 ? 'animate-pulse' : ''">
+                            <div
+                                class="p-3 bg-red-500/10 rounded-2xl text-red-500 group-hover:rotate-12 transition-all">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                                        d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268-2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21">
                                     </path>
                                 </svg>
                             </div>
                         </div>
                         <div class="mt-4 flex items-center gap-2">
-                            <div class="w-2 h-2 rounded-full"
-                                :class="handoverConversations.length > 0 ? 'bg-red-500 animate-ping' : 'bg-green-500'">
-                            </div>
-                            <span class="text-[10px] text-gray-600 uppercase font-bold tracking-tighter"
-                                x-text="handoverConversations.length > 0 ? '<?php echo __('human_intervention_needed'); ?>' : '<?php echo __('system_healthy'); ?>'"></span>
+                            <span
+                                class="text-[9px] text-gray-500 font-bold uppercase tracking-tighter"><?php echo __('moderation_active'); ?></span>
                         </div>
                     </div>
 
@@ -473,7 +470,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     </div>
                 </div>
 
-                <!-- Live Alerts Center (The Moved Handover Logic) -->
+                <!-- Recent Activity Log (Replaces Live Alerts) -->
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
                     <div class="lg:col-span-12">
                         <div
@@ -484,90 +481,83 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                         <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor"
                                             viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
-                                            </path>
+                                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                         </svg>
                                     </div>
                                     <div>
                                         <h3 class="text-xl font-black text-white">
-                                            <?php echo __('live_alerts_center'); ?>
+                                            <?php echo __('recent_activity_log'); ?>
                                         </h3>
                                         <p class="text-xs text-gray-500 font-bold tracking-wide">
-                                            <?php echo __('monitor_alerts_desc'); ?>
+                                            <?php echo __('recent_replies_desc'); ?>
                                         </p>
 
                                     </div>
                                 </div>
+                                <button @click="fetchRecentActivity()"
+                                    class="p-2 hover:bg-white/5 rounded-xl transition-colors text-gray-500 hover:text-white"
+                                    :class="fetchingActivity ? 'animate-spin' : ''">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                </button>
                             </div>
 
-                            <!-- List of Handover Alerts -->
+                            <!-- List of Recent Activities -->
                             <div class="space-y-4">
-                                <template x-if="handoverConversations.length === 0">
+                                <template x-if="recentActivities.length === 0">
                                     <div
                                         class="flex flex-col items-center justify-center py-12 px-6 border border-dashed border-white/5 rounded-3xl bg-white/[0.01]">
                                         <div
-                                            class="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mb-4">
-                                            <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor"
+                                            class="w-16 h-16 bg-indigo-500/10 rounded-full flex items-center justify-center mb-4">
+                                            <svg class="w-8 h-8 text-indigo-500" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                    d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                                             </svg>
                                         </div>
                                         <h5 class="text-white font-bold mb-1 text-sm">
-                                            <?php echo __('no_active_alerts'); ?>
+                                            <?php echo __('no_recent_activity'); ?>
                                         </h5>
                                     </div>
                                 </template>
 
-                                <template x-for="conv in handoverConversations" :key="conv.id">
+                                <template x-for="activity in recentActivities" :key="activity.id">
                                     <div
                                         class="p-5 bg-white/[0.03] hover:bg-white/[0.05] border border-white/5 rounded-2xl flex items-center justify-between group/item transition-all hover:scale-[1.01] hover:border-indigo-500/30">
-                                        <div class="flex items-center gap-5 min-w-0">
+                                        <div class="flex items-center gap-5 min-w-0 flex-1">
                                             <div
                                                 class="w-12 h-12 rounded-xl bg-gradient-to-tr from-gray-800 to-gray-900 border border-white/10 flex items-center justify-center shrink-0 shadow-lg">
-                                                <template x-if="conv.is_anger_detected == 1">
-                                                    <span class="text-lg">😠</span>
-                                                </template>
-                                                <template x-if="conv.is_anger_detected == 0">
-                                                    <span class="text-lg">👤</span>
-                                                </template>
+                                                <span class="text-lg">💬</span>
                                             </div>
-                                            <div class="min-w-0">
+                                            <div class="min-w-0 flex-1">
                                                 <div class="flex flex-wrap items-center gap-2 mb-1">
                                                     <span class="text-sm font-black text-white truncate"
-                                                        x-text="conv.user_name || 'User #' + conv.user_id.substring(0,8)"></span>
-                                                    <template x-if="conv.is_anger_detected == 1">
-                                                        <span
-                                                            class="px-2 py-0.5 bg-red-500/10 text-red-500 text-[8px] font-black rounded-lg border border-red-500/20 uppercase tracking-widest">
-                                                            <?php echo __('danger_alert'); ?>
-                                                        </span>
-                                                    </template>
-                                                    <template x-if="conv.repeat_count >= 3">
-                                                        <span
-                                                            class="px-2 py-0.5 bg-orange-500/10 text-orange-400 text-[8px] font-black rounded-lg border border-orange-500/20 uppercase tracking-widest">
-                                                            <?php echo __('repetition_alert'); ?>
-                                                        </span>
-                                                    </template>
+                                                        x-text="activity.user_identifier"></span>
+                                                    <span
+                                                        class="px-2 py-0.5 bg-indigo-500/10 text-indigo-400 text-[8px] font-black rounded-lg border border-indigo-500/20 uppercase tracking-widest"
+                                                        x-text="activity.rule_name">
+                                                    </span>
                                                 </div>
-                                                <p class="text-[11px] text-gray-400 font-bold mb-1"
-                                                    x-show="conv.last_user_message"
-                                                    x-text="'<?php echo __('last_message'); ?>: ' + conv.last_user_message">
+                                                <p class="text-[11px] text-gray-400 font-bold mb-1 line-clamp-1"
+                                                    x-text="activity.message ? 'User: ' + activity.message : 'User: ...'">
                                                 </p>
-                                                <p class="text-[9px] text-gray-500 truncate"
-                                                    x-text="'<?php echo __('last_interaction'); ?>: ' + (conv.last_bot_reply_text || '<?php echo __('waiting_response'); ?>')">
+                                                <p class="text-[11px] text-green-400/80 line-clamp-1"
+                                                    x-text="'Bot: ' + activity.reply_message">
                                                 </p>
                                             </div>
                                         </div>
-                                        <div class="flex items-center gap-3">
-                                            <button @click="resolveHandover(conv.id)"
-                                                class="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition-all font-bold text-xs shadow-lg shadow-indigo-600/20">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                                </svg>
-                                                <span><?php echo __('mark_as_resolved'); ?></span>
-                                            </button>
+                                        <div class="flex flex-col items-end gap-1 ml-4">
+                                            <span class="text-[10px] text-gray-500 font-mono"
+                                                x-text="activity.time_ago"></span>
+                                            <div class="flex gap-2">
+                                                <template x-if="activity.deleted_comment == 1">
+                                                    <span
+                                                        class="text-[9px] text-red-400 bg-red-400/10 px-1.5 py-0.5 rounded border border-red-400/20"
+                                                        title="<?php echo __('hidden'); ?>">HIDDEN</span>
+                                                </template>
+                                            </div>
                                         </div>
                                     </div>
                                 </template>
@@ -882,83 +872,17 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         </div>
                     </div>
 
-                    <!-- Advanced Intelligence & Scheduling -->
-                    <div
-                        class="glass-panel p-8 rounded-[2rem] border border-white/10 bg-indigo-500/10 backdrop-blur-2xl hover:border-indigo-400/30 transition-all shadow-2xl relative overflow-hidden group">
-                        <div class="absolute top-0 left-0 w-1 h-full bg-indigo-500"></div>
-
-                        <div class="flex justify-between items-start mb-6">
-                            <div>
-                                <h3 class="text-2xl font-bold text-white mb-2 rtl:text-right">
-                                    <?php echo __('bot_intelligence_settings'); ?>
-                                </h3>
-                                <p class="text-gray-400 text-sm max-w-md rtl:text-right">
-                                    <?php echo __('human_takeover_hint'); ?>
-                                </p>
-                            </div>
-
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <!-- Cooldown Section -->
-                            <div class="space-y-4">
-                                <label
-                                    class="block text-sm font-bold text-white"><?php echo __('bot_cooldown'); ?></label>
-                                <div class="flex gap-4">
-                                    <div class="flex-1">
-                                        <input type="number" x-model="cooldownHours" min="0"
-                                            class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-center focus:ring-2 focus:ring-indigo-500">
-                                        <span
-                                            class="block text-[10px] text-gray-500 text-center mt-1 uppercase"><?php echo __('hours'); ?></span>
-                                    </div>
-                                    <div class="flex-1">
-                                        <input type="number" x-model="cooldownMinutes" min="0" max="59"
-                                            class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-center focus:ring-2 focus:ring-indigo-500">
-                                        <span
-                                            class="block text-[10px] text-gray-500 text-center mt-1 uppercase"><?php echo __('minutes'); ?></span>
-                                    </div>
-                                    <div class="flex-1">
-                                        <input type="number" x-model="cooldownSeconds" min="0" max="59"
-                                            class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-center focus:ring-2 focus:ring-indigo-500">
-                                        <span
-                                            class="block text-[10px] text-gray-500 text-center mt-1 uppercase"><?php echo __('seconds'); ?></span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Schedule & Keywords Section -->
-                            <div class="space-y-4">
-                                <div class="flex items-center justify-between">
-                                    <label
-                                        class="block text-sm font-bold text-white"><?php echo __('bot_schedule'); ?></label>
-                                    <div
-                                        class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
-                                        <input type="checkbox" x-model="schEnabled" id="toggleSchedule"
-                                            class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
-                                        <label for="toggleSchedule"
-                                            :class="schEnabled ? 'bg-indigo-600' : 'bg-gray-700'"
-                                            class="toggle-label block overflow-hidden h-5 rounded-full cursor-pointer transition-colors"></label>
-                                    </div>
-                                </div>
-                                <div class="grid grid-cols-2 gap-4 mb-4"
-                                    :class="!schEnabled ? 'opacity-40 pointer-events-none' : ''">
-                                    <div>
-                                        <input type="time" x-model="schStart"
-                                            class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:ring-2 focus:ring-indigo-500">
-                                        <span
-                                            class="block text-[10px] text-gray-500 mt-1 uppercase"><?php echo __('start_time'); ?></span>
-                                    </div>
-                                    <div>
-                                        <input type="time" x-model="schEnd"
-                                            class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:ring-2 focus:ring-indigo-500">
-                                        <span
-                                            class="block text-[10px] text-gray-500 mt-1 uppercase"><?php echo __('end_time'); ?></span>
-                                    </div>
-                                </div>
-
-
-                            </div>
-                        </div>
+                    <!-- Bot Intelligence Settings (Hidden for Comments to avoid conflict) -->
+                    <!-- These settings (Cooldown, Schedule) are shared with Messenger Bot and are more relevant there. 
+                         To avoid confusion, we hide them here. If needed, they can be enabled in Messenger Bot page. -->
+                    <div style="display: none;">
+                        <!-- Hidden Inputs to preserve values during save -->
+                        <input type="hidden" x-model="cooldownHours">
+                        <input type="hidden" x-model="cooldownMinutes">
+                        <input type="hidden" x-model="cooldownSeconds">
+                        <input type="hidden" x-model="schEnabled">
+                        <input type="hidden" x-model="schStart">
+                        <input type="hidden" x-model="schEnd">
                     </div>
 
                     <!-- AI Protection Card -->
@@ -1424,8 +1348,9 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
             botExcludeKeywords: false,
             aiSentimentEnabled: true,
             angerKeywords: '',
-            handoverConversations: [],
-            fetchingHandover: false,
+            angerKeywords: '',
+            recentActivities: [],
+            fetchingActivity: false,
             savingPageSettings: false,
             isGlobalSaving: false,
             statsRange: 'all',
@@ -1472,16 +1397,15 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     this.fetchPageSettings();
                     this.fetchRules();
                     this.fetchStats();
-                    this.fetchHandover();
+                    this.fetchRecentActivity();
                 }
 
                 this.$watch('defaultReplyText', () => {
                     this.previewMode = 'default';
                 });
 
-                // Auto-refresh Handover Alerts every 30 seconds
                 setInterval(() => {
-                    this.fetchHandover();
+                    this.fetchRecentActivity();
                     this.fetchStats();
                     const urlParams = new URLSearchParams(window.location.search);
                     if (urlParams.has('preview')) {
@@ -1637,7 +1561,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             }
                         }
                     });
-                this.fetchHandover();
+                this.fetchRecentActivity();
             },
 
             fetchStats(customStart = '', customEnd = '') {
@@ -1681,28 +1605,20 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 this.closeCustomRangeModal();
             },
 
-            fetchHandover() {
+            fetchRecentActivity() {
                 if (!this.selectedPageId) return;
-                this.fetchingHandover = true;
-                fetch(`ajax_auto_reply.php?action=fetch_handover_conversations&page_id=${this.selectedPageId}`)
+                this.fetchingActivity = true;
+                fetch(`ajax_auto_reply.php?action=fetch_recent_activity&page_id=${this.selectedPageId}&source=comment`)
                     .then(res => res.json())
                     .then(data => {
-                        this.fetchingHandover = false;
+                        this.fetchingActivity = false;
                         if (data.success) {
-                            this.handoverConversations = data.conversations;
+                            this.recentActivities = data.activity;
                         }
-                    }).catch(() => { this.fetchingHandover = false; });
+                    }).catch(() => { this.fetchingActivity = false; });
             },
 
-            resolveHandover(id) {
-                let formData = new FormData();
-                formData.append('id', id);
-                fetch('ajax_auto_reply.php?action=mark_as_resolved', { method: 'POST', body: formData })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.success) this.fetchHandover();
-                    });
-            },
+            // Removed resolveHandover as it's not needed for comments activity log
 
             openAddModal() {
                 if (!this.selectedPageId) { alert('Please select a page first'); return; }

@@ -343,6 +343,42 @@ if ($action === 'mark_as_resolved') {
     exit;
 }
 
+if ($action === 'fetch_recent_activity') {
+    $page_id = $_GET['page_id'] ?? '';
+    $source = $_GET['source'] ?? 'comment';
+    if (!$page_id) {
+        echo json_encode(['success' => false, 'error' => 'No page ID']);
+        exit;
+    }
+    try {
+        // Assuming bot_sent_messages has columns: user_name, user_message, reply_message, created_at, rule_id, hidden_comment
+        $stmt = $pdo->prepare("SELECT m.*, r.trigger_type, r.keywords 
+                               FROM bot_sent_messages m 
+                               LEFT JOIN auto_reply_rules r ON m.rule_id = r.id 
+                               WHERE m.page_id = ? AND m.reply_source = ? 
+                               ORDER BY m.created_at DESC LIMIT 10");
+        $stmt->execute([$page_id, $source]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $activity = array_map(function ($row) {
+            return [
+                'id' => $row['id'],
+                'user_identifier' => $row['user_name'] ?? 'Guest',
+                'message' => $row['user_message'] ?? '',
+                'reply_message' => $row['reply_message'] ?? '',
+                'rule_name' => ($row['trigger_type'] === 'default') ? 'Default Reply' : (($row['keywords'] ?? 'Rule')),
+                'time_ago' => function_exists('time_elapsed_string') ? time_elapsed_string($row['created_at']) : $row['created_at'],
+                'deleted_comment' => $row['hidden_comment'] ?? 0
+            ];
+        }, $rows);
+
+        echo json_encode(['success' => true, 'activity' => $activity]);
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+    exit;
+}
+
 if ($action === 'fetch_page_stats') {
     $page_id = $_GET['page_id'] ?? '';
     $range = $_GET['range'] ?? 'all';
@@ -392,13 +428,18 @@ if ($action === 'fetch_page_stats') {
         $stmt->execute([$page_id, $source]);
         $total_interacted = $stmt->fetchColumn();
 
-        // 2. Active Handovers (We don't always filter handovers by time if they are STILL active, but for stats we should)
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM bot_conversation_states WHERE page_id = ? AND conversation_state = 'handover' $state_time_query");
-        $stmt->execute([$page_id]);
-        $active_handovers = $stmt->fetchColumn();
+        // 2. Active Handovers (Only relevant for Messenger)
+        if ($source === 'message') {
+            $stmt = $pdo->prepare("SELECT COUNT(*) FROM bot_conversation_states WHERE page_id = ? AND conversation_state = 'handover' $state_time_query");
+            $stmt->execute([$page_id]);
+            $active_handovers = $stmt->fetchColumn();
+        } else {
+            $active_handovers = 0;
+        }
 
-        // 3. AI Success Rate (Simulated based on Handover vs Total)
+        // 3. AI Success Rate (Active handovers are failures)
         $success_rate = 100;
+
         if ($total_interacted > 0) {
             $success_rate = round((($total_interacted - $active_handovers) / $total_interacted) * 100, 1);
         }
@@ -451,10 +492,25 @@ if ($action === 'fetch_page_stats') {
         // 7. System Health (Simulation based on successful replies)
         $health = $total_interacted > 0 ? "99.9%" : "100%";
 
-        // 8. Anger/Negative Sentiment Blocks
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM bot_conversation_states WHERE page_id = ? AND is_anger_detected = 1 $state_time_query");
-        $stmt->execute([$page_id]);
-        $anger_alerts = $stmt->fetchColumn();
+        // 8. Anger/Negative Sentiment Blocks (Only Messenger)
+        if ($source === 'message') {
+            $stmt = $pdo->prepare("SELECT COUNT(*) FROM bot_conversation_states WHERE page_id = ? AND is_anger_detected = 1 $state_time_query");
+            $stmt->execute([$page_id]);
+            $anger_alerts = $stmt->fetchColumn();
+        } else {
+            $anger_alerts = 0;
+        }
+
+        // 9. Hidden Comments (Only Comments)
+        $hidden_comments = 0;
+        if ($source === 'comment') {
+            // Check if hidden_comment column exists or just try (using try-catch block for the whole section so it might fail safely)
+            // But relying on PDO exception handling in the outer block.
+            // We use a safe check if possible, or just assume the column exists for now.
+            $stmt = $pdo->prepare("SELECT COUNT(*) FROM bot_sent_messages WHERE page_id = ? AND reply_source = 'comment' AND hidden_comment = 1 $time_query");
+            $stmt->execute([$page_id]);
+            $hidden_comments = $stmt->fetchColumn();
+        }
 
         echo json_encode([
             'success' => true,
@@ -467,9 +523,50 @@ if ($action === 'fetch_page_stats') {
                 'peak_hour' => $peak_hour,
                 'system_health' => $health,
                 'anger_alerts' => (int) $anger_alerts,
+                'hidden_comments' => (int) $hidden_comments,
                 'ai_filtered' => (int) $total_interacted // Keeping old key for compatibility
             ]
         ]);
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+    exit;
+}
+
+if ($action === 'fetch_recent_activity') {
+    $page_id = $_GET['page_id'] ?? '';
+    $source = $_GET['source'] ?? 'comment';
+
+    if (!$page_id) {
+        echo json_encode(['success' => false, 'error' => 'No page ID']);
+        exit;
+    }
+
+    try {
+        // Fetch recent logs from bot_sent_messages
+        // Assuming columns: user_name, message (user msg), reply_message (bot msg), created_at, rule_id
+        $stmt = $pdo->prepare("SELECT m.*, r.trigger_type, r.keywords 
+                               FROM bot_sent_messages m 
+                               LEFT JOIN auto_reply_rules r ON m.rule_id = r.id 
+                               WHERE m.page_id = ? AND m.reply_source = ? 
+                               ORDER BY m.created_at DESC LIMIT 10");
+        $stmt->execute([$page_id, $source]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Format data for UI
+        foreach ($rows as &$row) {
+            // Fallback if rule was deleted
+            if (!$row['rule_id']) {
+                $row['rule_name'] = 'Default Reply';
+            } else {
+                $row['rule_name'] = $row['trigger_type'] === 'default' ? 'Default Reply' : ($row['keywords'] ?? 'Rule #' . $row['rule_id']);
+            }
+            // Ensure we have displayable strings
+            $row['user_identifier'] = $row['user_name'] ?? $row['user_id'] ?? 'Unknown User';
+            $row['time_ago'] = time_elapsed_string($row['created_at']);
+        }
+
+        echo json_encode(['success' => true, 'activity' => $rows]);
     } catch (Exception $e) {
         echo json_encode(['success' => false, 'error' => $e->getMessage()]);
     }

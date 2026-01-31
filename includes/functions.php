@@ -474,7 +474,21 @@ $translations = [
         'system_healthy' => 'النظام يعمل بكفاءة',
         'instant_replies' => 'ردود فورية',
         'nav_auto_reply' => 'الرد الآلي (تعليقات)',
-        'nav_messenger_bot' => 'الرد الآلي (رسائل)',
+        'nav_messenger_bot' => 'Auto Reply (Messages)',
+        'recent_replies_desc' => 'Live feed of recent comments handled by the bot and actions taken.',
+        'recent_activity_log' => 'Recent Activity Log (Comments)',
+        'start_activity_stream' => 'Start Activity Stream',
+        'stop_activity_stream' => 'Stop Stream',
+        'no_recent_activity' => 'No recent activity yet. Bot is standing by...',
+        'hidden_comments' => 'Hidden Comments',
+        'moderation_active' => 'Moderation Active',
+        'recent_replies_desc' => 'عرض مباشر لآخر التعليقات التي تفاعل معها البوت والاجراءات المتخذة.',
+        'recent_activity_log' => 'سجل النشاط الأحدث (تعليقات)',
+        'start_activity_stream' => 'بدء تتبع النشاط',
+        'stop_activity_stream' => 'إيقاف التتبع',
+        'no_recent_activity' => 'لا يوجد نشاط حديث بعد. البوت في وضع الاستعداد...',
+        'hidden_comments' => 'تعليقات مخفية',
+        'moderation_active' => 'نظام الحماية نشط',
 
 
 
@@ -2819,3 +2833,40 @@ function isAdmin()
     return isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
 }
 
+
+function time_elapsed_string($datetime, $full = false)
+{
+    if (!$datetime)
+        return 'Just now';
+    try {
+        $now = new DateTime;
+        $ago = new DateTime($datetime);
+        $diff = $now->diff($ago);
+    } catch (Exception $e) {
+        return 'Just now';
+    }
+
+    $diff->w = floor($diff->d / 7);
+    $diff->d -= $diff->w * 7;
+
+    $string = array(
+        'y' => 'year',
+        'm' => 'month',
+        'w' => 'week',
+        'd' => 'day',
+        'h' => 'hour',
+        'i' => 'minute',
+        's' => 'second',
+    );
+    foreach ($string as $k => &$v) {
+        if ($diff->$k) {
+            $v = $diff->$k . ' ' . $v . ($diff->$k > 1 ? 's' : '');
+        } else {
+            unset($string[$k]);
+        }
+    }
+
+    if (!$full)
+        $string = array_slice($string, 0, 1);
+    return $string ? implode(', ', $string) . ' ago' : 'just now';
+}
