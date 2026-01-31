@@ -190,19 +190,28 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
         if ($thread_user_id) {
             $convs = $fb->makeRequest("{$page_id}/conversations", [
                 'user_id' => $thread_user_id,
-                'fields' => 'messages.limit(5){from,created_time,application}'
+                'fields' => 'messages.limit(5){from,created_time}'
             ], $access_token);
 
             if (isset($convs['data'][0]['messages']['data'])) {
                 foreach ($convs['data'][0]['messages']['data'] as $msg) {
                     $msg_sender_id = $msg['from']['id'] ?? '';
-                    // Only SILENCE if it's a message from the page AND NOT sent via an application (Human Admin)
-                    if ($msg_sender_id == $page_id && empty($msg['application'])) {
-                        $created_time = strtotime($msg['created_time']);
-                        if ((time() - $created_time) < $cooldown_seconds) {
-                            return; // SILENCE - Admin spoke recently in Messenger
+                    $fb_msg_id = $msg['id'] ?? '';
+
+                    if ($msg_sender_id == $page_id) {
+                        // Check if this ID is in our bot_sent_messages table
+                        $chk = $pdo->prepare("SELECT id FROM bot_sent_messages WHERE message_id = ?");
+                        $chk->execute([$fb_msg_id]);
+
+                        if (!$chk->fetch()) {
+                            // Message from Page, NOT in Bot database -> It's a Human Admin
+                            $created_time = strtotime($msg['created_time']);
+                            if ((time() - $created_time) < $cooldown_seconds) {
+                                return; // SILENCE
+                            }
+                            break;
                         }
-                        break;
+                        // If it's the bot, we continue to check older messages
                     }
                 }
             }
@@ -211,20 +220,28 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
         // B. Check Comment Replies if source is comment
         if ($source === 'comment') {
             $replies = $fb->makeRequest("{$target_id}/comments", [
-                'fields' => 'from,created_time,application',
+                'fields' => 'from,created_time',
                 'limit' => 5
             ], $access_token);
 
             if (isset($replies['data'])) {
                 foreach ($replies['data'] as $reply) {
                     $reply_sender_id = $reply['from']['id'] ?? '';
-                    // Only SILENCE if it's a comment from the page AND NOT sent via an application (Human Admin)
-                    if ($reply_sender_id == $page_id && empty($reply['application'])) {
-                        $created_time = strtotime($reply['created_time']);
-                        if ((time() - $created_time) < $cooldown_seconds) {
-                            return; // SILENCE - Admin replied to this comment on the post
+                    $fb_reply_id = $reply['id'] ?? '';
+
+                    if ($reply_sender_id == $page_id) {
+                        // Check if this ID is in our bot_sent_messages table
+                        $chk = $pdo->prepare("SELECT id FROM bot_sent_messages WHERE message_id = ?");
+                        $chk->execute([$fb_reply_id]);
+
+                        if (!$chk->fetch()) {
+                            // Reply from Page, NOT in Bot database -> It's a Human Admin
+                            $created_time = strtotime($reply['created_time']);
+                            if ((time() - $created_time) < $cooldown_seconds) {
+                                return; // SILENCE
+                            }
+                            break;
                         }
-                        break;
                     }
                 }
             }
@@ -233,13 +250,20 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 
     // 5. Execute Reply
     $fb = new FacebookAPI();
+    $res = null;
     if ($source === 'message') {
-        $fb->sendMessage($page_id, $access_token, $target_id, $reply_msg);
+        $res = $fb->sendMessage($page_id, $access_token, $target_id, $reply_msg);
     } else {
-        $fb->replyToComment($target_id, $reply_msg, $access_token);
+        $res = $fb->replyToComment($target_id, $reply_msg, $access_token);
         if ($hide_comment) {
             $fb->hideComment($target_id, $access_token, true);
         }
+    }
+
+    // 6. Log Bot Reply ID to database
+    if (isset($res['id'])) {
+        $stmt = $pdo->prepare("INSERT IGNORE INTO bot_sent_messages (message_id, page_id) VALUES (?, ?)");
+        $stmt->execute([$res['id'], $page_id]);
     }
 }
 
