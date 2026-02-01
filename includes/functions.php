@@ -388,8 +388,7 @@ $translations = [
         'facebook_page' => 'صفحة فيسبوك',
         'use_url' => 'استخدام رابط',
         'local_file' => 'ملف محلي',
-        'accounts_management' => 'إدارة الحسابات',
-        'system_management' => 'إدارة النظام',
+
         'portfolio_title_ar' => 'عنوان القسم (عربي)',
         'portfolio_title_en' => 'عنوان القسم (إنجليزي)',
         'add_new_work' => 'إضافة عمل جديد',
@@ -1601,8 +1600,7 @@ $translations = [
         'post_content_placeholder' => 'Write your post content here...',
         'image_url_placeholder' => 'https://example.com/image.jpg',
         'schedule_post_btn' => 'Schedule Post',
-        'system_management' => 'System Management',
-        'system_management' => 'System Management',
+
         'portfolio_title_ar' => 'Section Title (Arabic)',
         'portfolio_title_en' => 'Section Title (English)',
         'add_new_work' => 'Add New Work',
