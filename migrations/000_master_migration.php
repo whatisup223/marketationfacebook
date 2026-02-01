@@ -221,8 +221,19 @@ try {
     if (indexExists($pdo, 'fb_pages', 'page_id')) {
         $pdo->exec("ALTER TABLE fb_pages DROP INDEX page_id");
     }
+    if (indexExists($pdo, 'fb_pages', 'unique_page_id')) {
+        $pdo->exec("ALTER TABLE fb_pages DROP INDEX unique_page_id");
+    }
     if (!indexExists($pdo, 'fb_pages', 'unique_acc_page')) {
-        $pdo->exec("ALTER TABLE fb_pages ADD UNIQUE KEY `unique_acc_page` (account_id, page_id)");
+        try {
+            $pdo->exec("ALTER TABLE fb_pages ADD UNIQUE KEY `unique_acc_page` (account_id, page_id)");
+        } catch (PDOException $e) {
+            if ($e->getCode() == '23000') { // Duplicate entry error
+                echo "⚠️ Notice: Could not create unique index 'unique_acc_page' due to existing duplicate data in 'fb_pages'. This is expected if the same page was added multiple times to the same account. Skipping...\n";
+            } else {
+                throw $e;
+            }
+        }
     }
 
     // --- 026: FB Moderation ---
