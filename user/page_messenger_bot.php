@@ -655,9 +655,11 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <div class="flex-1 overflow-y-auto px-2 messenger-scrollbar space-y-6 pb-4">
                         <!-- User Message (Left) -->
                         <div class="flex items-end gap-2">
-                            <div class="w-6 h-6 rounded-full bg-gray-600 flex-shrink-0 flex items-center justify-center border border-white/5">
+                            <div
+                                class="w-6 h-6 rounded-full bg-gray-600 flex-shrink-0 flex items-center justify-center border border-white/5">
                                 <svg class="w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                    <path
+                                        d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
                                 </svg>
                             </div>
                             <div
@@ -697,22 +699,32 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <!-- Input Area & Quick Replies Footer -->
                     <div class="px-3 pb-4 pt-1 border-t border-white/5 bg-[#18191a]">
                         <!-- Quick Replies -->
-                        <div class="flex flex-wrap gap-2 justify-center mb-3" x-show="getCurrentPreviewButtons().length > 0">
+                        <div class="flex flex-wrap gap-2 justify-center mb-3"
+                            x-show="getCurrentPreviewButtons().length > 0">
                             <template x-for="btn in getCurrentPreviewButtons()">
                                 <div class="px-4 py-1.5 rounded-full border border-[#0084ff] text-[#0084ff] text-[11px] font-bold bg-[#0084ff]/5 hover:bg-[#0084ff]/10 cursor-pointer transition-all"
                                     x-text="btn.title || 'Button'"></div>
                             </template>
                         </div>
-                        
+
                         <!-- Mock Chat Input -->
                         <div class="flex items-center gap-2 bg-[#242526] rounded-full px-4 py-2 border border-white/5">
                             <div class="text-[#0084ff]">
-                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                        d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z" />
+                                </svg>
                             </div>
                             <div class="flex-1 text-gray-500 text-xs italic">Aa</div>
                             <div class="flex gap-2 text-[#0084ff]">
-                                <svg class="w-5 h-5 opacity-60" fill="currentColor" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/></svg>
-                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                                <svg class="w-5 h-5 opacity-60" fill="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                        d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z" />
+                                </svg>
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                        d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                                </svg>
                             </div>
                         </div>
                     </div>
@@ -795,12 +807,28 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <div
                             class="glass-panel p-6 rounded-2xl border border-white/5 bg-gray-800/20 hover:bg-gray-800/40 hover:border-indigo-500/30 transition-all flex justify-between items-center group shrink-0">
                             <div class="flex items-center gap-4">
-                                <div class="p-3 bg-indigo-500/10 rounded-2xl text-indigo-400">
+                                <div
+                                    class="p-3 bg-indigo-500/10 rounded-2xl text-indigo-400 relative group-hover:scale-110 transition-transform">
                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
                                         </path>
                                     </svg>
+                                    <!-- Dynamic Label Badge -->
+                                    <div class="absolute -top-3 -left-3 flex flex-col gap-1">
+                                        <template x-if="getRuleType(rule) === 'entry'">
+                                            <span
+                                                class="px-2 py-0.5 bg-green-500/20 text-green-400 text-[9px] font-black rounded-lg border border-green-500/20 shadow-sm whitespace-nowrap uppercase tracking-tighter">
+                                                <?php echo __('entry_point'); ?>
+                                            </span>
+                                        </template>
+                                        <template x-if="getRuleType(rule) === 'button'">
+                                            <span
+                                                class="px-2 py-0.5 bg-blue-500/20 text-blue-400 text-[9px] font-black rounded-lg border border-blue-500/20 shadow-sm whitespace-nowrap uppercase tracking-tighter">
+                                                <?php echo __('button_target'); ?>
+                                            </span>
+                                        </template>
+                                    </div>
                                 </div>
                                 <div>
                                     <p class="text-xs font-black text-indigo-400 uppercase tracking-widest mb-1"
@@ -1156,9 +1184,33 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                         class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white text-xs focus:ring-1 focus:ring-indigo-500">
                                 </div>
                                 <div class="flex-1 space-y-1">
-                                    <input type="text" x-model="btn.payload"
-                                        placeholder="<?php echo __('button_payload_placeholder'); ?>"
-                                        class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white text-xs focus:ring-1 focus:ring-indigo-500 font-mono text-indigo-300">
+                                    <div class="flex justify-between items-center px-1">
+                                        <label
+                                            class="text-[9px] font-bold text-gray-500 uppercase"><?php echo __('button_payload_placeholder'); ?></label>
+                                        <template x-if="isRuleExisting(btn.payload)">
+                                            <span
+                                                class="text-[8px] font-black text-green-500 uppercase flex items-center gap-1">
+                                                <div class="w-1 h-1 rounded-full bg-green-500"></div>
+                                                <?php echo __('linked_rule'); ?>
+                                            </span>
+                                        </template>
+                                        <template x-if="!isRuleExisting(btn.payload) && btn.payload">
+                                            <span
+                                                class="text-[8px] font-black text-orange-400 uppercase flex items-center gap-1">
+                                                <div class="w-1 h-1 rounded-full bg-orange-500 animate-pulse"></div>
+                                                <?php echo __('missing_rule'); ?>
+                                            </span>
+                                        </template>
+                                    </div>
+                                    <div class="relative">
+                                        <input type="text" x-model="btn.payload"
+                                            placeholder="<?php echo __('button_payload_placeholder'); ?>"
+                                            class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white text-xs focus:ring-1 focus:ring-indigo-500 font-mono text-indigo-300 pr-16 leading-none">
+                                        <button @click="suggestPayload(index)" type="button"
+                                            class="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 px-2 py-1 rounded-lg border border-indigo-500/10 transition-colors uppercase font-black">
+                                            <?php echo __('suggest_payload'); ?>
+                                        </button>
+                                    </div>
                                 </div>
                                 <button @click="removeButton(index)"
                                     class="p-3 bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500/20 transition-colors border border-red-500/10">
@@ -1442,6 +1494,38 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 return this.previewMode === 'rule' ? this.previewButtons : this.defaultReplyButtons;
             },
 
+            // Linking Helpers
+            suggestPayload(index) {
+                const title = this.modalButtons[index].title;
+                if (!title) return;
+                // Generate slug-like payload
+                const payload = title.trim().toLowerCase().replace(/\s+/g, '_').substring(0, 30);
+                this.modalButtons[index].payload = payload;
+            },
+
+            isRuleExisting(payload) {
+                if (!payload) return false;
+                // Check in all current rules if keywords match exactly
+                return this.fullRules.some(r => {
+                    const kws = r.keywords.split(',').map(k => k.trim());
+                    return kws.includes(payload.trim());
+                });
+            },
+
+            getRuleType(rule) {
+                // If it has children (other rules linking to its keywords) or if it starts from a common greeting
+                // simplified: if its keywords are found in any other rule's buttons
+                const isTarget = this.fullRules.some(r => {
+                    try {
+                        const btns = r.reply_buttons ? JSON.parse(r.reply_buttons) : [];
+                        return btns.some(b => b.payload.trim() === rule.keywords.trim());
+                    } catch (e) { return false; }
+                });
+                return isTarget ? 'button' : 'entry';
+            },
+
+            fullRules: [],
+
             getPageName() {
                 const page = this.pages.find(p => p.page_id == this.selectedPageId);
                 return page ? page.page_name : '';
@@ -1549,6 +1633,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     .then(res => res.json())
                     .then(data => {
                         if (data.success) {
+                            this.fullRules = data.rules;
                             this.rules = data.rules.filter(r => r.trigger_type === 'keyword');
                             const defRule = data.rules.find(r => r.trigger_type === 'default');
                             if (defRule) {
