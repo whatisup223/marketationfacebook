@@ -1131,12 +1131,12 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
     x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200"
     x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
 
-    <div class="bg-gray-900 border border-white/10 rounded-[2.5rem] w-full max-w-lg overflow-hidden shadow-2xl relative"
+    <div class="bg-gray-900 border border-white/10 rounded-[2.5rem] w-full max-w-lg shadow-2xl relative flex flex-col max-h-[90vh] overflow-hidden"
         @click.away="closeModal()">
         <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-600/10 blur-3xl -mr-10 -mt-10 pointer-events-none">
         </div>
 
-        <div class="p-8 relative z-10">
+        <div class="p-8 relative z-10 overflow-y-auto messenger-scrollbar">
             <div class="flex justify-between items-center mb-8">
                 <h3 class="text-2xl font-bold text-white flex items-center gap-3">
                     <div class="p-2 bg-indigo-600/20 rounded-xl">
