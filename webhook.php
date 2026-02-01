@@ -369,7 +369,7 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
     $fb = new FacebookAPI();
     $res = null;
     $buttons = isset($matched_rule['reply_buttons']) ? json_decode($matched_rule['reply_buttons'], true) : null;
-    $image_url = $matched_rule['reply_image_url'] ?? null;
+    $image_url = isset($matched_rule['reply_image_url']) ? $matched_rule['reply_image_url'] : null;
 
     if ($source === 'message') {
         // Send image first if exists
