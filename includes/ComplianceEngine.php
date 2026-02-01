@@ -33,11 +33,14 @@ class ComplianceEngine
         }
 
         // 2. Check 24-Hour Window
-        $windowStatus = $this->check24HourWindow($recipient_id);
-        if (!$windowStatus['is_open'] && $message_type === 'RESPONSE') {
-            // If window is closed, we can ONLY send specific tags, not standard responses
-            // Unless it's a specific "tag" type message allowed outside window
-            return ['allowed' => false, 'reason' => 'Outside 24-hour window. Window closed ' . $windowStatus['closed_ago']];
+        // Comments do not require 24-hour window check
+        if ($message_type !== 'COMMENT') {
+            $windowStatus = $this->check24HourWindow($recipient_id);
+            if (!$windowStatus['is_open'] && $message_type === 'RESPONSE') {
+                // If window is closed, we can ONLY send specific tags, not standard responses
+                // Unless it's a specific "tag" type message allowed outside window
+                return ['allowed' => false, 'reason' => 'Outside 24-hour window. Window closed ' . $windowStatus['closed_ago']];
+            }
         }
 
         // 3. Rate Limiting (Anti-Spam)

@@ -148,6 +148,37 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
         if ($state && $state['conversation_state'] === 'handover') {
             return;
         }
+
+        // --- NEW: Global Anger Detection (Before Rule Matching) ---
+        if ($page['bot_ai_sentiment_enabled'] && !empty($page['bot_anger_keywords'])) {
+            $anger_kws = explode(',', $page['bot_anger_keywords']);
+            foreach ($anger_kws as $akw) {
+                $akw = trim($akw);
+                if (!empty($akw) && mb_stripos($incoming_text, $akw) !== false) {
+                    // Anger detected! Switch to handover
+                    $stmt = $pdo->prepare("INSERT INTO bot_conversation_states (page_id, user_id, user_name, last_user_message, last_user_message_at, conversation_state, is_anger_detected, reply_source) 
+                                           VALUES (?, ?, ?, ?, NOW(), 'handover', 1, ?) 
+                                           ON DUPLICATE KEY UPDATE user_name = VALUES(user_name), last_user_message = VALUES(last_user_message), last_user_message_at = NOW(), conversation_state = 'handover', is_anger_detected = 1");
+                    $stmt->execute([$page_id, $customer_id, $sender_name, $incoming_text, $source]);
+
+                    // Add Internal Notification
+                    $notify_title = 'handover_notification_title';
+                    $section_key = ($source === 'message') ? 'nav_messenger_bot' : 'nav_auto_reply';
+
+                    $notify_msg = json_encode([
+                        'key' => 'handover_notification_msg',
+                        'params' => [$page['page_name'], $section_key],
+                        'param_keys' => [1]
+                    ]);
+
+                    $notify_link = ($source === 'message') ? 'user/page_messenger_bot.php' : 'user/page_auto_reply.php';
+                    addNotification($page['user_id'], $notify_title, $notify_msg, $notify_link);
+
+                    return; // SILENCE immediately
+                }
+            }
+        }
+        // -----------------------------------------------------------
     }
 
     // 2. Find Rule Match
@@ -196,40 +227,11 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
     if (!$reply_msg)
         return;
 
-    // 4. Advanced SaaS Logic (AI Sentiment & Repeat Detection)
+    // 4. Advanced SaaS Logic (Repeat Detection only)
     $is_ai_safe = (int) ($matched_rule['is_ai_safe'] ?? 1);
 
     if ($page['bot_ai_sentiment_enabled'] && $is_ai_safe && $customer_id) {
-        // A. Detection Anger Keywords
-        if (!empty($page['bot_anger_keywords'])) {
-            $anger_kws = explode(',', $page['bot_anger_keywords']);
-            foreach ($anger_kws as $akw) {
-                $akw = trim($akw);
-                if (!empty($akw) && mb_stripos($incoming_text, $akw) !== false) {
-                    // Anger detected! Switch to handover
-                    $stmt = $pdo->prepare("INSERT INTO bot_conversation_states (page_id, user_id, user_name, last_user_message, last_user_message_at, conversation_state, is_anger_detected, reply_source) 
-                                           VALUES (?, ?, ?, ?, NOW(), 'handover', 1, ?) 
-                                           ON DUPLICATE KEY UPDATE user_name = VALUES(user_name), last_user_message = VALUES(last_user_message), last_user_message_at = NOW(), conversation_state = 'handover', is_anger_detected = 1");
-                    $stmt->execute([$page_id, $customer_id, $sender_name, $incoming_text, $source]);
-
-                    // Add Internal Notification
-                    // Add Internal Notification
-                    $notify_title = 'handover_notification_title';
-                    $section_key = ($source === 'message') ? 'nav_messenger_bot' : 'nav_auto_reply';
-
-                    $notify_msg = json_encode([
-                        'key' => 'handover_notification_msg',
-                        'params' => [$page['page_name'], $section_key],
-                        'param_keys' => [1]
-                    ]);
-
-                    $notify_link = ($source === 'message') ? 'user/page_messenger_bot.php' : 'user/page_auto_reply.php';
-                    addNotification($page['user_id'], $notify_title, $notify_msg, $notify_link);
-
-                    return; // SILENCE
-                }
-            }
-        }
+        // Anger Detection moved to top (Global Check)
 
         // B. Repeat Detection (3 times same rule)
         if ($state && $state['last_bot_reply_text'] === $reply_msg) {
@@ -359,7 +361,8 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
     $compliance->refreshLastInteraction($customer_id, $source);
 
     // B. Check if we CAN send (Rate Limit + Protocol)
-    $policy = $compliance->canSendMessage($customer_id, 'RESPONSE');
+    $msg_type = ($source === 'comment') ? 'COMMENT' : 'RESPONSE';
+    $policy = $compliance->canSendMessage($customer_id, $msg_type);
     if (!$policy['allowed']) {
         // Log this rejection for debugging
         file_put_contents(__DIR__ . '/debug_compliance.txt', date('Y-m-d H:i:s') . " - BLOCKED: " . $policy['reason'] . "\n", FILE_APPEND);

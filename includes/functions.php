@@ -1438,6 +1438,8 @@ $translations = [
         'linked_rule' => 'مربوط بقاعدة',
         'missing_rule' => 'قاعدة مفقودة',
         'suggest_payload' => 'توليد تلقائي',
+        'handover_notification_title' => 'تدخل بشري مطلوب',
+        'handover_notification_msg' => 'تم رصد حالة تتطلب تدخلك في صفحة %s (قسم %s).',
     ],
     'en' => [
         'reply_buttons' => 'Reply Buttons',
@@ -1450,6 +1452,8 @@ $translations = [
         'linked_rule' => 'Linked',
         'missing_rule' => 'No Target Rule',
         'suggest_payload' => 'Auto-fill',
+        'handover_notification_title' => 'Human Intervention Needed',
+        'handover_notification_msg' => 'An interaction requires your attention on page %s (section %s).',
         'site_name' => 'Marketation Extractor',
         'accounts_management' => 'Accounts',
         'system_management' => 'System',
