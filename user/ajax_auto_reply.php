@@ -343,41 +343,22 @@ if ($action === 'mark_as_resolved') {
     exit;
 }
 
-if ($action === 'fetch_recent_activity') {
-    $page_id = $_GET['page_id'] ?? '';
-    $source = $_GET['source'] ?? 'comment';
+if ($action === 'mark_all_as_resolved') {
+    $page_id = $_POST['page_id'] ?? '';
     if (!$page_id) {
         echo json_encode(['success' => false, 'error' => 'No page ID']);
         exit;
     }
     try {
-        // Assuming bot_sent_messages has columns: user_name, user_message, reply_message, created_at, rule_id, hidden_comment
-        $stmt = $pdo->prepare("SELECT m.*, r.trigger_type, r.keywords 
-                               FROM bot_sent_messages m 
-                               LEFT JOIN auto_reply_rules r ON m.rule_id = r.id 
-                               WHERE m.page_id = ? AND m.reply_source = ? 
-                               ORDER BY m.created_at DESC LIMIT 10");
-        $stmt->execute([$page_id, $source]);
-        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        $activity = array_map(function ($row) {
-            return [
-                'id' => $row['id'],
-                'user_identifier' => $row['user_name'] ?? 'Guest',
-                'message' => $row['user_message'] ?? '',
-                'reply_message' => $row['reply_message'] ?? '',
-                'rule_name' => ($row['trigger_type'] === 'default') ? 'Default Reply' : (($row['keywords'] ?? 'Rule')),
-                'time_ago' => function_exists('time_elapsed_string') ? time_elapsed_string($row['created_at']) : $row['created_at'],
-                'deleted_comment' => $row['hidden_comment'] ?? 0
-            ];
-        }, $rows);
-
-        echo json_encode(['success' => true, 'activity' => $activity]);
+        $stmt = $pdo->prepare("UPDATE bot_conversation_states SET conversation_state = 'active', repeat_count = 0, is_anger_detected = 0 WHERE page_id = ? AND conversation_state = 'handover'");
+        $stmt->execute([$page_id]);
+        echo json_encode(['success' => true]);
     } catch (Exception $e) {
         echo json_encode(['success' => false, 'error' => $e->getMessage()]);
     }
     exit;
 }
+
 
 if ($action === 'fetch_page_stats') {
     $page_id = $_GET['page_id'] ?? '';
@@ -462,12 +443,12 @@ if ($action === 'fetch_page_stats') {
         $top_rule_name = "None";
         if ($top_rule_data) {
             if (!$top_rule_data['rule_id']) {
-                $top_rule_name = "Default Reply";
+                $top_rule_name = __('default_reply');
             } else {
                 $stmt = $pdo->prepare("SELECT keywords, trigger_type FROM auto_reply_rules WHERE id = ?");
                 $stmt->execute([$top_rule_data['rule_id']]);
                 $r = $stmt->fetch(PDO::FETCH_ASSOC);
-                $top_rule_name = ($r['trigger_type'] === 'default') ? "Default Reply" : (explode(',', $r['keywords'])[0] ?? "Rule #" . $top_rule_data['rule_id']);
+                $top_rule_name = ($r['trigger_type'] === 'default') ? __('default_reply') : (explode(',', $r['keywords'])[0] ?? "Rule #" . $top_rule_data['rule_id']);
             }
         }
 
@@ -557,13 +538,13 @@ if ($action === 'fetch_recent_activity') {
         foreach ($rows as &$row) {
             // Fallback if rule was deleted
             if (!$row['rule_id']) {
-                $row['rule_name'] = 'Default Reply';
+                $row['rule_name'] = __('default_reply');
             } else {
-                $row['rule_name'] = $row['trigger_type'] === 'default' ? 'Default Reply' : ($row['keywords'] ?? 'Rule #' . $row['rule_id']);
+                $row['rule_name'] = $row['trigger_type'] === 'default' ? __('default_reply') : ($row['keywords'] ?? __('rule_label') . ' ' . $row['rule_id']);
             }
             // Ensure we have displayable strings
             $row['user_identifier'] = $row['user_name'] ?? $row['user_id'] ?? 'Unknown User';
-            $row['time_ago'] = time_elapsed_string($row['created_at']);
+            $row['time_ago'] = function_exists('time_elapsed_string') ? time_elapsed_string($row['created_at']) : $row['created_at'];
         }
 
         echo json_encode(['success' => true, 'activity' => $rows]);
