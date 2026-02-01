@@ -11,6 +11,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $pdo = getDB();
     $stmt = $pdo->prepare("UPDATE notifications SET is_read = 1 WHERE user_id = ? AND is_read = 0");
 
+    // Debug logging
+    file_put_contents(__DIR__ . '/../../debug_mark_read.log', date('Y-m-d H:i:s') . " - Mark All - User: {$_SESSION['user_id']}\n", FILE_APPEND);
+
     if ($stmt->execute([$_SESSION['user_id']])) {
         echo json_encode(['success' => true]);
     } else {

@@ -375,7 +375,15 @@ if (isLoggedIn()) {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id: id })
-            }).finally(() => {
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) {
+                    console.error('Mark read failed:', data);
+                }
+            })
+            .catch(err => console.error(err))
+            .finally(() => {
                 window.location.href = url;
             });
         }
@@ -561,7 +569,16 @@ if (isLoggedIn()) {
                                                     <?php echo $notifications_unread_count > 9 ? '9+' : $notifications_unread_count; ?>
                                                 </span>
                                                 <button
-                                                    @click="fetch('<?php echo $prefix; ?>includes/api/mark_all_notifications_read.php', {method: 'POST'}).finally(() => window.location.reload());"
+                                                    @click="fetch('<?php echo $prefix; ?>includes/api/mark_all_notifications_read.php', {method: 'POST'})
+                                                        .then(res => res.json())
+                                                        .then(data => {
+                                                            if(!data.success) alert('Error: ' + (data.message || 'Unknown'));
+                                                            else window.location.reload();
+                                                        })
+                                                        .catch(err => {
+                                                            console.error(err);
+                                                            alert('Network error');
+                                                        });"
                                                     title="<?php echo __('mark_all_read'); ?>"
                                                     class="text-gray-500 hover:text-white transition-colors">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
