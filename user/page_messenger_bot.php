@@ -1484,7 +1484,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
             fetchHandover() {
                 if (!this.selectedPageId) return;
                 this.fetchingHandover = true;
-                fetch(`ajax_auto_reply.php?action=fetch_handover_conversations&page_id=${this.selectedPageId}`)
+                fetch(`ajax_auto_reply.php?action=fetch_handover_conversations&page_id=${this.selectedPageId}&source=message`)
                     .then(res => res.json())
                     .then(data => {
                         this.fetchingHandover = false;
@@ -1509,6 +1509,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 if (!confirm('<?php echo __('confirm_mark_all_resolved'); ?>')) return;
                 let formData = new FormData();
                 formData.append('page_id', this.selectedPageId);
+                formData.append('source', 'message');
                 fetch('ajax_auto_reply.php?action=mark_all_as_resolved', { method: 'POST', body: formData })
                     .then(res => res.json())
                     .then(data => {

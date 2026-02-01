@@ -316,9 +316,10 @@ if ($action === 'fetch_handover_conversations') {
         echo json_encode(['success' => false, 'error' => 'No page ID']);
         exit;
     }
+    $source = $_GET['source'] ?? 'message'; // Default to message or pass explicitly
     try {
-        $stmt = $pdo->prepare("SELECT * FROM bot_conversation_states WHERE page_id = ? AND conversation_state = 'handover' ORDER BY updated_at DESC");
-        $stmt->execute([$page_id]);
+        $stmt = $pdo->prepare("SELECT * FROM bot_conversation_states WHERE page_id = ? AND conversation_state = 'handover' AND reply_source = ? ORDER BY updated_at DESC");
+        $stmt->execute([$page_id, $source]);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         echo json_encode(['success' => true, 'conversations' => $rows]);
     } catch (Exception $e) {
@@ -345,13 +346,20 @@ if ($action === 'mark_as_resolved') {
 
 if ($action === 'mark_all_as_resolved') {
     $page_id = $_POST['page_id'] ?? '';
+    $source = $_POST['source'] ?? ''; // Optional filter
+
     if (!$page_id) {
         echo json_encode(['success' => false, 'error' => 'No page ID']);
         exit;
     }
     try {
-        $stmt = $pdo->prepare("UPDATE bot_conversation_states SET conversation_state = 'active', repeat_count = 0, is_anger_detected = 0 WHERE page_id = ? AND conversation_state = 'handover'");
-        $stmt->execute([$page_id]);
+        if ($source) {
+            $stmt = $pdo->prepare("UPDATE bot_conversation_states SET conversation_state = 'active', repeat_count = 0, is_anger_detected = 0 WHERE page_id = ? AND conversation_state = 'handover' AND reply_source = ?");
+            $stmt->execute([$page_id, $source]);
+        } else {
+            $stmt = $pdo->prepare("UPDATE bot_conversation_states SET conversation_state = 'active', repeat_count = 0, is_anger_detected = 0 WHERE page_id = ? AND conversation_state = 'handover'");
+            $stmt->execute([$page_id]);
+        }
         echo json_encode(['success' => true]);
     } catch (Exception $e) {
         echo json_encode(['success' => false, 'error' => $e->getMessage()]);
