@@ -1,6 +1,11 @@
 <?php
 // Migration: Add image support to auto-reply rules
-require_once 'includes/functions.php';
+// Handle path whether running from root or migrations folder
+if (file_exists(__DIR__ . '/../includes/functions.php')) {
+    require_once __DIR__ . '/../includes/functions.php';
+} else {
+    require_once 'includes/functions.php';
+}
 
 try {
     $pdo = getDB();
