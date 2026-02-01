@@ -129,20 +129,23 @@ class FacebookAPI
         return $res ?? ['error' => 'No message content'];
     }
 
-    // 3. Button Message (If buttons provided)
+    // 3. Quick Replies (Horizontal Buttons)
     public function sendButtonMessage($page_id, $access_token, $recipient_id, $text, $buttons)
     {
+        $quick_replies = [];
+        foreach ($buttons as $btn) {
+            $quick_replies[] = [
+                'content_type' => 'text',
+                'title' => $btn['title'],
+                'payload' => $btn['payload']
+            ];
+        }
+
         $payload = [
             'recipient' => ['id' => $recipient_id],
             'message' => [
-                'attachment' => [
-                    'type' => 'template',
-                    'payload' => [
-                        'template_type' => 'button',
-                        'text' => $text,
-                        'buttons' => $buttons
-                    ]
-                ]
+                'text' => $text,
+                'quick_replies' => $quick_replies
             ],
             'messaging_type' => 'RESPONSE'
         ];

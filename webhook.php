@@ -67,9 +67,11 @@ function handleFacebookEvent($data, $pdo)
                 if ($sender_id == $page_id)
                     continue; // Skip messages sent by the page itself
 
-                // Check for Text Message or Postback (Button Click)
+                // Check for Text Message, Quick Reply, or Postback (Button Click)
                 $message_text = '';
-                if (isset($messaging['message']['text'])) {
+                if (isset($messaging['message']['quick_reply']['payload'])) {
+                    $message_text = $messaging['message']['quick_reply']['payload'];
+                } elseif (isset($messaging['message']['text'])) {
                     $message_text = $messaging['message']['text'];
                 } elseif (isset($messaging['postback']['payload'])) {
                     $message_text = $messaging['postback']['payload'];
