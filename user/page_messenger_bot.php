@@ -1159,9 +1159,80 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <div>
                     <label
                         class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-3"><?php echo __('trigger_keyword'); ?></label>
-                    <input type="text" x-model="modalKeywords" placeholder="<?php echo __('keyword_placeholder'); ?>"
-                        class="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-sm">
+
+                    <!-- Smart Input with Dropdown -->
+                    <div class="relative" @click.away="showPayloadSuggestions = false">
+                        <input type="text" x-model="modalKeywords" @input="onKeywordInput()" @focus="showAllPayloads()"
+                            placeholder="<?php echo __('keyword_placeholder'); ?>"
+                            class="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-sm">
+
+                        <!-- Payload Icon Indicator -->
+                        <template x-if="availablePayloads.length > 0">
+                            <button type="button" @click="showAllPayloads()"
+                                class="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-indigo-500/10 hover:bg-indigo-500/20 rounded-lg transition-colors group">
+                                <svg class="w-4 h-4 text-indigo-400 group-hover:text-indigo-300" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+                        </template>
+
+                        <!-- Dropdown Suggestions -->
+                        <div x-show="showPayloadSuggestions" x-transition:enter="transition ease-out duration-200"
+                            x-transition:enter-start="opacity-0 transform scale-95"
+                            x-transition:enter-end="opacity-100 transform scale-100"
+                            class="absolute z-50 w-full mt-2 bg-gray-800 border border-white/10 rounded-2xl shadow-2xl max-h-60 overflow-y-auto messenger-scrollbar">
+
+                            <template x-if="filteredPayloads.length === 0">
+                                <div class="p-4 text-center text-gray-500 text-sm">
+                                    <?php echo __('no_payloads_found'); ?>
+                                </div>
+                            </template>
+
+                            <template x-for="payload in filteredPayloads" :key="payload">
+                                <button type="button" @click="selectPayload(payload)"
+                                    class="w-full px-5 py-3 text-left hover:bg-indigo-500/10 transition-colors flex items-center gap-3 group border-b border-white/5 last:border-0">
+                                    <div
+                                        class="p-2 bg-indigo-500/10 rounded-lg group-hover:bg-indigo-500/20 transition-colors">
+                                        <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
+                                            </path>
+                                        </svg>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="text-white font-mono text-sm truncate" x-text="payload"></div>
+                                        <div class="text-[10px] text-indigo-400 font-bold uppercase tracking-wider">
+                                            <?php echo __('button_payload'); ?>
+                                        </div>
+                                    </div>
+                                    <svg class="w-4 h-4 text-gray-600 group-hover:text-indigo-400 transition-colors"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 5l7 7-7 7"></path>
+                                    </svg>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+
                     <p class="text-[10px] text-gray-500 mt-2 italic"><?php echo __('keywords_hint'); ?></p>
+
+                    <!-- Payload Count Badge -->
+                    <template x-if="availablePayloads.length > 0">
+                        <div class="mt-2 flex items-center gap-2">
+                            <div
+                                class="px-3 py-1.5 bg-indigo-500/10 border border-indigo-500/20 rounded-lg flex items-center gap-2">
+                                <div class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></div>
+                                <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">
+                                    <span x-text="availablePayloads.length"></span>
+                                    <?php echo __('available_payloads'); ?>
+                                </span>
+                            </div>
+                        </div>
+                    </template>
                 </div>
                 <div>
                     <label
@@ -1447,6 +1518,11 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
             verifyToken: 'Loading...',
             pages: <?php echo json_encode($pages); ?>,
 
+            // Payload Suggestions
+            availablePayloads: [],
+            showPayloadSuggestions: false,
+            filteredPayloads: [],
+
             // Bot Intelligence Settings
             cooldownHours: 0,
             cooldownMinutes: 0,
@@ -1704,7 +1780,46 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 this.modalBypassSchedule = false;
                 this.modalBypassCooldown = false;
                 this.showModal = true;
+                this.fetchPayloads();
             },
+
+            fetchPayloads() {
+                if (!this.selectedPageId) return;
+                fetch(`ajax_auto_reply.php?action=fetch_payloads&page_id=${this.selectedPageId}&source=message`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            this.availablePayloads = data.payloads || [];
+                        }
+                    })
+                    .catch(() => {
+                        this.availablePayloads = [];
+                    });
+            },
+
+            onKeywordInput() {
+                const input = this.modalKeywords.toLowerCase().trim();
+                if (input.length > 0) {
+                    this.filteredPayloads = this.availablePayloads.filter(p =>
+                        p.toLowerCase().includes(input)
+                    );
+                    this.showPayloadSuggestions = this.filteredPayloads.length > 0;
+                } else {
+                    this.filteredPayloads = this.availablePayloads;
+                    this.showPayloadSuggestions = false;
+                }
+            },
+
+            selectPayload(payload) {
+                this.modalKeywords = payload;
+                this.showPayloadSuggestions = false;
+            },
+
+            showAllPayloads() {
+                this.filteredPayloads = this.availablePayloads;
+                this.showPayloadSuggestions = this.availablePayloads.length > 0;
+            },
+
 
             editRule(rule) {
                 this.editMode = true;

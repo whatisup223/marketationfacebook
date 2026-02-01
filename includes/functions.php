@@ -775,6 +775,9 @@ $translations = [
         'status_pending_small' => 'قيد الانتظار',
         'empty_queue_title' => 'القائمة فارغة',
         'empty_queue_desc' => 'لا توجد أرقام في الانتظار حالياً.',
+        'button_payload' => 'معرف الزر',
+        'available_payloads' => 'معرفات متاحة',
+        'no_payloads_found' => 'لا توجد معرفات متاحة',
 
         // Contact
         'contact_us' => 'اتصل بنا',
@@ -1891,6 +1894,9 @@ $translations = [
         'retry_delay_label' => 'Retry Delay (s)',
         'retrying_status' => 'Retrying (%d/%d)',
         'starts_in' => 'Starts in:',
+        'button_payload' => 'Button Payload',
+        'available_payloads' => 'Available Payloads',
+        'no_payloads_found' => 'No payloads available',
 
         // WhatsApp Campaign
         'wa_campaign_runner' => 'WhatsApp Campaign Runner',

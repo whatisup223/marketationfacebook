@@ -84,6 +84,48 @@ if ($action === 'fetch_page_settings') {
     exit;
 }
 
+if ($action === 'fetch_payloads') {
+    $page_id = $_GET['page_id'] ?? '';
+    $source = $_GET['source'] ?? 'message';
+
+    if (!$page_id) {
+        echo json_encode(['success' => false, 'error' => 'Page ID is required']);
+        exit;
+    }
+
+    try {
+        // Fetch all rules for this page
+        $stmt = $pdo->prepare("SELECT reply_buttons FROM auto_reply_rules WHERE page_id = ? AND reply_source = ? AND reply_buttons IS NOT NULL AND reply_buttons != ''");
+        $stmt->execute([$page_id, $source]);
+        $rules = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $payloads = [];
+        foreach ($rules as $rule) {
+            try {
+                $buttons = json_decode($rule['reply_buttons'], true);
+                if (is_array($buttons)) {
+                    foreach ($buttons as $btn) {
+                        if (!empty($btn['payload'])) {
+                            $payloads[] = trim($btn['payload']);
+                        }
+                    }
+                }
+            } catch (Exception $e) {
+                // Skip invalid JSON
+            }
+        }
+
+        // Remove duplicates and sort
+        $payloads = array_unique($payloads);
+        sort($payloads);
+
+        echo json_encode(['success' => true, 'payloads' => array_values($payloads)]);
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+    exit;
+}
+
 if ($action === 'debug_token_info') {
     $page_id = $_GET['page_id'] ?? '';
     if (!$page_id) {
