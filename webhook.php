@@ -203,9 +203,16 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
                     $stmt->execute([$page_id, $customer_id, $sender_name, $incoming_text, $source]);
 
                     // Add Internal Notification
-                    $notify_title = __('handover_notification_title');
-                    $section_name = ($source === 'message') ? __('nav_messenger_bot') : __('nav_auto_reply');
-                    $notify_msg = sprintf(__('handover_notification_msg'), $page['page_name'], $section_name);
+                    // Add Internal Notification
+                    $notify_title = 'handover_notification_title';
+                    $section_key = ($source === 'message') ? 'nav_messenger_bot' : 'nav_auto_reply';
+
+                    $notify_msg = json_encode([
+                        'key' => 'handover_notification_msg',
+                        'params' => [$page['page_name'], $section_key],
+                        'param_keys' => [1]
+                    ]);
+
                     $notify_link = ($source === 'message') ? 'user/page_messenger_bot.php' : 'user/page_auto_reply.php';
                     addNotification($page['user_id'], $notify_title, $notify_msg, $notify_link);
 
@@ -223,9 +230,16 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
                 $stmt->execute([$new_count, $incoming_text, $sender_name, $state['id']]);
 
                 // Add Internal Notification
-                $notify_title = __('handover_notification_title');
-                $section_name = ($source === 'message') ? __('nav_messenger_bot') : __('nav_auto_reply');
-                $notify_msg = sprintf(__('handover_notification_msg'), $page['page_name'], $section_name);
+                // Add Internal Notification
+                $notify_title = 'handover_notification_title';
+                $section_key = ($source === 'message') ? 'nav_messenger_bot' : 'nav_auto_reply';
+
+                $notify_msg = json_encode([
+                    'key' => 'handover_notification_msg',
+                    'params' => [$page['page_name'], $section_key],
+                    'param_keys' => [1]
+                ]);
+
                 $notify_link = ($source === 'message') ? 'user/page_messenger_bot.php' : 'user/page_auto_reply.php';
                 addNotification($page['user_id'], $notify_title, $notify_msg, $notify_link);
 

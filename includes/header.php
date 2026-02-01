@@ -163,9 +163,9 @@ if (isLoggedIn()) {
                 extend: {
                     fontFamily: {
                         <?php if ($lang === 'ar'): ?>
-                                                                                                                                                                                        sans: ['IBM Plex Sans Arabic', 'sans-serif'],
+                                                                                                                                                                                            sans: ['IBM Plex Sans Arabic', 'sans-serif'],
                         <?php else: ?>
-                                                                                                                                                                                        sans: ['Outfit', 'sans-serif'],
+                                                                                                                                                                                            sans: ['Outfit', 'sans-serif'],
                         <?php endif; ?>
                     },
                     colors: {
@@ -369,6 +369,17 @@ if (isLoggedIn()) {
             animation: floating 6s ease-in-out infinite;
         }
     </style>
+    <script>
+        window.markReadAndNavigate = function (id, url) {
+            fetch('<?php echo $prefix; ?>includes/api/mark_notification_read.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: id })
+            }).finally(() => {
+                window.location.href = url;
+            });
+        }
+    </script>
 </head>
 
 <body class="text-gray-100 antialiased min-h-screen flex flex-col bg-slate-900 transition-colors duration-300 dark"
@@ -550,7 +561,7 @@ if (isLoggedIn()) {
                                                     <?php echo $notifications_unread_count > 9 ? '9+' : $notifications_unread_count; ?>
                                                 </span>
                                                 <button
-                                                    @click="fetch('<?php echo $prefix; ?>includes/api/mark_all_notifications_read.php', {method: 'POST'}).then(() => window.location.reload());"
+                                                    @click="fetch('<?php echo $prefix; ?>includes/api/mark_all_notifications_read.php', {method: 'POST'}).finally(() => window.location.reload());"
                                                     title="<?php echo __('mark_all_read'); ?>"
                                                     class="text-gray-500 hover:text-white transition-colors">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -563,7 +574,7 @@ if (isLoggedIn()) {
 
                                         <!-- Mute Toggle -->
                                         <button
-                                            @click="fetch('<?php echo $prefix; ?>includes/api/toggle_notifications_mute.php', {method: 'POST'}).then(() => window.location.reload());"
+                                            @click="fetch('<?php echo $prefix; ?>includes/api/toggle_notifications_mute.php', {method: 'POST'}).finally(() => window.location.reload());"
                                             title="<?php echo $header_is_muted ? __('unmute_notifications') : __('mute_notifications'); ?>"
                                             class="<?php echo $header_is_muted ? 'text-red-400 hover:text-red-300' : 'text-gray-500 hover:text-white'; ?> transition-colors ml-2 rtl:mr-2 rtl:ml-0">
                                             <?php if ($header_is_muted): ?>
@@ -590,11 +601,9 @@ if (isLoggedIn()) {
                                             <?php foreach ($notifications_list as $notif): ?>
                                                 <div
                                                     class="border-b border-gray-800 last:border-0 hover:bg-gray-800 transition-colors relative group">
-                                                    <a href="<?php echo $prefix . $notif['link']; ?>" @click="fetch('<?php echo $prefix; ?>includes/api/mark_notification_read.php', {
-                                                            method: 'POST',
-                                                            headers: {'Content-Type': 'application/json'},
-                                                            body: JSON.stringify({id: <?php echo $notif['id']; ?>})
-                                                        });" class="block px-4 py-3">
+                                                    <a href="<?php echo $prefix . $notif['link']; ?>"
+                                                        @click.prevent="markReadAndNavigate(<?php echo $notif['id']; ?>, '<?php echo $prefix . $notif['link']; ?>')"
+                                                        class="block px-4 py-3">
                                                         <p class="text-xs text-indigo-400 font-bold mb-1">
                                                             <?php echo htmlspecialchars(__($notif['title'])); ?>
                                                         </p>
