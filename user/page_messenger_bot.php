@@ -805,66 +805,73 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <div class="grid grid-cols-1 gap-4 max-h-[600px] overflow-y-auto pr-2 messenger-scrollbar">
                     <template x-for="rule in rules" :key="rule.id">
                         <div
-                            class="glass-panel p-6 rounded-2xl border border-white/5 bg-gray-800/20 hover:bg-gray-800/40 hover:border-indigo-500/30 transition-all flex justify-between items-center group shrink-0">
-                            <div class="flex items-center gap-4">
-                                <div
-                                    class="p-3 bg-indigo-500/10 rounded-2xl text-indigo-400 relative group-hover:scale-110 transition-transform">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
-                                        </path>
-                                    </svg>
-                                    <!-- Dynamic Label Badge -->
-                                    <div class="absolute -top-3 -left-3 flex flex-col gap-1">
-                                        <template x-if="getRuleType(rule) === 'entry'">
-                                            <span
-                                                class="px-2 py-0.5 bg-green-500/20 text-green-400 text-[9px] font-black rounded-lg border border-green-500/20 shadow-sm whitespace-nowrap uppercase tracking-tighter">
-                                                <?php echo __('entry_point'); ?>
-                                            </span>
-                                        </template>
-                                        <template x-if="getRuleType(rule) === 'button'">
-                                            <span
-                                                class="px-2 py-0.5 bg-blue-500/20 text-blue-400 text-[9px] font-black rounded-lg border border-blue-500/20 shadow-sm whitespace-nowrap uppercase tracking-tighter">
-                                                <?php echo __('button_target'); ?>
-                                            </span>
-                                        </template>
+                            class="glass-panel p-4 md:p-6 rounded-2xl border border-white/5 bg-gray-800/20 hover:bg-gray-800/40 hover:border-indigo-500/30 transition-all group shrink-0">
+                            <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+                                <!-- Content Section -->
+                                <div class="flex items-center gap-4 min-w-0 flex-1">
+                                    <div
+                                        class="p-3 bg-indigo-500/10 rounded-2xl text-indigo-400 relative group-hover:scale-110 transition-transform flex-shrink-0">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
+                                            </path>
+                                        </svg>
+                                        <!-- Dynamic Label Badge -->
+                                        <div class="absolute -top-3 -left-3 flex flex-col gap-1">
+                                            <template x-if="getRuleType(rule) === 'entry'">
+                                                <span
+                                                    class="px-2 py-0.5 bg-green-500/20 text-green-400 text-[9px] font-black rounded-lg border border-green-500/20 shadow-sm whitespace-nowrap uppercase tracking-tighter">
+                                                    <?php echo __('entry_point'); ?>
+                                                </span>
+                                            </template>
+                                            <template x-if="getRuleType(rule) === 'button'">
+                                                <span
+                                                    class="px-2 py-0.5 bg-blue-500/20 text-blue-400 text-[9px] font-black rounded-lg border border-blue-500/20 shadow-sm whitespace-nowrap uppercase tracking-tighter">
+                                                    <?php echo __('button_target'); ?>
+                                                </span>
+                                            </template>
+                                        </div>
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <p class="text-xs font-black text-indigo-400 uppercase tracking-widest mb-1 truncate"
+                                            x-text="'<?php echo __('keywords_label'); ?>: ' + rule.keywords"></p>
+                                        <p class="text-sm text-white font-medium line-clamp-2 md:line-clamp-1"
+                                            x-text="rule.reply_message">
+                                        </p>
                                     </div>
                                 </div>
-                                <div>
-                                    <p class="text-xs font-black text-indigo-400 uppercase tracking-widest mb-1"
-                                        x-text="'<?php echo __('keywords_label'); ?>: ' + rule.keywords"></p>
-                                    <p class="text-sm text-white font-medium line-clamp-1" x-text="rule.reply_message">
-                                    </p>
+
+                                <!-- Action Buttons -->
+                                <div
+                                    class="flex items-center gap-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex-shrink-0">
+                                    <button @click="previewRule(rule); scrollToPreview()"
+                                        class="p-2.5 bg-indigo-600/10 hover:bg-indigo-600 rounded-xl text-indigo-400 hover:text-white transition-all border border-indigo-500/10"
+                                        title="<?php echo __('message_preview'); ?>">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                            </path>
+                                        </svg>
+                                    </button>
+                                    <button @click="editRule(rule)"
+                                        class="p-2.5 bg-white/5 hover:bg-white/10 rounded-xl text-gray-400 hover:text-white transition-all border border-white/5">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                                            </path>
+                                        </svg>
+                                    </button>
+                                    <button @click="deleteRule(rule.id)"
+                                        class="p-2.5 bg-red-500/10 hover:bg-red-500/20 rounded-xl text-red-500 transition-all border border-red-500/10">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                            </path>
+                                        </svg>
+                                    </button>
                                 </div>
-                            </div>
-                            <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button @click="previewRule(rule); scrollToPreview()"
-                                    class="p-2.5 bg-indigo-600/10 hover:bg-indigo-600 rounded-xl text-indigo-400 hover:text-white transition-all border border-indigo-500/10"
-                                    title="<?php echo __('message_preview'); ?>">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
-                                        </path>
-                                    </svg>
-                                </button>
-                                <button @click="editRule(rule)"
-                                    class="p-2.5 bg-white/5 hover:bg-white/10 rounded-xl text-gray-400 hover:text-white transition-all border border-white/5">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
-                                        </path>
-                                    </svg>
-                                </button>
-                                <button @click="deleteRule(rule.id)"
-                                    class="p-2.5 bg-red-500/10 hover:bg-red-500/20 rounded-xl text-red-500 transition-all border border-red-500/10">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                                        </path>
-                                    </svg>
-                                </button>
                             </div>
                         </div>
                     </template>
@@ -1241,6 +1248,42 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         class="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all resize-none text-sm leading-relaxed"></textarea>
                 </div>
 
+                <!-- Image Attachment Section -->
+                <div>
+                    <label class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-3">
+                        <?php echo __('attach_image'); ?> <span
+                            class="text-[10px] opacity-50 ml-1">(<?php echo __('optional'); ?>)</span>
+                    </label>
+
+                    <div class="space-y-3">
+                        <!-- Image URL Input -->
+                        <div class="relative">
+                            <input type="url" x-model="modalImageUrl"
+                                placeholder="<?php echo __('image_url_placeholder'); ?>"
+                                class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white text-xs focus:ring-1 focus:ring-indigo-500 pr-24">
+                            <button type="button" @click="clearImage()" x-show="modalImageUrl"
+                                class="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] bg-red-500/10 hover:bg-red-500/20 text-red-400 px-2 py-1 rounded-lg border border-red-500/10 transition-colors uppercase font-black">
+                                <?php echo __('clear'); ?>
+                            </button>
+                        </div>
+
+                        <!-- Image Preview -->
+                        <template x-if="modalImageUrl">
+                            <div class="relative group">
+                                <img :src="modalImageUrl"
+                                    class="w-full h-40 object-cover rounded-xl border border-white/10"
+                                    @error="imageLoadError = true">
+                                <div x-show="imageLoadError"
+                                    class="absolute inset-0 flex items-center justify-center bg-red-500/10 rounded-xl border border-red-500/20">
+                                    <p class="text-xs text-red-400 font-bold"><?php echo __('invalid_image_url'); ?></p>
+                                </div>
+                            </div>
+                        </template>
+
+                        <p class="text-[10px] text-gray-500 italic"><?php echo __('image_hint'); ?></p>
+                    </div>
+                </div>
+
                 <!-- Buttons Section -->
                 <div>
                     <label class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-3">
@@ -1511,6 +1554,8 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
             modalAiSafe: true,
             modalBypassSchedule: false,
             modalBypassCooldown: false,
+            modalImageUrl: '',
+            imageLoadError: false,
             subscribing: false,
             stopping: false,
             debugInfo: null,
@@ -1779,8 +1824,15 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 this.modalAiSafe = true;
                 this.modalBypassSchedule = false;
                 this.modalBypassCooldown = false;
+                this.modalImageUrl = '';
+                this.imageLoadError = false;
                 this.showModal = true;
                 this.fetchPayloads();
+            },
+
+            clearImage() {
+                this.modalImageUrl = '';
+                this.imageLoadError = false;
             },
 
             fetchPayloads() {
@@ -1790,6 +1842,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     .then(data => {
                         if (data.success) {
                             this.availablePayloads = data.payloads || [];
+                            this.updateFilteredPayloads();
                         }
                     })
                     .catch(() => {
@@ -1797,28 +1850,55 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     });
             },
 
-            onKeywordInput() {
-                const input = this.modalKeywords.toLowerCase().trim();
+            getSelectedKeywords() {
+                // Get already selected keywords as array
+                return this.modalKeywords
+                    .split(',')
+                    .map(k => k.trim())
+                    .filter(k => k.length > 0);
+            },
+
+            updateFilteredPayloads() {
+                const selected = this.getSelectedKeywords();
+                const input = this.modalKeywords.split(',').pop().trim().toLowerCase();
+
+                // Filter out already selected payloads
+                let available = this.availablePayloads.filter(p => !selected.includes(p));
+
+                // Further filter by current input
                 if (input.length > 0) {
-                    this.filteredPayloads = this.availablePayloads.filter(p =>
-                        p.toLowerCase().includes(input)
-                    );
-                    this.showPayloadSuggestions = this.filteredPayloads.length > 0;
-                } else {
-                    this.filteredPayloads = this.availablePayloads;
-                    this.showPayloadSuggestions = false;
+                    available = available.filter(p => p.toLowerCase().includes(input));
                 }
+
+                this.filteredPayloads = available;
+            },
+
+            onKeywordInput() {
+                this.updateFilteredPayloads();
+                this.showPayloadSuggestions = this.filteredPayloads.length > 0;
             },
 
             selectPayload(payload) {
-                this.modalKeywords = payload;
-                this.showPayloadSuggestions = false;
+                const selected = this.getSelectedKeywords();
+
+                // Add the new payload
+                selected.push(payload);
+
+                // Update the input with comma-separated values
+                this.modalKeywords = selected.join(', ');
+
+                // Update filtered list (removes selected payload)
+                this.updateFilteredPayloads();
+
+                // Keep dropdown open if there are more options
+                this.showPayloadSuggestions = this.filteredPayloads.length > 0;
             },
 
             showAllPayloads() {
-                this.filteredPayloads = this.availablePayloads;
-                this.showPayloadSuggestions = this.availablePayloads.length > 0;
+                this.updateFilteredPayloads();
+                this.showPayloadSuggestions = this.filteredPayloads.length > 0;
             },
+
 
 
             editRule(rule) {
@@ -1835,6 +1915,8 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 this.modalAiSafe = (rule.is_ai_safe == 1);
                 this.modalBypassSchedule = (rule.bypass_schedule == 1);
                 this.modalBypassCooldown = (rule.bypass_cooldown == 1);
+                this.modalImageUrl = rule.reply_image_url || '';
+                this.imageLoadError = false;
                 this.showModal = true;
             },
 
@@ -1848,6 +1930,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 formData.append('keywords', this.modalKeywords);
                 formData.append('reply', this.modalReply);
                 formData.append('reply_buttons', JSON.stringify(this.modalButtons));
+                formData.append('reply_image_url', this.modalImageUrl || '');
                 formData.append('source', 'message');
                 formData.append('hide_comment', '0');
                 formData.append('is_ai_safe', this.modalAiSafe ? '1' : '0');

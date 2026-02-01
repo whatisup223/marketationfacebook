@@ -778,6 +778,11 @@ $translations = [
         'button_payload' => 'معرف الزر',
         'available_payloads' => 'معرفات متاحة',
         'no_payloads_found' => 'لا توجد معرفات متاحة',
+        'attach_image' => 'إرفاق صورة',
+        'image_url_placeholder' => 'أدخل رابط الصورة (https://...)',
+        'clear' => 'مسح',
+        'invalid_image_url' => 'رابط الصورة غير صالح',
+        'image_hint' => 'يمكنك إرفاق صورة توضيحية مع الرد لجعله أكثر احترافية',
 
         // Contact
         'contact_us' => 'اتصل بنا',
@@ -1897,6 +1902,11 @@ $translations = [
         'button_payload' => 'Button Payload',
         'available_payloads' => 'Available Payloads',
         'no_payloads_found' => 'No payloads available',
+        'attach_image' => 'Attach Image',
+        'image_url_placeholder' => 'Enter image URL (https://...)',
+        'clear' => 'Clear',
+        'invalid_image_url' => 'Invalid image URL',
+        'image_hint' => 'You can attach an image with your reply to make it more professional',
 
         // WhatsApp Campaign
         'wa_campaign_runner' => 'WhatsApp Campaign Runner',

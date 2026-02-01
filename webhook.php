@@ -369,8 +369,15 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
     $fb = new FacebookAPI();
     $res = null;
     $buttons = isset($matched_rule['reply_buttons']) ? json_decode($matched_rule['reply_buttons'], true) : null;
+    $image_url = $matched_rule['reply_image_url'] ?? null;
 
     if ($source === 'message') {
+        // Send image first if exists
+        if (!empty($image_url)) {
+            $fb->sendImageMessage($page_id, $access_token, $target_id, $image_url);
+        }
+
+        // Then send text with buttons
         if ($buttons && is_array($buttons) && count($buttons) > 0) {
             $res = $fb->sendButtonMessage($page_id, $access_token, $target_id, $reply_msg, $buttons);
         } else {

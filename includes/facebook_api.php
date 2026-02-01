@@ -154,6 +154,27 @@ class FacebookAPI
         return $this->makeRequest($endpoint, $payload, $access_token, 'POST');
     }
 
+    // 4. Send Image Message
+    public function sendImageMessage($page_id, $access_token, $recipient_id, $image_url)
+    {
+        $payload = [
+            'recipient' => ['id' => $recipient_id],
+            'message' => [
+                'attachment' => [
+                    'type' => 'image',
+                    'payload' => [
+                        'url' => $image_url,
+                        'is_reusable' => true
+                    ]
+                ]
+            ],
+            'messaging_type' => 'RESPONSE'
+        ];
+
+        $endpoint = $page_id . '/messages';
+        return $this->makeRequest($endpoint, $payload, $access_token, 'POST');
+    }
+
     /**
      * Sends multiple messages in parallel using curl_multi
 
