@@ -435,7 +435,7 @@ require_once __DIR__ . '/../includes/header.php';
                 </svg>
                 <?php echo __('how_to_update'); ?>
             </h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div class="bg-gray-800/50 rounded-xl p-4 border border-gray-700/50">
                     <div class="text-blue-400 font-bold mb-2 flex items-center gap-2">
                         <span
@@ -459,6 +459,14 @@ require_once __DIR__ . '/../includes/header.php';
                         <?php echo __('run_migrations'); ?>
                     </div>
                     <p class="text-gray-400 text-sm"><?php echo __('update_step_3_desc'); ?></p>
+                </div>
+                <div class="bg-gray-800/50 rounded-xl p-4 border border-gray-700/50">
+                    <div class="text-orange-400 font-bold mb-2 flex items-center gap-2">
+                        <span
+                            class="w-6 h-6 rounded-full bg-orange-500/20 flex items-center justify-center text-xs">4</span>
+                        <?php echo __('smart_cleanup'); ?>
+                    </div>
+                    <p class="text-gray-400 text-sm"><?php echo __('cleanup_desc'); ?></p>
                 </div>
             </div>
         </div>

@@ -1419,14 +1419,14 @@ $translations = [
         'start_date' => 'تاريخ البدء',
         'end_date' => 'تاريخ الانتهاء',
         'apply_filter' => 'تطبيق الفلتر',
-        'accounts_management' => 'إدارة الحسابات',
-        'system_management' => 'إدارة النظام',
+        'accounts_management' => 'الحسابات',
+        'system_management' => 'النظام',
 
     ],
     'en' => [
         'site_name' => 'Marketation Extractor',
-        'accounts_management' => 'Accounts Management',
-        'system_management' => 'System Management',
+        'accounts_management' => 'Accounts',
+        'system_management' => 'System',
         'recent_replies_desc' => 'Live feed of recent interactions handled by the bot.',
         'recent_activity_log' => 'Recent Activity Log',
         'start_activity_stream' => 'Start Stream',
