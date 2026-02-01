@@ -622,6 +622,11 @@ $translations = [
         'update_step_1_desc' => 'التحقق من وجود تغييرات جديدة في المستودع الرئيسي.',
         'update_step_2_desc' => 'تنزيل ودمج أحدث التغييرات بأمان إلى الخادم الخاص بك.',
         'update_step_3_desc' => 'تطبيق أي تغييرات ضرورية في قاعدة البيانات لضمان عمل النظام بسلاسة.',
+        'smart_cleanup' => 'تنظيف ذكي',
+        'cleanup_desc' => 'حذف الملفات القديمة والمحذوفة من GitHub لضمان نظافة النظام.',
+        'cleanup_running' => 'جاري تنظيف الملفات الزائدة...',
+        'cleanup_success' => 'تم تنظيف النظام بنجاح!',
+        'cleanup_failed' => 'فشل تنظيف النظام.',
 
         // WhatsApp Campaign
         'wa_campaign_runner' => 'تشغيل حملة واتساب',
@@ -2714,6 +2719,11 @@ $translations = [
         'selection_mode' => 'Selection Mode',
         'exit_selection' => 'Exit Selection',
         'bulk_delete_title' => 'Bulk Delete',
+        'smart_cleanup' => 'Smart Cleanup',
+        'cleanup_desc' => 'Remove old files deleted from GitHub to keep the system clean.',
+        'cleanup_running' => 'Cleaning up redundant files...',
+        'cleanup_success' => 'System cleaned successfully!',
+        'cleanup_failed' => 'System cleanup failed.',
     ],
 ];
 
