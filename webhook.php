@@ -38,6 +38,7 @@ if (!$data) {
 
 require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/facebook_api.php';
+require_once __DIR__ . '/includes/ComplianceEngine.php';
 
 // A. Check if it's Facebook Webhook
 if (isset($data['object']) && ($data['object'] === 'page' || $data['object'] === 'instagram')) {
@@ -66,7 +67,14 @@ function handleFacebookEvent($data, $pdo)
                 if ($sender_id == $page_id)
                     continue; // Skip messages sent by the page itself
 
-                $message_text = $messaging['message']['text'] ?? '';
+                // Check for Text Message or Postback (Button Click)
+                $message_text = '';
+                if (isset($messaging['message']['text'])) {
+                    $message_text = $messaging['message']['text'];
+                } elseif (isset($messaging['postback']['payload'])) {
+                    $message_text = $messaging['postback']['payload'];
+                }
+
                 if (!$message_text)
                     continue;
 
@@ -342,10 +350,30 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
     }
 
     // 5. Execute Reply
+    // COMPLIANCE CHECK: Init Engine
+    $compliance = new ComplianceEngine($pdo, $page_id, $access_token);
+
+    // A. Track this user interaction (opens window)
+    $compliance->refreshLastInteraction($customer_id, $source);
+
+    // B. Check if we CAN send (Rate Limit + Protocol)
+    $policy = $compliance->canSendMessage($customer_id, 'RESPONSE');
+    if (!$policy['allowed']) {
+        // Log this rejection for debugging
+        file_put_contents(__DIR__ . '/debug_compliance.txt', date('Y-m-d H:i:s') . " - BLOCKED: " . $policy['reason'] . "\n", FILE_APPEND);
+        return;
+    }
+
     $fb = new FacebookAPI();
     $res = null;
+    $buttons = isset($matched_rule['reply_buttons']) ? json_decode($matched_rule['reply_buttons'], true) : null;
+
     if ($source === 'message') {
-        $res = $fb->sendMessage($page_id, $access_token, $target_id, $reply_msg);
+        if ($buttons && is_array($buttons) && count($buttons) > 0) {
+            $res = $fb->sendButtonMessage($page_id, $access_token, $target_id, $reply_msg, $buttons);
+        } else {
+            $res = $fb->sendMessage($page_id, $access_token, $target_id, $reply_msg);
+        }
     } else {
         $res = $fb->replyToComment($target_id, $reply_msg, $access_token);
         if ($hide_comment) {

@@ -129,8 +129,31 @@ class FacebookAPI
         return $res ?? ['error' => 'No message content'];
     }
 
+    // 3. Button Message (If buttons provided)
+    public function sendButtonMessage($page_id, $access_token, $recipient_id, $text, $buttons)
+    {
+        $payload = [
+            'recipient' => ['id' => $recipient_id],
+            'message' => [
+                'attachment' => [
+                    'type' => 'template',
+                    'payload' => [
+                        'template_type' => 'button',
+                        'text' => $text,
+                        'buttons' => $buttons
+                    ]
+                ]
+            ],
+            'messaging_type' => 'RESPONSE'
+        ];
+
+        $endpoint = $page_id . '/messages';
+        return $this->makeRequest($endpoint, $payload, $access_token, 'POST');
+    }
+
     /**
      * Sends multiple messages in parallel using curl_multi
+
      * This is 10-20x faster than sequential Loop
      * 
      * @param array $items Array of [ 'page_id', 'access_token', 'recipient_id', 'message_text', 'image_url' ]

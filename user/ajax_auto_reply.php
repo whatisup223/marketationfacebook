@@ -151,6 +151,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $type = $_POST['type'] ?? 'keyword';
         $keywords = $_POST['keywords'] ?? '';
         $reply = $_POST['reply'] ?? '';
+        $reply_buttons = $_POST['reply_buttons'] ?? null; // JSON String or null
         $rule_id = $_POST['rule_id'] ?? '';
         $hide_comment = isset($_POST['hide_comment']) ? (int) $_POST['hide_comment'] : 0;
         $is_ai_safe = isset($_POST['is_ai_safe']) ? (int) $_POST['is_ai_safe'] : 1;
@@ -167,24 +168,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             if ($rule_id) {
                 // Update
-                $stmt = $pdo->prepare("UPDATE auto_reply_rules SET trigger_type = ?, keywords = ?, reply_message = ?, hide_comment = ?, is_ai_safe = ?, bypass_schedule = ?, bypass_cooldown = ?, reply_source = ? WHERE id = ? AND page_id = ?");
-                $stmt->execute([$type, $keywords, $reply, $hide_comment, $is_ai_safe, $bypass_schedule, $bypass_cooldown, $source, $rule_id, $page_id]);
+                $stmt = $pdo->prepare("UPDATE auto_reply_rules SET trigger_type = ?, keywords = ?, reply_message = ?, reply_buttons = ?, hide_comment = ?, is_ai_safe = ?, bypass_schedule = ?, bypass_cooldown = ?, reply_source = ? WHERE id = ? AND page_id = ?");
+                $stmt->execute([$type, $keywords, $reply, $reply_buttons, $hide_comment, $is_ai_safe, $bypass_schedule, $bypass_cooldown, $source, $rule_id, $page_id]);
             } else {
                 // Check if existing default rule
                 if ($type === 'default') {
                     $check = $pdo->prepare("SELECT id FROM auto_reply_rules WHERE page_id = ? AND trigger_type = 'default' AND reply_source = ?");
                     $check->execute([$page_id, $source]);
                     if ($check->fetch()) {
-                        $stmt = $pdo->prepare("UPDATE auto_reply_rules SET reply_message = ?, hide_comment = ? WHERE page_id = ? AND trigger_type = 'default' AND reply_source = ?");
-                        $stmt->execute([$reply, $hide_comment, $page_id, $source]);
+                        $stmt = $pdo->prepare("UPDATE auto_reply_rules SET reply_message = ?, reply_buttons = ?, hide_comment = ? WHERE page_id = ? AND trigger_type = 'default' AND reply_source = ?");
+                        $stmt->execute([$reply, $reply_buttons, $hide_comment, $page_id, $source]);
                         echo json_encode(['success' => true, 'message' => __('rule_saved')]);
                         exit;
                     }
                 }
 
                 // Insert
-                $stmt = $pdo->prepare("INSERT INTO auto_reply_rules (page_id, trigger_type, keywords, reply_message, hide_comment, is_ai_safe, bypass_schedule, bypass_cooldown, reply_source) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->execute([$page_id, $type, $keywords, $reply, $hide_comment, $is_ai_safe, $bypass_schedule, $bypass_cooldown, $source]);
+                $stmt = $pdo->prepare("INSERT INTO auto_reply_rules (page_id, trigger_type, keywords, reply_message, reply_buttons, hide_comment, is_ai_safe, bypass_schedule, bypass_cooldown, reply_source) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->execute([$page_id, $type, $keywords, $reply, $reply_buttons, $hide_comment, $is_ai_safe, $bypass_schedule, $bypass_cooldown, $source]);
             }
             echo json_encode(['success' => true, 'message' => __('rule_saved')]);
             exit;

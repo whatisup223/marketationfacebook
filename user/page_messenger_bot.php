@@ -652,12 +652,16 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <p class="text-xs text-gray-500">Messenger • Very Responsive</p>
                     </div>
 
-                    <div class="flex-1 overflow-y-auto px-2 messenger-scrollbar space-y-4">
+                    <div class="flex-1 overflow-y-auto px-2 messenger-scrollbar space-y-6 pb-4">
                         <!-- User Message (Left) -->
                         <div class="flex items-end gap-2">
-                            <div class="w-6 h-6 rounded-full bg-gray-500 flex-shrink-0"></div>
+                            <div class="w-6 h-6 rounded-full bg-gray-600 flex-shrink-0 flex items-center justify-center border border-white/5">
+                                <svg class="w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                </svg>
+                            </div>
                             <div
-                                class="bg-[#303030] text-gray-200 rounded-2xl rounded-bl-none px-3 py-2 max-w-[80%] text-[13px]">
+                                class="bg-[#303030] text-gray-200 rounded-2xl rounded-bl-none px-3 py-2 max-w-[80%] text-[13px] shadow-sm">
                                 <div class="font-bold text-[10px] text-gray-400 mb-0.5">
                                     <?php echo __('customer_name_sample'); ?>
                                 </div>
@@ -686,6 +690,29 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                             d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                                     </svg>
                                 </template>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Input Area & Quick Replies Footer -->
+                    <div class="px-3 pb-4 pt-1 border-t border-white/5 bg-[#18191a]">
+                        <!-- Quick Replies -->
+                        <div class="flex flex-wrap gap-2 justify-center mb-3" x-show="getCurrentPreviewButtons().length > 0">
+                            <template x-for="btn in getCurrentPreviewButtons()">
+                                <div class="px-4 py-1.5 rounded-full border border-[#0084ff] text-[#0084ff] text-[11px] font-bold bg-[#0084ff]/5 hover:bg-[#0084ff]/10 cursor-pointer transition-all"
+                                    x-text="btn.title || 'Button'"></div>
+                            </template>
+                        </div>
+                        
+                        <!-- Mock Chat Input -->
+                        <div class="flex items-center gap-2 bg-[#242526] rounded-full px-4 py-2 border border-white/5">
+                            <div class="text-[#0084ff]">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
+                            </div>
+                            <div class="flex-1 text-gray-500 text-xs italic">Aa</div>
+                            <div class="flex gap-2 text-[#0084ff]">
+                                <svg class="w-5 h-5 opacity-60" fill="currentColor" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/></svg>
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
                             </div>
                         </div>
                     </div>
@@ -1115,6 +1142,45 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         class="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all resize-none text-sm leading-relaxed"></textarea>
                 </div>
 
+                <!-- Buttons Section -->
+                <div>
+                    <label class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-3">
+                        <?php echo __('reply_buttons'); ?> <span class="text-[10px] opacity-50 ml-1">(Max 3)</span>
+                    </label>
+                    <div class="space-y-3 mb-3">
+                        <template x-for="(btn, index) in modalButtons" :key="index">
+                            <div class="flex gap-2 items-center">
+                                <div class="flex-1 space-y-1">
+                                    <input type="text" x-model="btn.title"
+                                        placeholder="<?php echo __('button_label_placeholder'); ?>"
+                                        class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white text-xs focus:ring-1 focus:ring-indigo-500">
+                                </div>
+                                <div class="flex-1 space-y-1">
+                                    <input type="text" x-model="btn.payload"
+                                        placeholder="<?php echo __('button_payload_placeholder'); ?>"
+                                        class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white text-xs focus:ring-1 focus:ring-indigo-500 font-mono text-indigo-300">
+                                </div>
+                                <button @click="removeButton(index)"
+                                    class="p-3 bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500/20 transition-colors border border-red-500/10">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </template>
+                    </div>
+                    <button type="button" @click="addButton()" x-show="modalButtons.length < 3"
+                        class="w-full py-3 border border-dashed border-white/10 rounded-xl text-xs font-bold text-gray-400 hover:text-white hover:border-white/30 hover:bg-white/5 transition-all flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4">
+                            </path>
+                        </svg>
+                        <?php echo __('add_button'); ?>
+                    </button>
+                    <p class="text-[10px] text-gray-500 mt-2 italic"><?php echo __('buttons_hint'); ?></p>
+                </div>
+
 
 
                 <!-- Advanced Feature Flags -->
@@ -1309,6 +1375,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
             selectedPageId: '',
             rules: [],
             defaultReplyText: '',
+            defaultReplyButtons: [],
             defaultHideComment: false,
             savingDefault: false,
             showModal: false,
@@ -1316,6 +1383,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
             currentRuleId: null,
             modalKeywords: '',
             modalReply: '',
+            modalButtons: [],
             modalHideComment: false,
             modalAiSafe: true,
             modalBypassSchedule: false,
@@ -1357,6 +1425,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
             customStartDate: '',
             customEndDate: '',
             statsRule: '',
+            previewButtons: [],
 
             scrollToPreview() {
                 const element = document.getElementById('messenger-preview-section');
@@ -1369,6 +1438,9 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
             previewMode: 'default', // 'default' or 'rule'
             previewCustomerMsg: '',
             previewReplyMsg: '',
+            getCurrentPreviewButtons() {
+                return this.previewMode === 'rule' ? this.previewButtons : this.defaultReplyButtons;
+            },
 
             getPageName() {
                 const page = this.pages.find(p => p.page_id == this.selectedPageId);
@@ -1393,6 +1465,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                 this.$watch('defaultReplyText', () => {
                     this.previewMode = 'default';
+                    this.previewButtons = [...this.defaultReplyButtons];
                 });
 
                 // Auto-refresh Handover Alerts every 30 seconds
@@ -1406,6 +1479,11 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 this.previewMode = 'rule';
                 this.previewCustomerMsg = rule.keywords.split(',')[0].trim();
                 this.previewReplyMsg = rule.reply_message;
+                try {
+                    this.previewButtons = rule.reply_buttons ? JSON.parse(rule.reply_buttons) : [];
+                } catch (e) {
+                    this.previewButtons = [];
+                }
             },
 
             fetchTokenDebug() {
@@ -1475,6 +1553,11 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             const defRule = data.rules.find(r => r.trigger_type === 'default');
                             if (defRule) {
                                 this.defaultReplyText = defRule.reply_message;
+                                try {
+                                    this.defaultReplyButtons = defRule.reply_buttons ? JSON.parse(defRule.reply_buttons) : [];
+                                } catch (e) {
+                                    this.defaultReplyButtons = [];
+                                }
                             }
                         }
                     });
@@ -1530,6 +1613,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 this.currentRuleId = null;
                 this.modalKeywords = '';
                 this.modalReply = '';
+                this.modalButtons = [];
                 this.modalHideComment = false;
                 this.modalAiSafe = true;
                 this.modalBypassSchedule = false;
@@ -1542,6 +1626,11 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 this.currentRuleId = rule.id;
                 this.modalKeywords = rule.keywords;
                 this.modalReply = rule.reply_message;
+                try {
+                    this.modalButtons = rule.reply_buttons ? JSON.parse(rule.reply_buttons) : [];
+                } catch (e) {
+                    this.modalButtons = [];
+                }
                 this.modalHideComment = false;
                 this.modalAiSafe = (rule.is_ai_safe == 1);
                 this.modalBypassSchedule = (rule.bypass_schedule == 1);
@@ -1558,6 +1647,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 formData.append('type', 'keyword');
                 formData.append('keywords', this.modalKeywords);
                 formData.append('reply', this.modalReply);
+                formData.append('reply_buttons', JSON.stringify(this.modalButtons));
                 formData.append('source', 'message');
                 formData.append('hide_comment', '0');
                 formData.append('is_ai_safe', this.modalAiSafe ? '1' : '0');
@@ -1691,6 +1781,20 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         alert('Network Error');
                     });
             }
+            ,
+            addButton() {
+                if (this.modalButtons.length < 3) {
+                    this.modalButtons.push({
+                        title: '',
+                        payload: '',
+                        type: 'postback'
+                    });
+                }
+            },
+
+            removeButton(index) {
+                this.modalButtons.splice(index, 1);
+            },
         }
     }
 </script>
