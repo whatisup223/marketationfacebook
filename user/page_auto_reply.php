@@ -1630,7 +1630,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
             fetchHandover() {
                 if (!this.selectedPageId) return;
                 this.fetchingHandover = true;
-                fetch(`ajax_auto_reply.php?action=fetch_handover_conversations&page_id=${this.selectedPageId}&source=comment`)
+                fetch(`ajax_auto_reply.php?action=fetch_handover_conversations&page_id=${this.selectedPageId}&source=comment&t=${new Date().getTime()}`)
                     .then(res => res.json())
                     .then(data => {
                         this.fetchingHandover = false;
