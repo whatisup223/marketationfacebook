@@ -90,9 +90,9 @@ if (isset($_POST['ajax_scan'])) {
 
         $count = 0;
         $html_rows = '';
-        $insertLead = $pdo->prepare("INSERT INTO fb_leads (page_id, fb_user_id, fb_user_name, last_interaction) 
-                                     VALUES (?, ?, ?, NOW()) 
-                                     ON DUPLICATE KEY UPDATE last_interaction = NOW(), fb_user_name = VALUES(fb_user_name)");
+        $insertLead = $pdo->prepare("INSERT INTO fb_leads (page_id, fb_user_id, fb_user_name, lead_source, last_comment, last_interaction) 
+                                     VALUES (?, ?, ?, 'messenger', ?, NOW()) 
+                                     ON DUPLICATE KEY UPDATE last_interaction = NOW(), fb_user_name = VALUES(fb_user_name), last_comment = VALUES(last_comment), lead_source = IF(lead_source IS NULL OR lead_source = '', 'messenger', lead_source)");
 
         if (isset($conversations['data'])) {
             foreach ($conversations['data'] as $convo) {
@@ -109,7 +109,8 @@ if (isset($_POST['ajax_scan'])) {
 
                 if ($lead_data) {
                     try {
-                        $insertLead->execute([$page['id'], $lead_data['id'], $lead_data['name']]);
+                        $snippet = $convo['snippet'] ?? '';
+                        $insertLead->execute([$page['id'], $lead_data['id'], $lead_data['name'], $snippet]);
                         $count++;
 
                         // Generate HTML row for live append
@@ -117,6 +118,7 @@ if (isset($_POST['ajax_scan'])) {
                         $interaction_date = date('M d, H:i');
                         $user_role = __('fb_user_role');
 
+                        $source_label = __('messenger_source');
                         $html_rows .= "
                         <tr class='hover:bg-indigo-600/5 transition-all duration-200 group cursor-pointer animate-fade-in-up' onclick='toggleRow(this)'>
                             <td class='px-6 py-4 text-center'>
@@ -140,6 +142,12 @@ if (isset($_POST['ajax_scan'])) {
                             </td>
                             <td class='px-6 py-4 text-start'>
                                  <span class='text-xs text-gray-400 flex items-center gap-1.5'><div class='w-1.5 h-1.5 rounded-full bg-green-500'></div>$interaction_date</span>
+                            </td>
+                            <td class='px-6 py-4 text-start'>
+                                <div class='text-[11px] text-gray-300 line-clamp-1 max-w-[200px]' title='$snippet'>$snippet</div>
+                            </td>
+                            <td class='px-6 py-4 text-start'>
+                                 <span class='px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/10'>$source_label</span>
                             </td>
                         </tr>";
                     } catch (Exception $e) {
@@ -295,7 +303,49 @@ if ($page) {
     $stmt->execute([$page['id']]);
     $leads_count = $stmt->fetchColumn();
 }
+?>
 
+<style>
+    .tab-content {
+        display: none;
+    }
+
+    .tab-content.active {
+        display: block;
+        animation: fade-in-up 0.3s ease-out;
+    }
+
+    @keyframes fade-in-up {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+</style>
+
+<?php
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
@@ -315,7 +365,8 @@ require_once __DIR__ . '/../includes/header.php';
                         </path>
                     </svg>
                 </div>
-                <span class="text-sm font-bold"><?php echo __('fb_accounts'); ?></span>
+                <span class="text-sm font-bold"><?php echo __('fb_accounts'); ?>
+                </span>
             </a>
         </div>
 
@@ -326,11 +377,15 @@ require_once __DIR__ . '/../includes/header.php';
                     <?php echo __('manage_messages'); ?>
                 </a>
                 <span class="mx-2 text-gray-600">/</span>
-                <span class="text-white font-bold tracking-wide"><?php echo htmlspecialchars($page['page_name']); ?></span>
+                <span class="text-white font-bold tracking-wide">
+                    <?php echo htmlspecialchars($page['page_name']); ?>
+                </span>
             </div>
         <?php else: ?>
             <div class="flex items-center text-sm text-gray-400 mb-6">
-                <span class="text-white font-bold tracking-wide"><?php echo __('manage_messages'); ?></span>
+                <span class="text-white font-bold tracking-wide">
+                    <?php echo __('manage_messages'); ?>
+                </span>
             </div>
         <?php endif; ?>
 
@@ -369,7 +424,9 @@ require_once __DIR__ . '/../includes/header.php';
                                         class="text-white font-bold text-sm mb-1 group-hover:text-indigo-400 transition-colors line-clamp-1">
                                         <?php echo htmlspecialchars($p['page_name']); ?>
                                     </h3>
-                                    <span class="text-[10px] text-gray-500 font-mono mb-4">ID: <?php echo $p['page_id']; ?></span>
+                                    <span class="text-[10px] text-gray-500 font-mono mb-4">ID:
+                                        <?php echo $p['page_id']; ?>
+                                    </span>
                                     <div
                                         class="w-full py-2 bg-white/5 border border-white/10 rounded-lg text-xs font-bold text-gray-300 group-hover:bg-indigo-600 group-hover:text-white transition-all">
                                         <?php echo __('open_inbox'); ?>
@@ -388,8 +445,12 @@ require_once __DIR__ . '/../includes/header.php';
                                     </path>
                                 </svg>
                             </div>
-                            <h3 class="text-xl font-bold text-white mb-2"><?php echo __('no_pages_synced'); ?></h3>
-                            <p class="text-gray-400 text-sm max-w-sm mx-auto mb-8"><?php echo __('no_pages_synced_desc'); ?></p>
+                            <h3 class="text-xl font-bold text-white mb-2">
+                                <?php echo __('no_pages_synced'); ?>
+                            </h3>
+                            <p class="text-gray-400 text-sm max-w-sm mx-auto mb-8">
+                                <?php echo __('no_pages_synced_desc'); ?>
+                            </p>
                             <a href="fb_accounts.php"
                                 class="bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-indigo-600/20 transition-all active:scale-95 flex items-center gap-2">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -436,8 +497,9 @@ require_once __DIR__ . '/../includes/header.php';
                                 <div class="flex items-center gap-3 mb-3">
                                     <img src="<?php echo htmlspecialchars($camp['page_pic'] ?: '../assets/img/page_default.png'); ?>"
                                         class="w-6 h-6 rounded-md object-cover border border-white/10" alt="">
-                                    <span
-                                        class="text-[10px] font-bold text-gray-400 truncate"><?php echo htmlspecialchars($camp['page_name']); ?></span>
+                                    <span class="text-[10px] font-bold text-gray-400 truncate">
+                                        <?php echo htmlspecialchars($camp['page_name']); ?>
+                                    </span>
                                 </div>
 
                                 <h3 class="text-sm font-bold text-white truncate mb-1"
@@ -446,8 +508,9 @@ require_once __DIR__ . '/../includes/header.php';
                                 </h3>
 
                                 <div class="flex items-center justify-between mb-3">
-                                    <span
-                                        class="text-[9px] text-gray-500"><?php echo date('M d, H:i', strtotime($camp['created_at'])); ?></span>
+                                    <span class="text-[9px] text-gray-500">
+                                        <?php echo date('M d, H:i', strtotime($camp['created_at'])); ?>
+                                    </span>
                                     <?php
                                     $s_colors = [
                                         'running' => 'text-green-400',
@@ -457,13 +520,15 @@ require_once __DIR__ . '/../includes/header.php';
                                     ];
                                     $c = $s_colors[$camp['status']] ?? 'text-gray-400';
                                     ?>
-                                    <span
-                                        class="text-[9px] font-bold uppercase <?php echo $c; ?>"><?php echo $camp['status']; ?></span>
+                                    <span class="text-[9px] font-bold uppercase <?php echo $c; ?>">
+                                        <?php echo $camp['status']; ?>
+                                    </span>
                                 </div>
 
                                 <div class="text-[11px] text-gray-400 bg-black/20 p-2 rounded-lg line-clamp-2 border border-white/5 mb-3 italic"
                                     id="camp-msg-<?php echo $camp['id']; ?>">
-                                    "<?php echo htmlspecialchars($camp['message_text']); ?>"
+                                    "
+                                    <?php echo htmlspecialchars($camp['message_text']); ?>"
                                 </div>
 
                                 <div class="flex items-center gap-2 pt-3 border-t border-white/5">
@@ -554,7 +619,9 @@ require_once __DIR__ . '/../includes/header.php';
                                             d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14">
                                         </path>
                                     </svg>
-                                    <span>ID: <?php echo $page['page_id']; ?></span>
+                                    <span>ID:
+                                        <?php echo $page['page_id']; ?>
+                                    </span>
                                     <svg class="w-3 h-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14">
@@ -577,812 +644,1091 @@ require_once __DIR__ . '/../includes/header.php';
                     <!-- Divider -->
                     <div class="h-px bg-white/5 mb-6"></div>
 
-                    <!-- Row 2: Control Hub (Ultra-Responsive) -->
-                    <div
-                        class="glass-card bg-[#0f172a]/60 border border-white/10 rounded-2xl p-3 md:p-4 shadow-xl relative mb-4 w-full">
-                        <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-6">
-
-                            <!-- 1. Extraction Mode -->
-                            <div
-                                class="bg-black/40 rounded-xl p-1 flex items-center shrink-0 border border-white/5 w-full lg:w-auto">
-                                <button type="button" onclick="setMode('limit')" id="btn-mode-limit"
-                                    class="flex-1 lg:px-6 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 bg-indigo-600 text-white shadow-lg">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z">
-                                        </path>
-                                    </svg>
-                                    <span class="whitespace-nowrap"><?php echo __('extract_limit_option'); ?></span>
-                                </button>
-                                <button type="button" onclick="setMode('all')" id="btn-mode-all"
-                                    class="flex-1 lg:px-6 py-2 rounded-lg text-xs font-bold text-gray-400 hover:text-white transition-all flex items-center justify-center gap-2">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M19 11v-2a2 2 0 00-2-2H7a2 2 0 00-2 2v2m14 0v2a2 2 0 01-2 2h-1m-4 0h-4m9 0H7a2 2 0 01-2-2v-2m14 0V9a2 2 0 00-2-2M5 11V9a1.5 1.5 0 011.5-1.5h11A1.5 1.5 0 0119 9v1">
-                                        </path>
-                                    </svg>
-                                    <span class="whitespace-nowrap"><?php echo __('extract_all_option'); ?></span>
-                                </button>
-                            </div>
-
-                            <!-- 2. Inputs Group -->
-                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 flex-1">
-                                <!-- Batch Size -->
-                                <div class="relative">
-                                    <label
-                                        class="absolute -top-2.5 left-3 text-[10px] font-bold text-indigo-400 uppercase bg-[#0f172a] px-1.5 rounded border border-white/5 z-10"><?php echo __('lbl_batch_size'); ?></label>
-                                    <input type="number" id="scan_limit" value="50" min="1" max="500"
-                                        class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white text-sm font-mono focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all">
-                                </div>
-
-                                <!-- Total Goal -->
-                                <div class="relative transition-all duration-300" id="goal-wrapper">
-                                    <label
-                                        class="absolute -top-2.5 left-3 text-[10px] font-bold text-purple-400 uppercase bg-[#0f172a] px-1.5 rounded border border-white/5 z-10"><?php echo __('lbl_total_goal'); ?></label>
-                                    <input type="number" id="scan_goal" value="100" min="1"
-                                        class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white text-sm font-mono focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-all">
-                                </div>
-
-                                <!-- Delay -->
-                                <div class="relative">
-                                    <label
-                                        class="absolute -top-2.5 left-3 text-[10px] font-bold text-green-400 uppercase bg-[#0f172a] px-1.5 rounded border border-white/5 z-10"><?php echo __('lbl_delay'); ?></label>
-                                    <input type="number" id="scan_delay" value="1" min="0"
-                                        class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white text-sm font-mono focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition-all">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Control Buttons (Moved OUTSIDE form to prevent reload) -->
-                    <div
-                        class="mb-6 flex flex-col lg:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-[#1e293b]/50 border border-white/5 backdrop-blur-sm">
-                        <!-- Left: Status Indicators -->
-                        <div class="flex items-center gap-4 w-full lg:w-auto">
-                            <!-- Status Badges Code Here (Same as before) -->
-                            <div class="flex items-center gap-3 bg-black/20 rounded-xl px-4 py-2 border border-white/5">
-                                <div id="status-dot"
-                                    class="w-2 h-2 rounded-full bg-gray-600 shadow-[0_0_10px_rgba(255,255,255,0.2)]"></div>
-                                <span id="status-text"
-                                    class="text-xs font-bold text-gray-300 uppercase tracking-wider min-w-[120px]">
-                                    <?php echo __('status_ready'); ?>
-                                </span>
-                            </div>
-                        </div>
-
-                        <!-- Right: Actions -->
-                        <div class="flex items-center gap-2 w-full lg:w-auto lg:ml-auto">
-                            <button type="button" onclick="stopScan()" id="btn-stop" disabled
-                                class="w-10 h-10 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white disabled:opacity-30 disabled:hover:bg-red-500/10 transition-all flex items-center justify-center shadow-lg border border-red-500/20 shrink-0">
-                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M6 6h12v12H6z" />
-                                </svg>
-                            </button>
-                            <div class="relative flex items-center h-10 flex-1 lg:flex-none">
-                                <button type="button" onclick="pauseScan()" id="btn-pause"
-                                    class="hidden h-10 px-4 rounded-xl bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500 hover:text-white transition-all flex items-center justify-center gap-2 shadow-lg border border-yellow-500/20 w-full">
-                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
-                                    </svg>
-                                    <span
-                                        class="font-bold text-xs md:text-sm uppercase whitespace-nowrap"><?php echo __('btn_pause'); ?></span>
-                                </button>
-                                <button type="button" onclick="startScan()" id="btn-play"
-                                    class="h-10 px-4 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white rounded-xl shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2 transition-all transform active:scale-95 group border border-white/10 w-full">
-                                    <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path d="M8 5v14l11-7z" />
-                                    </svg>
-                                    <span class="font-bold text-xs md:text-sm uppercase whitespace-nowrap"
-                                        id="text-play"><?php echo __('btn_start'); ?></span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Row 3: Status & Progress Row (Full Width) -->
-                    <div class="glass-card bg-black/20 border border-white/5 rounded-2xl p-4 shadow-inner mb-4">
-                        <div class="flex items-center justify-between mb-3 px-1">
-                            <div class="flex items-center gap-3">
-                                <div id="status-dot"
-                                    class="w-2.5 h-2.5 rounded-full bg-gray-600 shadow-[0_0_10px_rgba(75,85,99,0.5)]"></div>
-                                <span id="status-text"
-                                    class="text-sm font-medium text-gray-300 tracking-wide"><?php echo __('status_ready'); ?></span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <span id="progress-count"
-                                    class="bg-indigo-500/15 text-indigo-400 border border-indigo-500/20 px-3 py-1 rounded-lg text-xs font-bold hidden">0</span>
-                            </div>
-                        </div>
-                        <!-- Deluxe Progress Bar -->
-                        <div
-                            class="relative w-full h-3 bg-black/40 rounded-full overflow-hidden border border-white/5 p-0.5">
-                            <div id="progress-bar"
-                                class="h-full bg-gradient-to-r from-indigo-600 via-blue-500 to-green-400 w-0 transition-all duration-500 rounded-full shadow-[0_0_15px_rgba(79,70,229,0.4)] relative">
-                                <!-- Shine Effect -->
-                                <div class="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Row 4: Clear Data Action -->
-                    <div class="flex justify-end items-center gap-3 mb-6">
-                        <!-- Clear Selection Button (Visible only when selection active) -->
-                        <button type="button" onclick="clearSelection()" id="btn-clear-selection" style="display:none;"
-                            class="h-9 px-4 bg-orange-500/10 hover:bg-orange-500 text-orange-500 hover:text-white border border-orange-500/20 rounded-xl transition-all flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-orange-500/5 active:scale-95">
+                    <!-- Tab Switcher -->
+                    <div class="flex items-center gap-2 mb-8 bg-black/20 p-1.5 rounded-2xl border border-white/5 w-fit">
+                        <button onclick="switchTab('messages')" id="tab-messages-btn"
+                            class="tab-btn px-6 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 bg-indigo-600 text-white shadow-lg">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M6 18L18 6M6 6l12 12"></path>
+                                    d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z">
+                                </path>
                             </svg>
-                            <?php echo __('clear'); ?>
+                            <?php echo __('extract_from_messages'); ?>
                         </button>
+                        <button onclick="switchTab('comments')" id="tab-comments-btn"
+                            class="tab-btn px-6 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 text-gray-400 hover:text-white">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z">
+                                </path>
+                            </svg>
+                            <?php echo __('extract_from_comments'); ?>
+                        </button>
+                    </div>
 
-                        <!-- Clear Database Button -->
-                        <form method="POST" onsubmit="return confirm('<?php echo __('clear_confirm'); ?>');">
-                            <button type="submit" name="clear_leads"
-                                class="h-9 px-4 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/20 rounded-xl transition-all flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-red-500/5 active:scale-95">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div id="messages-controls" class="tab-content active">
+                        <!-- Row 2: Control Hub (Ultra-Responsive) -->
+                        <div
+                            class="glass-card bg-[#0f172a]/60 border border-white/10 rounded-2xl p-3 md:p-4 shadow-xl relative mb-4 w-full">
+                            <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-6">
+                                <!-- 1. Extraction Mode -->
+                                <div
+                                    class="bg-black/40 rounded-xl p-1 flex items-center shrink-0 border border-white/5 w-full lg:w-auto">
+                                    <button type="button" onclick="setMode('limit')" id="btn-mode-limit"
+                                        class="flex-1 lg:px-6 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 bg-indigo-600 text-white shadow-lg">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z">
+                                            </path>
+                                        </svg>
+                                        <span class="whitespace-nowrap"><?php echo __('extract_limit_option'); ?></span>
+                                    </button>
+                                    <button type="button" onclick="setMode('all')" id="btn-mode-all"
+                                        class="flex-1 lg:px-6 py-2 rounded-lg text-xs font-bold text-gray-400 hover:text-white transition-all flex items-center justify-center gap-2">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 11v-2a2 2 0 00-2-2H7a2 2 0 00-2 2v2m14 0v2a2 2 0 01-2 2h-1m-4 0h-4m9 0H7a2 2 0 01-2-2v-2m14 0V9a2 2 0 00-2-2M5 11V9a1.5 1.5 0 011.5-1.5h11A1.5 1.5 0 0119 9v1">
+                                            </path>
+                                        </svg>
+                                        <span class="whitespace-nowrap"><?php echo __('extract_all_option'); ?></span>
+                                    </button>
+                                </div>
+                                <!-- 2. Inputs Group -->
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 flex-1">
+                                    <div class="relative">
+                                        <label
+                                            class="absolute -top-2.5 left-3 text-[10px] font-bold text-indigo-400 uppercase bg-[#0f172a] px-1.5 rounded border border-white/5 z-10"><?php echo __('lbl_batch_size'); ?></label>
+                                        <input type="number" id="scan_limit" value="50" min="1" max="500"
+                                            class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white text-sm font-mono focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all">
+                                    </div>
+                                    <div class="relative transition-all duration-300" id="goal-wrapper">
+                                        <label
+                                            class="absolute -top-2.5 left-3 text-[10px] font-bold text-purple-400 uppercase bg-[#0f172a] px-1.5 rounded border border-white/5 z-10"><?php echo __('lbl_total_goal'); ?></label>
+                                        <input type="number" id="scan_goal" value="100" min="1"
+                                            class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white text-sm font-mono focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-all">
+                                    </div>
+                                    <div class="relative">
+                                        <label
+                                            class="absolute -top-2.5 left-3 text-[10px] font-bold text-green-400 uppercase bg-[#0f172a] px-1.5 rounded border border-white/5 z-10"><?php echo __('lbl_delay'); ?></label>
+                                        <input type="number" id="scan_delay" value="1" min="0"
+                                            class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white text-sm font-mono focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition-all">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Activity Monitor (Messages) -->
+                        <div class="activity-monitor mb-6">
+                            <div class="glass-card bg-black/20 border border-white/5 rounded-2xl p-4 shadow-inner">
+                                <div class="flex flex-col md:flex-row items-center justify-between gap-4 mb-4">
+                                    <div
+                                        class="flex items-center gap-3 bg-black/20 rounded-xl px-4 py-2 border border-white/5">
+                                        <div
+                                            class="status-dot w-2.5 h-2.5 rounded-full bg-gray-600 shadow-[0_0_10px_rgba(75,85,99,0.5)]">
+                                        </div>
+                                        <span
+                                            class="status-text text-sm font-medium text-gray-300 tracking-wide uppercase"><?php echo __('status_ready'); ?></span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span id="progress-count-msg"
+                                            class="progress-count bg-indigo-500/15 text-indigo-400 border border-indigo-500/20 px-3 py-1 rounded-lg text-xs font-bold hidden">0</span>
+                                    </div>
+                                </div>
+                                <div
+                                    class="relative w-full h-2 bg-black/40 rounded-full overflow-hidden border border-white/5">
+                                    <div id="progress-bar-msg"
+                                        class="progress-bar h-full bg-gradient-to-r from-indigo-600 to-blue-500 w-0 transition-all duration-500">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Control Buttons (Messages) -->
+                        <div
+                            class="mb-6 flex flex-col lg:flex-row items-center justify-end gap-4 p-4 rounded-2xl bg-[#1e293b]/50 border border-white/5 backdrop-blur-sm">
+
+                            <div class="flex items-center gap-2 w-full lg:w-auto lg:ml-auto">
+                                <button type="button" onclick="stopScan()" id="btn-stop" disabled
+                                    class="w-10 h-10 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white disabled:opacity-30 disabled:hover:bg-red-500/10 transition-all flex items-center justify-center shadow-lg border border-red-500/20 shrink-0"><svg
+                                        class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M6 6h12v12H6z" />
+                                    </svg></button>
+                                <div class="relative flex items-center h-10 flex-1 lg:flex-none">
+                                    <button type="button" onclick="pauseScan()" id="btn-pause"
+                                        class="hidden h-10 px-4 rounded-xl bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500 hover:text-white transition-all flex items-center justify-center gap-2 shadow-lg border border-yellow-500/20 w-full"><svg
+                                            class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                                        </svg><span
+                                            class="font-bold text-xs md:text-sm uppercase whitespace-nowrap"><?php echo __('btn_pause'); ?></span></button>
+                                    <button type="button" onclick="startScan()" id="btn-play"
+                                        class="h-10 px-4 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white rounded-xl shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2 transition-all transform active:scale-95 group border border-white/10 w-full"><svg
+                                            class="w-5 h-5 group-hover:scale-110 transition-transform" fill="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path d="M8 5v14l11-7z" />
+                                        </svg><span class="font-bold text-xs md:text-sm uppercase whitespace-nowrap"
+                                            id="text-play"><?php echo __('btn_start'); ?></span></button>
+                                </div>
+                            </div>
+                        </div>
+
+
+                    </div>
+
+                    <div id="comments-controls" class="tab-content">
+                        <!-- Row 2: Control Hub (Comments) -->
+                        <div
+                            class="glass-card bg-[#0f172a]/60 border border-white/10 rounded-2xl p-6 md:p-8 shadow-xl relative mb-4 w-full">
+                            <div class="flex flex-col md:flex-row items-center gap-6 mb-8">
+                                <button type="button" onclick="fetchPosts()" id="btn-fetch-posts"
+                                    class="bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-3 rounded-xl font-bold transition-all flex items-center gap-2 shadow-lg shadow-indigo-600/20"><svg
+                                        class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                                        </path>
+                                    </svg><?php echo __('fetch_posts'); ?></button>
+                                <div class="flex-1 text-gray-400 text-sm">
+                                    <?php echo ($lang == 'ar' ? 'حدد المنشورات التي ترغب في سحب التعليقات منها' : 'Select posts you want to extract comments from'); ?>
+                                </div>
+                            </div>
+                            <div id="posts-grid"
+                                class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-h-[400px] overflow-y-auto custom-scrollbar p-2">
+                                <div class="col-span-full text-center py-10 text-gray-500 italic">
+                                    <?php echo ($lang == 'ar' ? 'انقر على "جلب المنشورات" للبدء' : 'Click "Fetch Posts" to start'); ?>
+                                </div>
+                            </div>
+
+                            <!-- Activity Monitor (Comments) -->
+                            <div class="activity-monitor mt-6 hidden" id="comments-activity-monitor">
+                                <div class="glass-card bg-black/20 border border-white/5 rounded-2xl p-4 shadow-inner">
+                                    <div class="flex flex-col md:flex-row items-center justify-between gap-4 mb-4">
+                                        <div
+                                            class="flex items-center gap-3 bg-black/20 rounded-xl px-4 py-2 border border-white/5">
+                                            <div
+                                                class="status-dot w-2.5 h-2.5 rounded-full bg-gray-600 shadow-[0_0_10px_rgba(75,85,99,0.5)]">
+                                            </div>
+                                            <span
+                                                class="status-text text-sm font-medium text-gray-300 tracking-wide uppercase"><?php echo __('status_ready'); ?></span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span id="progress-count-comm"
+                                                class="progress-count bg-indigo-500/15 text-indigo-400 border border-indigo-500/20 px-3 py-1 rounded-lg text-xs font-bold hidden">0</span>
+                                        </div>
+                                    </div>
+                                    <div
+                                        class="relative w-full h-2 bg-black/40 rounded-full overflow-hidden border border-white/5">
+                                        <div id="progress-bar-comm"
+                                            class="progress-bar h-full bg-gradient-to-r from-green-600 to-emerald-500 w-0 transition-all duration-500">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between mt-8 pt-8 border-t border-white/5">
+                                <div class="flex items-center gap-3">
+                                    <label class="flex items-center gap-2 cursor-pointer group">
+                                        <input type="checkbox" id="select-all-posts" onchange="toggleAllPosts(this)"
+                                            class="w-5 h-5 rounded border-gray-600 text-indigo-500 focus:ring-indigo-500 bg-gray-800 transition-all cursor-pointer">
+                                        <span
+                                            class="text-sm font-bold text-gray-400 group-hover:text-white transition-colors"><?php echo __('all_posts'); ?></span>
+                                    </label>
+                                </div>
+                                <button type="button" onclick="extractComments()" id="btn-extract-comments" disabled
+                                    class="bg-green-600 hover:bg-green-500 disabled:opacity-30 disabled:hover:bg-green-600 text-white px-10 py-3 rounded-xl font-bold transition-all flex items-center gap-2 shadow-lg shadow-green-600/20"><svg
+                                        class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 4v16m8-8H4"></path>
+                                    </svg><?php echo ($lang == 'ar' ? 'بدء الاستخراج' : 'Start Extraction'); ?></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Row 4: Clear Data Action -->
+                <div class="flex justify-end items-center gap-3 mb-6">
+                    <!-- Clear Selection Button (Visible only when selection active) -->
+                    <button type="button" onclick="clearSelection()" id="btn-clear-selection" style="display:none;"
+                        class="h-9 px-4 bg-orange-500/10 hover:bg-orange-500 text-orange-500 hover:text-white border border-orange-500/20 rounded-xl transition-all flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-orange-500/5 active:scale-95">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                            </path>
+                        </svg>
+                        <?php echo __('clear'); ?>
+                    </button>
+
+                    <!-- Clear Database Button -->
+                    <form method="POST" onsubmit="return confirm('<?php echo __('clear_confirm'); ?>');">
+                        <button type="submit" name="clear_leads"
+                            class="h-9 px-4 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/20 rounded-xl transition-all flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-red-500/5 active:scale-95">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                </path>
+                            </svg>
+                            <?php echo __('clear_database'); ?>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <?php if (isset($message) && $message): ?>
+                <div
+                    class="glass-card bg-green-500/5 border-green-500/20 text-green-400 p-4 rounded-2xl mb-6 flex items-center gap-3 animate-fade-in-up shadow-lg shadow-green-900/10">
+                    <svg class="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <div class="font-medium">
+                        <?php echo $message; ?>
+                    </div>
+                    <button onclick="this.parentElement.remove()"
+                        class="ml-auto text-green-400/50 hover:text-green-400 transition-colors"><svg class="w-4 h-4"
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                            </path>
+                        </svg></button>
+                </div>
+            <?php endif; ?>
+
+            <!-- Inbox Table -->
+            <input type="hidden" name="page_id" value="<?php echo $page['id']; ?>">
+
+            <div
+                class="glass-card rounded-3xl overflow-hidden border border-white/5 flex flex-col shadow-2xl shadow-black/50">
+                <!-- Table Header Toolbad -->
+                <div class="p-4 md:p-6 border-b border-white/5 bg-white/5 backdrop-blur-xl">
+                    <div class="flex flex-col xl:flex-row justify-between items-stretch xl:items-center gap-6">
+                        <!-- Left: Identity & Global Actions -->
+                        <div class="flex flex-col md:flex-row md:items-center gap-4 flex-1 min-w-0">
+                            <h2 class="text-lg md:text-xl font-bold flex items-center gap-3 text-white shrink-0">
+                                <span
+                                    class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0">
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+                                        </path>
+                                    </svg>
+                                </span>
+                                <span class="truncate">
+                                    <?php echo __('inbox_leads'); ?>
+                                </span>
+                            </h2>
+
+                            <div class="flex flex-wrap items-center gap-2">
+                                <!-- Direct Link to Campaigns (Fluid) -->
+                                <a href="create_campaign.php<?php echo $page ? '?page_id=' . $page['id'] : ''; ?>"
+                                    class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 text-gray-400 border border-white/10 text-[10px] md:text-xs font-bold hover:bg-white/10 hover:text-white transition-all group whitespace-nowrap">
+                                    <svg class="w-3.5 h-3.5 text-indigo-400 group-hover:scale-110 transition-transform shrink-0"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z">
+                                        </path>
+                                    </svg>
+                                    <span>
+                                        <?php echo ($lang == 'ar' ? 'إدارة الحملات' : 'Manage Campaigns'); ?>
+                                    </span>
+                                </a>
+
+                                <button type="button" onclick="selectAllGlobal(<?php echo $page['id']; ?>)"
+                                    class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[10px] md:text-xs font-bold hover:bg-indigo-500 hover:text-white transition-all">
+                                    <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01">
+                                        </path>
+                                    </svg>
+                                    <span class="whitespace-nowrap">
+                                        <?php echo __('select_all_global'); ?>
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Right: Search & Create -->
+                        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full xl:w-auto">
+                            <!-- Search Box (Expanding) -->
+                            <div class="relative flex-1 sm:w-64 group">
+                                <input type="text" id="lead-search"
+                                    class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 pl-10 text-xs text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all"
+                                    placeholder="<?php echo __('search_placeholder'); ?>">
+                                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-indigo-400 transition-colors"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                                    </path>
+                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                                 </svg>
-                                <?php echo __('clear_database'); ?>
-                            </button>
-                        </form>
+                            </div>
+
+                            <form action="create_campaign.php" method="POST" id="campaign-form"
+                                class="w-full sm:w-auto shrink-0">
+                                <input type="hidden" name="page_id" value="<?php echo $page['id']; ?>">
+                                <button type="submit"
+                                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2.5 rounded-xl shadow-lg shadow-indigo-600/20 transition-all transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-h-[42px]"
+                                    id="create-btn" disabled>
+                                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 4v16m8-8H4"></path>
+                                    </svg>
+                                    <span class="whitespace-nowrap">
+                                        <?php echo __('create_campaign'); ?>
+                                    </span>
+                                    <span id="selected-count"
+                                        class="bg-black/30 text-white text-[10px] px-2 py-0.5 rounded-full font-mono min-w-[20px] text-center">0</span>
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
 
-                <?php if (isset($message) && $message): ?>
-                    <div
-                        class="glass-card bg-green-500/5 border-green-500/20 text-green-400 p-4 rounded-2xl mb-6 flex items-center gap-3 animate-fade-in-up shadow-lg shadow-green-900/10">
-                        <svg class="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        <div class="font-medium"><?php echo $message; ?></div>
-                        <button onclick="this.parentElement.remove()"
-                            class="ml-auto text-green-400/50 hover:text-green-400 transition-colors"><svg class="w-4 h-4"
-                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
-                                </path>
-                            </svg></button>
-                    </div>
-                <?php endif; ?>
+                <!-- Table Content -->
+                <div class="overflow-x-auto overflow-y-auto max-h-[600px] custom-scrollbar bg-[#0f172a]/50">
+                    <table class="w-full text-start border-collapse min-w-[800px]" id="leads-table">
+                        <thead
+                            class="bg-[#1e293b] text-gray-400 text-[10px] uppercase font-bold sticky top-0 z-10 shadow-lg shadow-black/20 tracking-wider">
+                            <tr>
+                                <th class="px-6 py-4 w-16 bg-[#1e293b] text-center">
+                                    <div class="flex items-center justify-center relative group">
+                                        <input type="checkbox" id="select-all"
+                                            class="w-4 h-4 rounded border-gray-600 text-indigo-500 focus:ring-indigo-500 bg-gray-800 transition-all cursor-pointer">
+                                    </div>
+                                </th>
+                                <th class="px-6 py-4 bg-[#1e293b] text-start">
+                                    <?php echo __('user_identity'); ?>
+                                </th>
+                                <th class="px-6 py-4 bg-[#1e293b] text-start">
+                                    <?php echo __('psid_label'); ?>
+                                </th>
+                                <th class="px-6 py-4 bg-[#1e293b] text-start">
+                                    <?php echo __('interaction_date'); ?>
+                                </th>
+                                <th class="px-6 py-4 bg-[#1e293b] text-start">
+                                    <?php echo __('last_activity_label'); ?>
+                                </th>
+                                <th class="px-6 py-4 bg-[#1e293b] text-start">
+                                    <?php echo __('source'); ?>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-800/50" id="leads-tbody">
+                            <?php
+                            // Pagination Logic
+                            $leads_per_page = 50;
+                            $page_num = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+                            $offset = ($page_num - 1) * $leads_per_page;
 
-                <!-- Inbox Table -->
-                <input type="hidden" name="page_id" value="<?php echo $page['id']; ?>">
+                            // Get Total Count
+                            $stmt = $pdo->prepare("SELECT COUNT(*) FROM fb_leads WHERE page_id = ?");
+                            $stmt->execute([$page['id']]);
+                            $total_leads = $stmt->fetchColumn();
+                            $total_pages = ceil($total_leads / $leads_per_page);
 
-                <div
-                    class="glass-card rounded-3xl overflow-hidden border border-white/5 flex flex-col shadow-2xl shadow-black/50">
-                    <!-- Table Header Toolbad -->
-                    <div class="p-4 md:p-6 border-b border-white/5 bg-white/5 backdrop-blur-xl">
-                        <div class="flex flex-col xl:flex-row justify-between items-stretch xl:items-center gap-6">
-                            <!-- Left: Identity & Global Actions -->
-                            <div class="flex flex-col md:flex-row md:items-center gap-4 flex-1 min-w-0">
-                                <h2 class="text-lg md:text-xl font-bold flex items-center gap-3 text-white shrink-0">
-                                    <span
-                                        class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0">
-                                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
-                                            </path>
-                                        </svg>
-                                    </span>
-                                    <span class="truncate"><?php echo __('inbox_leads'); ?></span>
-                                </h2>
+                            // Get Paginated Results
+                            $stmt = $pdo->prepare("SELECT * FROM fb_leads WHERE page_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?");
+                            // Bind parameters explicitly for LIMIT/OFFSET (PDO needs int)
+                            $stmt->bindValue(1, $page['id'], PDO::PARAM_INT);
+                            $stmt->bindValue(2, $leads_per_page, PDO::PARAM_INT);
+                            $stmt->bindValue(3, $offset, PDO::PARAM_INT);
+                            $stmt->execute();
+                            $leads = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-                                <div class="flex flex-wrap items-center gap-2">
-                                    <!-- Direct Link to Campaigns (Fluid) -->
-                                    <a href="create_campaign.php<?php echo $page ? '?page_id=' . $page['id'] : ''; ?>"
-                                        class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 text-gray-400 border border-white/10 text-[10px] md:text-xs font-bold hover:bg-white/10 hover:text-white transition-all group whitespace-nowrap">
-                                        <svg class="w-3.5 h-3.5 text-indigo-400 group-hover:scale-110 transition-transform shrink-0"
-                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z">
-                                            </path>
-                                        </svg>
-                                        <span><?php echo ($lang == 'ar' ? 'إدارة الحملات' : 'Manage Campaigns'); ?></span>
-                                    </a>
-
-                                    <button type="button" onclick="selectAllGlobal(<?php echo $page['id']; ?>)"
-                                        class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[10px] md:text-xs font-bold hover:bg-indigo-500 hover:text-white transition-all">
-                                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01">
-                                            </path>
-                                        </svg>
-                                        <span class="whitespace-nowrap"><?php echo __('select_all_global'); ?></span>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Right: Search & Create -->
-                            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full xl:w-auto">
-                                <!-- Search Box (Expanding) -->
-                                <div class="relative flex-1 sm:w-64 group">
-                                    <input type="text" id="lead-search"
-                                        class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 pl-10 text-xs text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all"
-                                        placeholder="<?php echo __('search_placeholder'); ?>">
-                                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-indigo-400 transition-colors"
-                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                                    </svg>
-                                </div>
-
-                                <form action="create_campaign.php" method="POST" id="campaign-form"
-                                    class="w-full sm:w-auto shrink-0">
-                                    <input type="hidden" name="page_id" value="<?php echo $page['id']; ?>">
-                                    <button type="submit"
-                                        class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2.5 rounded-xl shadow-lg shadow-indigo-600/20 transition-all transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-h-[42px]"
-                                        id="create-btn" disabled>
-                                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M12 4v16m8-8H4"></path>
-                                        </svg>
-                                        <span class="whitespace-nowrap"><?php echo __('create_campaign'); ?></span>
-                                        <span id="selected-count"
-                                            class="bg-black/30 text-white text-[10px] px-2 py-0.5 rounded-full font-mono min-w-[20px] text-center">0</span>
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Table Content -->
-                    <div class="overflow-x-auto overflow-y-auto max-h-[600px] custom-scrollbar bg-[#0f172a]/50">
-                        <table class="w-full text-start border-collapse min-w-[800px]" id="leads-table">
-                            <thead
-                                class="bg-[#1e293b] text-gray-400 text-[10px] uppercase font-bold sticky top-0 z-10 shadow-lg shadow-black/20 tracking-wider">
-                                <tr>
-                                    <th class="px-6 py-4 w-16 bg-[#1e293b] text-center">
-                                        <div class="flex items-center justify-center relative group">
-                                            <input type="checkbox" id="select-all"
-                                                class="w-4 h-4 rounded border-gray-600 text-indigo-500 focus:ring-indigo-500 bg-gray-800 transition-all cursor-pointer">
-                                        </div>
-                                    </th>
-                                    <th class="px-6 py-4 bg-[#1e293b] text-start"><?php echo __('user_identity'); ?></th>
-                                    <th class="px-6 py-4 bg-[#1e293b] text-start"><?php echo __('psid_label'); ?></th>
-                                    <th class="px-6 py-4 bg-[#1e293b] text-start"><?php echo __('interaction_date'); ?></th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-800/50" id="leads-tbody">
-                                <?php
-                                // Pagination Logic
-                                $leads_per_page = 50;
-                                $page_num = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
-                                $offset = ($page_num - 1) * $leads_per_page;
-
-                                // Get Total Count
-                                $stmt = $pdo->prepare("SELECT COUNT(*) FROM fb_leads WHERE page_id = ?");
-                                $stmt->execute([$page['id']]);
-                                $total_leads = $stmt->fetchColumn();
-                                $total_pages = ceil($total_leads / $leads_per_page);
-
-                                // Get Paginated Results
-                                $stmt = $pdo->prepare("SELECT * FROM fb_leads WHERE page_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?");
-                                // Bind parameters explicitly for LIMIT/OFFSET (PDO needs int)
-                                $stmt->bindValue(1, $page['id'], PDO::PARAM_INT);
-                                $stmt->bindValue(2, $leads_per_page, PDO::PARAM_INT);
-                                $stmt->bindValue(3, $offset, PDO::PARAM_INT);
-                                $stmt->execute();
-                                $leads = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-                                if (count($leads) > 0):
-                                    foreach ($leads as $lead):
-                                        ?>
-                                        <tr class="hover:bg-indigo-600/5 transition-all duration-200 group cursor-pointer"
-                                            onclick="toggleRow(this)">
-                                            <td class="px-6 py-4 text-center">
-                                                <div class="flex items-center justify-center">
-                                                    <input type="checkbox" name="leads[]" value="<?php echo $lead['id']; ?>"
-                                                        class="lead-checkbox w-4 h-4 rounded border-gray-600 text-indigo-500 focus:ring-indigo-500 bg-gray-800 transition-all cursor-pointer"
-                                                        onclick="event.stopPropagation()">
-                                                </div>
-                                            </td>
-                                            <td class="px-6 py-4 text-start">
-                                                <div class="flex items-center gap-4">
-                                                    <div
-                                                        class="w-10 h-10 rounded-full bg-[#1877F2] flex items-center justify-center text-white shadow-lg shadow-blue-500/30 group-hover:scale-110 transition-transform ring-2 ring-white/10 shrink-0">
-                                                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                                                            <path
-                                                                d="M14 13.5h2.5l1-4H14v-2c0-1.03 0-2 2-2h1.5V2.14c-.326-.043-1.557-.14-2.857-.14C11.928 2 10 3.657 10 6.7v2.8H7v4h3V22h4v-8.5z" />
-                                                        </svg>
-                                                    </div>
-                                                    <div>
-                                                        <div
-                                                            class="font-bold text-white group-hover:text-indigo-400 transition-colors text-sm">
-                                                            <?php echo htmlspecialchars($lead['fb_user_name']); ?>
-                                                        </div>
-                                                        <div class="text-[10px] text-gray-500"><?php echo __('fb_user_role'); ?>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td class="px-6 py-4 text-start">
-                                                <div class="flex items-center gap-2">
-                                                    <span
-                                                        class="font-mono text-[11px] text-gray-400 bg-black/30 px-2 py-1 rounded border border-white/5 select-all"><?php echo $lead['fb_user_id']; ?></span>
-                                                </div>
-                                            </td>
-                                            <td class="px-6 py-4 text-start">
-                                                <span class="text-xs text-gray-400 flex items-center gap-1.5">
-                                                    <div class="w-1.5 h-1.5 rounded-full bg-green-500"></div>
-                                                    <?php echo date('M d, H:i', strtotime($lead['created_at'])); ?>
-                                                </span>
-                                            </td>
-                                        </tr>
-                                        </tr>
-                                    <?php endforeach; else: ?>
-                                    <tr id="no-leads-row">
-                                        <td colspan="4">
-                                            <div class="flex flex-col items-center justify-center py-24 text-gray-500">
-                                                <!-- Empty state icon -->
-                                                <p class="text-lg font-medium text-gray-400"><?php echo __('no_leads_found'); ?>
-                                                </p>
+                            if (count($leads) > 0):
+                                foreach ($leads as $lead):
+                                    ?>
+                                    <tr class="hover:bg-indigo-600/5 transition-all duration-200 group cursor-pointer"
+                                        onclick="toggleRow(this)">
+                                        <td class="px-6 py-4 text-center">
+                                            <div class="flex items-center justify-center">
+                                                <input type="checkbox" name="leads[]" value="<?php echo $lead['id']; ?>"
+                                                    class="lead-checkbox w-4 h-4 rounded border-gray-600 text-indigo-500 focus:ring-indigo-500 bg-gray-800 transition-all cursor-pointer"
+                                                    onclick="event.stopPropagation()">
                                             </div>
                                         </td>
-                                    </tr>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
-                    </div> <!-- End of scrollable table container -->
-
-                    <!-- PAGINATION CONTROLS (FIXED AT BOTTOM) -->
-                    <?php if ($total_pages > 1): ?>
-                        <div
-                            class="p-4 border-t border-white/5 bg-[#0f172a]/80 backdrop-blur flex items-center justify-between rounded-b-2xl">
-                            <div class="text-xs text-gray-400">
-                                <?php echo __('showing_page'); ?> <span
-                                    class="text-white font-bold"><?php echo $page_num; ?></span> <?php echo __('of'); ?> <span
-                                    class="text-white font-bold"><?php echo $total_pages; ?></span>
-                            </div>
-                            <div class="flex gap-2">
-                                <?php if ($page_num > 1): ?>
-                                    <a href="?page_id=<?php echo $page['id']; ?>&page=<?php echo $page_num - 1; ?>"
-                                        class="px-3 py-1.5 rounded-lg bg-black/20 border border-white/10 text-xs text-white hover:bg-indigo-600 hover:border-indigo-500 transition-all font-bold flex items-center gap-1">
-                                        <span>&larr;</span> <?php echo __('prev'); ?>
-                                    </a>
-                                <?php endif; ?>
-
-                                <?php if ($page_num < $total_pages): ?>
-                                    <a href="?page_id=<?php echo $page['id']; ?>&page=<?php echo $page_num + 1; ?>"
-                                        class="px-3 py-1.5 rounded-lg bg-black/20 border border-white/10 text-xs text-white hover:bg-indigo-600 hover:border-indigo-500 transition-all font-bold flex items-center gap-1">
-                                        <?php echo __('next'); ?> <span>&rarr;</span>
-                                    </a>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                    <?php endif; ?>
-                <?php endif; // End check for showSelector ?>
-
-                <?php if (!$showSelector && $page): ?>
-                    <!-- CAMPAIGN HISTORY CARD (NEW) -->
-                    <div class="mt-8">
-                        <div class="flex items-center justify-between mb-6">
-                            <h2 class="text-xl font-bold text-white flex items-center gap-2">
-                                <svg class="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                <?php echo ($lang == 'ar' ? 'سجل حملات هذه الصفحة' : 'Campaign History for this Page'); ?>
-                            </h2>
-                        </div>
-
-                        <?php
-                        $stmt = $pdo->prepare("SELECT * FROM campaigns WHERE page_id = ? AND user_id = ? ORDER BY created_at DESC LIMIT 10");
-                        $stmt->execute([$page['id'], $user_id]);
-                        $page_campaigns = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-                        if (count($page_campaigns) > 0):
-                            ?>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <?php foreach ($page_campaigns as $camp): ?>
-                                    <div class="glass-card p-5 rounded-2xl border border-white/5 hover:border-indigo-500/30 transition-all group relative overflow-hidden"
-                                        id="camp-card-<?php echo $camp['id']; ?>">
-                                        <!-- Status Badge -->
-                                        <div class="absolute top-4 right-4">
-                                            <?php
-                                            $status_colors = [
-                                                'running' => 'bg-green-500/10 text-green-400 border-green-500/20',
-                                                'completed' => 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-                                                'paused' => 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
-                                                'draft' => 'bg-gray-500/10 text-gray-400 border-gray-500/20'
-                                            ];
-                                            $s_class = $status_colors[$camp['status']] ?? $status_colors['draft'];
-                                            ?>
-                                            <span
-                                                class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border <?php echo $s_class; ?>">
-                                                <?php echo __($camp['status'] ?: 'draft'); ?>
-                                            </span>
-                                        </div>
-
-                                        <div class="flex items-start gap-4">
-                                            <div
-                                                class="w-12 h-12 rounded-xl bg-indigo-600/10 flex items-center justify-center text-indigo-500 shrink-0">
-                                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
-                                                    </path>
-                                                </svg>
+                                        <td class="px-6 py-4 text-start">
+                                            <div class="flex items-center gap-4">
+                                                <div
+                                                    class="w-10 h-10 rounded-full bg-[#1877F2] flex items-center justify-center text-white shadow-lg shadow-blue-500/30 group-hover:scale-110 transition-transform ring-2 ring-white/10 shrink-0">
+                                                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                                        <path
+                                                            d="M14 13.5h2.5l1-4H14v-2c0-1.03 0-2 2-2h1.5V2.14c-.326-.043-1.557-.14-2.857-.14C11.928 2 10 3.657 10 6.7v2.8H7v4h3V22h4v-8.5z" />
+                                                    </svg>
+                                                </div>
+                                                <div>
+                                                    <div
+                                                        class="font-bold text-white group-hover:text-indigo-400 transition-colors text-sm">
+                                                        <?php echo htmlspecialchars($lead['fb_user_name']); ?>
+                                                    </div>
+                                                    <div class="text-[10px] text-gray-500">
+                                                        <?php echo __('fb_user_role'); ?>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div class="min-w-0 flex-1">
-                                                <h3 class="text-white font-bold truncate pr-16"
-                                                    title="<?php echo htmlspecialchars($camp['name']); ?>">
-                                                    <?php echo htmlspecialchars($camp['name']); ?>
-                                                </h3>
-                                                <p class="text-[10px] text-gray-500 mt-0.5">
-                                                    <?php echo date('M d, Y H:i', strtotime($camp['created_at'])); ?>
-                                                </p>
+                                        </td>
+                                        <td class="px-6 py-4 text-start">
+                                            <div class="flex items-center gap-2">
+                                                <span
+                                                    class="font-mono text-[11px] text-gray-400 bg-black/30 px-2 py-1 rounded border border-white/5 select-all">
+                                                    <?php echo $lead['fb_user_id']; ?>
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-start">
+                                            <span class="text-xs text-gray-400 flex items-center gap-1.5">
+                                                <div class="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                                                <?php echo date('M d, H:i', strtotime($lead['created_at'])); ?>
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 text-start">
+                                            <div class="text-[11px] text-gray-300 line-clamp-1 max-w-[200px]"
+                                                title="<?php echo htmlspecialchars($lead['last_comment'] ?? ''); ?>">
+                                                <?php echo htmlspecialchars($lead['last_comment'] ?? '---'); ?>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-start">
+                                            <span
+                                                class="px-2 py-0.5 rounded text-[10px] font-bold <?php echo $lead['lead_source'] == 'messenger' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/10' : 'bg-green-500/10 text-green-400 border border-green-500/10'; ?>">
+                                                <?php echo $lead['lead_source'] == 'messenger' ? __('messenger_source') : __('comment_source'); ?>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    </tr>
+                                <?php endforeach; else: ?>
+                                <tr id="no-leads-row">
+                                    <td colspan="5">
+                                        <div class="flex flex-col items-center justify-center py-24 text-gray-500">
+                                            <!-- Empty state icon -->
+                                            <p class="text-lg font-medium text-gray-400">
+                                                <?php echo __('no_leads_found'); ?>
+                                            </p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div> <!-- End of scrollable table container -->
 
-                                                <div class="mt-3 bg-black/20 rounded-lg p-3 border border-white/5">
-                                                    <div class="text-xs text-gray-400 line-clamp-2 italic"
-                                                        id="camp-msg-<?php echo $camp['id']; ?>">
-                                                        "<?php echo htmlspecialchars($camp['message_text']); ?>"
+                <!-- PAGINATION CONTROLS (FIXED AT BOTTOM) -->
+                <?php if ($total_pages > 1): ?>
+                    <div
+                        class="p-4 border-t border-white/5 bg-[#0f172a]/80 backdrop-blur flex items-center justify-between rounded-b-2xl">
+                        <div class="text-xs text-gray-400">
+                            <?php echo __('showing_page'); ?> <span class="text-white font-bold">
+                                <?php echo $page_num; ?>
+                            </span>
+                            <?php echo __('of'); ?> <span class="text-white font-bold">
+                                <?php echo $total_pages; ?>
+                            </span>
+                        </div>
+                        <div class="flex gap-2">
+                            <?php if ($page_num > 1): ?>
+                                <a href="?page_id=<?php echo $page['id']; ?>&page=<?php echo $page_num - 1; ?>"
+                                    class="px-3 py-1.5 rounded-lg bg-black/20 border border-white/10 text-xs text-white hover:bg-indigo-600 hover:border-indigo-500 transition-all font-bold flex items-center gap-1">
+                                    <span>&larr;</span>
+                                    <?php echo __('prev'); ?>
+                                </a>
+                            <?php endif; ?>
+
+                            <?php if ($page_num < $total_pages): ?>
+                                <a href="?page_id=<?php echo $page['id']; ?>&page=<?php echo $page_num + 1; ?>"
+                                    class="px-3 py-1.5 rounded-lg bg-black/20 border border-white/10 text-xs text-white hover:bg-indigo-600 hover:border-indigo-500 transition-all font-bold flex items-center gap-1">
+                                    <?php echo __('next'); ?> <span>&rarr;</span>
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+            <?php endif; // End check for showSelector ?>
+
+            <?php if (!$showSelector && $page): ?>
+                <!-- CAMPAIGN HISTORY CARD (NEW) -->
+                <div class="mt-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                            <svg class="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <?php echo ($lang == 'ar' ? 'سجل حملات هذه الصفحة' : 'Campaign History for this Page'); ?>
+                        </h2>
+                    </div>
+
+                    <?php
+                    $stmt = $pdo->prepare("SELECT * FROM campaigns WHERE page_id = ? AND user_id = ? ORDER BY created_at DESC LIMIT 10");
+                    $stmt->execute([$page['id'], $user_id]);
+                    $page_campaigns = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                    if (count($page_campaigns) > 0):
+                        ?>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <?php foreach ($page_campaigns as $camp): ?>
+                                <div class="glass-card p-5 rounded-2xl border border-white/5 hover:border-indigo-500/30 transition-all group relative overflow-hidden"
+                                    id="camp-card-<?php echo $camp['id']; ?>">
+                                    <!-- Status Badge -->
+                                    <div class="absolute top-4 right-4">
+                                        <?php
+                                        $status_colors = [
+                                            'running' => 'bg-green-500/10 text-green-400 border-green-500/20',
+                                            'completed' => 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+                                            'paused' => 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
+                                            'draft' => 'bg-gray-500/10 text-gray-400 border-gray-500/20'
+                                        ];
+                                        $s_class = $status_colors[$camp['status']] ?? $status_colors['draft'];
+                                        ?>
+                                        <span
+                                            class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border <?php echo $s_class; ?>">
+                                            <?php echo __($camp['status'] ?: 'draft'); ?>
+                                        </span>
+                                    </div>
+
+                                    <div class="flex items-start gap-4">
+                                        <div
+                                            class="w-12 h-12 rounded-xl bg-indigo-600/10 flex items-center justify-center text-indigo-500 shrink-0">
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
+                                                </path>
+                                            </svg>
+                                        </div>
+                                        <div class="min-w-0 flex-1">
+                                            <h3 class="text-white font-bold truncate pr-16"
+                                                title="<?php echo htmlspecialchars($camp['name']); ?>">
+                                                <?php echo htmlspecialchars($camp['name']); ?>
+                                            </h3>
+                                            <p class="text-[10px] text-gray-500 mt-0.5">
+                                                <?php echo date('M d, Y H:i', strtotime($camp['created_at'])); ?>
+                                            </p>
+
+                                            <div class="mt-3 bg-black/20 rounded-lg p-3 border border-white/5">
+                                                <div class="text-xs text-gray-400 line-clamp-2 italic"
+                                                    id="camp-msg-<?php echo $camp['id']; ?>">
+                                                    "
+                                                    <?php echo htmlspecialchars($camp['message_text']); ?>"
+                                                </div>
+                                            </div>
+
+                                            <!-- Stats Mini (Flexible Grid) -->
+                                            <div class="grid grid-cols-3 gap-2 mt-4">
+                                                <div
+                                                    class="bg-black/20 p-2 rounded-xl border border-white/5 text-center flex flex-col justify-center min-w-0">
+                                                    <div
+                                                        class="text-[8px] md:text-[9px] text-gray-500 uppercase font-bold mb-1 truncate">
+                                                        <?php echo __('sent'); ?>
+                                                    </div>
+                                                    <div class="text-xs md:text-sm font-bold text-green-400 truncate">
+                                                        <?php echo $camp['sent_count']; ?>
                                                     </div>
                                                 </div>
-
-                                                <!-- Stats Mini (Flexible Grid) -->
-                                                <div class="grid grid-cols-3 gap-2 mt-4">
+                                                <div
+                                                    class="bg-black/20 p-2 rounded-xl border border-white/5 text-center flex flex-col justify-center min-w-0">
                                                     <div
-                                                        class="bg-black/20 p-2 rounded-xl border border-white/5 text-center flex flex-col justify-center min-w-0">
-                                                        <div
-                                                            class="text-[8px] md:text-[9px] text-gray-500 uppercase font-bold mb-1 truncate">
-                                                            <?php echo __('sent'); ?>
-                                                        </div>
-                                                        <div class="text-xs md:text-sm font-bold text-green-400 truncate">
-                                                            <?php echo $camp['sent_count']; ?>
-                                                        </div>
+                                                        class="text-[8px] md:text-[9px] text-gray-500 uppercase font-bold mb-1 truncate">
+                                                        <?php echo __('failed'); ?>
                                                     </div>
-                                                    <div
-                                                        class="bg-black/20 p-2 rounded-xl border border-white/5 text-center flex flex-col justify-center min-w-0">
-                                                        <div
-                                                            class="text-[8px] md:text-[9px] text-gray-500 uppercase font-bold mb-1 truncate">
-                                                            <?php echo __('failed'); ?>
-                                                        </div>
-                                                        <div class="text-xs md:text-sm font-bold text-red-400 truncate">
-                                                            <?php echo $camp['failed_count']; ?>
-                                                        </div>
-                                                    </div>
-                                                    <div
-                                                        class="bg-black/20 p-2 rounded-xl border border-white/5 text-center flex flex-col justify-center min-w-0">
-                                                        <div
-                                                            class="text-[8px] md:text-[9px] text-gray-500 uppercase font-bold mb-1 truncate">
-                                                            <?php echo __('total'); ?>
-                                                        </div>
-                                                        <div class="text-xs md:text-sm font-bold text-indigo-400 truncate">
-                                                            <?php echo $camp['total_leads']; ?>
-                                                        </div>
+                                                    <div class="text-xs md:text-sm font-bold text-red-400 truncate">
+                                                        <?php echo $camp['failed_count']; ?>
                                                     </div>
                                                 </div>
+                                                <div
+                                                    class="bg-black/20 p-2 rounded-xl border border-white/5 text-center flex flex-col justify-center min-w-0">
+                                                    <div
+                                                        class="text-[8px] md:text-[9px] text-gray-500 uppercase font-bold mb-1 truncate">
+                                                        <?php echo __('total'); ?>
+                                                    </div>
+                                                    <div class="text-xs md:text-sm font-bold text-indigo-400 truncate">
+                                                        <?php echo $camp['total_leads']; ?>
+                                                    </div>
+                                                </div>
+                                            </div>
 
-                                                <!-- Actions (Responsive Wrap) -->
-                                                <div class="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-white/5">
-                                                    <a href="campaign_runner.php?id=<?php echo $camp['id']; ?>"
-                                                        class="flex-1 min-w-[120px] flex justify-center items-center py-2 bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white rounded-xl text-[10px] font-bold transition-all border border-indigo-500/20 whitespace-nowrap">
-                                                        <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor"
-                                                            viewBox="0 0 24 24">
+                                            <!-- Actions (Responsive Wrap) -->
+                                            <div class="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-white/5">
+                                                <a href="campaign_runner.php?id=<?php echo $camp['id']; ?>"
+                                                    class="flex-1 min-w-[120px] flex justify-center items-center py-2 bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white rounded-xl text-[10px] font-bold transition-all border border-indigo-500/20 whitespace-nowrap">
+                                                    <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                            d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z">
+                                                        </path>
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                            d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                    </svg>
+                                                    <?php echo ($lang == 'ar' ? 'فتح المحرر' : 'Open Runner'); ?>
+                                                </a>
+                                                <div class="flex items-center gap-1.5 flex-wrap sm:flex-nowrap justify-end ml-auto">
+                                                    <a href="create_campaign.php?id=<?php echo $camp['id']; ?>"
+                                                        class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl transition-all border border-white/5 shrink-0"
+                                                        title="<?php echo __('edit'); ?>">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                                d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z">
+                                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
                                                             </path>
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                                d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                                         </svg>
-                                                        <?php echo ($lang == 'ar' ? 'فتح المحرر' : 'Open Runner'); ?>
                                                     </a>
-                                                    <div
-                                                        class="flex items-center gap-1.5 flex-wrap sm:flex-nowrap justify-end ml-auto">
-                                                        <a href="create_campaign.php?id=<?php echo $camp['id']; ?>"
-                                                            class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl transition-all border border-white/5 shrink-0"
-                                                            title="<?php echo __('edit'); ?>">
-                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                                viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                                    stroke-width="2"
-                                                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
-                                                                </path>
-                                                            </svg>
-                                                        </a>
-                                                        <a href="campaign_reports.php?id=<?php echo $camp['id']; ?>"
-                                                            class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl transition-all border border-white/5 shrink-0"
-                                                            title="<?php echo __('reports'); ?>">
-                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                                viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                                    stroke-width="2"
-                                                                    d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                                                                </path>
-                                                            </svg>
-                                                        </a>
-                                                        <button onclick="window.deleteCampaign(<?php echo $camp['id']; ?>)"
-                                                            class="w-9 h-9 flex items-center justify-center text-red-500/50 hover:text-red-400 bg-red-500/5 hover:bg-red-500/10 rounded-xl transition-all border border-red-500/10 shrink-0"
-                                                            title="<?php echo __('delete'); ?>">
-                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                                viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                                    stroke-width="2"
-                                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                                                                </path>
-                                                            </svg>
-                                                        </button>
-                                                    </div>
+                                                    <a href="campaign_reports.php?id=<?php echo $camp['id']; ?>"
+                                                        class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl transition-all border border-white/5 shrink-0"
+                                                        title="<?php echo __('reports'); ?>">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                                            </path>
+                                                        </svg>
+                                                    </a>
+                                                    <button onclick="window.deleteCampaign(<?php echo $camp['id']; ?>)"
+                                                        class="w-9 h-9 flex items-center justify-center text-red-500/50 hover:text-red-400 bg-red-500/5 hover:bg-red-500/10 rounded-xl transition-all border border-red-500/10 shrink-0"
+                                                        title="<?php echo __('delete'); ?>">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                                            </path>
+                                                        </svg>
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                <?php endforeach; ?>
-                            </div>
-                        <?php else: ?>
-                            <div class="glass-card p-10 rounded-2xl border border-white/5 border-dashed text-center">
-                                <p class="text-sm text-gray-500 italic">
-                                    <?php echo ($lang == 'ar' ? 'لا توجد حملات سابقة لهذه الصفحة' : 'No previous campaigns for this page'); ?>
-                                </p>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                <?php endif; ?>
-            </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php else: ?>
+                        <div class="glass-card p-10 rounded-2xl border border-white/5 border-dashed text-center">
+                            <p class="text-sm text-gray-500 italic">
+                                <?php echo ($lang == 'ar' ? 'لا توجد حملات سابقة لهذه الصفحة' : 'No previous campaigns for this page'); ?>
+                            </p>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
         </div>
+    </div>
 
-        <!-- Token Update Modal -->
-        <div id="token-modal"
-            class="fixed inset-0 z-[100] hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <!-- Token Update Modal -->
+    <div id="token-modal"
+        class="fixed inset-0 z-[100] hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div
+            class="bg-gray-900 border border-white/10 w-full max-w-md rounded-3xl p-8 shadow-2xl animate-in fade-in zoom-in duration-300">
             <div
-                class="bg-gray-900 border border-white/10 w-full max-w-md rounded-3xl p-8 shadow-2xl animate-in fade-in zoom-in duration-300">
-                <div
-                    class="w-20 h-20 rounded-full bg-red-500/20 flex items-center justify-center text-red-500 mx-auto mb-6">
-                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
-                        </path>
+                class="w-20 h-20 rounded-full bg-red-500/20 flex items-center justify-center text-red-500 mx-auto mb-6">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                    </path>
+                </svg>
+            </div>
+            <h3 class="text-2xl font-bold text-white text-center mb-3 text-red-500">
+                <?php echo __('token_expired_title'); ?>
+            </h3>
+            <p class="text-gray-400 text-center text-sm mb-8 leading-relaxed">
+                <?php echo __('token_expired_msg'); ?>
+            </p>
+
+            <div class="space-y-4">
+                <div class="relative">
+                    <input type="text" id="new-token-input" placeholder="<?php echo __('new_token_placeholder'); ?>"
+                        class="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-white text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all font-mono">
+                </div>
+
+                <button onclick="updateToken()" id="btn-update-token"
+                    class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl shadow-lg shadow-indigo-500/20 transition-all flex items-center justify-center gap-2 group">
+                    <span>
+                        <?php echo __('update_token_btn'); ?>
+                    </span>
+                    <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="currentColor"
+                        viewBox="0 0 20 20">
+                        <path
+                            d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 111.414-1.414z" />
                     </svg>
-                </div>
-                <h3 class="text-2xl font-bold text-white text-center mb-3 text-red-500">
-                    <?php echo __('token_expired_title'); ?>
-                </h3>
-                <p class="text-gray-400 text-center text-sm mb-8 leading-relaxed">
-                    <?php echo __('token_expired_msg'); ?>
-                </p>
-
-                <div class="space-y-4">
-                    <div class="relative">
-                        <input type="text" id="new-token-input" placeholder="<?php echo __('new_token_placeholder'); ?>"
-                            class="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-white text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all font-mono">
-                    </div>
-
-                    <button onclick="updateToken()" id="btn-update-token"
-                        class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl shadow-lg shadow-indigo-500/20 transition-all flex items-center justify-center gap-2 group">
-                        <span><?php echo __('update_token_btn'); ?></span>
-                        <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="currentColor"
-                            viewBox="0 0 20 20">
-                            <path
-                                d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 111.414-1.414z" />
-                        </svg>
-                    </button>
-                    <button onclick="document.getElementById('token-modal').classList.add('hidden')"
-                        class="w-full text-gray-500 text-sm font-medium hover:text-white transition-colors">
-                        <?php echo __('cancel'); ?>
-                    </button>
-                </div>
+                </button>
+                <button onclick="document.getElementById('token-modal').classList.add('hidden')"
+                    class="w-full text-gray-500 text-sm font-medium hover:text-white transition-colors">
+                    <?php echo __('cancel'); ?>
+                </button>
             </div>
         </div>
+    </div>
 
-        <?php if (!$showSelector): ?>
-            <script>
-                // --- STATE MANAGEMENT ---
-                let state = {
-                    isRunning: false,
-                    isPaused: false,
-                    scanMode: 'limit', // 'limit' or 'all'
-                    limit: 50,         // Batch size
-                    totalGoal: 100,    // Only for limit mode
-                    delay: 1,
-                    processed: 0,
-                    nextCursor: null
+    <?php if (!$showSelector): ?>
+        <script>
+            //        --- STATE MANAGEMENT ---
+            let state = {
+                isRunning: false,
+                isPaused: false,
+                scanMode: 'limit', // 'limit' or 'all'
+                limit: 50,         // Batch size
+                totalGoal: 100,    // Only for limit mode
+                delay: 1,
+                processed: 0,
+                nextCursor: null
+            };
+
+            // --- STATE PERSISTENCE ---
+            const SETTINGS_KEY = `extraction_settings_${<?php echo $page['id'] ?? 0; ?>}`;
+
+            function saveSettings() {
+                // Save FULL state to allow auto-resume after reload/crash
+                const settings = {
+                    limit: ui.inputLimit.value,
+                    goal: ui.inputGoal.value,
+                    delay: ui.inputDelay.value,
+                    mode: state.scanMode,
+                    // Persist State
+                    isRunning: state.isRunning,
+                    isPaused: state.isPaused,
+                    processed: state.processed,
+                    nextCursor: state.nextCursor,
+                    totalGoal: state.totalGoal
                 };
+                localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+            }
 
-                // --- STATE PERSISTENCE ---
-                const SETTINGS_KEY = `extraction_settings_${<?php echo $page['id'] ?? 0; ?>}`;
+            function loadSettings() {
+                const saved = localStorage.getItem(SETTINGS_KEY);
+                if (saved) {
+                    try {
+                        const settings = JSON.parse(saved);
+                        if (ui.inputLimit) ui.inputLimit.value = settings.limit || 50;
+                        if (ui.inputGoal) ui.inputGoal.value = settings.goal || 100;
+                        if (ui.inputDelay) ui.inputDelay.value = settings.delay || 1;
+                        setMode(settings.mode || 'limit');
 
-                function saveSettings() {
-                    // Save FULL state to allow auto-resume after reload/crash
-                    const settings = {
-                        limit: ui.inputLimit.value,
-                        goal: ui.inputGoal.value,
-                        delay: ui.inputDelay.value,
-                        mode: state.scanMode,
-                        // Persist State
-                        isRunning: state.isRunning,
-                        isPaused: state.isPaused,
-                        processed: state.processed,
-                        nextCursor: state.nextCursor,
-                        totalGoal: state.totalGoal
-                    };
-                    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+                        // RESTORE STATE & AUTO-RESUME
+                        state.processed = settings.processed || 0;
+                        state.totalGoal = settings.totalGoal || 100;
+                        state.nextCursor = settings.nextCursor;
+                        state.limit = parseInt(settings.limit) || 50;
+                        state.delay = parseInt(settings.delay) || 1;
+
+                        const wasRunning = settings.isRunning === true;
+                        const wasPaused = settings.isPaused === true;
+                        const incomplete = (state.processed > 0 && state.processed < state.totalGoal && state.nextCursor);
+
+                        if (wasRunning && incomplete && !wasPaused) {
+                            updateUI('running');
+                            ui.statusText.forEach(el => el.innerText = "Resuming from crash...");
+                            setTimeout(() => {
+                                state.isRunning = true;
+                                state.isPaused = false;
+                                scanLoop();
+                            }, 2000);
+                        }
+                        else if (wasPaused && incomplete) {
+                            state.isPaused = true;
+                            state.isRunning = true;
+                            updateUI('paused');
+                            ui.statusText.forEach(el => el.innerText = `<?php echo __('status_paused'); ?> (Resumed)`);
+                        }
+
+                    } catch (e) { console.error("Error loading settings", e); }
+                }
+            }
+
+            // --- UI HELPERS ---
+            const ui = {
+                btnLimit: document.getElementById('btn-mode-limit'),
+                btnAll: document.getElementById('btn-mode-all'),
+                inputLimit: document.getElementById('scan_limit'),
+                inputGoal: document.getElementById('scan_goal'),
+                goalWrapper: document.getElementById('goal-wrapper'),
+                inputDelay: document.getElementById('scan_delay'),
+                btnPlay: document.getElementById('btn-play'),
+                btnPause: document.getElementById('btn-pause'),
+                btnStop: document.getElementById('btn-stop'),
+                textPlay: document.getElementById('text-play'),
+
+                statusText: document.querySelectorAll('.status-text'),
+                statusDot: document.querySelectorAll('.status-dot'),
+
+                // Progress for Messages
+                progressCountMsg: document.getElementById('progress-count-msg'),
+                progressBarMsg: document.getElementById('progress-bar-msg'),
+
+                // Progress for Comments
+                progressCountComm: document.getElementById('progress-count-comm'),
+                progressBarComm: document.getElementById('progress-bar-comm'),
+                commActivityMonitor: document.getElementById('comments-activity-monitor'),
+
+                tbody: document.getElementById('leads-tbody'),
+                noLeadsRow: document.getElementById('no-leads-row'),
+                postsGrid: document.getElementById('posts-grid'),
+                btnExtractComments: document.getElementById('btn-extract-comments')
+            };
+
+            function switchTab(tab) {
+                if (state.isRunning) {
+                    alert("Please stop current operation before switching.");
+                    return;
                 }
 
-                function loadSettings() {
-                    const saved = localStorage.getItem(SETTINGS_KEY);
-                    if (saved) {
-                        try {
-                            const settings = JSON.parse(saved);
-                            ui.inputLimit.value = settings.limit || 50;
-                            ui.inputGoal.value = settings.goal || 100;
-                            ui.inputDelay.value = settings.delay || 1;
-                            setMode(settings.mode || 'limit');
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                document.querySelectorAll('.tab-btn').forEach(b => {
+                    b.classList.remove('bg-indigo-600', 'text-white', 'shadow-lg');
+                    b.classList.add('text-gray-400');
+                });
 
-                            // RESTORE STATE & AUTO-RESUME
-                            state.processed = settings.processed || 0;
-                            state.totalGoal = settings.totalGoal || 100;
-                            state.nextCursor = settings.nextCursor;
-                            state.limit = parseInt(settings.limit) || 50;
-                            state.delay = parseInt(settings.delay) || 1;
+                document.getElementById(tab + '-controls').classList.add('active');
+                const activeBtn = document.getElementById('tab-' + tab + '-btn');
+                activeBtn.classList.add('bg-indigo-600', 'text-white', 'shadow-lg');
+                activeBtn.classList.remove('text-gray-400');
+            }
 
-                            // FORCE RESUME LOGIC (SMART)
-                            // Only auto-resume if it was ACTUALLY running (Crash Recovery)
-                            // If it was PAUSED by user, do NOT auto-start. Just restore UI.
+            async function fetchPosts() {
+                const btn = document.getElementById('btn-fetch-posts');
+                btn.disabled = true;
+                btn.innerHTML = '<?php echo __('please_wait'); ?>...';
+                ui.postsGrid.innerHTML = '<div class="col-span-full text-center py-10"><span class="animate-pulse">Loading Posts...</span></div>';
 
-                            const wasRunning = settings.isRunning === true;
-                            const wasPaused = settings.isPaused === true;
-                            const incomplete = (state.processed > 0 && state.processed < state.totalGoal && state.nextCursor);
+                try {
+                    const fd = new FormData();
+                    fd.append('action', 'fetch_posts');
+                    fd.append('page_id', <?php echo (int) ($page['id'] ?? 0); ?>);
 
-                            // Restore UI Values
-                            ui.inputLimit.value = state.limit;
-                            ui.inputGoal.value = state.totalGoal;
+                    const res = await fetch('ajax_extract_comments.php', { method: 'POST', body: fd });
+                    const data = await res.json();
 
-                            if (wasRunning && incomplete && !wasPaused) {
-                                // CRASH RECOVERY: Auto-Start
-                                updateUI('running');
-                                ui.statusText.innerText = "Resuming from crash...";
-                                console.log('🔄 Auto-Resuming Scan (Crash Recovery)...', state);
+                    if (data.status === 'ok') {
+                        ui.postsGrid.innerHTML = '';
+                        if (data.data.length === 0) {
+                            ui.postsGrid.innerHTML = '<div class="col-span-full text-center py-10">No posts found.</div>';
+                        } else {
+                            data.data.forEach(post => {
+                                const date = new Date(post.created_time).toLocaleDateString();
+                                const img = post.full_picture || '../assets/img/post_placeholder.png';
+                                const html = `
+                <div class="glass-card bg-white/5 border border-white/5 p-3 rounded-xl hover:border-indigo-500/30 transition-all group relative cursor-pointer" onclick="togglePostSelection(this, '${post.id}')">
+                                            <div class="relative rounded-lg overflow-hidden mb-3 aspect-square bg-black/40">
+                                                <img src="${img}" class="w-full h-full object-cover">
+                                                <div class="absolute inset-0 bg-indigo-600/0 group-hover:bg-indigo-600/10 transition-all pointer-events-none"></div>
+                                                <div class="post-check absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 border border-white/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
+                                                    <svg class="w-4 h-4 text-white hidden" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+                                                </div>
+                                            </div>
+                                            <div class="text-[10px] text-gray-500 mb-1">${date}</div>
+                                            <div class="text-[11px] text-white font-bold line-clamp-2">${post.message || 'No Text Content'}</div>
+                                            <input type="checkbox" name="post_ids[]" value="${post.id}" class="hidden post-checkbox">
+                                        </div>
+            `;
+                                ui.postsGrid.insertAdjacentHTML('beforeend', html);
+                            });
+                        }
+                    } else { alert(data.message); }
+                } catch (e) {
+                    console.error(e);
+                    alert("System Error fetching posts.");
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = '<?php echo __('fetch_posts'); ?>';
+                }
+            }
 
-                                setTimeout(() => {
-                                    state.isRunning = true;
-                                    state.isPaused = false;
-                                    scanLoop();
-                                }, 2000);
-                            }
-                            else if (wasPaused && incomplete) {
-                                // PAUSED STATE: Restore UI but DO NOT Start
-                                state.isPaused = true;
-                                state.isRunning = true; // Logically running but paused
+            function togglePostSelection(card, postId) {
+                const cb = card.querySelector('.post-checkbox');
+                const check = card.querySelector('.post-check');
+                const svg = check.querySelector('svg');
 
-                                updateUI('paused');
-                                ui.statusText.innerText = `<?php echo __('status_paused'); ?> (Resumed)`;
-                                console.log('⏸️ Restored Paused State. Waiting for user...');
-                            }
+                cb.checked = !cb.checked;
+                if (cb.checked) {
+                    card.classList.add('ring-2', 'ring-indigo-500', 'bg-indigo-500/5');
+                    check.classList.remove('opacity-0', 'bg-black/60');
+                    check.classList.add('bg-indigo-600', 'border-indigo-400');
+                    svg.classList.remove('hidden');
+                } else {
+                    card.classList.remove('ring-2', 'ring-indigo-500', 'bg-indigo-500/5');
+                    check.classList.add('opacity-0', 'bg-black/60');
+                    check.classList.remove('bg-indigo-600', 'border-indigo-400');
+                    svg.classList.add('hidden');
+                }
+                updateExtractBtn();
+            }
 
-                        } catch (e) { console.error("Error loading settings", e); }
+            function toggleAllPosts(btn) {
+                document.querySelectorAll('.post-checkbox').forEach(cb => {
+                    const card = cb.closest('.glass-card');
+                    if (cb.checked !== btn.checked) {
+                        togglePostSelection(card, cb.value);
                     }
-                }
+                });
+            }
 
-                // --- UI HELPERS ---
-                const ui = {
-                    btnLimit: document.getElementById('btn-mode-limit'),
-                    btnAll: document.getElementById('btn-mode-all'),
-                    inputLimit: document.getElementById('scan_limit'),
-                    inputGoal: document.getElementById('scan_goal'),
-                    goalWrapper: document.getElementById('goal-wrapper'),
-                    inputDelay: document.getElementById('scan_delay'),
-                    btnPlay: document.getElementById('btn-play'),
-                    btnPause: document.getElementById('btn-pause'),
-                    btnStop: document.getElementById('btn-stop'),
-                    textPlay: document.getElementById('text-play'),
+            function updateExtractBtn() {
+                const count = document.querySelectorAll('.post-checkbox:checked').length;
+                ui.btnExtractComments.disabled = count === 0;
+            }
 
-                    statusText: document.getElementById('status-text'),
-                    statusDot: document.getElementById('status-dot'),
-                    progressCount: document.getElementById('progress-count'),
-                    progressBar: document.getElementById('progress-bar'),
+            async function extractComments() {
+                if (state.isRunning) return;
 
-                    tbody: document.getElementById('leads-tbody'),
-                    noLeadsRow: document.getElementById('no-leads-row')
-                };
+                const selectedPosts = Array.from(document.querySelectorAll('.post-checkbox:checked')).map(cb => cb.value);
+                if (selectedPosts.length === 0) return;
 
-                // Add listeners to save on change
-                if (ui.inputLimit && ui.inputGoal && ui.inputDelay) {
-                    [ui.inputLimit, ui.inputGoal, ui.inputDelay].forEach(input => {
-                        input.addEventListener('change', saveSettings);
-                        input.addEventListener('input', saveSettings);
-                    });
-                }
+                if (!confirm(`هل أنت متأكد من بدء استخراج التعليقات من ${selectedPosts.length} منشور؟`)) return;
 
-                // Initialize settings on load
-                loadSettings();
+                state.isRunning = true;
+                ui.commActivityMonitor.classList.remove('hidden');
+                updateUI('running');
 
-                function setMode(mode) {
-                    if (state.isRunning) return;
+                let totalNew = 0;
+                let totalUpdated = 0;
+                let totalFound = 0;
 
-                    state.scanMode = mode;
-                    if (mode === 'limit') {
-                        ui.btnLimit.classList.replace('text-gray-400', 'text-white');
-                        ui.btnLimit.classList.add('bg-indigo-600', 'shadow-lg');
-                        ui.btnAll.classList.remove('bg-indigo-600', 'shadow-lg', 'text-white');
-                        ui.btnAll.classList.add('text-gray-400');
+                try {
+                    for (let i = 0; i < selectedPosts.length; i++) {
+                        if (!state.isRunning) break;
 
-                        ui.goalWrapper.classList.remove('hidden');
-                    } else {
-                        ui.btnAll.classList.replace('text-gray-400', 'text-white');
-                        ui.btnAll.classList.add('bg-indigo-600', 'shadow-lg');
-                        ui.btnLimit.classList.remove('bg-indigo-600', 'shadow-lg', 'text-white');
-                        ui.btnLimit.classList.add('text-gray-400');
+                        const post_id = selectedPosts[i];
+                        const displayId = post_id.split('_')[1] || post_id;
 
-                        ui.goalWrapper.classList.add('hidden');
-                    }
-                    saveSettings();
-                }
+                        ui.statusText.forEach(el => el.innerText = `<?php echo __('extracting_comments_status'); ?>`.replace('%s', displayId));
 
-                // --- SCAN LOGIC ---
-                async function startScan() {
-                    if (state.isRunning && !state.isPaused) return;
+                        let pct = Math.round((i / selectedPosts.length) * 100);
+                        if (ui.progressBarComm) ui.progressBarComm.style.width = pct + '%';
+                        if (ui.progressCountComm) {
+                            ui.progressCountComm.innerText = `${i + 1} / ${selectedPosts.length}`;
+                            ui.progressCountComm.classList.remove('hidden');
+                        }
 
-                    if (state.isPaused) {
-                        resumeScan();
-                        return;
+                        const fd = new FormData();
+                        fd.append('action', 'extract_comments');
+                        fd.append('page_id', <?php echo (int) ($page['id'] ?? 0); ?>);
+                        fd.append('post_ids[]', post_id);
+
+                        const res = await fetch('ajax_extract_comments.php', { method: 'POST', body: fd });
+                        const data = await res.json();
+
+                        if (data.status === 'ok') {
+                            totalNew += parseInt(data.count || 0);
+                            totalUpdated += parseInt(data.updated || 0);
+                            totalFound += parseInt(data.total_found || 0);
+                        } else {
+                            console.warn("Post extraction failed:", data.message);
+                        }
                     }
 
-                    // INIT
-                    state.isRunning = true;
-                    state.isPaused = false;
-                    state.processed = 0;
-                    state.nextCursor = null;
-                    state.limit = parseInt(ui.inputLimit.value) || 50;
-                    state.totalGoal = parseInt(ui.inputGoal.value) || 100;
-                    state.delay = parseInt(ui.inputDelay.value) || 0;
+                    if (ui.progressBarComm) ui.progressBarComm.style.width = '100%';
 
-                    updateUI('running');
-                    scanLoop();
-                }
+                    let msg = `تم الانتهاء من فحص التعليقات بنجاح!\n\n`;
+                    msg += `- عملاء جدد: ${totalNew}\n`;
+                    msg += `- عملاء تم تحديثهم (كانوا من المسنجر أو منشور آخر): ${totalUpdated}\n`;
+                    msg += `- إجمالي التعليقات الصالحة التي تم فحصها: ${totalFound}\n\n`;
 
-                function pauseScan() {
-                    state.isPaused = true;
-                    updateUI('paused');
-                    saveSettings(); // Save manual pause state
-                }
+                    if (totalNew === 0 && totalUpdated === 0 && totalFound > 0) {
+                        msg += `ملاحظة: جميع هؤلاء العملاء موجودون بالفعل في قاعدة بياناتك.`;
+                    } else if (totalFound === 0) {
+                        msg += `تنبيه: لم نجد أي تعليقات صالحة للاستخراج في هذه المنشورات.`;
+                    }
 
-                function resumeScan() {
-                    state.isPaused = false;
-                    updateUI('running');
-                    scanLoop();
-                }
-
-                function stopScan() {
+                    alert(msg);
+                    window.location.reload();
+                } catch (e) {
+                    console.error(e);
+                    alert("System Error during extraction.");
+                } finally {
                     state.isRunning = false;
-                    state.isPaused = false;
-                    updateUI('stopped');
+                    updateUI('finished');
+                }
+            }
+            // Add listeners to save on change
+            if (ui.inputLimit && ui.inputGoal && ui.inputDelay) {
+                [ui.inputLimit, ui.inputGoal, ui.inputDelay].forEach(input => {
+                    input.addEventListener('change', saveSettings);
+                    input.addEventListener('input', saveSettings);
+                });
+            }
 
-                    // MURDER THE ZOMBIE: Explicit stop clears memory
-                    clearSettings();
+            // Initialize settings on load
+            loadSettings();
 
-                    // Optional: Reload to clear UI if needed, but per request we keep state
-                    // window.location.reload(); 
+            function setMode(mode) {
+                if (state.isRunning) return;
+
+                state.scanMode = mode;
+                if (mode === 'limit') {
+                    ui.btnLimit.classList.replace('text-gray-400', 'text-white');
+                    ui.btnLimit.classList.add('bg-indigo-600', 'shadow-lg');
+                    ui.btnAll.classList.remove('bg-indigo-600', 'shadow-lg', 'text-white');
+                    ui.btnAll.classList.add('text-gray-400');
+
+                    ui.goalWrapper.classList.remove('hidden');
+                } else {
+                    ui.btnAll.classList.replace('text-gray-400', 'text-white');
+                    ui.btnAll.classList.add('bg-indigo-600', 'shadow-lg');
+                    ui.btnLimit.classList.remove('bg-indigo-600', 'shadow-lg', 'text-white');
+                    ui.btnLimit.classList.add('text-gray-400');
+
+                    ui.goalWrapper.classList.add('hidden');
+                }
+                saveSettings();
+            }
+
+            // --- SCAN LOGIC ---
+            async function startScan() {
+                if (state.isRunning && !state.isPaused) return;
+
+                if (state.isPaused) {
+                    resumeScan();
+                    return;
                 }
 
-                async function scanLoop() {
-                    while (state.isRunning && !state.isPaused) {
+                // INIT
+                state.isRunning = true;
+                state.isPaused = false;
+                state.processed = 0;
+                state.nextCursor = null;
+                state.limit = parseInt(ui.inputLimit.value) || 50;
+                state.totalGoal = parseInt(ui.inputGoal.value) || 100;
+                state.delay = parseInt(ui.inputDelay.value) || 0;
 
-                        // Check if we reached the goal in limit mode
-                        if (state.scanMode === 'limit' && state.processed >= state.totalGoal) {
-                            finishScan();
-                            break;
-                        }
+                updateUI('running');
+                scanLoop();
+            }
 
-                        // Determine Batch Size
-                        let currentBatch = state.limit;
-                        if (state.scanMode === 'limit') {
-                            currentBatch = Math.min(state.limit, state.totalGoal - state.processed);
-                        }
+            function pauseScan() {
+                state.isPaused = true;
+                updateUI('paused');
+                saveSettings(); // Save manual pause state
+            }
 
-                        // Status: Scanning (Batch Size)
-                        ui.statusText.innerText = `<?php echo __('status_scanning'); ?>`.replace('%s', currentBatch);
-                        ui.progressBar.classList.add('animate-pulse');
+            function resumeScan() {
+                state.isPaused = false;
+                updateUI('running');
+                scanLoop();
+            }
+
+            function stopScan() {
+                state.isRunning = false;
+                state.isPaused = false;
+                updateUI('stopped');
+
+                // MURDER THE ZOMBIE: Explicit stop clears memory
+                clearSettings();
+
+                // Optional: Reload to clear UI if needed, but per request we keep state
+                // window.location.reload(); 
+            }
+
+            async function scanLoop() {
+                while (state.isRunning && !state.isPaused) {
+
+                    // Check if we reached the goal in limit mode
+                    if (state.scanMode === 'limit' && state.processed >= state.totalGoal) {
+                        finishScan();
+                        break;
+                    }
+
+                    // Determine Batch Size
+                    let currentBatch = state.limit;
+                    if (state.scanMode === 'limit') {
+                        currentBatch = Math.min(state.limit, state.totalGoal - state.processed);
+                    }
+
+                    // Status: Scanning (Batch Size)
+                    ui.statusText.forEach(el => el.innerText = `<?php echo __('status_fetching'); ?>`);
+                    if(ui.progressBarMsg) ui.progressBarMsg.classList.add('animate-pulse');
 
                         try {
                             const formData = new FormData();
                             formData.append('ajax_scan', '1');
                             formData.append('limit', currentBatch);
                             if (state.nextCursor) formData.append('after_cursor', state.nextCursor);
+
+                            // Status Update: Extracting
+                            setTimeout(() => {
+                                if (state.isRunning) ui.statusText.forEach(el => el.innerText = `<?php echo __('status_extracting'); ?>`);
+                            }, 2000);
 
                             // SAVE STATE BEFORE FETCH (CRITICAL FOR CRASH RECOVERY)
                             saveSettings();
@@ -1427,16 +1773,18 @@ require_once __DIR__ . '/../includes/header.php';
                                 state.processed += newCount;
 
                                 // Update Progress UI
-                                ui.progressCount.innerText = state.processed + (state.scanMode === 'limit' ? ' / ' + state.totalGoal : '');
-                                ui.progressCount.classList.remove('hidden');
+                                if(ui.progressCountMsg) {
+                                    ui.progressCountMsg.innerText = state.processed + (state.scanMode === 'limit' ? ' / ' + state.totalGoal : '');
+                                    ui.progressCountMsg.classList.remove('hidden');
+                                }
                             }
 
                             // Progress Bar Update
                             if (state.scanMode === 'limit') {
                                 let pct = Math.min(100, (state.processed / state.totalGoal) * 100);
-                                ui.progressBar.style.width = pct + '%';
+                                if(ui.progressBarMsg) ui.progressBarMsg.style.width = pct + '%';
                             } else {
-                                ui.progressBar.style.width = '100%';
+                                if(ui.progressBarMsg) ui.progressBarMsg.style.width = '100%';
                             }
 
                             if (data.next_cursor && (state.scanMode === 'all' || state.processed < state.totalGoal)) {
@@ -1449,14 +1797,14 @@ require_once __DIR__ . '/../includes/header.php';
 
                             // Delay / Anti-Ban
                             if (state.delay > 0 && state.isRunning && !state.isPaused) {
-                                ui.statusText.innerText = `<?php echo __('status_sleeping'); ?>`.replace('%s', state.delay);
+                                ui.statusText.forEach(el => el.innerText = `<?php echo __('status_sleeping'); ?>`.replace('%s', state.delay));
                                 await new Promise(r => setTimeout(r, state.delay * 1000));
                             }
 
                         } catch (e) {
                             console.error("Crash/Network Error:", e);
                             // Simple Retry without reload (since we are not crashing anymore)
-                            ui.statusText.innerText = "Network Error... Retrying in 5s...";
+                            ui.statusText.forEach(el => el.innerText = "Network Error... Retrying in 5s...");
                             await new Promise(r => setTimeout(r, 5000));
                             continue;
                         }
@@ -1471,12 +1819,12 @@ require_once __DIR__ . '/../includes/header.php';
                     clearSettings();
 
                     updateUI('finished');
-                    ui.statusText.innerText = `<?php echo __('status_finished'); ?>`;
+                    ui.statusText.forEach(el => el.innerText = `<?php echo __('status_finished'); ?> `);
 
                     console.log('Scan finished. Next Cursor:', state.nextCursor);
 
                     // Final Auto-Reload to show all results
-                    ui.statusText.innerText = "Finished. Reloading...";
+                    ui.statusText.forEach(el => el.innerText = "Finished. Reloading...");
                     alert('Extraction Finished! Click OK to see results.');
                     window.location.reload();
                 }
@@ -1495,40 +1843,44 @@ require_once __DIR__ . '/../includes/header.php';
                 function updateUI(status) {
                     if (ui.statusText && ui.statusDot) {
                         if (status === 'running') {
-                            ui.btnPlay.classList.add('hidden');
-                            ui.btnPause.classList.remove('hidden');
-                            ui.btnStop.disabled = false;
-                            ui.btnPause.disabled = false;
+                            if (ui.btnPlay) ui.btnPlay.classList.add('hidden');
+                            if (ui.btnPause) ui.btnPause.classList.remove('hidden');
+                            if (ui.btnStop) ui.btnStop.disabled = false;
+                            if (ui.btnPause) ui.btnPause.disabled = false;
 
-                            ui.statusDot.classList.replace('bg-green-500', 'bg-blue-500');
-                            ui.statusDot.classList.add('animate-ping');
+                            ui.statusDot.forEach(el => {
+                                el.className = 'status-dot w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)] animate-ping';
+                            });
 
-                            ui.inputLimit.disabled = true;
-                            ui.inputGoal.disabled = true;
-                            ui.inputDelay.disabled = true;
+                            if (ui.inputLimit) ui.inputLimit.disabled = true;
+                            if (ui.inputGoal) ui.inputGoal.disabled = true;
+                            if (ui.inputDelay) ui.inputDelay.disabled = true;
                         }
                         else if (status === 'paused') {
-                            ui.btnPlay.classList.remove('hidden');
-                            ui.btnPause.classList.add('hidden');
-                            ui.textPlay.innerText = `<?php echo __('btn_resume'); ?>`;
+                            if (ui.btnPlay) ui.btnPlay.classList.remove('hidden');
+                            if (ui.btnPause) ui.btnPause.classList.add('hidden');
+                            if (ui.textPlay) ui.textPlay.innerText = `<?php echo __('btn_resume'); ?> `;
 
-                            ui.statusDot.classList.replace('bg-green-500', 'bg-yellow-500');
-                            ui.statusDot.classList.remove('animate-ping');
-                            ui.statusText.innerText = `<?php echo __('status_paused'); ?>`;
+                            ui.statusDot.forEach(el => {
+                                el.className = 'status-dot w-2.5 h-2.5 rounded-full bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)]';
+                            });
+                            ui.statusText.forEach(el => el.innerText = `<?php echo __('status_paused'); ?> `);
                         }
                         else if (status === 'stopped' || status === 'finished') {
-                            ui.btnPlay.classList.remove('hidden');
-                            ui.btnPause.classList.add('hidden');
-                            ui.textPlay.innerText = `<?php echo __('btn_start'); ?>`;
-                            ui.btnStop.disabled = true;
+                            if (ui.btnPlay) ui.btnPlay.classList.remove('hidden');
+                            if (ui.btnPause) ui.btnPause.classList.add('hidden');
+                            if (ui.textPlay) ui.textPlay.innerText = `<?php echo __('btn_start'); ?>`;
+                            if (ui.btnStop) ui.btnStop.disabled = true;
 
-                            ui.statusDot.className = 'w-2 h-2 rounded-full bg-gray-600';
-                            ui.progressBar.classList.remove('animate-pulse');
-                            if (status === 'stopped') ui.progressBar.style.width = '0';
+                            ui.statusDot.forEach(el => el.className = 'status-dot w-2.5 h-2.5 rounded-full bg-gray-600');
+                            if (ui.progressBar) {
+                                ui.progressBar.classList.remove('animate-pulse');
+                                if (status === 'stopped') ui.progressBar.style.width = '0';
+                            }
 
-                            ui.inputLimit.disabled = false;
-                            ui.inputGoal.disabled = false;
-                            ui.inputDelay.disabled = false;
+                            if (ui.inputLimit) ui.inputLimit.disabled = false;
+                            if (ui.inputGoal) ui.inputGoal.disabled = false;
+                            if (ui.inputDelay) ui.inputDelay.disabled = false;
                         }
                     }
                 }
@@ -1832,132 +2184,131 @@ require_once __DIR__ . '/../includes/header.php';
                 }, 1000);
 
             </script>
-        <?php endif; ?>
+    <?php endif; ?>
 
-        <script>
-            // --- CAMPAIGN MANAGEMENT LOGIC (GLOBAL) ---
-            let campIdToDelete = null;
+    <script>
+        // --- CAMPAIGN MANAGEMENT LOGIC (GLOBAL) ---
+        let campIdToDelete = null;
 
-            window.deleteCampaign = function (campId) {
-                campIdToDelete = campId;
-                document.getElementById('delete-modal').classList.remove('hidden');
-            };
+        window.deleteCampaign = function (campId) {
+            campIdToDelete = campId;
+            document.getElementById('delete-modal').classList.remove('hidden');
+        };
 
-            async function confirmDelete() {
-                if (!campIdToDelete) return;
+        async function confirmDelete() {
+            if (!campIdToDelete) return;
 
-                const btn = document.getElementById('btn-confirm-delete');
-                const originalText = btn.innerHTML;
-                btn.disabled = true;
-                btn.innerHTML = '<?php echo __('please_wait'); ?>...';
+            const btn = document.getElementById('btn-confirm-delete');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<?php echo __('please_wait'); ?>...';
 
-                try {
-                    const fd = new FormData();
-                    fd.append('action', 'delete');
-                    fd.append('campaign_id', campIdToDelete);
+            try {
+                const fd = new FormData();
+                fd.append('action', 'delete');
+                fd.append('campaign_id', campIdToDelete);
 
-                    const res = await fetch('ajax_campaign_actions.php', { method: 'POST', body: fd });
-                    const data = await res.json();
+                const res = await fetch('ajax_campaign_actions.php', { method: 'POST', body: fd });
+                const data = await res.json();
 
-                    if (data.status === 'success') {
-                        const cards = document.querySelectorAll('#camp-card-' + campIdToDelete);
-                        cards.forEach(card => {
-                            card.style.opacity = '0';
-                            card.style.transform = 'scale(0.9)';
-                            setTimeout(() => card.remove(), 300);
-                        });
-                        window.closeDeleteModal();
-                    } else {
-                        alert(data.message);
-                    }
-                } catch (e) {
-                    console.error(e);
-                    alert('<?php echo __('system_error'); ?>');
-                } finally {
-                    btn.disabled = false;
-                    btn.innerHTML = originalText;
+                if (data.status === 'success') {
+                    const cards = document.querySelectorAll('#camp-card-' + campIdToDelete);
+                    cards.forEach(card => {
+                        card.style.opacity = '0';
+                        card.style.transform = 'scale(0.9)';
+                        setTimeout(() => card.remove(), 300);
+                    });
+                    window.closeDeleteModal();
+                } else {
+                    alert(data.message);
                 }
+            } catch (e) {
+                console.error(e);
+                alert('<?php echo __('system_error'); ?>');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
+        window.confirmDelete = confirmDelete;
+
+        window.closeDeleteModal = function () {
+            document.getElementById('delete-modal').classList.add('hidden');
+            campIdToDelete = null;
+        };
+    </script>
+    <script>
+        // Connection Status Auto-Check
+        document.addEventListener('DOMContentLoaded', function () {
+            const badgeContainer = document.getElementById('connection-status-badge');
+            if (badgeContainer) {
+                checkStatus();
             }
 
-            window.confirmDelete = confirmDelete;
+            async function checkStatus() {
+                try {
+                    const formData = new FormData();
+                    <?php $p_id = (isset($page) && isset($page['id'])) ? $page['id'] : 0; ?>
+                    formData.append('page_db_id', <?php echo (int) $p_id; ?>);
 
-            window.closeDeleteModal = function () {
-                document.getElementById('delete-modal').classList.add('hidden');
-                campIdToDelete = null;
-            };
-        </script>
-        <script>
-            // Connection Status Auto-Check
-            document.addEventListener('DOMContentLoaded', function () {
-                const badgeContainer = document.getElementById('connection-status-badge');
-                if (badgeContainer) {
-                    checkStatus();
-                }
+                    const response = await fetch('ajax_check_status.php', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await response.json();
 
-                async function checkStatus() {
-                    try {
-                        const formData = new FormData();
-                        <?php $p_id = (isset($page) && isset($page['id'])) ? $page['id'] : 0; ?>
-                        formData.append('page_db_id', <?php echo (int) $p_id; ?>);
-
-                        const response = await fetch('ajax_check_status.php', {
-                            method: 'POST',
-                            body: formData
-                        });
-                        const data = await response.json();
-
-                        if (data.status === 'active') {
-                            badgeContainer.innerHTML = `
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-500/10 text-green-400 border border-green-500/20 text-xs font-bold ml-3 align-middle">
+                    if (data.status === 'active') {
+                        badgeContainer.innerHTML = `
+                < span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-500/10 text-green-400 border border-green-500/20 text-xs font-bold ml-3 align-middle" >
                             <div class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
                             <?php echo __('connected'); ?>
-                        </span>`;
-                        } else if (data.status === 'expired') {
-                            badgeContainer.innerHTML = `
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/10 text-red-500 border border-red-500/20 text-xs font-bold ml-3 align-middle">
+                        </span > `;
+                    } else if (data.status === 'expired') {
+                        badgeContainer.innerHTML = `
+                < span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/10 text-red-500 border border-red-500/20 text-xs font-bold ml-3 align-middle" >
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                             <?php echo __('token_expired'); ?>
-                        </span>`;
-                        }
-                    } catch (e) {
-                        console.error("Status check failed", e);
+                        </span >`;
                     }
+                } catch (e) {
+                    console.error("Status check failed", e);
                 }
-            });
-        </script>
+            }
+        });
+    </script>
 
-        <!-- Delete Confirmation Modal (NEW) -->
-        <div id="delete-modal"
-            class="fixed inset-0 z-[110] hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-            <div
-                class="glass-card max-w-sm w-full p-8 rounded-3xl border border-white/10 text-center relative overflow-hidden">
-                <div class="absolute top-0 left-0 w-full h-1 bg-red-500/50"></div>
-                <div
-                    class="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center text-red-500 mx-auto mb-6">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                        </path>
-                    </svg>
-                </div>
-                <h3 class="text-xl font-bold text-white mb-2">
-                    <?php echo __('delete_campaign_title'); ?>
-                </h3>
-                <p class="text-gray-400 text-sm mb-8">
-                    <?php echo __('delete_campaign_desc'); ?>
-                </p>
+    <!-- Delete Confirmation Modal (NEW) -->
+    <div id="delete-modal"
+        class="fixed inset-0 z-[110] hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div
+            class="glass-card max-w-sm w-full p-8 rounded-3xl border border-white/10 text-center relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-red-500/50"></div>
+            <div class="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center text-red-500 mx-auto mb-6">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                    </path>
+                </svg>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">
+                <?php echo __('delete_campaign_title'); ?>
+            </h3>
+            <p class="text-gray-400 text-sm mb-8">
+                <?php echo __('delete_campaign_desc'); ?>
+            </p>
 
-                <div class="flex gap-3">
-                    <button onclick="window.closeDeleteModal()"
-                        class="flex-1 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl font-bold transition-all border border-white/5">
-                        <?php echo __('cancel'); ?>
-                    </button>
-                    <button id="btn-confirm-delete" onclick="window.confirmDelete()"
-                        class="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold transition-all shadow-lg shadow-red-500/20">
-                        <?php echo __('confirm_delete_btn'); ?>
-                    </button>
-                </div>
+            <div class="flex gap-3">
+                <button onclick="window.closeDeleteModal()"
+                    class="flex-1 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl font-bold transition-all border border-white/5">
+                    <?php echo __('cancel'); ?>
+                </button>
+                <button id="btn-confirm-delete" onclick="window.confirmDelete()"
+                    class="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold transition-all shadow-lg shadow-red-500/20">
+                    <?php echo __('confirm_delete_btn'); ?>
+                </button>
             </div>
         </div>
+    </div>
 
-        <?php require_once __DIR__ . '/../includes/footer.php'; ?>
+    <?php require_once __DIR__ . '/../includes/footer.php'; ?>

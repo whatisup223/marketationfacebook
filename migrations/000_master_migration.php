@@ -386,11 +386,15 @@ try {
         `page_id` int(11) UNSIGNED DEFAULT NULL,
         `fb_user_id` varchar(100) NOT NULL,
         `fb_user_name` varchar(255) DEFAULT NULL,
+        `lead_source` varchar(50) DEFAULT 'message', 
+        `post_id` varchar(100) DEFAULT NULL,
+        `last_comment` text DEFAULT NULL,
         `last_interaction` datetime DEFAULT NULL,
         `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
         PRIMARY KEY (`id`),
         KEY `page_id` (`page_id`),
-        KEY `fb_user_id` (`fb_user_id`)
+        KEY `fb_user_id` (`fb_user_id`),
+        UNIQUE KEY `idx_lead_source_post` (`page_id`, `fb_user_id`, `lead_source`, `post_id`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
 
     $pdo->exec("CREATE TABLE IF NOT EXISTS `campaigns` (
@@ -446,6 +450,36 @@ try {
     }
     if (!columnExists($pdo, 'fb_accounts', 'is_active')) {
         $pdo->exec("ALTER TABLE fb_accounts ADD COLUMN is_active TINYINT(1) DEFAULT 1 AFTER access_token");
+    }
+
+    // --- 039: Lead Source & Post ID tracking ---
+    if (!columnExists($pdo, 'fb_leads', 'lead_source')) {
+        $pdo->exec("ALTER TABLE fb_leads ADD COLUMN lead_source VARCHAR(50) DEFAULT 'message' AFTER fb_user_name");
+    }
+    if (!columnExists($pdo, 'fb_leads', 'post_id')) {
+        $pdo->exec("ALTER TABLE fb_leads ADD COLUMN post_id VARCHAR(100) DEFAULT NULL AFTER lead_source");
+    }
+    if (!columnExists($pdo, 'fb_leads', 'last_comment')) {
+        $pdo->exec("ALTER TABLE fb_leads ADD COLUMN last_comment TEXT DEFAULT NULL AFTER post_id");
+    }
+
+    // Ensure Unique Index for Granular Lead Tracking (Page + User + Source + Post)
+    if (!indexExists($pdo, 'fb_leads', 'idx_lead_source_post')) {
+        // Drop older restrictive unique indexes if they exist to avoid conflicts
+        if (indexExists($pdo, 'fb_leads', 'unique_lead_source')) {
+            $pdo->exec("ALTER TABLE fb_leads DROP INDEX unique_lead_source");
+        }
+        if (indexExists($pdo, 'fb_leads', 'idx_lead_source_basic')) {
+            $pdo->exec("ALTER TABLE fb_leads DROP INDEX idx_lead_source_basic");
+        }
+
+        try {
+            $pdo->exec("ALTER TABLE fb_leads ADD UNIQUE KEY `idx_lead_source_post` (page_id, fb_user_id, lead_source, post_id)");
+        } catch (Exception $e) {
+            // Check if it failed due to duplicates, if so, we might need to truncate or ignore. 
+            // For safety in this migration, we just log.
+            echo "⚠️ Notice: Could not add unique index 'idx_lead_source_post' to fb_leads. You may have duplicate entries.\n";
+        }
     }
 
     echo "✅ Master Migration completed successfully!\n";

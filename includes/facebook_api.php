@@ -353,7 +353,7 @@ class FacebookAPI
     public function getConversations($page_id, $access_token, $limit = 100, $after = '')
     {
         $params = [
-            'fields' => 'id,participants,updated_time',
+            'fields' => 'id,participants,updated_time,snippet',
             'limit' => $limit
         ];
         if ($after)
@@ -664,12 +664,16 @@ class FacebookAPI
 
     public function getPostComments($post_id, $access_token, $limit = 100, $after = '')
     {
+        // Try including 'id' explicitly and from{id,name} to force data inclusion
         $params = [
-            'fields' => 'from{id,name},message,created_time',
-            'limit' => $limit
+            'fields' => 'id,from{id,name},message,created_time',
+            'limit' => $limit,
+            'filter' => 'stream'
         ];
-        if ($after)
+        if ($after) {
             $params['after'] = $after;
+        }
+
         return $this->makeRequest("$post_id/comments", $params, $access_token);
     }
 
