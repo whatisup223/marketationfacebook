@@ -399,6 +399,15 @@ class FacebookAPI
     }
 
     /**
+     * Like a comment
+     */
+    public function likeComment($comment_id, $access_token)
+    {
+        $endpoint = "$comment_id/likes";
+        return $this->makeRequest($endpoint, [], $access_token, 'POST');
+    }
+
+    /**
      * Publish a post (immediate or scheduled)
      */
     public function publishPost($page_id, $access_token, $message, $image = null, $scheduled_at = null, $post_type = 'feed')

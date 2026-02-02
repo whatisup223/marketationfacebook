@@ -248,6 +248,25 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
     // Capture Private Reply Settings from the matched rule
     $private_reply_enabled = (int) ($matched_rule['private_reply_enabled'] ?? 0);
     $private_reply_text = $matched_rule['private_reply_text'] ?? '';
+    // Capture Auto Like Settings
+    $auto_like_comment = (int) ($matched_rule['auto_like_comment'] ?? 0);
+
+    // --- QUICK WINS IMPLEMENTATION ---
+    // 1. Random Variations (Spintax): explode by | and pick random
+    if (strpos($reply_msg, '|') !== false) {
+        $options = explode('|', $reply_msg);
+        $reply_msg = trim($options[array_rand($options)]);
+    }
+    if ($private_reply_enabled && !empty($private_reply_text) && strpos($private_reply_text, '|') !== false) {
+        $options = explode('|', $private_reply_text);
+        $private_reply_text = trim($options[array_rand($options)]);
+    }
+
+    // 2. Mention User: Replace {name} with sender_name
+    if (!empty($sender_name)) {
+        $reply_msg = str_replace('{name}', $sender_name, $reply_msg);
+        $private_reply_text = str_replace('{name}', $sender_name, $private_reply_text);
+    }
 
     // 4. Advanced SaaS Logic (Repeat Detection only)
     $is_ai_safe = (int) ($matched_rule['is_ai_safe'] ?? 1);
@@ -438,6 +457,11 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
             // We use the specific endpoint for this: /{comment_id}/private_replies
             // Note: This only works if the comment is less than 7 days old (usually instant)
             $fb->replyPrivateToComment($target_id, $private_reply_text, $access_token);
+        }
+
+        // --- NEW: AUTO LIKE COMMENT ---
+        if ($auto_like_comment) {
+            $fb->likeComment($target_id, $access_token);
         }
     }
 

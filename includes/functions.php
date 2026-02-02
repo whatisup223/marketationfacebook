@@ -800,6 +800,9 @@ $translations = [
         'send_private_reply' => 'إرسال رسالة خاصة (DM)',
         'send_private_reply_hint' => 'تفعيل هذا الخيار سيؤدي لإرسال رسالة خاصة للعميل فور التعليق.',
         'private_reply_placeholder' => 'اكتب نص الرسالة الخاصة هنا...',
+        'auto_like' => 'إعجاب تلقائي',
+        'spintax_hint' => 'للردود المتعددة استخدم',
+        'mention_hint' => 'لذكر اسم العميل استخدم',
 
         // Contact
         'contact_us' => 'اتصل بنا',
@@ -1596,6 +1599,9 @@ $translations = [
         'send_private_reply' => 'Send Private Reply (DM)',
         'send_private_reply_hint' => 'Enabling this will automatically send a private message to the user upon commenting.',
         'private_reply_placeholder' => 'Type the private message here...',
+        'auto_like' => 'Auto Like',
+        'spintax_hint' => 'For random replies use',
+        'mention_hint' => 'To mention customer name use',
         'view_all_activity' => 'View All Activity',
         'user_panel' => 'User Panel',
         'admin_panel' => 'Admin Panel',

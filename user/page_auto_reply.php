@@ -1190,24 +1190,54 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-3"><?php echo __('reply_message'); ?></label>
                     <textarea x-model="modalReply" rows="5" placeholder="<?php echo __('reply_placeholder'); ?>"
                         class="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all resize-none text-sm leading-relaxed"></textarea>
+                    <div class="mt-2 text-[10px] text-gray-500 space-y-1">
+                        <p><?php echo __('spintax_hint'); ?>: <span class="text-indigo-400">Hello | Hi | Welcome</span>
+                        </p>
+                        <p><?php echo __('mention_hint'); ?>: <span class="text-indigo-400">{name}</span></p>
+                    </div>
                 </div>
 
-                <div class="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5">
-                    <div class="flex items-center gap-3">
-                        <div class="p-2.5 bg-red-500/10 rounded-xl">
-                            <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268-2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21">
-                                </path>
-                            </svg>
+                <div class="grid grid-cols-2 gap-3">
+                    <!-- Hide Comment -->
+                    <div class="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2.5 bg-red-500/10 rounded-xl">
+                                <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268-2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21">
+                                    </path>
+                                </svg>
+                            </div>
+                            <span class="text-sm font-bold text-white"><?php echo __('hide_comment'); ?></span>
                         </div>
-                        <span class="text-sm font-bold text-white"><?php echo __('hide_comment'); ?></span>
+                        <div
+                            class="relative inline-block w-12 align-middle select-none transition duration-200 ease-in">
+                            <input type="checkbox" x-model="modalHideComment" id="toggleHideModal"
+                                class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-6 transition-all duration-300" />
+                            <label for="toggleHideModal" :class="modalHideComment ? 'bg-indigo-600' : 'bg-gray-700'"
+                                class="toggle-label block overflow-hidden h-6 rounded-full cursor-pointer transition-colors"></label>
+                        </div>
                     </div>
-                    <div class="relative inline-block w-12 align-middle select-none transition duration-200 ease-in">
-                        <input type="checkbox" x-model="modalHideComment" id="toggleHideModal"
-                            class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-6 transition-all duration-300" />
-                        <label for="toggleHideModal" :class="modalHideComment ? 'bg-indigo-600' : 'bg-gray-700'"
-                            class="toggle-label block overflow-hidden h-6 rounded-full cursor-pointer transition-colors"></label>
+
+                    <!-- Auto Like Comment -->
+                    <div class="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2.5 bg-pink-500/10 rounded-xl">
+                                <svg class="w-5 h-5 text-pink-400" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                </svg>
+                            </div>
+                            <span class="text-sm font-bold text-white"><?php echo __('auto_like'); ?></span>
+                        </div>
+                        <div
+                            class="relative inline-block w-12 align-middle select-none transition duration-200 ease-in">
+                            <input type="checkbox" x-model="modalAutoLike" id="toggleAutoLikeModal"
+                                class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-6 transition-all duration-300" />
+                            <label for="toggleAutoLikeModal" :class="modalAutoLike ? 'bg-indigo-600' : 'bg-gray-700'"
+                                class="toggle-label block overflow-hidden h-6 rounded-full cursor-pointer transition-colors"></label>
+                        </div>
                     </div>
                 </div>
 
@@ -1787,6 +1817,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 this.modalHideComment = false;
                 this.modalPrivateReplyEnabled = false;
                 this.modalPrivateReplyText = '';
+                this.modalAutoLike = false; // Reset
                 this.modalAiSafe = true;
                 this.modalBypassSchedule = false;
                 this.modalBypassCooldown = false;
@@ -1802,6 +1833,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 this.modalHideComment = (rule.hide_comment == 1);
                 this.modalPrivateReplyEnabled = (rule.private_reply_enabled == 1);
                 this.modalPrivateReplyText = rule.private_reply_text || '';
+                this.modalAutoLike = (rule.auto_like_comment == 1);
                 this.modalAiSafe = (rule.is_ai_safe == 1);
                 this.modalBypassSchedule = (rule.bypass_schedule == 1);
                 this.modalBypassCooldown = (rule.bypass_cooldown == 1);
@@ -1820,6 +1852,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 formData.append('hide_comment', this.modalHideComment ? '1' : '0');
                 formData.append('private_reply_enabled', this.modalPrivateReplyEnabled ? '1' : '0');
                 formData.append('private_reply_text', this.modalPrivateReplyText);
+                formData.append('auto_like_comment', this.modalAutoLike ? '1' : '0'); // Save
                 formData.append('is_ai_safe', this.modalAiSafe ? '1' : '0');
                 formData.append('bypass_schedule', this.modalBypassSchedule ? '1' : '0');
                 formData.append('bypass_cooldown', this.modalBypassCooldown ? '1' : '0');

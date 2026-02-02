@@ -202,6 +202,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $reply_image_url = $_POST['reply_image_url'] ?? null;
         $private_reply_enabled = isset($_POST['private_reply_enabled']) ? (int) $_POST['private_reply_enabled'] : 0;
         $private_reply_text = $_POST['private_reply_text'] ?? null;
+        $auto_like_comment = isset($_POST['auto_like_comment']) ? (int) $_POST['auto_like_comment'] : 0;
         $source = $_POST['source'] ?? 'comment';
 
         // Allow empty reply ONLY for default type (to disable it)
@@ -218,11 +219,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($rule_id) {
                 // Update
                 if ($hasImageColumn) {
-                    $stmt = $pdo->prepare("UPDATE auto_reply_rules SET trigger_type = ?, keywords = ?, reply_message = ?, `reply_buttons` = ?, reply_image_url = ?, hide_comment = ?, is_ai_safe = ?, bypass_schedule = ?, bypass_cooldown = ?, private_reply_enabled = ?, private_reply_text = ?, reply_source = ? WHERE id = ? AND page_id = ?");
-                    $stmt->execute([$type, $keywords, $reply, $reply_buttons, $reply_image_url, $hide_comment, $is_ai_safe, $bypass_schedule, $bypass_cooldown, $private_reply_enabled, $private_reply_text, $source, $rule_id, $page_id]);
+                    $stmt = $pdo->prepare("UPDATE auto_reply_rules SET trigger_type = ?, keywords = ?, reply_message = ?, `reply_buttons` = ?, reply_image_url = ?, hide_comment = ?, is_ai_safe = ?, bypass_schedule = ?, bypass_cooldown = ?, private_reply_enabled = ?, private_reply_text = ?, auto_like_comment = ?, reply_source = ? WHERE id = ? AND page_id = ?");
+                    $stmt->execute([$type, $keywords, $reply, $reply_buttons, $reply_image_url, $hide_comment, $is_ai_safe, $bypass_schedule, $bypass_cooldown, $private_reply_enabled, $private_reply_text, $auto_like_comment, $source, $rule_id, $page_id]);
                 } else {
-                    $stmt = $pdo->prepare("UPDATE auto_reply_rules SET trigger_type = ?, keywords = ?, reply_message = ?, `reply_buttons` = ?, hide_comment = ?, is_ai_safe = ?, bypass_schedule = ?, bypass_cooldown = ?, private_reply_enabled = ?, private_reply_text = ?, reply_source = ? WHERE id = ? AND page_id = ?");
-                    $stmt->execute([$type, $keywords, $reply, $reply_buttons, $hide_comment, $is_ai_safe, $bypass_schedule, $bypass_cooldown, $private_reply_enabled, $private_reply_text, $source, $rule_id, $page_id]);
+                    $stmt = $pdo->prepare("UPDATE auto_reply_rules SET trigger_type = ?, keywords = ?, reply_message = ?, `reply_buttons` = ?, hide_comment = ?, is_ai_safe = ?, bypass_schedule = ?, bypass_cooldown = ?, private_reply_enabled = ?, private_reply_text = ?, auto_like_comment = ?, reply_source = ? WHERE id = ? AND page_id = ?");
+                    $stmt->execute([$type, $keywords, $reply, $reply_buttons, $hide_comment, $is_ai_safe, $bypass_schedule, $bypass_cooldown, $private_reply_enabled, $private_reply_text, $auto_like_comment, $source, $rule_id, $page_id]);
                 }
             } else {
                 // Check if existing default rule
@@ -231,11 +232,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $check->execute([$page_id, $source]);
                     if ($check->fetch()) {
                         if ($hasImageColumn) {
-                            $stmt = $pdo->prepare("UPDATE auto_reply_rules SET reply_message = ?, `reply_buttons` = ?, reply_image_url = ?, hide_comment = ?, private_reply_enabled = ?, private_reply_text = ? WHERE page_id = ? AND trigger_type = 'default' AND reply_source = ?");
-                            $stmt->execute([$reply, $reply_buttons, $reply_image_url, $hide_comment, $private_reply_enabled, $private_reply_text, $page_id, $source]);
+                            $stmt = $pdo->prepare("UPDATE auto_reply_rules SET reply_message = ?, `reply_buttons` = ?, reply_image_url = ?, hide_comment = ?, private_reply_enabled = ?, private_reply_text = ?, auto_like_comment = ? WHERE page_id = ? AND trigger_type = 'default' AND reply_source = ?");
+                            $stmt->execute([$reply, $reply_buttons, $reply_image_url, $hide_comment, $private_reply_enabled, $private_reply_text, $auto_like_comment, $page_id, $source]);
                         } else {
-                            $stmt = $pdo->prepare("UPDATE auto_reply_rules SET reply_message = ?, `reply_buttons` = ?, hide_comment = ?, private_reply_enabled = ?, private_reply_text = ? WHERE page_id = ? AND trigger_type = 'default' AND reply_source = ?");
-                            $stmt->execute([$reply, $reply_buttons, $hide_comment, $private_reply_enabled, $private_reply_text, $page_id, $source]);
+                            $stmt = $pdo->prepare("UPDATE auto_reply_rules SET reply_message = ?, `reply_buttons` = ?, hide_comment = ?, private_reply_enabled = ?, private_reply_text = ?, auto_like_comment = ? WHERE page_id = ? AND trigger_type = 'default' AND reply_source = ?");
+                            $stmt->execute([$reply, $reply_buttons, $hide_comment, $private_reply_enabled, $private_reply_text, $auto_like_comment, $page_id, $source]);
                         }
                         echo json_encode(['success' => true, 'message' => __('rule_saved')]);
                         exit;
@@ -244,11 +245,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // Insert
                 if ($hasImageColumn) {
-                    $stmt = $pdo->prepare("INSERT INTO auto_reply_rules (page_id, trigger_type, keywords, reply_message, `reply_buttons`, reply_image_url, hide_comment, is_ai_safe, bypass_schedule, bypass_cooldown, private_reply_enabled, private_reply_text, reply_source) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                    $stmt->execute([$page_id, $type, $keywords, $reply, $reply_buttons, $reply_image_url, $hide_comment, $is_ai_safe, $bypass_schedule, $bypass_cooldown, $private_reply_enabled, $private_reply_text, $source]);
+                    $stmt = $pdo->prepare("INSERT INTO auto_reply_rules (page_id, trigger_type, keywords, reply_message, `reply_buttons`, reply_image_url, hide_comment, is_ai_safe, bypass_schedule, bypass_cooldown, private_reply_enabled, private_reply_text, auto_like_comment, reply_source) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                    $stmt->execute([$page_id, $type, $keywords, $reply, $reply_buttons, $reply_image_url, $hide_comment, $is_ai_safe, $bypass_schedule, $bypass_cooldown, $private_reply_enabled, $private_reply_text, $auto_like_comment, $source]);
                 } else {
-                    $stmt = $pdo->prepare("INSERT INTO auto_reply_rules (page_id, trigger_type, keywords, reply_message, `reply_buttons`, hide_comment, is_ai_safe, bypass_schedule, bypass_cooldown, private_reply_enabled, private_reply_text, reply_source) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                    $stmt->execute([$page_id, $type, $keywords, $reply, $reply_buttons, $hide_comment, $is_ai_safe, $bypass_schedule, $bypass_cooldown, $private_reply_enabled, $private_reply_text, $source]);
+                    $stmt = $pdo->prepare("INSERT INTO auto_reply_rules (page_id, trigger_type, keywords, reply_message, `reply_buttons`, hide_comment, is_ai_safe, bypass_schedule, bypass_cooldown, private_reply_enabled, private_reply_text, auto_like_comment, reply_source) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                    $stmt->execute([$page_id, $type, $keywords, $reply, $reply_buttons, $hide_comment, $is_ai_safe, $bypass_schedule, $bypass_cooldown, $private_reply_enabled, $private_reply_text, $auto_like_comment, $source]);
                 }
             }
             echo json_encode(['success' => true, 'message' => __('rule_saved')]);
