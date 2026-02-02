@@ -799,10 +799,14 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 </div>
 
                 <textarea x-model="defaultReplyText" rows="4"
-                    class="w-full bg-black/40 border border-white/10 rounded-2xl p-5 text-white placeholder-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all mb-6 text-base leading-relaxed"
+                    class="w-full bg-black/40 border border-white/10 rounded-2xl p-5 text-white placeholder-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-base leading-relaxed"
                     placeholder="<?php echo __('reply_placeholder'); ?>"></textarea>
+                <div class="mt-2 mb-6 text-[10px] text-gray-500 space-y-1">
+                    <p><?php echo __('spintax_hint'); ?>: <span class="text-indigo-400">Hello | Hi | Welcome</span></p>
+                    <p><?php echo __('mention_hint'); ?>: <span class="text-indigo-400">{name}</span></p>
+                </div>
 
-                <div class="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5">
+                <div class="grid grid-cols-2 gap-3 mb-4">
                     <div class="flex items-center gap-3">
                         <div class="p-2.5 bg-indigo-500/10 rounded-xl">
                             <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -826,322 +830,337 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     </div>
                 </div>
 
-                <!-- Private Reply Section (Default) -->
-                <div class="mt-4 p-4 bg-white/5 rounded-2xl border border-white/5">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="flex items-center gap-3">
-                            <div class="p-2.5 bg-blue-500/10 rounded-xl">
-                                <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
+                <!-- Auto Like Comment (Default) -->
+                <div class="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2.5 bg-pink-500/10 rounded-xl">
+                            <svg class="w-5 h-5 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                            </svg>
+                        </div>
+                        <span class="text-sm font-bold text-white"><?php echo __('auto_like'); ?></span>
+                    </div>
+                    <div class="relative inline-block w-12 align-middle select-none transition duration-200 ease-in">
+                        <input type="checkbox" x-model="defaultAutoLike" id="toggleAutoLikeDefault"
+                            class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-6 transition-all duration-300" />
+                        <label for="toggleAutoLikeDefault" :class="defaultAutoLike ? 'bg-indigo-600' : 'bg-gray-700'"
+                            class="toggle-label block overflow-hidden h-6 rounded-full cursor-pointer transition-colors"></label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Private Reply Section (Default) -->
+            <div class="mt-4 p-4 bg-white/5 rounded-2xl border border-white/5">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2.5 bg-blue-500/10 rounded-xl">
+                            <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z">
+                                </path>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold text-white"><?php echo __('send_private_reply'); ?></p>
+                            <p class="text-[10px] text-gray-500"><?php echo __('send_private_reply_hint'); ?></p>
+                        </div>
+                    </div>
+                    <div class="relative inline-block w-12 align-middle select-none transition duration-200 ease-in">
+                        <input type="checkbox" x-model="defaultPrivateReplyEnabled" id="togglePrivateReplyDefault"
+                            class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-6 transition-all duration-300" />
+                        <label for="togglePrivateReplyDefault"
+                            :class="defaultPrivateReplyEnabled ? 'bg-indigo-600' : 'bg-gray-700'"
+                            class="toggle-label block overflow-hidden h-6 rounded-full cursor-pointer transition-colors"></label>
+                    </div>
+                </div>
+                <div x-show="defaultPrivateReplyEnabled" x-transition>
+                    <textarea x-model="defaultPrivateReplyText" rows="2"
+                        class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white placeholder-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm"
+                        placeholder="<?php echo __('private_reply_placeholder'); ?>"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Keyword Rules Section -->
+        <div class="space-y-6">
+            <div class="flex justify-between items-center">
+                <h3 class="text-2xl font-bold text-white"><?php echo __('keyword_rules'); ?></h3>
+                <button @click="openAddModal()"
+                    class="bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white px-5 py-2.5 rounded-xl transition-all border border-indigo-500/20 flex items-center gap-2 font-bold text-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4">
+                        </path>
+                    </svg>
+                    <?php echo __('add_new_rule'); ?>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4 max-h-[600px] overflow-y-auto pr-2 messenger-scrollbar">
+                <template x-for="rule in rules" :key="rule.id">
+                    <div
+                        class="glass-panel p-6 rounded-2xl border border-white/5 bg-gray-800/20 hover:bg-gray-800/40 hover:border-indigo-500/30 transition-all flex justify-between items-center group shrink-0">
+                        <div class="flex items-center gap-4">
+                            <div class="p-3 bg-indigo-500/10 rounded-2xl text-indigo-400">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z">
+                                        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
                                     </path>
                                 </svg>
                             </div>
                             <div>
-                                <p class="text-sm font-bold text-white"><?php echo __('send_private_reply'); ?></p>
-                                <p class="text-[10px] text-gray-500"><?php echo __('send_private_reply_hint'); ?></p>
+                                <p class="text-xs font-black text-indigo-400 uppercase tracking-widest mb-1"
+                                    x-text="'<?php echo __('keywords_label'); ?>: ' + rule.keywords"></p>
+                                <p class="text-sm text-white font-medium line-clamp-1" x-text="rule.reply_message">
+                                </p>
                             </div>
                         </div>
-                        <div
-                            class="relative inline-block w-12 align-middle select-none transition duration-200 ease-in">
-                            <input type="checkbox" x-model="defaultPrivateReplyEnabled" id="togglePrivateReplyDefault"
-                                class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-6 transition-all duration-300" />
-                            <label for="togglePrivateReplyDefault"
-                                :class="defaultPrivateReplyEnabled ? 'bg-indigo-600' : 'bg-gray-700'"
-                                class="toggle-label block overflow-hidden h-6 rounded-full cursor-pointer transition-colors"></label>
+                        <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button @click="previewRule(rule); scrollToPreview()"
+                                class="p-2.5 bg-indigo-600/10 hover:bg-indigo-600 rounded-xl text-indigo-400 hover:text-white transition-all border border-indigo-500/10"
+                                title="<?php echo __('message_preview'); ?>">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                    </path>
+                                </svg>
+                            </button>
+                            <button @click="editRule(rule)"
+                                class="p-2.5 bg-white/5 hover:bg-white/10 rounded-xl text-gray-400 hover:text-white transition-all border border-white/5">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                                    </path>
+                                </svg>
+                            </button>
+                            <button @click="deleteRule(rule.id)"
+                                class="p-2.5 bg-red-500/10 hover:bg-red-500/20 rounded-xl text-red-500 transition-all border border-red-500/10">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                    </path>
+                                </svg>
+                            </button>
                         </div>
                     </div>
-                    <div x-show="defaultPrivateReplyEnabled" x-transition>
-                        <textarea x-model="defaultPrivateReplyText" rows="2"
-                            class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white placeholder-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm"
-                            placeholder="<?php echo __('private_reply_placeholder'); ?>"></textarea>
+                </template>
+
+                <template x-if="rules.length === 0">
+                    <div class="p-12 border-2 border-white/5 border-dashed rounded-[2rem] text-center">
+                        <p class="text-gray-500 text-sm italic font-medium">
+                            <?php echo __('no_keyword_rules'); ?>
+                        </p>
                     </div>
-                </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- Bot Intelligence Settings (Hidden for Comments to avoid conflict) -->
+        <!-- These settings (Cooldown, Schedule) are shared with Messenger Bot and are more relevant there. 
+                         To avoid confusion, we hide them here. If needed, they can be enabled in Messenger Bot page. -->
+        <div style="display: none;">
+            <!-- Hidden Inputs to preserve values during save -->
+            <input type="hidden" x-model="cooldownHours">
+            <input type="hidden" x-model="cooldownMinutes">
+            <input type="hidden" x-model="cooldownSeconds">
+            <input type="hidden" x-model="schEnabled">
+            <input type="hidden" x-model="schStart">
+            <input type="hidden" x-model="schEnd">
+        </div>
+
+        <!-- AI Protection Card -->
+        <div
+            class="glass-panel p-8 rounded-[2rem] border border-white/10 bg-white/5 backdrop-blur-2xl hover:border-indigo-500/20 transition-all shadow-2xl relative overflow-hidden group">
+            <!-- Decorative Background -->
+            <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-600/10 blur-3xl -mr-16 -mt-16 pointer-events-none">
             </div>
 
-            <!-- Keyword Rules Section -->
-            <div class="space-y-6">
-                <div class="flex justify-between items-center">
-                    <h3 class="text-2xl font-bold text-white"><?php echo __('keyword_rules'); ?></h3>
-                    <button @click="openAddModal()"
-                        class="bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white px-5 py-2.5 rounded-xl transition-all border border-indigo-500/20 flex items-center gap-2 font-bold text-sm">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4">
+            <div class="flex flex-col md:flex-row gap-8">
+                <!-- Left Side: Toggle & Info -->
+                <div class="flex-shrink-0 w-full md:w-64">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="p-3 bg-indigo-500/20 rounded-xl">
+                            <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-white"><?php echo __('ai_protection'); ?></h3>
+                    </div>
+
+                    <div class="bg-black/20 p-5 rounded-2xl border border-white/5 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span
+                                class="text-xs font-bold text-gray-400 uppercase tracking-wider"><?php echo __('status'); ?></span>
+                            <div
+                                class="relative inline-block w-11 align-middle select-none transition duration-200 ease-in">
+                                <input type="checkbox" x-model="aiSentimentEnabled" id="toggleAiSentimentCard"
+                                    class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
+                                <label for="toggleAiSentimentCard"
+                                    :class="aiSentimentEnabled ? 'bg-indigo-600' : 'bg-gray-700'"
+                                    class="toggle-label block overflow-hidden h-6 rounded-full cursor-pointer transition-colors"></label>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-500 leading-relaxed rtl:text-right">
+                            <?php echo __('human_takeover_hint'); ?>
+                        </p>
+                    </div>
+
+                    <!-- Compact Exclude Toggle -->
+                    <div
+                        class="mt-4 flex items-center justify-between gap-3 p-3 rounded-xl border border-white/5 bg-white/5 hover:border-indigo-500/30 transition-all group">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            <div
+                                class="w-1.5 h-1.5 rounded-full bg-indigo-500/50 group-hover:bg-indigo-400 group-hover:scale-125 transition-all flex-shrink-0">
+                            </div>
+                            <span
+                                class="text-[11px] font-bold text-gray-400 uppercase tracking-widest truncate group-hover:text-gray-200 transition-colors">
+                                <?php echo __('exclude_keyword_rules'); ?>
+                            </span>
+                        </div>
+
+                        <div
+                            class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in flex-shrink-0">
+                            <input type="checkbox" x-model="botExcludeKeywords" id="toggleGlobalExclCard"
+                                class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-2 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
+                            <label for="toggleGlobalExclCard"
+                                :class="botExcludeKeywords ? 'bg-indigo-600' : 'bg-gray-700'"
+                                class="toggle-label block overflow-hidden h-5 rounded-full cursor-pointer transition-colors"></label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Side: Keywords & Settings -->
+                <div class="flex-1" x-show="aiSentimentEnabled" x-transition.opacity>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <div class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+                                <label
+                                    class="text-xs font-bold text-gray-300 uppercase tracking-widest"><?php echo __('bot_anger_keywords'); ?></label>
+                            </div>
+                            <span
+                                class="text-[10px] text-indigo-400 font-mono"><?php echo __('comma_separated'); ?></span>
+                        </div>
+
+                        <div class="relative group">
+                            <textarea x-model="angerKeywords" rows="5"
+                                placeholder="<?php echo __('anger_keywords_placeholder'); ?>"
+                                class="w-full bg-black/40 border border-white/10 rounded-2xl p-5 text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all resize-none font-medium leading-relaxed group-hover:border-white/20"></textarea>
+                        </div>
+
+                        <div
+                            class="flex items-start gap-3 text-xs text-gray-500 bg-white/5 p-4 rounded-xl border border-white/5">
+                            <svg class="w-4 h-4 text-indigo-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span><?php echo __('bot_anger_keywords_help'); ?></span>
+                        </div>
+
+                        <!-- NEW: Handover Settings -->
+                        <div class="mt-6 pt-6 border-t border-white/5 space-y-4">
+                            <!-- Repetition Threshold -->
+                            <div>
+                                <label
+                                    class="block text-xs font-bold text-gray-300 uppercase tracking-widest mb-2"><?php echo __('repetition_threshold'); ?></label>
+                                <div class="flex items-center gap-3">
+                                    <input type="number" x-model="repetitionThreshold" min="1" max="10"
+                                        class="w-20 bg-black/40 border border-white/10 rounded-xl p-3 text-white text-center font-bold focus:ring-2 focus:ring-indigo-500 transition-all">
+                                    <p class="text-[10px] text-gray-500">
+                                        <?php echo __('repetition_threshold_hint') ?? 'Times a user can repeat the same message before handover.'; ?>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Handover Reply -->
+                            <div>
+                                <label
+                                    class="block text-xs font-bold text-gray-300 uppercase tracking-widest mb-2"><?php echo __('handover_reply_msg'); ?></label>
+                                <textarea x-model="handoverReply" rows="2"
+                                    placeholder="<?php echo __('handover_reply_placeholder') ?? 'Message to send before handing over...'; ?>"
+                                    class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-sm focus:ring-2 focus:ring-indigo-500 transition-all resize-none"></textarea>
+                                <p class="text-[10px] text-gray-500 mt-2">
+                                    <?php echo __('handover_reply_help') ?? 'Optional: Bot will send this message once before silencing itself.'; ?>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Disabled State -->
+                <div class="flex-1 flex flex-col items-center justify-center p-8 border-2 border-white/5 border-dashed rounded-2xl bg-black/10 min-h-[200px]"
+                    x-show="!aiSentimentEnabled" x-transition.opacity>
+                    <div class="p-4 bg-gray-800/50 rounded-full mb-4 text-gray-600">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636">
                             </path>
                         </svg>
-                        <?php echo __('add_new_rule'); ?>
-                    </button>
-                </div>
-
-                <div class="grid grid-cols-1 gap-4 max-h-[600px] overflow-y-auto pr-2 messenger-scrollbar">
-                    <template x-for="rule in rules" :key="rule.id">
-                        <div
-                            class="glass-panel p-6 rounded-2xl border border-white/5 bg-gray-800/20 hover:bg-gray-800/40 hover:border-indigo-500/30 transition-all flex justify-between items-center group shrink-0">
-                            <div class="flex items-center gap-4">
-                                <div class="p-3 bg-indigo-500/10 rounded-2xl text-indigo-400">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
-                                        </path>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <p class="text-xs font-black text-indigo-400 uppercase tracking-widest mb-1"
-                                        x-text="'<?php echo __('keywords_label'); ?>: ' + rule.keywords"></p>
-                                    <p class="text-sm text-white font-medium line-clamp-1" x-text="rule.reply_message">
-                                    </p>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button @click="previewRule(rule); scrollToPreview()"
-                                    class="p-2.5 bg-indigo-600/10 hover:bg-indigo-600 rounded-xl text-indigo-400 hover:text-white transition-all border border-indigo-500/10"
-                                    title="<?php echo __('message_preview'); ?>">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
-                                        </path>
-                                    </svg>
-                                </button>
-                                <button @click="editRule(rule)"
-                                    class="p-2.5 bg-white/5 hover:bg-white/10 rounded-xl text-gray-400 hover:text-white transition-all border border-white/5">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
-                                        </path>
-                                    </svg>
-                                </button>
-                                <button @click="deleteRule(rule.id)"
-                                    class="p-2.5 bg-red-500/10 hover:bg-red-500/20 rounded-xl text-red-500 transition-all border border-red-500/10">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                                        </path>
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-                    </template>
-
-                    <template x-if="rules.length === 0">
-                        <div class="p-12 border-2 border-white/5 border-dashed rounded-[2rem] text-center">
-                            <p class="text-gray-500 text-sm italic font-medium">
-                                <?php echo __('no_keyword_rules'); ?>
-                            </p>
-                        </div>
-                    </template>
+                    </div>
+                    <p class="text-sm text-gray-500 font-medium"><?php echo __('ai_system_disabled'); ?></p>
                 </div>
             </div>
-
-            <!-- Bot Intelligence Settings (Hidden for Comments to avoid conflict) -->
-            <!-- These settings (Cooldown, Schedule) are shared with Messenger Bot and are more relevant there. 
-                         To avoid confusion, we hide them here. If needed, they can be enabled in Messenger Bot page. -->
-            <div style="display: none;">
-                <!-- Hidden Inputs to preserve values during save -->
-                <input type="hidden" x-model="cooldownHours">
-                <input type="hidden" x-model="cooldownMinutes">
-                <input type="hidden" x-model="cooldownSeconds">
-                <input type="hidden" x-model="schEnabled">
-                <input type="hidden" x-model="schStart">
-                <input type="hidden" x-model="schEnd">
-            </div>
-
-            <!-- AI Protection Card -->
-            <div
-                class="glass-panel p-8 rounded-[2rem] border border-white/10 bg-white/5 backdrop-blur-2xl hover:border-indigo-500/20 transition-all shadow-2xl relative overflow-hidden group">
-                <!-- Decorative Background -->
-                <div
-                    class="absolute top-0 right-0 w-32 h-32 bg-indigo-600/10 blur-3xl -mr-16 -mt-16 pointer-events-none">
-                </div>
-
-                <div class="flex flex-col md:flex-row gap-8">
-                    <!-- Left Side: Toggle & Info -->
-                    <div class="flex-shrink-0 w-full md:w-64">
-                        <div class="flex items-center gap-3 mb-4">
-                            <div class="p-3 bg-indigo-500/20 rounded-xl">
-                                <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                                </svg>
-                            </div>
-                            <h3 class="text-xl font-bold text-white"><?php echo __('ai_protection'); ?></h3>
-                        </div>
-
-                        <div class="bg-black/20 p-5 rounded-2xl border border-white/5 space-y-4">
-                            <div class="flex items-center justify-between">
-                                <span
-                                    class="text-xs font-bold text-gray-400 uppercase tracking-wider"><?php echo __('status'); ?></span>
-                                <div
-                                    class="relative inline-block w-11 align-middle select-none transition duration-200 ease-in">
-                                    <input type="checkbox" x-model="aiSentimentEnabled" id="toggleAiSentimentCard"
-                                        class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
-                                    <label for="toggleAiSentimentCard"
-                                        :class="aiSentimentEnabled ? 'bg-indigo-600' : 'bg-gray-700'"
-                                        class="toggle-label block overflow-hidden h-6 rounded-full cursor-pointer transition-colors"></label>
-                                </div>
-                            </div>
-                            <p class="text-xs text-gray-500 leading-relaxed rtl:text-right">
-                                <?php echo __('human_takeover_hint'); ?>
-                            </p>
-                        </div>
-
-                        <!-- Compact Exclude Toggle -->
-                        <div
-                            class="mt-4 flex items-center justify-between gap-3 p-3 rounded-xl border border-white/5 bg-white/5 hover:border-indigo-500/30 transition-all group">
-                            <div class="flex items-center gap-2.5 min-w-0">
-                                <div
-                                    class="w-1.5 h-1.5 rounded-full bg-indigo-500/50 group-hover:bg-indigo-400 group-hover:scale-125 transition-all flex-shrink-0">
-                                </div>
-                                <span
-                                    class="text-[11px] font-bold text-gray-400 uppercase tracking-widest truncate group-hover:text-gray-200 transition-colors">
-                                    <?php echo __('exclude_keyword_rules'); ?>
-                                </span>
-                            </div>
-
-                            <div
-                                class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in flex-shrink-0">
-                                <input type="checkbox" x-model="botExcludeKeywords" id="toggleGlobalExclCard"
-                                    class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-2 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
-                                <label for="toggleGlobalExclCard"
-                                    :class="botExcludeKeywords ? 'bg-indigo-600' : 'bg-gray-700'"
-                                    class="toggle-label block overflow-hidden h-5 rounded-full cursor-pointer transition-colors"></label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Right Side: Keywords & Settings -->
-                    <div class="flex-1" x-show="aiSentimentEnabled" x-transition.opacity>
-                        <div class="space-y-4">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-2">
-                                    <div class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
-                                    <label
-                                        class="text-xs font-bold text-gray-300 uppercase tracking-widest"><?php echo __('bot_anger_keywords'); ?></label>
-                                </div>
-                                <span
-                                    class="text-[10px] text-indigo-400 font-mono"><?php echo __('comma_separated'); ?></span>
-                            </div>
-
-                            <div class="relative group">
-                                <textarea x-model="angerKeywords" rows="5"
-                                    placeholder="<?php echo __('anger_keywords_placeholder'); ?>"
-                                    class="w-full bg-black/40 border border-white/10 rounded-2xl p-5 text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all resize-none font-medium leading-relaxed group-hover:border-white/20"></textarea>
-                            </div>
-
-                            <div
-                                class="flex items-start gap-3 text-xs text-gray-500 bg-white/5 p-4 rounded-xl border border-white/5">
-                                <svg class="w-4 h-4 text-indigo-400 flex-shrink-0 mt-0.5" fill="none"
-                                    stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                <span><?php echo __('bot_anger_keywords_help'); ?></span>
-                            </div>
-
-                            <!-- NEW: Handover Settings -->
-                            <div class="mt-6 pt-6 border-t border-white/5 space-y-4">
-                                <!-- Repetition Threshold -->
-                                <div>
-                                    <label
-                                        class="block text-xs font-bold text-gray-300 uppercase tracking-widest mb-2"><?php echo __('repetition_threshold'); ?></label>
-                                    <div class="flex items-center gap-3">
-                                        <input type="number" x-model="repetitionThreshold" min="1" max="10"
-                                            class="w-20 bg-black/40 border border-white/10 rounded-xl p-3 text-white text-center font-bold focus:ring-2 focus:ring-indigo-500 transition-all">
-                                        <p class="text-[10px] text-gray-500">
-                                            <?php echo __('repetition_threshold_hint') ?? 'Times a user can repeat the same message before handover.'; ?>
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <!-- Handover Reply -->
-                                <div>
-                                    <label
-                                        class="block text-xs font-bold text-gray-300 uppercase tracking-widest mb-2"><?php echo __('handover_reply_msg'); ?></label>
-                                    <textarea x-model="handoverReply" rows="2"
-                                        placeholder="<?php echo __('handover_reply_placeholder') ?? 'Message to send before handing over...'; ?>"
-                                        class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-sm focus:ring-2 focus:ring-indigo-500 transition-all resize-none"></textarea>
-                                    <p class="text-[10px] text-gray-500 mt-2">
-                                        <?php echo __('handover_reply_help') ?? 'Optional: Bot will send this message once before silencing itself.'; ?>
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Disabled State -->
-                    <div class="flex-1 flex flex-col items-center justify-center p-8 border-2 border-white/5 border-dashed rounded-2xl bg-black/10 min-h-[200px]"
-                        x-show="!aiSentimentEnabled" x-transition.opacity>
-                        <div class="p-4 bg-gray-800/50 rounded-full mb-4 text-gray-600">
-                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636">
-                                </path>
-                            </svg>
-                        </div>
-                        <p class="text-sm text-gray-500 font-medium"><?php echo __('ai_system_disabled'); ?></p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Global Save Bar (Moved here) -->
-            <div x-show="selectedPageId" x-transition:enter="transition ease-out duration-300"
-                x-transition:enter-start="opacity-0 transform translate-y-4"
-                x-transition:enter-end="opacity-100 transform translate-y-0" class="mt-12 mb-12 flex justify-center">
-                <div
-                    class="glass-panel p-3 rounded-[2rem] border border-white/10 bg-black/40 backdrop-blur-3xl flex flex-col md:flex-row items-center justify-between gap-6 w-full max-w-4xl shadow-2xl">
-                    <div class="flex items-center gap-4 px-6 text-center md:text-left">
-                        <div class="relative">
-                            <div class="w-12 h-12 bg-indigo-600/20 rounded-2xl flex items-center justify-center">
-                                <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                                </svg>
-                            </div>
-                            <div
-                                class="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-gray-900 animate-pulse">
-                            </div>
-                        </div>
-                        <div>
-                            <p class="text-sm font-bold text-white uppercase tracking-tight">
-                                <?php echo __('wa_settings_ready') ?? 'Settings Ready to Save'; ?>
-                            </p>
-                            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em]">
-                                <?php echo __('unsaved_changes_hint'); ?>
-                            </p>
-                        </div>
-                    </div>
-                    <button @click="saveAllSettings()" :disabled="isGlobalSaving"
-                        class="px-12 py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-[1.5rem] shadow-xl shadow-indigo-600/30 transition-all transform active:scale-95 flex items-center gap-3 group">
-                        <template x-if="!isGlobalSaving">
-                            <svg class="w-5 h-5 group-hover:translate-y-[-2px] transition-transform" fill="none"
-                                stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                                    d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4">
-                                </path>
-                            </svg>
-                        </template>
-                        <template x-if="isGlobalSaving">
-                            <svg class="animate-spin w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                    stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor"
-                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                                </path>
-                            </svg>
-                        </template>
-                        <span class="uppercase tracking-widest text-xs"
-                            x-text="isGlobalSaving ? '<?php echo __('saving'); ?>...' : '<?php echo __('save_changes'); ?>'"></span>
-                    </button>
-                </div>
-            </div>
-
         </div>
+
+        <!-- Global Save Bar (Moved here) -->
+        <div x-show="selectedPageId" x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0 transform translate-y-4"
+            x-transition:enter-end="opacity-100 transform translate-y-0" class="mt-12 mb-12 flex justify-center">
+            <div
+                class="glass-panel p-3 rounded-[2rem] border border-white/10 bg-black/40 backdrop-blur-3xl flex flex-col md:flex-row items-center justify-between gap-6 w-full max-w-4xl shadow-2xl">
+                <div class="flex items-center gap-4 px-6 text-center md:text-left">
+                    <div class="relative">
+                        <div class="w-12 h-12 bg-indigo-600/20 rounded-2xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                            </svg>
+                        </div>
+                        <div
+                            class="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-gray-900 animate-pulse">
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-white uppercase tracking-tight">
+                            <?php echo __('wa_settings_ready') ?? 'Settings Ready to Save'; ?>
+                        </p>
+                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em]">
+                            <?php echo __('unsaved_changes_hint'); ?>
+                        </p>
+                    </div>
+                </div>
+                <button @click="saveAllSettings()" :disabled="isGlobalSaving"
+                    class="px-12 py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-[1.5rem] shadow-xl shadow-indigo-600/30 transition-all transform active:scale-95 flex items-center gap-3 group">
+                    <template x-if="!isGlobalSaving">
+                        <svg class="w-5 h-5 group-hover:translate-y-[-2px] transition-transform" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4">
+                            </path>
+                        </svg>
+                    </template>
+                    <template x-if="isGlobalSaving">
+                        <svg class="animate-spin w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none"
+                            viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                            </circle>
+                            <path class="opacity-75" fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                            </path>
+                        </svg>
+                    </template>
+                    <span class="uppercase tracking-widest text-xs"
+                        x-text="isGlobalSaving ? '<?php echo __('saving'); ?>...' : '<?php echo __('save_changes'); ?>'"></span>
+                </button>
+            </div>
+        </div>
+
     </div>
+</div>
 </div>
 
 </main>
@@ -1470,6 +1489,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
             defaultHideComment: false,
             defaultPrivateReplyEnabled: false,
             defaultPrivateReplyText: '',
+            defaultAutoLike: false,
             savingDefault: false,
             showModal: false,
             editMode: false,
@@ -1555,6 +1575,12 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 this.$watch('defaultReplyText', () => {
                     this.previewMode = 'default';
                 });
+
+                // Auto-save default reply settings when changed
+                this.$watch('defaultHideComment', () => { this.saveDefaultSettings(); });
+                this.$watch('defaultAutoLike', () => { this.saveDefaultSettings(); });
+                this.$watch('defaultPrivateReplyEnabled', () => { this.saveDefaultSettings(); });
+                this.$watch('defaultPrivateReplyText', () => { this.saveDefaultSettings(); });
 
                 setInterval(() => {
                     this.fetchHandover();
@@ -1722,6 +1748,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 this.defaultHideComment = (defRule.hide_comment == 1);
                                 this.defaultPrivateReplyEnabled = (defRule.private_reply_enabled == 1);
                                 this.defaultPrivateReplyText = defRule.private_reply_text || '';
+                                this.defaultAutoLike = (defRule.auto_like_comment == 1);
                             }
                         }
                     });
@@ -1841,6 +1868,23 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
             },
 
             closeModal() { this.showModal = false; },
+
+            saveDefaultSettings() {
+                if (!this.selectedPageId) return;
+                let formData = new FormData();
+                formData.append('page_id', this.selectedPageId);
+                formData.append('type', 'default');
+                formData.append('reply', this.defaultReplyText);
+                formData.append('hide_comment', this.defaultHideComment ? '1' : '0');
+                formData.append('private_reply_enabled', this.defaultPrivateReplyEnabled ? '1' : '0');
+                formData.append('private_reply_text', this.defaultPrivateReplyText);
+                formData.append('auto_like_comment', this.defaultAutoLike ? '1' : '0');
+                fetch('ajax_auto_reply.php?action=save_rule', { method: 'POST', body: formData })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (!data.success) console.error('Failed to save default settings');
+                    });
+            },
 
             saveRule() {
                 if (!this.selectedPageId || !this.modalReply) return;
