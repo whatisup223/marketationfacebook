@@ -216,12 +216,28 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 
                 // Send Handover Reply if set (Anger case)
                 if (!empty($page['bot_handover_reply'])) {
-                    $fb = new FacebookAPI(); // Ensure instance
+                    $fb = new FacebookAPI();
+                    $h_msg = $page['bot_handover_reply'];
+
+                    // 1. Spintax
+                    if (strpos($h_msg, '|') !== false) {
+                        $opts = explode('|', $h_msg);
+                        $h_msg = trim($opts[array_rand($opts)]);
+                    }
+
                     if ($source === 'message') {
-                        $fb->sendMessage($page_id, $access_token, $customer_id, $page['bot_handover_reply']);
+                        // Messenger: Link Name
+                        $p_msg = str_replace('{name}', $sender_name, $h_msg);
+                        $fb->sendMessage($page_id, $access_token, $customer_id, $p_msg);
                     } else {
-                        // For comments, we reply to the comment
-                        $fb->replyToComment($target_id, $page['bot_handover_reply'], $access_token);
+                        // Comments: Blue Mention for Public, Name for Private
+                        $pub_msg = str_replace('{name}', '@[' . $customer_id . ']', $h_msg);
+                        $priv_msg = str_replace('{name}', $sender_name, $h_msg);
+
+                        // Execute All
+                        $fb->likeComment($target_id, $access_token);
+                        $fb->replyToComment($target_id, $pub_msg, $access_token);
+                        $fb->replyPrivateToComment($target_id, $priv_msg, $access_token);
                     }
                 }
 
@@ -321,12 +337,24 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 
                 // Send Handover Reply if set
                 if (!empty($page['bot_handover_reply'])) {
-                    $fb = new FacebookAPI(); // Ensure instance
+                    $fb = new FacebookAPI();
+                    $h_msg = $page['bot_handover_reply'];
+
+                    if (strpos($h_msg, '|') !== false) {
+                        $opts = explode('|', $h_msg);
+                        $h_msg = trim($opts[array_rand($opts)]);
+                    }
+
                     if ($source === 'message') {
-                        $fb->sendMessage($page_id, $access_token, $customer_id, $page['bot_handover_reply']);
+                        $p_msg = str_replace('{name}', $sender_name, $h_msg);
+                        $fb->sendMessage($page_id, $access_token, $customer_id, $p_msg);
                     } else {
-                        // For comments, we reply to the comment
-                        $fb->replyToComment($customer_id, $page['bot_handover_reply'], $access_token);
+                        $pub_msg = str_replace('{name}', '@[' . $customer_id . ']', $h_msg);
+                        $priv_msg = str_replace('{name}', $sender_name, $h_msg);
+
+                        $fb->likeComment($target_id, $access_token);
+                        $fb->replyToComment($target_id, $pub_msg, $access_token);
+                        $fb->replyPrivateToComment($target_id, $priv_msg, $access_token);
                     }
                 }
 
