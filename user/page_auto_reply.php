@@ -1062,10 +1062,10 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         </div>
 
                         <!-- Handover Settings (Inside AI Card) -->
-                        <div class="mt-6 pt-6 border-t border-white/5 ">
+                        <div class="mt-6 pt-6 border-t border-white/5">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <!-- Left: Repetition Threshold -->
-                                <div class="space-y-4">
+                                <div>
                                     <label
                                         class="block text-xs font-bold text-gray-300 uppercase tracking-widest mb-2"><?php echo __('repetition_threshold'); ?></label>
                                     <div class="flex items-center gap-3">
@@ -1078,13 +1078,13 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 </div>
 
                                 <!-- Right: Handover Reply -->
-                                <div class="space-y-4">
+                                <div>
                                     <label
                                         class="block text-xs font-bold text-gray-300 uppercase tracking-widest mb-2"><?php echo __('handover_reply_msg'); ?></label>
                                     <textarea x-model="handoverReply" rows="3"
                                         placeholder="<?php echo __('handover_reply_placeholder') ?? 'Message to send before handing over...'; ?>"
                                         class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-sm focus:ring-2 focus:ring-indigo-500 transition-all resize-none"></textarea>
-                                    <p class="text-[10px] text-gray-500">
+                                    <p class="text-[10px] text-gray-500 mt-2">
                                         <?php echo __('handover_reply_help') ?? 'Optional: Bot will send this message once before silencing itself.'; ?>
                                     </p>
                                 </div>
