@@ -9,7 +9,14 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $action = $_GET['action'] ?? '';
-$user_id = $_SESSION['user_id'];
+$user_id = $_SESSION['user_id'] ?? null;
+
+if (!$user_id) {
+    echo json_encode(['error' => 'User not logged in']);
+    exit;
+}
+
+$pdo = getDB();
 
 try {
     if ($action === 'fetch_smtp') {
@@ -22,14 +29,14 @@ try {
 
     if ($action === 'save_smtp') {
         $config = [
-            'enabled' => $_POST['enabled'] == '1',
-            'host' => trim($_POST['host']),
-            'port' => trim($_POST['port']),
-            'encryption' => trim($_POST['encryption']),
-            'username' => trim($_POST['username']),
-            'password' => trim($_POST['password']),
-            'from_email' => trim($_POST['from_email']),
-            'from_name' => trim($_POST['from_name']),
+            'enabled' => ($_POST['enabled'] ?? '0') == '1',
+            'host' => trim($_POST['host'] ?? ''),
+            'port' => trim($_POST['port'] ?? '587'),
+            'encryption' => trim($_POST['encryption'] ?? 'tls'),
+            'username' => trim($_POST['username'] ?? ''),
+            'password' => trim($_POST['password'] ?? ''),
+            'from_email' => trim($_POST['from_email'] ?? ''),
+            'from_name' => trim($_POST['from_name'] ?? ''),
         ];
 
         // Basic validation
