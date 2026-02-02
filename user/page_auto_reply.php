@@ -70,9 +70,9 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             class="w-full bg-black/40 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-3.5 pr-10 appearance-none transition-all group-hover:border-white/20">
                             <option value=""><?php echo __('select_page'); ?>...</option>
                             <?php foreach ($pages as $page): ?>
-                                    <option value="<?php echo htmlspecialchars($page['page_id']); ?>">
-                                        <?php echo htmlspecialchars($page['page_name']); ?>
-                                    </option>
+                                <option value="<?php echo htmlspecialchars($page['page_id']); ?>">
+                                    <?php echo htmlspecialchars($page['page_name']); ?>
+                                </option>
                             <?php endforeach; ?>
                         </select>
                         <div
@@ -1153,7 +1153,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
     x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200"
     x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
 
-    <div class="bg-gray-900 border border-white/10 rounded-[2.5rem] w-full max-w-lg overflow-hidden shadow-2xl relative"
+    <div class="bg-gray-900 border border-white/10 rounded-[2.5rem] w-full max-w-lg max-h-[90vh] overflow-y-auto messenger-scrollbar shadow-2xl relative"
         @click.away="closeModal()">
         <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-600/10 blur-3xl -mr-10 -mt-10 pointer-events-none">
         </div>
@@ -1534,6 +1534,10 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         setTimeout(() => this.scrollToPreview(), 1000);
                     }
                 }, 30000);
+
+                this.$watch('showModal', value => {
+                    document.body.style.overflow = value ? 'hidden' : '';
+                });
             },
 
             previewRule(rule) {
