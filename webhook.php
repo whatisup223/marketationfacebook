@@ -263,16 +263,25 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
         $private_reply_text = trim($options[array_rand($options)]);
     }
 
-    // 2. Mention User: Smart replacement based on source
-    // For comments: Use @[USER_ID] for proper tagging (blue clickable link)
-    // For messages: Use plain name (Messenger doesn't support mentions)
-    if ($source === 'comment' && !empty($customer_id)) {
-        $mention = '@[' . $customer_id . ']';
-        $reply_msg = str_replace('{name}', $mention, $reply_msg);
-        $private_reply_text = str_replace('{name}', $mention, $private_reply_text);
-    } elseif (!empty($sender_name)) {
-        $reply_msg = str_replace('{name}', $sender_name, $reply_msg);
-        $private_reply_text = str_replace('{name}', $sender_name, $private_reply_text);
+    // 2. Mention User: Smart replacement based on source and destination
+    // For the PUBLIC COMMENT: We use @[ID] (Blue mention)
+    // For ANY MESSAGE (Private or Direct): We use the Name
+    if ($source === 'comment') {
+        // Public Reply (The actual comment)
+        if (!empty($customer_id)) {
+            $mention = '@[' . $customer_id . ']';
+            $reply_msg = str_replace('{name}', $mention, $reply_msg);
+        }
+        // Private Reply (The inbox message sent after comment)
+        if (!empty($sender_name)) {
+            $private_reply_text = str_replace('{name}', $sender_name, $private_reply_text);
+        }
+    } else {
+        // Source is 'message' (Direct Messenger Bot)
+        if (!empty($sender_name)) {
+            $reply_msg = str_replace('{name}', $sender_name, $reply_msg);
+            $private_reply_text = str_replace('{name}', $sender_name, $private_reply_text);
+        }
     }
 
     // 4. Advanced SaaS Logic (Repeat Detection only)
