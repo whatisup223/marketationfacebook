@@ -797,6 +797,9 @@ $translations = [
         'clear' => 'مسح',
         'invalid_image_url' => 'رابط الصورة غير صالح',
         'image_hint' => 'يمكنك إرفاق صورة توضيحية مع الرد لجعله أكثر احترافية',
+        'send_private_reply' => 'إرسال رسالة خاصة (DM)',
+        'send_private_reply_hint' => 'تفعيل هذا الخيار سيؤدي لإرسال رسالة خاصة للعميل فور التعليق.',
+        'private_reply_placeholder' => 'اكتب نص الرسالة الخاصة هنا...',
 
         // Contact
         'contact_us' => 'اتصل بنا',
@@ -1590,6 +1593,9 @@ $translations = [
         'keyword_violation' => 'Banned Keyword: ',
         'phone_violation' => 'Phone Number',
         'link_violation' => 'Link (URL)',
+        'send_private_reply' => 'Send Private Reply (DM)',
+        'send_private_reply_hint' => 'Enabling this will automatically send a private message to the user upon commenting.',
+        'private_reply_placeholder' => 'Type the private message here...',
         'view_all_activity' => 'View All Activity',
         'user_panel' => 'User Panel',
         'admin_panel' => 'Admin Panel',

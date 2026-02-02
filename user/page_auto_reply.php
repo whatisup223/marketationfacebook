@@ -70,9 +70,9 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             class="w-full bg-black/40 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-3.5 pr-10 appearance-none transition-all group-hover:border-white/20">
                             <option value=""><?php echo __('select_page'); ?>...</option>
                             <?php foreach ($pages as $page): ?>
-                                <option value="<?php echo htmlspecialchars($page['page_id']); ?>">
-                                    <?php echo htmlspecialchars($page['page_name']); ?>
-                                </option>
+                                    <option value="<?php echo htmlspecialchars($page['page_id']); ?>">
+                                        <?php echo htmlspecialchars($page['page_name']); ?>
+                                    </option>
                             <?php endforeach; ?>
                         </select>
                         <div
@@ -825,6 +825,39 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             class="toggle-label block overflow-hidden h-6 rounded-full cursor-pointer transition-colors"></label>
                     </div>
                 </div>
+
+                <!-- Private Reply Section (Default) -->
+                <div class="mt-4 p-4 bg-white/5 rounded-2xl border border-white/5">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2.5 bg-blue-500/10 rounded-xl">
+                                <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z">
+                                    </path>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold text-white"><?php echo __('send_private_reply'); ?></p>
+                                <p class="text-[10px] text-gray-500"><?php echo __('send_private_reply_hint'); ?></p>
+                            </div>
+                        </div>
+                        <div
+                            class="relative inline-block w-12 align-middle select-none transition duration-200 ease-in">
+                            <input type="checkbox" x-model="defaultPrivateReplyEnabled" id="togglePrivateReplyDefault"
+                                class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-6 transition-all duration-300" />
+                            <label for="togglePrivateReplyDefault"
+                                :class="defaultPrivateReplyEnabled ? 'bg-indigo-600' : 'bg-gray-700'"
+                                class="toggle-label block overflow-hidden h-6 rounded-full cursor-pointer transition-colors"></label>
+                        </div>
+                    </div>
+                    <div x-show="defaultPrivateReplyEnabled" x-transition>
+                        <textarea x-model="defaultPrivateReplyText" rows="2"
+                            class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white placeholder-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm"
+                            placeholder="<?php echo __('private_reply_placeholder'); ?>"></textarea>
+                    </div>
+                </div>
             </div>
 
             <!-- Keyword Rules Section -->
@@ -1178,6 +1211,39 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     </div>
                 </div>
 
+                <!-- Private Reply Section (Modal) -->
+                <div class="p-4 bg-white/5 rounded-2xl border border-white/5">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2.5 bg-blue-500/10 rounded-xl">
+                                <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z">
+                                    </path>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold text-white"><?php echo __('send_private_reply'); ?></p>
+                                <p class="text-[10px] text-gray-500"><?php echo __('send_private_reply_hint'); ?></p>
+                            </div>
+                        </div>
+                        <div
+                            class="relative inline-block w-12 align-middle select-none transition duration-200 ease-in">
+                            <input type="checkbox" x-model="modalPrivateReplyEnabled" id="togglePrivateReplyModal"
+                                class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-6 transition-all duration-300" />
+                            <label for="togglePrivateReplyModal"
+                                :class="modalPrivateReplyEnabled ? 'bg-indigo-600' : 'bg-gray-700'"
+                                class="toggle-label block overflow-hidden h-6 rounded-full cursor-pointer transition-colors"></label>
+                        </div>
+                    </div>
+                    <div x-show="modalPrivateReplyEnabled" x-transition>
+                        <textarea x-model="modalPrivateReplyText" rows="2"
+                            class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white placeholder-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm"
+                            placeholder="<?php echo __('private_reply_placeholder'); ?>"></textarea>
+                    </div>
+                </div>
+
                 <!-- New Advanced Feature Flags -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <!-- AI Safe Toggle -->
@@ -1372,6 +1438,8 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
             rules: [],
             defaultReplyText: '',
             defaultHideComment: false,
+            defaultPrivateReplyEnabled: false,
+            defaultPrivateReplyText: '',
             savingDefault: false,
             showModal: false,
             editMode: false,
@@ -1379,6 +1447,8 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
             modalKeywords: '',
             modalReply: '',
             modalHideComment: false,
+            modalPrivateReplyEnabled: false,
+            modalPrivateReplyText: '',
             subscribing: false,
             stopping: false,
             modalAiSafe: true,
@@ -1572,6 +1642,8 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 formData.append('reply', this.defaultReplyText);
                 formData.append('keywords', '*');
                 formData.append('hide_comment', this.defaultHideComment ? '1' : '0');
+                formData.append('private_reply_enabled', this.defaultPrivateReplyEnabled ? '1' : '0');
+                formData.append('private_reply_text', this.defaultPrivateReplyText);
                 return fetch('ajax_auto_reply.php?action=save_rule', { method: 'POST', body: formData })
                     .then(res => res.json());
             },
@@ -1614,6 +1686,8 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             if (defRule) {
                                 this.defaultReplyText = defRule.reply_message;
                                 this.defaultHideComment = (defRule.hide_comment == 1);
+                                this.defaultPrivateReplyEnabled = (defRule.private_reply_enabled == 1);
+                                this.defaultPrivateReplyText = defRule.private_reply_text || '';
                             }
                         }
                     });
@@ -1707,6 +1781,8 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 this.modalKeywords = '';
                 this.modalReply = '';
                 this.modalHideComment = false;
+                this.modalPrivateReplyEnabled = false;
+                this.modalPrivateReplyText = '';
                 this.modalAiSafe = true;
                 this.modalBypassSchedule = false;
                 this.modalBypassCooldown = false;
@@ -1718,7 +1794,10 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 this.currentRuleId = rule.id;
                 this.modalKeywords = rule.keywords;
                 this.modalReply = rule.reply_message;
+                this.modalReply = rule.reply_message;
                 this.modalHideComment = (rule.hide_comment == 1);
+                this.modalPrivateReplyEnabled = (rule.private_reply_enabled == 1);
+                this.modalPrivateReplyText = rule.private_reply_text || '';
                 this.modalAiSafe = (rule.is_ai_safe == 1);
                 this.modalBypassSchedule = (rule.bypass_schedule == 1);
                 this.modalBypassCooldown = (rule.bypass_cooldown == 1);
@@ -1735,6 +1814,8 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 formData.append('keywords', this.modalKeywords);
                 formData.append('reply', this.modalReply);
                 formData.append('hide_comment', this.modalHideComment ? '1' : '0');
+                formData.append('private_reply_enabled', this.modalPrivateReplyEnabled ? '1' : '0');
+                formData.append('private_reply_text', this.modalPrivateReplyText);
                 formData.append('is_ai_safe', this.modalAiSafe ? '1' : '0');
                 formData.append('bypass_schedule', this.modalBypassSchedule ? '1' : '0');
                 formData.append('bypass_cooldown', this.modalBypassCooldown ? '1' : '0');
