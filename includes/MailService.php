@@ -12,15 +12,25 @@ class MailService
     private $fromName;
     private $debug = [];
 
-    public function __construct()
+    public function __construct($config = null)
     {
-        $this->host = getSetting('smtp_host');
-        $this->port = getSetting('smtp_port', 587);
-        $this->username = getSetting('smtp_username');
-        $this->password = getSetting('smtp_password');
-        $this->encryption = getSetting('smtp_encryption', 'tls'); // tls, ssl, or none
-        $this->fromName = getSetting('smtp_from_name', getSetting('site_name'));
-        $this->fromEmail = getSetting('smtp_username'); // Usually same as username
+        if ($config) {
+            $this->host = $config['host'] ?? '';
+            $this->port = $config['port'] ?? 587;
+            $this->username = $config['username'] ?? '';
+            $this->password = $config['password'] ?? '';
+            $this->encryption = $config['encryption'] ?? 'tls';
+            $this->fromName = $config['from_name'] ?? getSetting('site_name');
+            $this->fromEmail = $config['from_email'] ?? $this->username;
+        } else {
+            $this->host = getSetting('smtp_host');
+            $this->port = getSetting('smtp_port', 587);
+            $this->username = getSetting('smtp_username');
+            $this->password = getSetting('smtp_password');
+            $this->encryption = getSetting('smtp_encryption', 'tls'); // tls, ssl, or none
+            $this->fromName = getSetting('smtp_from_name', getSetting('site_name'));
+            $this->fromEmail = getSetting('smtp_username'); // Usually same as username
+        }
     }
 
     public function send($to, $subject, $message, $isHtml = true)

@@ -1415,6 +1415,30 @@ $translations = [
         'handover_reply_msg' => 'رسالة التسليم (Handover)',
         'handover_reply_placeholder' => 'اكتب الرسالة التي سيرد بها البوت قبل الصمت...',
         'handover_reply_help' => 'اختياري: سيرسل البوت هذه الرسالة لمرة واحدة قبل أن يصمت نهائياً.',
+        'smtp_settings' => 'إعدادات SMTP',
+        'smtp_configuration' => 'تكوين SMTP',
+        'smtp_user_config_desc' => 'قم بإعداد خادم البريد الخاص بك لاستقبال الإشعارات الهامة.',
+        'enable_email_alerts' => 'تفعيل تنبيهات البريد',
+        'smtp_host' => 'خادم SMTP',
+        'smtp_port' => 'منفذ SMTP',
+        'smtp_encryption' => 'التشفير',
+        'smtp_username' => 'اسم المستخدم',
+        'smtp_password' => 'كلمة المرور',
+        'smtp_from_email' => 'البريد المرسل (From)',
+        'smtp_from_name' => 'الاسم المرسل (From Name)',
+        'save_settings' => 'حفظ الإعدادات',
+        'saving' => 'جاري الحفظ',
+        'test_smtp_settings' => 'اختبار الاتصال',
+        'testing' => 'جاري الاختبار',
+        'fill_all_fields' => 'يرجى ملء جميع الحقول المطلوبة.',
+        'settings_updated' => 'تم تحديث الإعدادات بنجاح.',
+        'smtp_test_success' => 'تم الاتصال بخادم البريد بنجاح!',
+        'handover_alert_subject' => 'تنبيه: تدخل بشري مطلوب في %s',
+        'handover_alert_body_intro' => 'مرحباً %s،',
+        'handover_alert_body_msg' => 'هناك محادثة تتطلب انتباهك على صفحة <b>%s</b>.',
+        'customer_name' => 'اسم العميل',
+        'message_snippet' => 'مقتطف من الرسالة',
+        'view_conversation' => 'عرض المحادثة',
         'unsaved_changes_hint' => 'راجع تغييراتك بدقة قبل الحفظ',
         'saving' => 'جاري الحفظ',
         'wa_settings_ready' => 'الإعدادات جاهزة للحفظ',
@@ -2123,29 +2147,7 @@ $translations = [
         'user_label' => 'User',
         'cancel' => 'Cancel',
 
-        // Localization
-        'localization_settings' => 'Localization Settings',
-        'default_site_language' => 'Default Site Language',
-        'default_lang_desc' => 'The language displayed to new visitors who have not set their preference yet.',
-        'smtp_test_success' => 'Test email sent successfully! Check your inbox.',
-        'smtp_test_failed' => 'Failed to send test email. Check your SMTP settings.',
-        'smtp_settings' => 'SMTP Settings',
-        'smtp_configuration' => 'SMTP Configuration',
-        'smtp_host' => 'SMTP Host',
-        'smtp_port' => 'SMTP Port',
-        'hide_comment' => 'Hide Comment',
-        'hide_comment_desc' => 'Automatically hide the user\'s comment after replying',
-        'auto_hide_status' => 'Hidden',
-        'activate_auto_reply' => 'Activate Auto-Reply on Page',
-        'processing_activity' => 'Processing...',
-        'smtp_encryption' => 'SMTP Encryption',
-        'smtp_username' => 'SMTP Username',
-        'smtp_password' => 'SMTP Password',
-        'smtp_from_name' => 'From Name',
-        'test_smtp_settings' => 'Test SMTP Settings',
-        'test_email_address' => 'Test Email Address',
-        'send_test_email' => 'Send Test Email',
-        'smtp_info_note' => 'Note: Make sure SMTP details are correct to ensure emails reach users.',
+
 
         // Misc
         'bot_intelligence_settings' => 'Advanced Intelligence & Scheduling',
@@ -2503,6 +2505,30 @@ $translations = [
         'handover_reply_msg' => 'Handover Reply Message',
         'handover_reply_placeholder' => 'Message sent before bot silences itself...',
         'handover_reply_help' => 'Optional: Bot sends this once before switching to human agent.',
+        'smtp_settings' => 'SMTP Settings',
+        'smtp_configuration' => 'SMTP Configuration',
+        'smtp_user_config_desc' => 'Configure your own SMTP server to receive important notifications.',
+        'enable_email_alerts' => 'Enable Email Alerts',
+        'smtp_host' => 'SMTP Host',
+        'smtp_port' => 'SMTP Port',
+        'smtp_encryption' => 'Encryption',
+        'smtp_username' => 'Username',
+        'smtp_password' => 'Password',
+        'smtp_from_email' => 'From Email',
+        'smtp_from_name' => 'From Name',
+        'save_settings' => 'Save Settings',
+        'saving' => 'Saving',
+        'test_smtp_settings' => 'Test Connection',
+        'testing' => 'Testing',
+        'fill_all_fields' => 'Please fill all required fields.',
+        'settings_updated' => 'Settings updated successfully.',
+        'smtp_test_success' => 'Connected to SMTP server successfully!',
+        'handover_alert_subject' => 'Alert: Human Intervention Needed on %s',
+        'handover_alert_body_intro' => 'Hi %s,',
+        'handover_alert_body_msg' => 'A conversation requires your attention on page <b>%s</b>.',
+        'customer_name' => 'Customer Name',
+        'message_snippet' => 'Message Snippet',
+        'view_conversation' => 'View Conversation',
         'faqs_title_ar' => 'FAQs Title (Arabic)',
         'faqs_title_en' => 'FAQs Title (English)',
         'facebook' => 'Facebook Tools',
@@ -2867,6 +2893,37 @@ function notifyAdmins($title, $message, $link = '#')
 }
 
 
+
+
+// --- Email Functions ---
+
+function sendUserEmail($user_id, $to, $subject, $body, $custom_config = null)
+{
+    require_once __DIR__ . '/MailService.php';
+
+    $config = $custom_config;
+    if (!$config) {
+        $pdo = getDB();
+        $stmt = $pdo->prepare("SELECT smtp_config FROM users WHERE id = ?");
+        $stmt->execute([$user_id]);
+        $config = json_decode($stmt->fetchColumn() ?: '{}', true);
+    }
+
+    // Check if user has enabled SMTP and it is valid
+    if (!empty($config) && !empty($config['enabled']) && !empty($config['host'])) {
+        try {
+            $mailer = new MailService($config);
+            $result = $mailer->send($to, $subject, $body);
+            return $result === true ? true : "SMTP Error";
+        } catch (Exception $e) {
+            error_log("User SMTP Error: " . $e->getMessage());
+            return "Mailer Error: " . $e->getMessage();
+        }
+    } else {
+        return false; // Not enabled or invalid
+    }
+}
+
 function getSetting($key, $default = null)
 {
     static $settings = null;
@@ -2944,8 +3001,18 @@ function time_elapsed_string($datetime, $full = false)
         return 'Just now';
     }
 
-    $diff->w = floor($diff->d / 7);
-    $diff->d -= $diff->w * 7;
+    $weeks = floor($diff->d / 7);
+    $days = $diff->d % 7;
+
+    $diff_values = [
+        'y' => $diff->y,
+        'm' => $diff->m,
+        'w' => $weeks,
+        'd' => $days,
+        'h' => $diff->h,
+        'i' => $diff->i,
+        's' => $diff->s,
+    ];
 
     $string = array(
         'y' => 'year',
@@ -2957,8 +3024,8 @@ function time_elapsed_string($datetime, $full = false)
         's' => 'second',
     );
     foreach ($string as $k => &$v) {
-        if ($diff->$k) {
-            $v = $diff->$k . ' ' . $v . ($diff->$k > 1 ? 's' : '');
+        if ($diff_values[$k]) {
+            $v = $diff_values[$k] . ' ' . $v . ($diff_values[$k] > 1 ? 's' : '');
         } else {
             unset($string[$k]);
         }

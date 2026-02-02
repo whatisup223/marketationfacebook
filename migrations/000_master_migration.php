@@ -66,13 +66,21 @@ try {
     $pdo->exec("CREATE TABLE IF NOT EXISTS `users` (
         `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
         `username` varchar(50) NOT NULL,
+        `name` varchar(100) DEFAULT NULL,
         `password` varchar(255) NOT NULL,
         `email` varchar(100) DEFAULT NULL,
+        `avatar` varchar(255) DEFAULT NULL,
         `role` enum('user','admin') NOT NULL DEFAULT 'user',
         `status` enum('active','inactive') NOT NULL DEFAULT 'active',
+        `points` int(11) DEFAULT 0,
+        `webhook_token` varchar(100) DEFAULT NULL,
+        `preferences` text DEFAULT NULL,
+        `smtp_config` text DEFAULT NULL,
+        `last_login` datetime DEFAULT NULL,
         `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
         PRIMARY KEY (`id`),
-        UNIQUE KEY `username` (`username`)
+        UNIQUE KEY `username` (`username`),
+        UNIQUE KEY `webhook_token` (`webhook_token`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
 
     $pdo->exec("CREATE TABLE IF NOT EXISTS `fb_accounts` (
@@ -81,6 +89,7 @@ try {
         `fb_user_id` varchar(100) NOT NULL,
         `fb_user_name` varchar(255) DEFAULT NULL,
         `access_token` text NOT NULL,
+        `is_active` tinyint(1) DEFAULT 1,
         `status` enum('active','expired') NOT NULL DEFAULT 'active',
         `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
         PRIMARY KEY (`id`),
@@ -93,18 +102,45 @@ try {
         `page_id` varchar(100) NOT NULL,
         `page_name` varchar(255) NOT NULL,
         `page_access_token` text NOT NULL,
+        `picture_url` text DEFAULT NULL,
+        `last_cursor` text DEFAULT NULL,
+        `bot_cooldown_seconds` int(11) DEFAULT 0,
+        `bot_schedule_enabled` tinyint(1) DEFAULT 0,
+        `bot_schedule_start` time DEFAULT '00:00:00',
+        `bot_schedule_end` time DEFAULT '23:59:59',
+        `bot_exclude_keywords` tinyint(1) DEFAULT 0,
+        `bot_ai_sentiment_enabled` tinyint(1) DEFAULT 1,
+        `bot_anger_keywords` text DEFAULT NULL,
+        `bot_repetition_threshold` int(11) DEFAULT 3,
+        `bot_handover_reply` text DEFAULT NULL,
+        `default_reply_image_url` text DEFAULT NULL,
         `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
         PRIMARY KEY (`id`),
         KEY `account_id` (`account_id`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
 
-    $pdo->exec("CREATE TABLE IF NOT EXISTS `tickets` (
+    $pdo->exec("CREATE TABLE IF NOT EXISTS `support_tickets` (
         `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
         `user_id` int(11) UNSIGNED NOT NULL,
         `subject` varchar(255) NOT NULL,
-        `status` enum('open','closed','pending') NOT NULL DEFAULT 'open',
+        `status` enum('open','answered','pending','solved','closed') DEFAULT 'open',
+        `is_read_user` tinyint(1) DEFAULT 0,
+        `is_read_admin` tinyint(1) DEFAULT 0,
+        `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+        `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+        PRIMARY KEY (`id`),
+        KEY `user_id` (`user_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+    $pdo->exec("CREATE TABLE IF NOT EXISTS `ticket_messages` (
+        `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+        `ticket_id` int(11) UNSIGNED NOT NULL,
+        `user_id` int(11) UNSIGNED NOT NULL,
+        `message` text NOT NULL,
+        `is_admin` tinyint(1) DEFAULT 0,
         `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
         PRIMARY KEY (`id`),
+        KEY `ticket_id` (`ticket_id`),
         KEY `user_id` (`user_id`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
 
@@ -323,6 +359,94 @@ try {
         INDEX (`page_id`),
         INDEX (`user_id`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+    // --- 037: Core System Tables (Notifications, Settings, Leads, Campaigns) ---
+    $pdo->exec("CREATE TABLE IF NOT EXISTS `notifications` (
+        `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+        `user_id` int(11) UNSIGNED NOT NULL,
+        `title` varchar(255) NOT NULL,
+        `message` text NOT NULL,
+        `link` varchar(255) DEFAULT '#',
+        `is_read` tinyint(1) DEFAULT 0,
+        `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+        PRIMARY KEY (`id`),
+        KEY `user_id` (`user_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+    $pdo->exec("CREATE TABLE IF NOT EXISTS `settings` (
+        `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+        `setting_key` varchar(100) NOT NULL,
+        `setting_value` longtext DEFAULT NULL,
+        PRIMARY KEY (`id`),
+        UNIQUE KEY `setting_key` (`setting_key`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+    $pdo->exec("CREATE TABLE IF NOT EXISTS `fb_leads` (
+        `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+        `page_id` int(11) UNSIGNED DEFAULT NULL,
+        `fb_user_id` varchar(100) NOT NULL,
+        `fb_user_name` varchar(255) DEFAULT NULL,
+        `last_interaction` datetime DEFAULT NULL,
+        `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+        PRIMARY KEY (`id`),
+        KEY `page_id` (`page_id`),
+        KEY `fb_user_id` (`fb_user_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+    $pdo->exec("CREATE TABLE IF NOT EXISTS `campaigns` (
+        `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+        `user_id` int(11) UNSIGNED NOT NULL,
+        `page_id` int(11) UNSIGNED NOT NULL,
+        `name` varchar(255) NOT NULL,
+        `message_text` text DEFAULT NULL,
+        `image_url` text DEFAULT NULL,
+        `status` enum('pending','running','paused','completed','failed') DEFAULT 'pending',
+        `total_leads` int(11) DEFAULT 0,
+        `sent_count` int(11) DEFAULT 0,
+        `failed_count` int(11) DEFAULT 0,
+        `batch_size` int(11) DEFAULT 10,
+        `retry_count` int(11) DEFAULT 3,
+        `retry_delay` int(11) DEFAULT 5,
+        `scheduled_at` datetime DEFAULT NULL,
+        `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+        PRIMARY KEY (`id`),
+        KEY `user_id` (`user_id`),
+        KEY `page_id` (`page_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+    $pdo->exec("CREATE TABLE IF NOT EXISTS `campaign_queue` (
+        `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+        `campaign_id` int(11) UNSIGNED NOT NULL,
+        `lead_id` int(11) UNSIGNED NOT NULL,
+        `status` enum('pending','sent','failed') DEFAULT 'pending',
+        `error_msg` text DEFAULT NULL,
+        `sent_at` datetime DEFAULT NULL,
+        `retry_at` datetime DEFAULT NULL,
+        PRIMARY KEY (`id`),
+        KEY `campaign_id` (`campaign_id`),
+        KEY `lead_id` (`lead_id`),
+        KEY `status` (`status`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+    // --- 038: Ensure incremental columns are added if they weren't in initial CREATE TABLE ---
+    if (!columnExists($pdo, 'users', 'preferences')) {
+        $pdo->exec("ALTER TABLE users ADD COLUMN preferences TEXT DEFAULT NULL");
+    }
+    if (!columnExists($pdo, 'users', 'smtp_config')) {
+        $pdo->exec("ALTER TABLE users ADD COLUMN smtp_config TEXT DEFAULT NULL");
+    }
+    if (!columnExists($pdo, 'fb_pages', 'bot_repetition_threshold')) {
+        $pdo->exec("ALTER TABLE fb_pages ADD COLUMN bot_repetition_threshold INT DEFAULT 3");
+    }
+    if (!columnExists($pdo, 'fb_pages', 'bot_handover_reply')) {
+        $pdo->exec("ALTER TABLE fb_pages ADD COLUMN bot_handover_reply TEXT DEFAULT NULL");
+    }
+    if (!columnExists($pdo, 'users', 'name')) {
+        $pdo->exec("ALTER TABLE users ADD COLUMN name VARCHAR(100) DEFAULT NULL AFTER username");
+    }
+    if (!columnExists($pdo, 'fb_accounts', 'is_active')) {
+        $pdo->exec("ALTER TABLE fb_accounts ADD COLUMN is_active TINYINT(1) DEFAULT 1 AFTER access_token");
+    }
 
     echo "✅ Master Migration completed successfully!\n";
 

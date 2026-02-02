@@ -163,9 +163,9 @@ if (isLoggedIn()) {
                 extend: {
                     fontFamily: {
                         <?php if ($lang === 'ar'): ?>
-                                                                                                                                                                                            sans: ['IBM Plex Sans Arabic', 'sans-serif'],
+                                                                                                                                                                                                sans: ['IBM Plex Sans Arabic', 'sans-serif'],
                         <?php else: ?>
-                                                                                                                                                                                            sans: ['Outfit', 'sans-serif'],
+                                                                                                                                                                                                sans: ['Outfit', 'sans-serif'],
                         <?php endif; ?>
                     },
                     colors: {
@@ -376,16 +376,16 @@ if (isLoggedIn()) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id: id })
             })
-            .then(res => res.json())
-            .then(data => {
-                if (!data.success) {
-                    console.error('Mark read failed:', data);
-                }
-            })
-            .catch(err => console.error(err))
-            .finally(() => {
-                window.location.href = url;
-            });
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.success) {
+                        console.error('Mark read failed:', data);
+                    }
+                })
+                .catch(err => console.error(err))
+                .finally(() => {
+                    window.location.href = url;
+                });
         }
     </script>
 </head>
@@ -568,8 +568,7 @@ if (isLoggedIn()) {
                                                     class="text-xs text-indigo-400 font-bold bg-indigo-500/10 px-2 py-0.5 rounded-full border border-indigo-500/20">
                                                     <?php echo $notifications_unread_count > 9 ? '9+' : $notifications_unread_count; ?>
                                                 </span>
-                                                <button
-                                                    @click="fetch('<?php echo $prefix; ?>includes/api/mark_all_notifications_read.php', {method: 'POST'})
+                                                <button @click="fetch('<?php echo $prefix; ?>includes/api/mark_all_notifications_read.php', {method: 'POST'})
                                                         .then(res => res.json())
                                                         .then(data => {
                                                             if(!data.success) alert('Error: ' + (data.message || 'Unknown'));
@@ -578,8 +577,7 @@ if (isLoggedIn()) {
                                                         .catch(err => {
                                                             console.error(err);
                                                             alert('Network error');
-                                                        });"
-                                                    title="<?php echo __('mark_all_read'); ?>"
+                                                        });" title="<?php echo __('mark_all_read'); ?>"
                                                     class="text-gray-500 hover:text-white transition-colors">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -1118,6 +1116,12 @@ if (isLoggedIn()) {
                                     <a href="<?php echo $prefix; ?>user/profile.php"
                                         class="-mx-3 block rounded-xl px-4 py-3 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'profile.php' ? 'text-indigo-400 bg-indigo-600/10 border border-indigo-500/20' : 'text-gray-300 hover:bg-gray-800 transition-colors'; ?>">
                                         <?php echo __('profile'); ?>
+                                    </a>
+
+                                    <!-- Settings -->
+                                    <a href="<?php echo $prefix; ?>user/settings.php"
+                                        class="-mx-3 block rounded-xl px-4 py-3 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'settings.php' ? 'text-indigo-400 bg-indigo-600/10 border border-indigo-500/20' : 'text-gray-300 hover:bg-gray-800 transition-colors'; ?>">
+                                        <?php echo __('settings'); ?>
                                     </a>
 
                                     <!-- Notifications -->

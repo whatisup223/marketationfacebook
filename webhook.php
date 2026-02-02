@@ -40,6 +40,8 @@ require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/facebook_api.php';
 require_once __DIR__ . '/includes/ComplianceEngine.php';
 
+$pdo = getDB();
+
 // A. Check if it's Facebook Webhook
 if (isset($data['object']) && ($data['object'] === 'page' || $data['object'] === 'instagram')) {
     handleFacebookEvent($data, $pdo);
@@ -174,6 +176,9 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
                     $notify_link = ($source === 'message') ? 'user/page_messenger_bot.php' : 'user/page_auto_reply.php';
                     addNotification($page['user_id'], $notify_title, $notify_msg, $notify_link);
 
+                    // --- SEND EMAIL ALERT ---
+                    triggerHandoverEmail($pdo, $page['user_id'], $page['page_name'], $source, $sender_name, $incoming_text);
+
                     // Send Handover Reply if set (Anger case)
                     if (!empty($page['bot_handover_reply'])) {
                         $fb = new FacebookAPI(); // Ensure instance
@@ -268,6 +273,9 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 
                 $notify_link = ($source === 'message') ? 'user/page_messenger_bot.php' : 'user/page_auto_reply.php';
                 addNotification($page['user_id'], $notify_title, $notify_msg, $notify_link);
+
+                // --- SEND EMAIL ALERT ---
+                triggerHandoverEmail($pdo, $page['user_id'], $page['page_name'], $source, $sender_name, $incoming_text);
 
                 // Send Handover Reply if set
                 if (!empty($page['bot_handover_reply'])) {
@@ -523,4 +531,40 @@ function handleEvolutionEvent($data, $pdo)
             // Logic for WA auto-reply could go here
             break;
     }
+}
+
+function triggerHandoverEmail($pdo, $user_id, $page_name, $source, $sender_name, $incoming_text)
+{
+    $stmt = $pdo->prepare("SELECT email, username, preferences, smtp_config FROM users WHERE id = ?");
+    $stmt->execute([$user_id]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$user)
+        return;
+
+    $smtp = json_decode($user['smtp_config'] ?: '{}', true);
+    if (empty($smtp['enabled']))
+        return;
+
+    $prefs = json_decode($user['preferences'] ?: '{}', true);
+    $user_lang = $prefs['lang'] ?? 'ar';
+
+    $subject = sprintf(__('handover_alert_subject', $user_lang), $page_name);
+
+    $body = "
+    <div dir=\"" . ($user_lang === 'ar' ? 'rtl' : 'ltr') . "\" style=\"font-family: sans-serif; line-height: 1.6; color: #333;\">
+        <h2 style=\"color: #4f46e5;\">" . __('handover_alert_subject', $user_lang) . "</h2>
+        <p>" . sprintf(__('handover_alert_body_intro', $user_lang), $user['username'] ?? 'User') . "</p>
+        <p>" . sprintf(__('handover_alert_body_msg', $user_lang), $page_name) . "</p>
+        <hr style=\"border: none; border-top: 1px solid #eee; margin: 20px 0;\">
+        <p><strong>" . __('customer_name', $user_lang) . ":</strong> " . htmlspecialchars($sender_name) . "</p>
+        <p><strong>" . __('message_snippet', $user_lang) . ":</strong><br>
+           <i style=\"color: #666;\">\"" . htmlspecialchars(mb_substr($incoming_text, 0, 200)) . "...\"</i></p>
+        <p style=\"margin-top: 30px;\">
+            <a href=\"https://" . ($_SERVER['HTTP_HOST'] ?? 'marketation.net') . "/user/\" style=\"background: #4f46e5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;\">
+                " . __('view_conversation', $user_lang) . "
+            </a>
+        </p>
+    </div>";
+
+    sendUserEmail($user_id, $user['email'], $subject, $body, $smtp);
 }
