@@ -265,8 +265,8 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
     // Capture Private Reply Settings from the matched rule
     $private_reply_enabled = (int) ($matched_rule['private_reply_enabled'] ?? 0);
     $private_reply_text = $matched_rule['private_reply_text'] ?? '';
-    // Capture Auto Like Settings
-    $auto_like_comment = (int) ($matched_rule['auto_like_comment'] ?? 0);
+    // Capture Auto Like Settings (Support aliases for safety)
+    $auto_like_comment = (int) ($matched_rule['auto_like_comment'] ?? $matched_rule['auto_like'] ?? 0);
 
     // --- QUICK WINS IMPLEMENTATION ---
     // 1. Random Variations (Spintax): explode by | and pick random
@@ -509,7 +509,9 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 
         // --- NEW: AUTO LIKE COMMENT ---
         if ($auto_like_comment) {
-            $fb->likeComment($target_id, $access_token);
+            $like_res = $fb->likeComment($target_id, $access_token);
+            // DEBUG: Log the result of the auto-like
+            file_put_contents(__DIR__ . '/debug_fb.txt', date('Y-m-d H:i:s') . " - Auto-Like Res: " . json_encode($like_res) . " | ID: $target_id\n", FILE_APPEND);
         }
     }
 
