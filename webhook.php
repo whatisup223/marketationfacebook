@@ -236,11 +236,16 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
             $reply_msg = $def['reply_message'];
             $hide_comment = $def['hide_comment'];
             $matched_rule = $def;
+            $matched_rule = $def;
         }
     }
 
     if (!$reply_msg)
         return;
+
+    // Capture Private Reply Settings from the matched rule
+    $private_reply_enabled = (int) ($matched_rule['private_reply_enabled'] ?? 0);
+    $private_reply_text = $matched_rule['private_reply_text'] ?? '';
 
     // 4. Advanced SaaS Logic (Repeat Detection only)
     $is_ai_safe = (int) ($matched_rule['is_ai_safe'] ?? 1);
@@ -423,6 +428,14 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
         $res = $fb->replyToComment($target_id, $reply_msg, $access_token);
         if ($hide_comment) {
             $fb->hideComment($target_id, $access_token, true);
+        }
+
+        // --- NEW: PRIVATE REPLY TO COMMENT ---
+        if ($private_reply_enabled && !empty($private_reply_text)) {
+            // Facebook allows sending a private message to the person who commented
+            // We use the specific endpoint for this: /{comment_id}/private_replies
+            // Note: This only works if the comment is less than 7 days old (usually instant)
+            $fb->replyPrivateToComment($target_id, $private_reply_text, $access_token);
         }
     }
 
