@@ -494,6 +494,12 @@ $translations = [
         'danger_alert' => 'تنبيه خطر',
         'repetition_alert' => 'تنبيه تكرار',
         'monitor_alerts_desc' => 'متابعة التنبيهات التي تتطلب تدخلاً بشرياً فورياً.',
+        'repetition_threshold' => 'حد التكرار (للصمت)',
+        'repetition_threshold_hint' => 'عدد المرات التي يكرر فيها البوت نفس الرسالة قبل أن يصمت ويحول المحادثة لموظف.',
+        'handover_reply_msg' => 'رسالة التسليم (Handover)',
+        'handover_reply_placeholder' => 'اكتب الرسالة التي سيرد بها البوت قبل الصمت...',
+        'handover_reply_help' => 'اختياري: سيرسل البوت هذه الرسالة لمرة واحدة قبل أن يصمت نهائياً.',
+
 
 
 
@@ -1404,6 +1410,11 @@ $translations = [
         'system_healthy' => 'النظام يعمل بشكل جيد',
         'vs_last_week' => 'مقارنة بالأسبوع الماضي',
         'monitor_alerts_desc' => 'مراقبة تنبيهات النظام وطلبات التدخل البشري في الوقت الفعلي',
+        'repetition_threshold' => 'حد التكرار (للصمت)',
+        'repetition_threshold_hint' => 'عدد المرات التي يكرر فيها البوت نفس الرسالة قبل أن يصمت ويحول المحادثة لموظف.',
+        'handover_reply_msg' => 'رسالة التسليم (Handover)',
+        'handover_reply_placeholder' => 'اكتب الرسالة التي سيرد بها البوت قبل الصمت...',
+        'handover_reply_help' => 'اختياري: سيرسل البوت هذه الرسالة لمرة واحدة قبل أن يصمت نهائياً.',
         'unsaved_changes_hint' => 'راجع تغييراتك بدقة قبل الحفظ',
         'saving' => 'جاري الحفظ',
         'wa_settings_ready' => 'الإعدادات جاهزة للحفظ',
@@ -2487,6 +2498,11 @@ $translations = [
         'how_it_works_title_en' => 'Steps Title (English)',
         'testimonials_title_ar' => 'Testimonials Title (Arabic)',
         'testimonials_title_en' => 'Testimonials Title (English)',
+        'repetition_threshold' => 'Repetition Threshold',
+        'repetition_threshold_hint' => 'Number of times bot repeats same message before silencing.',
+        'handover_reply_msg' => 'Handover Reply Message',
+        'handover_reply_placeholder' => 'Message sent before bot silences itself...',
+        'handover_reply_help' => 'Optional: Bot sends this once before switching to human agent.',
         'faqs_title_ar' => 'FAQs Title (Arabic)',
         'faqs_title_en' => 'FAQs Title (English)',
         'facebook' => 'Facebook Tools',

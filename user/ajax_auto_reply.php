@@ -68,7 +68,7 @@ if ($action === 'fetch_page_settings') {
     }
 
     try {
-        $stmt = $pdo->prepare("SELECT bot_cooldown_seconds, bot_schedule_enabled, bot_schedule_start, bot_schedule_end, bot_exclude_keywords, bot_ai_sentiment_enabled, bot_anger_keywords FROM fb_pages WHERE page_id = ?");
+        $stmt = $pdo->prepare("SELECT bot_cooldown_seconds, bot_schedule_enabled, bot_schedule_start, bot_schedule_end, bot_exclude_keywords, bot_ai_sentiment_enabled, bot_anger_keywords, bot_repetition_threshold, bot_handover_reply FROM fb_pages WHERE page_id = ?");
         $stmt->execute([$page_id]);
         $settings = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -312,6 +312,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $exclude_kw = (int) ($_POST['exclude_keywords'] ?? 0);
         $ai_enabled = (int) ($_POST['ai_sentiment_enabled'] ?? 1);
         $anger_kws = $_POST['anger_keywords'] ?? '';
+        $rep_count = (int) ($_POST['repetition_count'] ?? 3);
+        if ($rep_count < 1)
+            $rep_count = 3;
+        $handover_msg = $_POST['handover_reply'] ?? '';
 
         if (!$page_id) {
             echo json_encode(['success' => false, 'error' => 'Page ID is required']);
@@ -326,9 +330,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 bot_schedule_end = ?,
                 bot_exclude_keywords = ?,
                 bot_ai_sentiment_enabled = ?,
-                bot_anger_keywords = ?
+                bot_anger_keywords = ?,
+                bot_repetition_threshold = ?,
+                bot_handover_reply = ?
                 WHERE page_id = ?");
-            $stmt->execute([$cooldown, $sch_enabled, $sch_start, $sch_end, $exclude_kw, $ai_enabled, $anger_kws, $page_id]);
+            $stmt->execute([$cooldown, $sch_enabled, $sch_start, $sch_end, $exclude_kw, $ai_enabled, $anger_kws, $rep_count, $handover_msg, $page_id]);
             echo json_encode(['success' => true, 'message' => __('settings_updated')]);
         } catch (Exception $e) {
             echo json_encode(['success' => false, 'error' => $e->getMessage()]);

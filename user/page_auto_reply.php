@@ -1007,6 +1007,34 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 </svg>
                                 <span><?php echo __('bot_anger_keywords_help'); ?></span>
                             </div>
+
+                            <!-- NEW: Handover Settings -->
+                            <div class="mt-6 pt-6 border-t border-white/5 space-y-4">
+                                <!-- Repetition Threshold -->
+                                <div>
+                                    <label
+                                        class="block text-xs font-bold text-gray-300 uppercase tracking-widest mb-2"><?php echo __('repetition_threshold'); ?></label>
+                                    <div class="flex items-center gap-3">
+                                        <input type="number" x-model="repetitionThreshold" min="1" max="10"
+                                            class="w-20 bg-black/40 border border-white/10 rounded-xl p-3 text-white text-center font-bold focus:ring-2 focus:ring-indigo-500 transition-all">
+                                        <p class="text-[10px] text-gray-500">
+                                            <?php echo __('repetition_threshold_hint') ?? 'Times a user can repeat the same message before handover.'; ?>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Handover Reply -->
+                                <div>
+                                    <label
+                                        class="block text-xs font-bold text-gray-300 uppercase tracking-widest mb-2"><?php echo __('handover_reply_msg'); ?></label>
+                                    <textarea x-model="handoverReply" rows="2"
+                                        placeholder="<?php echo __('handover_reply_placeholder') ?? 'Message to send before handing over...'; ?>"
+                                        class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-sm focus:ring-2 focus:ring-indigo-500 transition-all resize-none"></textarea>
+                                    <p class="text-[10px] text-gray-500 mt-2">
+                                        <?php echo __('handover_reply_help') ?? 'Optional: Bot will send this message once before silencing itself.'; ?>
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -1371,6 +1399,8 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
             botExcludeKeywords: false,
             aiSentimentEnabled: true,
             angerKeywords: '',
+            repetitionThreshold: 3,
+            handoverReply: '',
             handoverConversations: [],
             fetchingHandover: false,
             savingPageSettings: false,
@@ -1509,6 +1539,8 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             this.botExcludeKeywords = (s.bot_exclude_keywords == 1);
                             this.aiSentimentEnabled = (s.bot_ai_sentiment_enabled == 1);
                             this.angerKeywords = s.bot_anger_keywords || '';
+                            this.repetitionThreshold = parseInt(s.bot_repetition_threshold || 3);
+                            this.handoverReply = s.bot_handover_reply || '';
                         }
                     });
             },
@@ -1525,6 +1557,8 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 formData.append('exclude_keywords', this.botExcludeKeywords ? '1' : '0');
                 formData.append('ai_sentiment_enabled', this.aiSentimentEnabled ? '1' : '0');
                 formData.append('anger_keywords', this.angerKeywords);
+                formData.append('repetition_count', this.repetitionThreshold);
+                formData.append('handover_reply', this.handoverReply);
 
                 return fetch('ajax_auto_reply.php?action=save_page_settings', { method: 'POST', body: formData })
                     .then(res => res.json());

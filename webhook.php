@@ -118,7 +118,7 @@ function handleFacebookEvent($data, $pdo)
 function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $actual_sender_id = null, $sender_name = '')
 {
     // 1. Fetch Page Settings (Token, Schedule, Cooldown, AI Intelligence)
-    $stmt = $pdo->prepare("SELECT p.page_access_token, p.page_name, p.bot_cooldown_seconds, p.bot_schedule_enabled, p.bot_schedule_start, p.bot_schedule_end, p.bot_exclude_keywords, p.bot_ai_sentiment_enabled, p.bot_anger_keywords, a.user_id 
+    $stmt = $pdo->prepare("SELECT p.page_access_token, p.page_name, p.bot_cooldown_seconds, p.bot_schedule_enabled, p.bot_schedule_start, p.bot_schedule_end, p.bot_exclude_keywords, p.bot_ai_sentiment_enabled, p.bot_anger_keywords, p.bot_repetition_threshold, p.bot_handover_reply, a.user_id 
                            FROM fb_pages p 
                            JOIN fb_accounts a ON p.account_id = a.id 
                            WHERE p.page_id = ?");
@@ -174,6 +174,17 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
                     $notify_link = ($source === 'message') ? 'user/page_messenger_bot.php' : 'user/page_auto_reply.php';
                     addNotification($page['user_id'], $notify_title, $notify_msg, $notify_link);
 
+                    // Send Handover Reply if set (Anger case)
+                    if (!empty($page['bot_handover_reply'])) {
+                        $fb = new FacebookAPI(); // Ensure instance
+                        if ($source === 'message') {
+                            $fb->sendMessage($page_id, $access_token, $customer_id, $page['bot_handover_reply']);
+                        } else {
+                            // For comments, we reply to the comment
+                            $fb->replyToComment($customer_id, $page['bot_handover_reply'], $access_token);
+                        }
+                    }
+
                     return; // SILENCE immediately
                 }
             }
@@ -199,7 +210,6 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
                 continue;
 
             // Improved matching: Whole Word Match using Regex (supports Arabic/UTF-8)
-            // This ensures "تم" matches as a whole word but not inside "تمام"
             $pattern = '/(?<![\p{L}\p{N}])' . preg_quote($kw, '/') . '(?![\p{L}\p{N}])/ui';
 
             if (preg_match($pattern, $incoming_text)) {
@@ -233,15 +243,19 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
     if ($page['bot_ai_sentiment_enabled'] && $is_ai_safe && $customer_id) {
         // Anger Detection moved to top (Global Check)
 
-        // B. Repeat Detection (3 times same rule)
+        // B. Repeat Detection (Configurable Threshold)
         if ($state && $state['last_bot_reply_text'] === $reply_msg) {
+            $threshold = (int) ($page['bot_repetition_threshold'] ?? 3);
+            if ($threshold < 1)
+                $threshold = 3;
+
             $new_count = $state['repeat_count'] + 1;
-            if ($new_count >= 3) {
+
+            if ($new_count >= $threshold) {
                 // Too many repeats! Switch to handover
                 $stmt = $pdo->prepare("UPDATE bot_conversation_states SET conversation_state = 'handover', repeat_count = ?, last_user_message = ?, last_user_message_at = NOW(), user_name = ? WHERE id = ?");
                 $stmt->execute([$new_count, $incoming_text, $sender_name, $state['id']]);
 
-                // Add Internal Notification
                 // Add Internal Notification
                 $notify_title = 'handover_notification_title';
                 $section_key = ($source === 'message') ? 'nav_messenger_bot' : 'nav_auto_reply';
@@ -254,6 +268,17 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 
                 $notify_link = ($source === 'message') ? 'user/page_messenger_bot.php' : 'user/page_auto_reply.php';
                 addNotification($page['user_id'], $notify_title, $notify_msg, $notify_link);
+
+                // Send Handover Reply if set
+                if (!empty($page['bot_handover_reply'])) {
+                    $fb = new FacebookAPI(); // Ensure instance
+                    if ($source === 'message') {
+                        $fb->sendMessage($page_id, $access_token, $customer_id, $page['bot_handover_reply']);
+                    } else {
+                        // For comments, we reply to the comment
+                        $fb->replyToComment($customer_id, $page['bot_handover_reply'], $access_token);
+                    }
+                }
 
                 return; // SILENCE
             }
