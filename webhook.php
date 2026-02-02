@@ -7,7 +7,7 @@
 $logFile = 'c:/Users/AHL ELSONA/Desktop/marketationfacebook/webhook_log.txt';
 $input = file_get_contents('php://input');
 // For debugging - remove in production
-file_put_contents($logFile, date('Y-m-d H:i:s') . " - Input: " . $input . "\n", FILE_APPEND);
+// file_put_contents($logFile, date('Y-m-d H:i:s') . " - Input: " . $input . "\n", FILE_APPEND);
 
 // 1. Handle Facebook Verification (GET request)
 if (isset($_GET['hub_mode']) && $_GET['hub_mode'] === 'subscribe') {
@@ -221,7 +221,7 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
                         $fb->sendMessage($page_id, $access_token, $customer_id, $page['bot_handover_reply']);
                     } else {
                         // For comments, we reply to the comment
-                        $fb->replyToComment($customer_id, $page['bot_handover_reply'], $access_token);
+                        $fb->replyToComment($target_id, $page['bot_handover_reply'], $access_token);
                     }
                 }
 
