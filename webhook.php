@@ -151,50 +151,6 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
             return;
         }
 
-        // --- NEW: Global Anger Detection (Before Rule Matching) ---
-        if ($page['bot_ai_sentiment_enabled'] && !empty($page['bot_anger_keywords'])) {
-            $anger_kws = explode(',', $page['bot_anger_keywords']);
-            foreach ($anger_kws as $akw) {
-                $akw = trim($akw);
-                if (!empty($akw) && mb_stripos($incoming_text, $akw) !== false) {
-                    // Anger detected! Switch to handover
-                    $stmt = $pdo->prepare("INSERT INTO bot_conversation_states (page_id, user_id, user_name, last_user_message, last_user_message_at, conversation_state, is_anger_detected, reply_source) 
-                                           VALUES (?, ?, ?, ?, NOW(), 'handover', 1, ?) 
-                                           ON DUPLICATE KEY UPDATE user_name = VALUES(user_name), last_user_message = VALUES(last_user_message), last_user_message_at = NOW(), conversation_state = 'handover', is_anger_detected = 1");
-                    $stmt->execute([$page_id, $customer_id, $sender_name, $incoming_text, $source]);
-
-                    // Add Internal Notification
-                    $notify_title = 'handover_notification_title';
-                    $section_key = ($source === 'message') ? 'nav_messenger_bot' : 'nav_auto_reply';
-
-                    $notify_msg = json_encode([
-                        'key' => 'handover_notification_msg',
-                        'params' => [$page['page_name'], $section_key],
-                        'param_keys' => [1]
-                    ]);
-
-                    $notify_link = ($source === 'message') ? 'user/page_messenger_bot.php' : 'user/page_auto_reply.php';
-                    addNotification($page['user_id'], $notify_title, $notify_msg, $notify_link);
-
-                    // --- SEND EMAIL ALERT ---
-                    triggerHandoverEmail($pdo, $page['user_id'], $page['page_name'], $source, $sender_name, $incoming_text);
-
-                    // Send Handover Reply if set (Anger case)
-                    if (!empty($page['bot_handover_reply'])) {
-                        $fb = new FacebookAPI(); // Ensure instance
-                        if ($source === 'message') {
-                            $fb->sendMessage($page_id, $access_token, $customer_id, $page['bot_handover_reply']);
-                        } else {
-                            // For comments, we reply to the comment
-                            $fb->replyToComment($customer_id, $page['bot_handover_reply'], $access_token);
-                        }
-                    }
-
-                    return; // SILENCE immediately
-                }
-            }
-        }
-        // -----------------------------------------------------------
     }
 
     // 2. Find Rule Match
@@ -227,7 +183,53 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
         }
     }
 
-    // 2.2 If no keyword match, try Default Rule
+    // 2.2 Global Anger Detection (Only if NO keyword match found)
+    // If we have a direct keyword match, we assume specific intent and reply regardless of tone.
+    // If we're falling back to default/AI, we check for anger first.
+    if (!$reply_msg && $page['bot_ai_sentiment_enabled'] && !empty($page['bot_anger_keywords'])) {
+        $anger_kws = explode(',', $page['bot_anger_keywords']);
+        foreach ($anger_kws as $akw) {
+            $akw = trim($akw);
+            if (!empty($akw) && mb_stripos($incoming_text, $akw) !== false) {
+                // Anger detected! Switch to handover
+                $stmt = $pdo->prepare("INSERT INTO bot_conversation_states (page_id, user_id, user_name, last_user_message, last_user_message_at, conversation_state, is_anger_detected, reply_source) 
+                                        VALUES (?, ?, ?, ?, NOW(), 'handover', 1, ?) 
+                                        ON DUPLICATE KEY UPDATE user_name = VALUES(user_name), last_user_message = VALUES(last_user_message), last_user_message_at = NOW(), conversation_state = 'handover', is_anger_detected = 1");
+                $stmt->execute([$page_id, $customer_id, $sender_name, $incoming_text, $source]);
+
+                // Add Internal Notification
+                $notify_title = 'handover_notification_title';
+                $section_key = ($source === 'message') ? 'nav_messenger_bot' : 'nav_auto_reply';
+
+                $notify_msg = json_encode([
+                    'key' => 'handover_notification_msg',
+                    'params' => [$page['page_name'], $section_key],
+                    'param_keys' => [1]
+                ]);
+
+                $notify_link = ($source === 'message') ? 'user/page_messenger_bot.php' : 'user/page_auto_reply.php';
+                addNotification($page['user_id'], $notify_title, $notify_msg, $notify_link);
+
+                // --- SEND EMAIL ALERT ---
+                triggerHandoverEmail($pdo, $page['user_id'], $page['page_name'], $source, $sender_name, $incoming_text);
+
+                // Send Handover Reply if set (Anger case)
+                if (!empty($page['bot_handover_reply'])) {
+                    $fb = new FacebookAPI(); // Ensure instance
+                    if ($source === 'message') {
+                        $fb->sendMessage($page_id, $access_token, $customer_id, $page['bot_handover_reply']);
+                    } else {
+                        // For comments, we reply to the comment
+                        $fb->replyToComment($customer_id, $page['bot_handover_reply'], $access_token);
+                    }
+                }
+
+                return; // SILENCE immediately
+            }
+        }
+    }
+
+    // 2.3 If no keyword match AND no anger silence, try Default Rule
     if (!$reply_msg) {
         $stmt = $pdo->prepare("SELECT * FROM auto_reply_rules WHERE page_id = ? AND reply_source = ? AND trigger_type = 'default' LIMIT 1");
         $stmt->execute([$page_id, $source]);
