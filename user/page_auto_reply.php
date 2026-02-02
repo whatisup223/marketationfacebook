@@ -1062,30 +1062,32 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         </div>
 
                         <!-- NEW: Handover Settings -->
-                        <div class="mt-6 pt-6 border-t border-white/5 space-y-4">
-                            <!-- Repetition Threshold -->
-                            <div>
-                                <label
-                                    class="block text-xs font-bold text-gray-300 uppercase tracking-widest mb-2"><?php echo __('repetition_threshold'); ?></label>
-                                <div class="flex items-center gap-3">
-                                    <input type="number" x-model="repetitionThreshold" min="1" max="10"
-                                        class="w-20 bg-black/40 border border-white/10 rounded-xl p-3 text-white text-center font-bold focus:ring-2 focus:ring-indigo-500 transition-all">
-                                    <p class="text-[10px] text-gray-500">
-                                        <?php echo __('repetition_threshold_hint') ?? 'Times a user can repeat the same message before handover.'; ?>
+                        <div class="mt-6 pt-6 border-t border-white/5">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Repetition Threshold -->
+                                <div>
+                                    <label
+                                        class="block text-xs font-bold text-gray-300 uppercase tracking-widest mb-2"><?php echo __('repetition_threshold'); ?></label>
+                                    <div class="flex items-center gap-3">
+                                        <input type="number" x-model="repetitionThreshold" min="1" max="10"
+                                            class="w-20 bg-black/40 border border-white/10 rounded-xl p-3 text-white text-center font-bold focus:ring-2 focus:ring-indigo-500 transition-all">
+                                        <p class="text-[10px] text-gray-500">
+                                            <?php echo __('repetition_threshold_hint') ?? 'Times a user can repeat the same message before handover.'; ?>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Handover Reply -->
+                                <div>
+                                    <label
+                                        class="block text-xs font-bold text-gray-300 uppercase tracking-widest mb-2"><?php echo __('handover_reply_msg'); ?></label>
+                                    <textarea x-model="handoverReply" rows="2"
+                                        placeholder="<?php echo __('handover_reply_placeholder') ?? 'Message to send before handing over...'; ?>"
+                                        class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-sm focus:ring-2 focus:ring-indigo-500 transition-all resize-none"></textarea>
+                                    <p class="text-[10px] text-gray-500 mt-2">
+                                        <?php echo __('handover_reply_help') ?? 'Optional: Bot will send this message once before silencing itself.'; ?>
                                     </p>
                                 </div>
-                            </div>
-
-                            <!-- Handover Reply -->
-                            <div>
-                                <label
-                                    class="block text-xs font-bold text-gray-300 uppercase tracking-widest mb-2"><?php echo __('handover_reply_msg'); ?></label>
-                                <textarea x-model="handoverReply" rows="2"
-                                    placeholder="<?php echo __('handover_reply_placeholder') ?? 'Message to send before handing over...'; ?>"
-                                    class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-sm focus:ring-2 focus:ring-indigo-500 transition-all resize-none"></textarea>
-                                <p class="text-[10px] text-gray-500 mt-2">
-                                    <?php echo __('handover_reply_help') ?? 'Optional: Bot will send this message once before silencing itself.'; ?>
-                                </p>
                             </div>
                         </div>
                     </div>
