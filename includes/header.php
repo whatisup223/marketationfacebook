@@ -163,9 +163,9 @@ if (isLoggedIn()) {
                 extend: {
                     fontFamily: {
                         <?php if ($lang === 'ar'): ?>
-                                                                                                                                                                                                sans: ['IBM Plex Sans Arabic', 'sans-serif'],
+                                                                                                                                                                                                    sans: ['IBM Plex Sans Arabic', 'sans-serif'],
                         <?php else: ?>
-                                                                                                                                                                                                sans: ['Outfit', 'sans-serif'],
+                                                                                                                                                                                                    sans: ['Outfit', 'sans-serif'],
                         <?php endif; ?>
                     },
                     colors: {
@@ -388,6 +388,9 @@ if (isLoggedIn()) {
                 });
         }
     </script>
+
+    <!-- Alpine.js CDN -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 
 <body class="text-gray-100 antialiased min-h-screen flex flex-col bg-slate-900 transition-colors duration-300 dark"

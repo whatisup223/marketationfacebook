@@ -4,10 +4,10 @@
  * Handles both Evolution API (WhatsApp) and Facebook (Comments & Messenger)
  */
 
-$logFile = __DIR__ . '/webhook_log.txt';
+$logFile = 'c:/Users/AHL ELSONA/Desktop/marketationfacebook/webhook_log.txt';
 $input = file_get_contents('php://input');
 // For debugging - remove in production
-// file_put_contents($logFile, date('Y-m-d H:i:s') . " - Input: " . $input . "\n", FILE_APPEND);
+file_put_contents($logFile, date('Y-m-d H:i:s') . " - Input: " . $input . "\n", FILE_APPEND);
 
 // 1. Handle Facebook Verification (GET request)
 if (isset($_GET['hub_mode']) && $_GET['hub_mode'] === 'subscribe') {
@@ -98,9 +98,10 @@ function handleFacebookEvent($data, $pdo)
                             if ($sender_id == $page_id)
                                 continue;
 
-                            $comment_id = $val['comment_id'] ?? '';
+                            $comment_id = $val['comment_id'] ?? $val['id'] ?? '';
                             $message_text = $val['message'] ?? '';
                             $sender_name = $val['from']['name'] ?? '';
+                            $sender_id = $val['from']['id'] ?? '';
 
                             // 1. Check Moderation (Must check for both additions and edits)
                             $is_moderated = processModeration($pdo, $page_id, $comment_id, $message_text, $sender_name);
@@ -453,6 +454,10 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
         }
     } else {
         $res = $fb->replyToComment($target_id, $reply_msg, $access_token);
+
+        // DEBUG: Log the result of the comment reply
+        file_put_contents(__DIR__ . '/debug_fb.txt', date('Y-m-d H:i:s') . " - Comment Reply Res: " . json_encode($res) . " | ID: $target_id | Msg: $reply_msg\n", FILE_APPEND);
+
         if ($hide_comment) {
             $fb->hideComment($target_id, $access_token, true);
         }

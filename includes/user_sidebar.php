@@ -22,16 +22,23 @@
             <a href="profile.php"
                 class="flex items-center space-x-3 rtl:space-x-reverse mb-8 p-3 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-all group">
                 <div class="flex-shrink-0">
-                    <?php if ($current_user['avatar']): ?>
-                        <img src="../<?php echo $current_user['avatar']; ?>"
-                            class="w-10 h-10 rounded-xl object-cover border border-indigo-500/30 group-hover:scale-105 transition-transform">
-                    <?php else: ?>
-                        <div
-                            class="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center border border-indigo-500/30 group-hover:scale-105 transition-transform">
-                            <span
-                                class="text-indigo-400 font-bold"><?php echo mb_substr($current_user['name'], 0, 1, 'UTF-8'); ?></span>
-                        </div>
-                    <?php endif; ?>
+                    <?php
+                    $user_avatar = $current_user['avatar'];
+                    $avatar_path = !empty($user_avatar) ? $prefix . $user_avatar : null;
+                    ?>
+                    <div class="relative w-10 h-10 group-hover:scale-105 transition-transform">
+                        <?php if ($avatar_path): ?>
+                            <img src="<?php echo $avatar_path; ?>"
+                                onerror="this.onerror=null; this.src='data:image/svg+xml;base64,<?php echo base64_encode('<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>'); ?>'; this.className='w-full h-full rounded-xl bg-indigo-500/20 p-2 text-indigo-400 border border-indigo-500/30'"
+                                class="w-full h-full rounded-xl object-cover border border-indigo-500/30">
+                        <?php else: ?>
+                            <div
+                                class="w-full h-full rounded-xl bg-indigo-500/20 flex items-center justify-center border border-indigo-500/30">
+                                <span
+                                    class="text-indigo-400 font-bold"><?php echo mb_substr($current_user['name'], 0, 1, 'UTF-8'); ?></span>
+                            </div>
+                        <?php endif; ?>
+                    </div>
                 </div>
                 <div class="flex-1 min-w-0">
                     <p class="text-sm font-bold text-white truncate group-hover:text-indigo-400 transition-colors">
@@ -46,10 +53,14 @@
             <?php echo __('user_panel'); ?>
         </h3>
     </div>
-    <nav class="space-y-2" x-data="{ 
-        fbOpen: <?php echo in_array(basename($_SERVER['PHP_SELF']), ['fb_accounts.php', 'page_inbox.php', 'create_campaign.php', 'campaign_reports.php', 'page_auto_reply.php', 'page_moderator.php', 'fb_scheduler.php', 'page_messenger_bot.php']) ? 'true' : 'false'; ?>,
-        waOpen: <?php echo in_array(basename($_SERVER['PHP_SELF']), ['wa_accounts.php', 'wa_bulk_send.php', 'wa_settings.php']) ? 'true' : 'false'; ?> 
-    }">
+    <?php
+    $fb_pages = ['fb_accounts.php', 'page_inbox.php', 'create_campaign.php', 'campaign_reports.php', 'page_auto_reply.php', 'page_moderator.php', 'fb_scheduler.php', 'page_messenger_bot.php'];
+    $wa_pages = ['wa_accounts.php', 'wa_bulk_send.php', 'wa_settings.php'];
+    $current_page = basename($_SERVER['PHP_SELF']);
+    $is_fb_open = in_array($current_page, $fb_pages) ? 'true' : 'false';
+    $is_wa_open = in_array($current_page, $wa_pages) ? 'true' : 'false';
+    ?>
+    <nav class="space-y-2" x-data="{ fbOpen: <?php echo $is_fb_open; ?>, waOpen: <?php echo $is_wa_open; ?> }">
         <a href="dashboard.php"
             class="block px-4 py-3 <?php echo basename($_SERVER['PHP_SELF']) == 'dashboard.php' ? 'bg-indigo-600/20 text-indigo-300 border-indigo-500/30' : 'text-gray-400 hover:bg-gray-800 hover:text-white'; ?> rounded-xl font-medium border border-transparent transition-colors">
             <?php echo __('overview'); ?>
