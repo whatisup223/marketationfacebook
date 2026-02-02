@@ -1055,7 +1055,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <span><?php echo __('bot_anger_keywords_help'); ?></span>
                             </div>
 
-                            <!-- NEW: Handover Settings -->
+                            <!-- Handover Settings (Inside AI Card) -->
                             <div class="mt-6 pt-6 border-t border-white/5">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <!-- Repetition Threshold -->
