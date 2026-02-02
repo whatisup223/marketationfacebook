@@ -227,6 +227,8 @@ try {
         `is_ai_safe` tinyint(1) DEFAULT 1,
         `bypass_schedule` tinyint(1) DEFAULT 0,
         `bypass_cooldown` tinyint(1) DEFAULT 0,
+        `private_reply_enabled` tinyint(1) DEFAULT 0,
+        `private_reply_text` text DEFAULT NULL,
         `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
         PRIMARY KEY (`id`),
         KEY `page_id` (`page_id`)
@@ -461,6 +463,14 @@ try {
     }
     if (!columnExists($pdo, 'fb_leads', 'last_comment')) {
         $pdo->exec("ALTER TABLE fb_leads ADD COLUMN last_comment TEXT DEFAULT NULL AFTER post_id");
+    }
+
+    // --- 040: Auto Reply Private Message ---
+    if (!columnExists($pdo, 'auto_reply_rules', 'private_reply_enabled')) {
+        $pdo->exec("ALTER TABLE auto_reply_rules ADD COLUMN private_reply_enabled TINYINT(1) DEFAULT 0");
+    }
+    if (!columnExists($pdo, 'auto_reply_rules', 'private_reply_text')) {
+        $pdo->exec("ALTER TABLE auto_reply_rules ADD COLUMN private_reply_text TEXT DEFAULT NULL");
     }
 
     // Ensure Unique Index for Granular Lead Tracking (Page + User + Source + Post)
