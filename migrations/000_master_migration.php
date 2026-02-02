@@ -229,6 +229,7 @@ try {
         `bypass_cooldown` tinyint(1) DEFAULT 0,
         `private_reply_enabled` tinyint(1) DEFAULT 0,
         `private_reply_text` text DEFAULT NULL,
+        `auto_like_comment` tinyint(1) DEFAULT 0,
         `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
         PRIMARY KEY (`id`),
         KEY `page_id` (`page_id`)
@@ -471,6 +472,11 @@ try {
     }
     if (!columnExists($pdo, 'auto_reply_rules', 'private_reply_text')) {
         $pdo->exec("ALTER TABLE auto_reply_rules ADD COLUMN private_reply_text TEXT DEFAULT NULL");
+    }
+
+    // --- 041: Auto Like Comment Feature ---
+    if (!columnExists($pdo, 'auto_reply_rules', 'auto_like_comment')) {
+        $pdo->exec("ALTER TABLE auto_reply_rules ADD COLUMN auto_like_comment TINYINT(1) DEFAULT 0");
     }
 
     // Ensure Unique Index for Granular Lead Tracking (Page + User + Source + Post)
