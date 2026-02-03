@@ -192,8 +192,7 @@ class FacebookAPI
         $handles = [];
         $results = [];
 
-        // 1. Prepare all requests
-        // 1. Prepare all requests
+        // --- PHASE 1: STANDARD SEND (RESPONSE) ---
         foreach ($items as $key => $item) {
             $page_id = $item['page_id'];
             $access_token = $item['access_token'];
@@ -207,9 +206,6 @@ class FacebookAPI
             $requests_to_make = [];
 
             // Case A: Image + Text (Send Image FIRST, then Text)
-            // Note: In parallel they might arrive slightly mixed, but usually network latency for image makes text arrive first if simultaneous.
-            // To ensure order we usually need sequential, but for speed we do parallel.
-            // Let's send both.
             if (!empty($image_url) && !empty($message_text)) {
                 // Image Req
                 $requests_to_make[$key . '_img'] = [
@@ -228,7 +224,6 @@ class FacebookAPI
                     'message' => ['text' => $message_text],
                     'messaging_type' => 'RESPONSE'
                 ];
-
             } elseif (!empty($image_url)) {
                 // Image Only
                 $requests_to_make[$key] = [
@@ -262,56 +257,114 @@ class FacebookAPI
                 curl_setopt($ch, CURLOPT_TIMEOUT, 30);
 
                 curl_multi_add_handle($mh, $ch);
-                $handles[$reqKey] = $ch;
+                $handles[$reqKey] = ['ch' => $ch, 'payload' => $payload, 'endpoint' => $endpoint];
             }
         }
 
-        // 2. Execute Parallel
+        // Execute Phase 1
         $running = null;
         do {
             curl_multi_exec($mh, $running);
             curl_multi_select($mh);
         } while ($running > 0);
 
-        // 3. Collect Results
-        foreach ($handles as $key => $ch) {
+        // --- PHASE 2: REVIEW & RETRY WITH TAGS ---
+        $retry_handles = [];
+
+        foreach ($handles as $reqKey => $data) {
+            $ch = $data['ch'];
             $response = curl_multi_getcontent($ch);
             $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             $json = json_decode($response, true);
 
-            // Determine separate keys
-            $originalKey = $key;
-            if (strpos($key, '_img') !== false) {
-                $originalKey = str_replace('_img', '', $key);
-            } elseif (strpos($key, '_txt') !== false) {
-                $originalKey = str_replace('_txt', '', $key);
-            }
-
-            // Determine Success/Error
-            $isError = ($http_code >= 400 || isset($json['error']));
-            $resultData = $isError ? ($json ?? ['error' => 'HTTP ' . $http_code]) : $json;
-
-            // Merge logic:
-            // If we already have a result for this key (e.g. from the other part), we need to be careful.
-            // Priority: If ANY part failed, we strictly might want to show error?
-            // BETTER: If Text succeeded but Image failed, we still sent something.
-            // Let's store failures.
-
-            if (!isset($results[$originalKey])) {
-                $results[$originalKey] = $resultData;
-            } else {
-                // We have a previous result.
-                // If current is error, overwrite previous success (so we know something went wrong)
-                // OR: If current is success and previous was error, we can maybe say "partial success"?
-                // Let's keep the last one unless it's an error overwriting a success, that's tricky.
-                // Simple logic: If we have an error now, save it.
-                if ($isError) {
-                    $results[$originalKey] = $resultData;
-                }
-            }
-
+            // Clean up old handle
             curl_multi_remove_handle($mh, $ch);
             curl_close($ch);
+
+            // Check Failure
+            // Error Code 10 = Permission Error / Policy
+            // Error Code 2018 = Account restriction
+            $isError = ($http_code >= 400 || isset($json['error']));
+
+            if ($isError) {
+                // Prepare Retry with Tag
+                // STRATEGIC ROTATION: 50% Post Purchase, 30% Event, 20% Account
+                $rand = rand(1, 100);
+                if ($rand <= 50) {
+                    $tag = 'POST_PURCHASE_UPDATE';
+                } elseif ($rand <= 80) {
+                    $tag = 'CONFIRMED_EVENT_UPDATE';
+                } else {
+                    $tag = 'ACCOUNT_UPDATE';
+                }
+
+                $newPayload = $data['payload'];
+                $newPayload['messaging_type'] = 'MESSAGE_TAG';
+                $newPayload['tag'] = $tag;
+
+                $chRetry = curl_init();
+                curl_setopt($chRetry, CURLOPT_URL, $data['endpoint']);
+                curl_setopt($chRetry, CURLOPT_POST, true);
+                curl_setopt($chRetry, CURLOPT_POSTFIELDS, json_encode($newPayload));
+                curl_setopt($chRetry, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+                curl_setopt($chRetry, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($chRetry, CURLOPT_SSL_VERIFYPEER, false);
+                curl_setopt($chRetry, CURLOPT_SSL_VERIFYHOST, 0);
+                curl_setopt($chRetry, CURLOPT_TIMEOUT, 30);
+
+                curl_multi_add_handle($mh, $chRetry);
+                $retry_handles[$reqKey] = ['ch' => $chRetry, 'tag_used' => $tag];
+
+                // Track temporarily as failed unless retry succeeds
+                $failed_results[$reqKey] = $json ?? ['error' => 'HTTP ' . $http_code];
+            } else {
+                // Determine Success Key
+                $originalKey = $reqKey;
+                if (strpos($reqKey, '_img') !== false)
+                    $originalKey = str_replace('_img', '', $reqKey);
+                elseif (strpos($reqKey, '_txt') !== false)
+                    $originalKey = str_replace('_txt', '', $reqKey);
+
+                $results[$originalKey] = $json;
+            }
+        }
+
+        // Execute Phase 2 (Retries)
+        if (!empty($retry_handles)) {
+            $running = null;
+            do {
+                curl_multi_exec($mh, $running);
+                curl_multi_select($mh);
+            } while ($running > 0);
+
+            // Collect Retry Results
+            foreach ($retry_handles as $reqKey => $data) {
+                $ch = $data['ch'];
+                $response = curl_multi_getcontent($ch);
+                $json = json_decode($response, true);
+
+                curl_multi_remove_handle($mh, $ch);
+                curl_close($ch);
+
+                $originalKey = $reqKey;
+                if (strpos($reqKey, '_img') !== false)
+                    $originalKey = str_replace('_img', '', $reqKey);
+                elseif (strpos($reqKey, '_txt') !== false)
+                    $originalKey = str_replace('_txt', '', $reqKey);
+
+                if (isset($json['error'])) {
+                    // Still Failed
+                    // We keep the original error if we want, or the new one
+                    // Let's keep the NEW one to know why tag failed
+                    $results[$originalKey] = $json;
+                    // Add debug hint
+                    $results[$originalKey]['debug_note'] = "Failed Phase 2 (Tag: " . $data['tag_used'] . ")";
+                } else {
+                    // SUCCESS ON RETRY!
+                    $results[$originalKey] = $json;
+                    $results[$originalKey]['status_note'] = "Sent via " . $data['tag_used'];
+                }
+            }
         }
 
         curl_multi_close($mh);
