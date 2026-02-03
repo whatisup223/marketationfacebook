@@ -162,22 +162,6 @@
                 </div>
             </div>
 
-            <!-- Unified Inbox (Main Section) -->
-            <a href="unified_inbox.php" title="<?php echo __('unified_inbox'); ?>"
-                class="flex items-center px-3 py-2.5 <?php echo $current_page == 'unified_inbox.php' ? 'bg-indigo-600/20 text-indigo-300 border-indigo-500/20' : 'text-gray-400 hover:bg-white/5 hover:text-white'; ?> rounded-xl font-medium border border-transparent transition-all group overflow-hidden"
-                :class="sidebarCollapsed ? 'justify-center' : 'gap-3'">
-                <div class="relative flex items-center justify-center shrink-0">
-                    <svg class="w-5 h-5 text-gray-500 group-hover:text-indigo-400 transition-colors" fill="none"
-                        stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.172a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20" />
-                    </svg>
-                    <div class="absolute -top-1 -right-1 w-2 h-2 bg-indigo-500 rounded-full blur-[2px] animate-pulse">
-                    </div>
-                </div>
-                <span class="text-sm whitespace-nowrap transition-all duration-300"
-                    :class="sidebarCollapsed ? 'w-0 opacity-0 absolute' : 'w-auto opacity-100'"><?php echo __('unified_inbox'); ?></span>
-            </a>
 
             <!-- Campaign Reports -->
             <a href="campaign_reports.php" title="<?php echo __('campaign_reports'); ?>"

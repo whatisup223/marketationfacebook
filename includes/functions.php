@@ -81,7 +81,7 @@ $translations = [
         'whatsapp' => 'أدوات واتساب',
         'wa_accounts' => 'حسابات واتساب',
         'wa_bulk_send' => 'إرسال جماعي (WA)',
-        'unified_inbox' => 'البريد الموحد',
+
         'wa_settings' => 'إعدادات واتساب',
         'auto_moderator' => 'حماية الصفحات',
         'auto_moderator_desc' => 'قم بحماية صفحتك من التعليقات المسيئة، أرقام الهواتف، والروابط الدعائية تلقائياً.',
