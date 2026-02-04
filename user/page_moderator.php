@@ -23,7 +23,7 @@ $stmt->execute([$user_id]);
 $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
-<div class="flex min-h-screen bg-gray-900 font-sans" x-data="autoModerator()">
+<div id="main-user-container" class="main-user-container flex min-h-screen bg-gray-900 font-sans" x-data="autoModerator()">
     <?php include '../includes/user_sidebar.php'; ?>
 
     <!-- Modals moved outside main to fix containing block issues (backdrop-filter) -->

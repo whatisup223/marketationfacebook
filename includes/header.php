@@ -70,8 +70,12 @@ if (isLoggedIn()) {
     }
 }
 ?>
+<?php
+$h_sidebar_collapsed = isset($_COOKIE['sidebar_collapsed']) && $_COOKIE['sidebar_collapsed'] === 'true';
+?>
 <!DOCTYPE html>
-<html lang="<?php echo $lang; ?>" dir="<?php echo $dir; ?>" class="scroll-smooth dark">
+<html lang="<?php echo $lang; ?>" dir="<?php echo $dir; ?>"
+    class="scroll-smooth dark <?php echo $h_sidebar_collapsed ? 'sidebar-closed' : ''; ?>">
 
 <head>
     <meta charset="UTF-8">
@@ -163,9 +167,9 @@ if (isLoggedIn()) {
                 extend: {
                     fontFamily: {
                         <?php if ($lang === 'ar'): ?>
-                                                                                                                                                                                                    sans: ['IBM Plex Sans Arabic', 'sans-serif'],
+                                                                                                                                                                                                                                                                                    sans: ['IBM Plex Sans Arabic', 'sans-serif'],
                         <?php else: ?>
-                                                                                                                                                                                                    sans: ['Outfit', 'sans-serif'],
+                                                                                                                                                                                                                                                                                    sans: ['Outfit', 'sans-serif'],
                         <?php endif; ?>
                     },
                     colors: {
@@ -178,6 +182,10 @@ if (isLoggedIn()) {
         }
     </script>
     <style>
+        [x-cloak] {
+            display: none !important;
+        }
+
         /* Base (Dark Mode Always) */
         body {
             font-family:
@@ -190,6 +198,7 @@ if (isLoggedIn()) {
         /* Scroll behavior and offset for sticky header */
         html {
             scroll-behavior: smooth;
+            overflow-y: scroll;
         }
 
         section[id] {
@@ -389,16 +398,96 @@ if (isLoggedIn()) {
         }
     </script>
 
+    <style>
+        [x-cloak] {
+            display: none !important;
+        }
+
+        /* Base Sidebar Width Rules */
+        #app-sidebar {
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: width;
+        }
+
+        /* Initial state overrides for non-flicker */
+        html.sidebar-closed #app-sidebar {
+            width: 80px !important;
+        }
+
+        html:not(.sidebar-closed) #app-sidebar {
+            width: 260px !important;
+        }
+
+        /* Transition for main content to follow sidebar */
+        #main-user-container {
+            transition: padding 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Hide elements gracefully when sidebar is closed */
+        html.sidebar-closed .hide-on-collapse {
+            opacity: 0 !important;
+            width: 0 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            pointer-events: none !important;
+            overflow: hidden !important;
+            white-space: nowrap !important;
+        }
+
+        /* Immediately hide submenus when closed */
+        html.sidebar-closed .navigation-submenu {
+            display: none !important;
+        }
+
+        /* Scrollbar styling */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        /* Submenu Container */
+        .navigation-submenu {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, opacity 0.2s ease-out;
+        }
+
+        /* Active State */
+        .navigation-submenu.is-active {
+            max-height: 500px;
+            opacity: 1;
+            margin-top: 0.25rem;
+        }
+
+        /* Strict Preload - No movements during first load */
+        .preload .navigation-submenu,
+        .preload #app-sidebar,
+        .preload #main-user-container {
+            transition: none !important;
+            animation: none !important;
+        }
+    </style>
+
     <!-- Alpine.js CDN -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 
-<body class="text-gray-100 antialiased min-h-screen flex flex-col bg-slate-900 transition-colors duration-300 dark"
+<body
+    class="preload text-gray-100 antialiased min-h-screen flex flex-col bg-slate-900 transition-colors duration-300 dark"
     x-data="{ 
         scrolled: false, 
         mobileMenu: false
-     }" :class="{ 'overflow-hidden': mobileMenu }" @keydown.escape.window="mobileMenu = false"
-    @scroll.window="scrolled = (window.pageYOffset > 20)">
+     }" x-init="setTimeout(() => $el.classList.remove('preload'), 300)" :class="{ 'overflow-hidden': mobileMenu }"
+    @keydown.escape.window="mobileMenu = false" @scroll.window="scrolled = (window.pageYOffset > 20)">
     <!-- Background -->
     <div class="fixed inset-0 -z-10 overflow-hidden">
         <div class="g-blob"></div>

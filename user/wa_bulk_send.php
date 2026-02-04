@@ -272,7 +272,7 @@ require_once __DIR__ . '/../includes/header.php';
         display: none !important;
     }
 </style>
-<div class="flex min-h-screen pt-4" x-data="{ 
+<div id="main-user-container" class="main-user-container flex min-h-screen pt-4" x-data="{ 
     message: '', 
     numbers: '', 
     campaignName: 'حملة واتساب جديدة ' + new Date().toLocaleString(),

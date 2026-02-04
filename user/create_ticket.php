@@ -65,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
-<div class="flex min-h-screen pt-4">
+<div id="main-user-container" class="main-user-container flex min-h-screen pt-4">
     <!-- Sidebar -->
     <?php require_once __DIR__ . '/../includes/user_sidebar.php'; ?>
 

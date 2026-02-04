@@ -93,7 +93,7 @@ if (isset($_SESSION['wa_settings_success'])) {
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
-<div class="flex min-h-screen pt-4">
+<div id="main-user-container" class="main-user-container flex min-h-screen pt-4">
     <?php require_once __DIR__ . '/../includes/user_sidebar.php'; ?>
 
     <div class="flex-1 min-w-0 p-4 md:p-8 relative overflow-hidden" x-data="{ 

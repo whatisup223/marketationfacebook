@@ -24,7 +24,7 @@ try {
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
-<div class="flex min-h-screen pt-4" x-data="waAccountManager()"
+<div id="main-user-container" class="main-user-container flex min-h-screen pt-4" x-data="waAccountManager()"
     @open-reconnect-modal.window="startLinking($event.detail.instance)">
     <?php require_once __DIR__ . '/../includes/user_sidebar.php'; ?>
 

@@ -21,7 +21,7 @@ $stmt->execute([$_SESSION['user_id']]);
 $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
-<div class="flex min-h-screen bg-gray-900 font-sans" x-data="autoReplyApp()">
+<div id="main-user-container" class="main-user-container flex min-h-screen bg-gray-900 font-sans" x-data="autoReplyApp()">
     <?php include '../includes/user_sidebar.php'; ?>
 
     <main class="flex-1 flex flex-col bg-gray-900/50 backdrop-blur-md relative p-6">

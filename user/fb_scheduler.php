@@ -64,7 +64,7 @@ require_once __DIR__ . '/../includes/header.php';
     }
 </style>
 
-<div class="flex min-h-screen pt-4" x-data="postScheduler()" x-init="$watch('showModal', value => {
+<div id="main-user-container" class="main-user-container flex min-h-screen pt-4" x-data="postScheduler()" x-init="$watch('showModal', value => {
     // Scroll lock removed to allow scrolling to the inline editor
 })">
     <?php require_once __DIR__ . '/../includes/user_sidebar.php'; ?>

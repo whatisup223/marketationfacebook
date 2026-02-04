@@ -68,7 +68,7 @@ include '../includes/header.php';
 
 ?>
 
-<div class="flex min-h-screen pt-4">
+<div id="main-user-container" class="main-user-container flex min-h-screen pt-4">
     <?php include '../includes/user_sidebar.php'; ?>
 
     <div class="flex-1 min-w-0 p-4 md:p-8">
