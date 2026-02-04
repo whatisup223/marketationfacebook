@@ -141,10 +141,12 @@ include '../includes/header.php';
                                     <div class="p-2.5 bg-indigo-600/20 rounded-xl border border-indigo-500/10">
                                         <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor"
                                             viewBox="0 0 24 24">
-                                            <path x-show="showAddForm" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            <path x-show="showAddForm" stroke-linecap="round" stroke-linejoin="round"
+                                                stroke-width="2"
                                                 d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z">
                                             </path>
-                                            <path x-show="!showAddForm" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            <path x-show="!showAddForm" stroke-linecap="round" stroke-linejoin="round"
+                                                stroke-width="2"
                                                 d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
                                             </path>
                                         </svg>
@@ -200,36 +202,59 @@ include '../includes/header.php';
                                                             </h4>
                                                             <!-- Active Status Badge -->
                                                             <?php if ($acc['is_active']): ?>
-                                                                <span class="text-[10px] uppercase font-bold text-green-400 bg-green-500/10 border border-green-500/20 px-2 py-0.5 rounded-full flex items-center gap-1">
-                                                                    <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                                                                <span
+                                                                    class="text-[10px] uppercase font-bold text-green-400 bg-green-500/10 border border-green-500/20 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                                                    <span
+                                                                        class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
                                                                     <?php echo __('status_active'); ?>
                                                                 </span>
                                                             <?php else: ?>
-                                                                <span class="text-[10px] uppercase font-bold text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded-full">
+                                                                <span
+                                                                    class="text-[10px] uppercase font-bold text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded-full">
                                                                     <?php echo __('status_inactive'); ?>
                                                                 </span>
                                                             <?php endif; ?>
                                                         </div>
-                                                        
+
                                                         <div class="space-y-1">
-                                                            <div class="flex items-center gap-2 text-[10px] text-gray-500 font-mono">
+                                                            <div
+                                                                class="flex items-center gap-2 text-[10px] text-gray-500 font-mono">
                                                                 <span>ID: <?php echo $acc['fb_id']; ?></span>
                                                             </div>
 
                                                             <div class="flex flex-wrap items-center gap-2 pt-1">
                                                                 <!-- Token Type -->
-                                                                <span class="text-[10px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-1.5 py-0.5 rounded flex items-center gap-1">
-                                                                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                                                <span
+                                                                    class="text-[10px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-1.5 py-0.5 rounded flex items-center gap-1">
+                                                                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24"
+                                                                        stroke="currentColor">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                                            stroke-width="2"
+                                                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                    </svg>
                                                                     توكن ثابت / دائم
                                                                 </span>
                                                                 <!-- Expiry -->
-                                                                <span class="text-[10px] bg-white/5 text-gray-300 border border-white/10 px-1.5 py-0.5 rounded flex items-center gap-1">
-                                                                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                                                <span
+                                                                    class="text-[10px] bg-white/5 text-gray-300 border border-white/10 px-1.5 py-0.5 rounded flex items-center gap-1">
+                                                                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24"
+                                                                        stroke="currentColor">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                                            stroke-width="2"
+                                                                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                    </svg>
                                                                     مدى الحياة
                                                                 </span>
                                                                 <!-- Token Checker Link -->
-                                                                <a href="https://developers.facebook.com/tools/debug/accesstoken/?access_token=<?php echo $acc['access_token']; ?>" target="_blank" class="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded flex items-center gap-1 hover:bg-emerald-500/20 transition-colors">
-                                                                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>
+                                                                <a href="https://developers.facebook.com/tools/debug/accesstoken/?access_token=<?php echo $acc['access_token']; ?>"
+                                                                    target="_blank"
+                                                                    class="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded flex items-center gap-1 hover:bg-emerald-500/20 transition-colors">
+                                                                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24"
+                                                                        stroke="currentColor">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                                            stroke-width="2"
+                                                                            d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                                                                    </svg>
                                                                     فاحص التوكن
                                                                 </a>
                                                             </div>
@@ -237,8 +262,7 @@ include '../includes/header.php';
                                                     </div>
                                                 </div>
 
-                                                <div
-                                                    class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <div class="flex items-center gap-2">
                                                     <a href="?delete_account=<?php echo $acc['id']; ?>"
                                                         onclick="return confirm('<?php echo __('confirm_delete_account'); ?>')"
                                                         class="p-2 hover:bg-red-500/20 text-gray-400 hover:text-red-500 rounded-lg transition-colors"
