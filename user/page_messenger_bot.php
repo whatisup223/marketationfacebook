@@ -67,9 +67,9 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             class="w-full bg-black/40 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-3.5 pr-10 appearance-none transition-all group-hover:border-white/20">
                             <option value=""><?php echo __('select_page'); ?>...</option>
                             <?php foreach ($pages as $page): ?>
-                                <option value="<?php echo htmlspecialchars($page['page_id']); ?>">
-                                    <?php echo htmlspecialchars($page['page_name']); ?>
-                                </option>
+                                    <option value="<?php echo htmlspecialchars($page['page_id']); ?>">
+                                        <?php echo htmlspecialchars($page['page_name']); ?>
+                                    </option>
                             <?php endforeach; ?>
                         </select>
                         <div
@@ -114,17 +114,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     </template>
                 </div>
 
-                <!-- Token Debug Info -->
-                <!-- Token Debug Info -->
-                <template x-if="debugInfo && selectedPageId">
-                    <div x-transition.opacity
-                        class="mt-4 p-3 bg-black/40 rounded-xl border border-white/5 text-[10px] font-mono text-gray-500 flex justify-between items-center">
-                        <span>Token: <span class="text-indigo-400/70"
-                                x-text="debugInfo ? debugInfo.masked_token : ''"></span></span>
-                        <span>Length: <span class="text-indigo-400/70"
-                                x-text="debugInfo ? debugInfo.length : ''"></span></span>
-                    </div>
-                </template>
+
             </div>
         </div>
 
