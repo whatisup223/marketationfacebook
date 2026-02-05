@@ -50,7 +50,7 @@ if ($action === 'fetch_rules') {
     }
 
     try {
-        $stmt = $pdo->prepare("SELECT id, trigger_type, keywords, reply_message, reply_buttons, created_at FROM auto_reply_rules WHERE page_id = ? AND reply_source = ? ORDER BY trigger_type DESC, created_at DESC");
+        $stmt = $pdo->prepare("SELECT * FROM auto_reply_rules WHERE page_id = ? AND reply_source = ? ORDER BY trigger_type DESC, created_at DESC");
         $stmt->execute([$page_id, $source]);
         $rules = $stmt->fetchAll(PDO::FETCH_ASSOC);
         echo json_encode(['success' => true, 'rules' => $rules]);
