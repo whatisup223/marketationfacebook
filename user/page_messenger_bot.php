@@ -11,13 +11,7 @@ if (!isset($_SESSION['user_id'])) {
 
 // Get User Pages via Account Join - Robust query
 $pdo = getDB();
-$stmt = $pdo->prepare("SELECT * FROM fb_pages WHERE id IN (
-    SELECT MIN(p.id) 
-    FROM fb_pages p 
-    JOIN fb_accounts a ON p.account_id = a.id 
-    WHERE a.user_id = ? 
-    GROUP BY p.page_id
-) ORDER BY page_name ASC");
+$stmt = $pdo->prepare("SELECT p.id, p.page_id, p.page_name FROM fb_pages p JOIN fb_accounts a ON p.account_id = a.id WHERE a.user_id = ? GROUP BY p.page_id ORDER BY p.page_name ASC");
 $stmt->execute([$_SESSION['user_id']]);
 $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>

@@ -547,7 +547,7 @@ require_once 'includes/header.php';
 
 <!-- Portfolio Section (Our Work) -->
 <?php
-$portfolioStmt = $pdo->query("SELECT * FROM portfolio_items ORDER BY display_order ASC, id DESC");
+$portfolioStmt = $pdo->query("SELECT id, title_en, title_ar, description_en, description_ar, preview_url, content_url, item_type, category_en, category_ar FROM portfolio_items ORDER BY display_order ASC, id DESC");
 $portfolioItems = $portfolioStmt->fetchAll(PDO::FETCH_ASSOC);
 if (!empty($portfolioItems)):
     ?>
@@ -794,7 +794,7 @@ if (!empty($portfolioItems)):
 <!-- Pricing Section -->
 <?php
 $pricingPlans = [];
-$pricingStmt = $pdo->query("SELECT * FROM pricing_plans WHERE is_active = 1 ORDER BY display_order ASC, id ASC");
+$pricingStmt = $pdo->query("SELECT id, plan_name_en, plan_name_ar, description_en, description_ar, price, currency_en, currency_ar, billing_period_en, billing_period_ar, button_text_en, button_text_ar, button_url, features, is_featured FROM pricing_plans WHERE is_active = 1 ORDER BY display_order ASC, id ASC");
 while ($row = $pricingStmt->fetch(PDO::FETCH_ASSOC)) {
     $pricingPlans[] = $row;
 }
