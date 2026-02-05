@@ -23,7 +23,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <div id="main-user-container" class="main-user-container flex min-h-screen bg-gray-900 font-sans"
-    x-data="autoReplyApp()">
+    style="font-family: <?php echo $font; ?>;" x-data="autoReplyApp()">
     <?php include '../includes/user_sidebar.php'; ?>
 
     <main class="flex-1 flex flex-col bg-gray-900/50 backdrop-blur-md relative p-6 overflow-x-hidden">
@@ -212,13 +212,16 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     <option value="today" class="bg-gray-900 text-gray-300"><?php echo __('today'); ?>
                                     </option>
                                     <option value="week" class="bg-gray-900 text-gray-300">
-                                        <?php echo __('last_7_days'); ?></option>
+                                        <?php echo __('last_7_days'); ?>
+                                    </option>
                                     <option value="month" class="bg-gray-900 text-gray-300">
-                                        <?php echo __('last_30_days'); ?></option>
+                                        <?php echo __('last_30_days'); ?>
+                                    </option>
                                     <option value="all" class="bg-gray-900 text-gray-300"><?php echo __('all_time'); ?>
                                     </option>
                                     <option value="custom" class="bg-gray-900 text-indigo-400">
-                                        <?php echo __('custom_period') ?? 'Custom Range'; ?></option>
+                                        <?php echo __('custom_period') ?? 'Custom Range'; ?>
+                                    </option>
                                 </select>
                                 <div
                                     class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">

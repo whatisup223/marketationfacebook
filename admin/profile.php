@@ -76,20 +76,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
 
         if (in_array($ext, $allowed)) {
-            $new_name = 'uploads/avatars/avatar_' . $user_id . '_' . time() . '.' . $ext;
+            $upload_dir = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'avatars';
+            if (!is_dir($upload_dir)) {
+                mkdir($upload_dir, 0777, true);
+            }
+
+            $new_filename = 'avatar_' . $user_id . '_' . time() . '.' . $ext;
+            $new_name = 'uploads/avatars/' . $new_filename;
+            $destination = $upload_dir . DIRECTORY_SEPARATOR . $new_filename;
 
             $stmt = $pdo->prepare("SELECT avatar FROM users WHERE id = ?");
             $stmt->execute([$user_id]);
             $old_avatar = $stmt->fetchColumn();
-            if ($old_avatar && file_exists(__DIR__ . '/../' . $old_avatar)) {
-                @unlink(__DIR__ . '/../' . $old_avatar);
+            if ($old_avatar && file_exists(dirname(__DIR__) . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $old_avatar))) {
+                @unlink(dirname(__DIR__) . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $old_avatar));
             }
 
-            if (move_uploaded_file($_FILES['avatar']['tmp_name'], __DIR__ . '/../' . $new_name)) {
+            if (move_uploaded_file($_FILES['avatar']['tmp_name'], $destination)) {
                 $stmt = $pdo->prepare("UPDATE users SET avatar = ? WHERE id = ?");
                 $stmt->execute([$new_name, $user_id]);
                 set_flash('success', __("avatar_updated"));
+            } else {
+                set_flash('error', "Failed to upload avatar: Permission denied or directory missing.");
             }
+        } else {
+            set_flash('error', "Invalid file type");
         }
         header("Location: profile.php");
         exit;

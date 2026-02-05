@@ -17,7 +17,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <div id="main-user-container" class="main-user-container flex min-h-screen bg-gray-900 font-sans"
-    x-data="autoReplyApp()">
+    style="font-family: <?php echo $font; ?>;" x-data="autoReplyApp()">
     <?php include '../includes/user_sidebar.php'; ?>
 
     <main
