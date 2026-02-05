@@ -178,8 +178,8 @@ try {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
 
     // --- 011-012: Link & Simplify Tickets ---
-    if (!columnExists($pdo, 'tickets', 'campaign_id')) {
-        $pdo->exec("ALTER TABLE `tickets` ADD COLUMN `campaign_id` int(11) DEFAULT NULL");
+    if (!columnExists($pdo, 'support_tickets', 'campaign_id')) {
+        $pdo->exec("ALTER TABLE `support_tickets` ADD COLUMN `campaign_id` int(11) DEFAULT NULL");
     }
 
     // --- 013-014: FB Pages Cursor & User Points ---

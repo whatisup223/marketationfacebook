@@ -1,7 +1,7 @@
 <?php
 require_once '../includes/functions.php';
 
-header('Content-Type: application/json');
+header('Content-Type: application/json; charset=utf-8');
 
 if (!isset($_SESSION['user_id'])) {
     http_response_code(401);

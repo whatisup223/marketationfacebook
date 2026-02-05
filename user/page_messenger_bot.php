@@ -1,5 +1,6 @@
 ﻿<?php
 require_once '../includes/functions.php';
+header('Content-Type: text/html; charset=utf-8');
 require_once '../includes/header.php';
 
 // Check login
@@ -72,9 +73,9 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             class="w-full bg-black/40 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-3.5 pr-10 appearance-none transition-all group-hover:border-white/20">
                             <option value=""><?php echo __('select_page'); ?>...</option>
                             <?php foreach ($pages as $page): ?>
-                                    <option value="<?php echo htmlspecialchars($page['page_id']); ?>">
-                                        <?php echo htmlspecialchars($page['page_name']); ?>
-                                    </option>
+                                <option value="<?php echo htmlspecialchars($page['page_id']); ?>">
+                                    <?php echo htmlspecialchars($page['page_name']); ?>
+                                </option>
                             <?php endforeach; ?>
                         </select>
                         <div
@@ -206,15 +207,25 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <select x-model="statsRange"
                                     @change="if(statsRange === 'custom') { openCustomRangeModal() } else { fetchStats() }"
                                     class="bg-white/5 border border-white/10 text-white text-[10px] font-black uppercase rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full md:w-48 pl-4 pr-10 py-2.5 appearance-none cursor-pointer hover:bg-white/10 transition-all shadow-lg">
-                                    <option value="today" class="bg-gray-900 text-gray-300"><?php echo __('today'); ?></option>
-                                    <option value="week" class="bg-gray-900 text-gray-300"><?php echo __('last_7_days'); ?></option>
-                                    <option value="month" class="bg-gray-900 text-gray-300"><?php echo __('last_30_days'); ?></option>
-                                    <option value="all" class="bg-gray-900 text-gray-300"><?php echo __('all_time'); ?></option>
-                                    <option value="custom" class="bg-gray-900 text-indigo-400"><?php echo __('custom_period') ?? 'Custom Range'; ?></option>
+                                    <option value="today" class="bg-gray-900 text-gray-300"><?php echo __('today'); ?>
+                                    </option>
+                                    <option value="week" class="bg-gray-900 text-gray-300">
+                                        <?php echo __('last_7_days'); ?>
+                                    </option>
+                                    <option value="month" class="bg-gray-900 text-gray-300">
+                                        <?php echo __('last_30_days'); ?>
+                                    </option>
+                                    <option value="all" class="bg-gray-900 text-gray-300"><?php echo __('all_time'); ?>
+                                    </option>
+                                    <option value="custom" class="bg-gray-900 text-indigo-400">
+                                        <?php echo __('custom_period') ?? 'Custom Range'; ?>
+                                    </option>
                                 </select>
-                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
+                                <div
+                                    class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
                                     <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 9l-7 7-7-7"></path>
                                     </svg>
                                 </div>
                             </div>
@@ -634,9 +645,9 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                         </template>
                                     </div>
                                     <h4 class="font-bold text-white text-lg"
-                                        x-text="getPageName() || 'Marketation - Ù…Ø§Ø±ÙƒØªÙŠØ´Ù†'">
+                                        x-text="getPageName() || 'Marketation - ماركتيشن'">
                                     </h4>
-                                    <p class="text-xs text-gray-500">Messenger â€¢ Very Responsive</p>
+                                    <p class="text-xs text-gray-500">Messenger • Very Responsive</p>
                                 </div>
 
                                 <div class="flex-1 overflow-y-auto px-2 messenger-scrollbar space-y-6 pb-4">
@@ -888,6 +899,62 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             </div>
                         </div>
 
+                        <!-- Global Save Bar (Auto Replies) -->
+                        <div x-transition:enter="transition ease-out duration-300"
+                            x-transition:enter-start="opacity-0 transform translate-y-4"
+                            x-transition:enter-end="opacity-100 transform translate-y-0"
+                            class="mt-8 flex justify-center">
+                            <div
+                                class="glass-panel p-3 rounded-[2rem] border border-white/10 bg-black/40 backdrop-blur-3xl flex flex-col md:flex-row items-center justify-between gap-6 w-full max-w-4xl shadow-2xl">
+                                <div class="flex items-center gap-4 px-6 text-center md:text-left">
+                                    <div class="relative">
+                                        <div
+                                            class="w-12 h-12 bg-indigo-600/20 rounded-2xl flex items-center justify-center">
+                                            <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                            </svg>
+                                        </div>
+                                        <div
+                                            class="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-gray-900 animate-pulse">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-bold text-white uppercase tracking-tight">
+                                            <?php echo __('wa_settings_ready') ?? 'Settings Ready to Save'; ?>
+                                        </p>
+                                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em]">
+                                            <?php echo __('unsaved_changes_hint'); ?>
+                                        </p>
+                                    </div>
+                                </div>
+                                <button @click="saveAllSettings()" :disabled="isGlobalSaving"
+                                    class="px-12 py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-[1.5rem] shadow-xl shadow-indigo-600/30 transition-all transform active:scale-95 flex items-center gap-3 group">
+                                    <template x-if="!isGlobalSaving">
+                                        <svg class="w-5 h-5 group-hover:translate-y-[-2px] transition-transform"
+                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                                d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4">
+                                            </path>
+                                        </svg>
+                                    </template>
+                                    <template x-if="isGlobalSaving">
+                                        <svg class="animate-spin w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg"
+                                            fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                                stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor"
+                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                            </path>
+                                        </svg>
+                                    </template>
+                                    <span class="uppercase tracking-widest text-xs"
+                                        x-text="isGlobalSaving ? '<?php echo __('saving'); ?>...' : '<?php echo __('save_changes'); ?>'"></span>
+                                </button>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -927,9 +994,9 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                         </template>
                                     </div>
                                     <h4 class="font-bold text-white text-lg"
-                                        x-text="getPageName() || 'Marketation - Ù…Ø§Ø±ÙƒØªÙŠØ´Ù†'">
+                                        x-text="getPageName() || 'Marketation - ماركتيشن'">
                                     </h4>
-                                    <p class="text-xs text-gray-500">Messenger â€¢ Very Responsive</p>
+                                    <p class="text-xs text-gray-500">Messenger • Very Responsive</p>
                                 </div>
 
                                 <div class="flex-1 overflow-y-auto px-2 messenger-scrollbar space-y-6 pb-4">
@@ -1765,7 +1832,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
             debugInfo: null,
             webhookUrl: 'Loading...',
             verifyToken: 'Loading...',
-            pages: <?php echo json_encode($pages); ?>,
+            pages: <?php echo json_encode($pages, JSON_UNESCAPED_UNICODE); ?>,
 
             // Payload Suggestions
             availablePayloads: [],
@@ -2282,8 +2349,8 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         title: '',
                         payload: '',
                         type: 'postback'
-              });
-       }
+                    });
+                }
             },
 
             removeButton(index) {
