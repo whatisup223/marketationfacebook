@@ -165,6 +165,11 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
     $is_keyword_match = false;
 
     foreach ($rules as $rule) {
+        // Safe check for active status
+        if (isset($rule['is_active']) && $rule['is_active'] == 0) {
+            continue;
+        }
+
         $keywords = explode(',', $rule['keywords']);
         foreach ($keywords as $kw) {
             $kw = trim($kw);
@@ -521,6 +526,20 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
         $rule_id = $matched_rule['id'] ?? null;
         $stmt = $pdo->prepare("INSERT IGNORE INTO bot_sent_messages (message_id, page_id, rule_id, reply_source, user_id) VALUES (?, ?, ?, ?, ?)");
         $stmt->execute([$sent_id, $page_id, $rule_id, $source, $customer_id]);
+
+        // --- NEW: Increment Usage Count ---
+        if ($rule_id) {
+            try {
+                // Check if usage_count exists first (safe update)
+                $check = $pdo->query("SHOW COLUMNS FROM auto_reply_rules LIKE 'usage_count'")->fetchAll();
+                if (count($check) > 0) {
+                    $stmt = $pdo->prepare("UPDATE auto_reply_rules SET usage_count = COALESCE(usage_count, 0) + 1 WHERE id = ?");
+                    $stmt->execute([$rule_id]);
+                }
+            } catch (Exception $e) {
+                // Ignore
+            }
+        }
     }
 
     if ($customer_id) {

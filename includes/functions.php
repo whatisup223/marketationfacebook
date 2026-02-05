@@ -1515,6 +1515,13 @@ $translations = [
         'messenger_source' => 'رسائل المسنجر',
         'comment_source' => 'تعليقات المنشورات',
         'extracting_comments_status' => 'جاري استخراج التعليقات من المنشور: %s',
+        'auto_like' => 'إعجاب تلقائي',
+        'auto_like_help' => 'الإعجاب بتعليق العميل تلقائياً لجذب انتباهه',
+        'private_reply_content' => 'محتوى الرسالة الخاصة',
+        'hide_comment_after_reply' => 'إخفاء التعليق بعد الرد',
+        'hide_comment_help' => 'سيتم إخفاء تعليق العميل عن الآخرين بعد الرد عليه',
+        'send_private_reply' => 'إرسال رد خاص (DM)',
+        'send_private_reply_hint' => 'إرسال رسالة ماسنجر للشخص الذي علق',
     ],
     'en' => [
         'reply_buttons' => 'Reply Buttons',
@@ -2874,6 +2881,13 @@ $translations = [
         'cleanup_running' => 'Cleaning up redundant files...',
         'cleanup_success' => 'System cleaned successfully!',
         'cleanup_failed' => 'System cleanup failed.',
+        'auto_like' => 'Auto Like',
+        'auto_like_help' => 'Automatically like the user comment to grab attention',
+        'private_reply_content' => 'Private Message Content',
+        'hide_comment_after_reply' => 'Hide Comment After Reply',
+        'hide_comment_help' => 'The user comment will be hidden from others after replying',
+        'send_private_reply' => 'Send Private Reply (DM)',
+        'send_private_reply_hint' => 'Send a Messenger reply to the person who commented',
     ],
 ];
 

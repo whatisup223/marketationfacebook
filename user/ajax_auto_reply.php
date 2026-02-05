@@ -50,9 +50,21 @@ if ($action === 'fetch_rules') {
     }
 
     try {
+        // AUTO-MIGRATE: Ensure columns exist
+        $columns = $pdo->query("SHOW COLUMNS FROM auto_reply_rules")->fetchAll(PDO::FETCH_COLUMN);
+
+        if (!in_array('is_active', $columns)) {
+            $pdo->exec("ALTER TABLE auto_reply_rules ADD COLUMN is_active TINYINT(1) DEFAULT 1");
+        }
+        if (!in_array('usage_count', $columns)) {
+            $pdo->exec("ALTER TABLE auto_reply_rules ADD COLUMN usage_count INT DEFAULT 0");
+        }
+
+        // Now fetch safely
         $stmt = $pdo->prepare("SELECT * FROM auto_reply_rules WHERE page_id = ? AND reply_source = ? ORDER BY trigger_type DESC, created_at DESC");
         $stmt->execute([$page_id, $source]);
         $rules = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
         echo json_encode(['success' => true, 'rules' => $rules]);
     } catch (Exception $e) {
         echo json_encode(['success' => false, 'error' => $e->getMessage()]);
@@ -258,6 +270,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             echo json_encode(['success' => false, 'error' => $e->getMessage()]);
             exit;
         }
+    }
+
+    // Toggle Rule Active Status (NEW)
+    if ($action === 'toggle_rule') {
+        $rule_id = $_POST['rule_id'] ?? '';
+        $is_active = isset($_POST['is_active']) ? (int) $_POST['is_active'] : 0;
+
+        if (!$rule_id) {
+            echo json_encode(['success' => false, 'error' => 'Rule ID is required']);
+            exit;
+        }
+
+        try {
+            // Check if is_active column exists
+            $columns = $pdo->query("SHOW COLUMNS FROM auto_reply_rules LIKE 'is_active'")->fetchAll();
+
+            if (count($columns) === 0) {
+                // Add column if it doesn't exist
+                $pdo->exec("ALTER TABLE auto_reply_rules ADD COLUMN is_active TINYINT(1) DEFAULT 1");
+            }
+
+            $stmt = $pdo->prepare("UPDATE auto_reply_rules SET is_active = ? WHERE id = ?");
+            $stmt->execute([$is_active, $rule_id]);
+
+            echo json_encode(['success' => true, 'message' => 'Rule status updated']);
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+        exit;
     }
 
     if ($action === 'delete_rule') {
