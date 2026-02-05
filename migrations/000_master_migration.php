@@ -435,6 +435,41 @@ try {
         KEY `status` (`status`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
 
+    // --- Frontend Content Tables ---
+    $pdo->exec("CREATE TABLE IF NOT EXISTS `portfolio_items` (
+        `id` INT AUTO_INCREMENT PRIMARY KEY,
+        `title_en` VARCHAR(255),
+        `title_ar` VARCHAR(255),
+        `description_en` TEXT,
+        `description_ar` TEXT,
+        `preview_url` VARCHAR(255),
+        `content_url` VARCHAR(255),
+        `item_type` VARCHAR(50),
+        `category_en` VARCHAR(100),
+        `category_ar` VARCHAR(100),
+        `display_order` INT DEFAULT 0
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+    $pdo->exec("CREATE TABLE IF NOT EXISTS `pricing_plans` (
+        `id` INT AUTO_INCREMENT PRIMARY KEY,
+        `plan_name_en` VARCHAR(255),
+        `plan_name_ar` VARCHAR(255),
+        `description_en` TEXT,
+        `description_ar` TEXT,
+        `price` DECIMAL(10,2),
+        `currency_en` VARCHAR(50),
+        `currency_ar` VARCHAR(50),
+        `billing_period_en` VARCHAR(100),
+        `billing_period_ar` VARCHAR(100),
+        `button_text_en` VARCHAR(255),
+        `button_text_ar` VARCHAR(255),
+        `button_url` TEXT,
+        `features` TEXT,
+        `is_featured` TINYINT(1) DEFAULT 0,
+        `is_active` TINYINT(1) DEFAULT 1,
+        `display_order` INT DEFAULT 0
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
     // --- 038: Ensure incremental columns are added if they weren't in initial CREATE TABLE ---
     if (!columnExists($pdo, 'users', 'username')) {
         $pdo->exec("ALTER TABLE users ADD COLUMN username VARCHAR(50) DEFAULT NULL AFTER id");
