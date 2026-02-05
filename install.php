@@ -99,6 +99,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // 2. Users Table (Updated)
         $pdo->exec("CREATE TABLE IF NOT EXISTS users (
             id INT AUTO_INCREMENT PRIMARY KEY,
+            username VARCHAR(50) UNIQUE DEFAULT NULL,
             name VARCHAR(100) NOT NULL,
             email VARCHAR(100) UNIQUE NOT NULL,
             password VARCHAR(255) NOT NULL,
@@ -295,8 +296,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE email = ?");
         $stmt->execute([$admin_email]);
         if ($stmt->fetchColumn() == 0) {
-            $stmt = $pdo->prepare("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, 'admin')");
-            $stmt->execute(['Administrator', $admin_email, $admin_pass]);
+            $username = explode('@', $admin_email)[0];
+            $stmt = $pdo->prepare("INSERT INTO users (name, username, email, password, role) VALUES (?, ?, ?, ?, 'admin')");
+            $stmt->execute(['Administrator', $username, $admin_email, $admin_pass]);
         }
 
         // Seeding Default Plans

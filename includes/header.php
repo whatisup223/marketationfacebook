@@ -167,9 +167,9 @@ $h_sidebar_collapsed = isset($_COOKIE['sidebar_collapsed']) && $_COOKIE['sidebar
                 extend: {
                     fontFamily: {
                         <?php if ($lang === 'ar'): ?>
-                                                                                                                                                                                                                                                                                    sans: ['IBM Plex Sans Arabic', 'sans-serif'],
+                                                                                                                                                                                                                                                                                        sans: ['IBM Plex Sans Arabic', 'sans-serif'],
                         <?php else: ?>
-                                                                                                                                                                                                                                                                                    sans: ['Outfit', 'sans-serif'],
+                                                                                                                                                                                                                                                                                        sans: ['Outfit', 'sans-serif'],
                         <?php endif; ?>
                     },
                     colors: {
@@ -246,6 +246,8 @@ $h_sidebar_collapsed = isset($_COOKIE['sidebar_collapsed']) && $_COOKIE['sidebar
             animation: move 25s infinite alternate;
             opacity: 0.4;
             /* Slightly lower for light mode */
+            will-change: transform;
+            transform: translate3d(0, 0, 0);
         }
 
         /* Custom Scrollbar */

@@ -436,6 +436,22 @@ try {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
 
     // --- 038: Ensure incremental columns are added if they weren't in initial CREATE TABLE ---
+    if (!columnExists($pdo, 'users', 'username')) {
+        $pdo->exec("ALTER TABLE users ADD COLUMN username VARCHAR(50) DEFAULT NULL AFTER id");
+        // Populate username from email
+        $users = $pdo->query("SELECT id, email FROM users WHERE username IS NULL")->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($users as $u) {
+            $uname = explode('@', $u['email'])[0];
+            // Simple uniquifier if needed, though unlikely for small batch
+            $pdo->prepare("UPDATE users SET username = ? WHERE id = ?")->execute([$uname, $u['id']]);
+        }
+        $pdo->exec("ALTER TABLE users MODIFY COLUMN username VARCHAR(50) NOT NULL");
+        try {
+            $pdo->exec("ALTER TABLE users ADD UNIQUE (username)");
+        } catch (Exception $e) {
+        }
+    }
+
     if (!columnExists($pdo, 'users', 'preferences')) {
         $pdo->exec("ALTER TABLE users ADD COLUMN preferences TEXT DEFAULT NULL");
     }

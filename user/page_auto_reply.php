@@ -205,33 +205,21 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             </div>
 
                             <!-- Range Filter -->
-                            <div
-                                class="flex flex-wrap items-center gap-2 bg-white/5 p-1 rounded-2xl border border-white/10 backdrop-blur-md w-full md:w-auto">
-                                <button @click="statsRange = 'today'; fetchStats()"
-                                    :class="statsRange === 'today' ? 'bg-indigo-600 text-white shadow-lg' : 'text-gray-500 hover:text-white'"
-                                    class="flex-1 md:flex-none px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all duration-300">
-                                    <?php echo __('today'); ?>
-                                </button>
-                                <button @click="statsRange = 'week'; fetchStats()"
-                                    :class="statsRange === 'week' ? 'bg-indigo-600 text-white shadow-lg' : 'text-gray-500 hover:text-white'"
-                                    class="flex-1 md:flex-none px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all duration-300">
-                                    <?php echo __('last_7_days'); ?>
-                                </button>
-                                <button @click="statsRange = 'month'; fetchStats()"
-                                    :class="statsRange === 'month' ? 'bg-indigo-600 text-white shadow-lg' : 'text-gray-500 hover:text-white'"
-                                    class="flex-1 md:flex-none px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all duration-300">
-                                    <?php echo __('last_30_days'); ?>
-                                </button>
-                                <button @click="statsRange = 'all'; fetchStats()"
-                                    :class="statsRange === 'all' ? 'bg-indigo-600 text-white shadow-lg' : 'text-gray-500 hover:text-white'"
-                                    class="flex-1 md:flex-none px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all duration-300">
-                                    <?php echo __('all_time'); ?>
-                                </button>
-                                <div class="w-px h-4 bg-white/10 mx-1 hidden md:block"></div>
-                                <button @click="openCustomRangeModal()"
-                                    class="flex-1 md:flex-none px-4 py-2 rounded-xl text-[10px] font-black uppercase text-indigo-400 hover:bg-white/5 transition-all">
-                                    <?php echo __('custom_period') ?? 'Custom Range'; ?>
-                                </button>
+                            <div class="relative group w-full md:w-auto">
+                                <select x-model="statsRange"
+                                    @change="if(statsRange === 'custom') { openCustomRangeModal() } else { fetchStats() }"
+                                    class="bg-white/5 border border-white/10 text-white text-[10px] font-black uppercase rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full md:w-48 pl-4 pr-10 py-2.5 appearance-none cursor-pointer hover:bg-white/10 transition-all shadow-lg">
+                                    <option value="today" class="bg-gray-900 text-gray-300"><?php echo __('today'); ?></option>
+                                    <option value="week" class="bg-gray-900 text-gray-300"><?php echo __('last_7_days'); ?></option>
+                                    <option value="month" class="bg-gray-900 text-gray-300"><?php echo __('last_30_days'); ?></option>
+                                    <option value="all" class="bg-gray-900 text-gray-300"><?php echo __('all_time'); ?></option>
+                                    <option value="custom" class="bg-gray-900 text-indigo-400"><?php echo __('custom_period') ?? 'Custom Range'; ?></option>
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
+                                    <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </div>
                             </div>
 
                             <!-- Additional Filters -->

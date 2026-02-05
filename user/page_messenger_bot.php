@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once '../includes/functions.php';
 require_once '../includes/header.php';
 
@@ -21,10 +21,12 @@ $stmt->execute([$_SESSION['user_id']]);
 $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
-<div id="main-user-container" class="main-user-container flex min-h-screen bg-gray-900 font-sans" x-data="autoReplyApp()">
+<div id="main-user-container" class="main-user-container flex min-h-screen bg-gray-900 font-sans"
+    x-data="autoReplyApp()">
     <?php include '../includes/user_sidebar.php'; ?>
 
-    <main class="flex-1 flex flex-col bg-gray-900/50 backdrop-blur-md relative p-6">
+    <main
+        class="flex-1 flex flex-col bg-gray-900/50 backdrop-blur-md relative p-4 md:p-6 w-full max-w-full overflow-x-hidden">
 
         <!-- Header -->
         <div class="flex-none flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
@@ -70,9 +72,9 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             class="w-full bg-black/40 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-3.5 pr-10 appearance-none transition-all group-hover:border-white/20">
                             <option value=""><?php echo __('select_page'); ?>...</option>
                             <?php foreach ($pages as $page): ?>
-                                <option value="<?php echo htmlspecialchars($page['page_id']); ?>">
-                                    <?php echo htmlspecialchars($page['page_name']); ?>
-                                </option>
+                                    <option value="<?php echo htmlspecialchars($page['page_id']); ?>">
+                                        <?php echo htmlspecialchars($page['page_name']); ?>
+                                    </option>
                             <?php endforeach; ?>
                         </select>
                         <div
@@ -131,963 +133,1186 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </div>
         </div>
 
-        <!-- NEW: Insight & Control Center Section -->
-        <template x-if="selectedPageId">
-            <div x-transition.opacity class="mt-12 space-y-12 pb-24 border-t border-white/5 pt-12 relative">
 
-                <!-- Background Glow -->
-                <div
-                    class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-96 bg-indigo-600/5 blur-[120px] pointer-events-none -z-10">
-                </div>
-
-                <!-- Section Header -->
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 relative z-30">
-                    <div class="w-full md:w-auto">
-                        <div class="flex items-center gap-2 mb-3">
-                            <span class="w-8 h-[2px] bg-indigo-500 rounded-full"></span>
-                            <span
-                                class="text-[10px] font-black text-indigo-400 uppercase tracking-[0.3em]"><?php echo __('overview'); ?></span>
-                        </div>
-                        <h2 class="text-3xl font-black text-white leading-tightrtl:text-right">
-                            <?php echo __('insight_control_center'); ?>
-                        </h2>
-                    </div>
-
-                    <!-- Range Filter -->
-                    <div
-                        class="flex flex-wrap items-center gap-2 bg-white/5 p-1 rounded-2xl border border-white/10 backdrop-blur-md w-full md:w-auto">
-                        <button @click="statsRange = 'today'; fetchStats()"
-                            :class="statsRange === 'today' ? 'bg-indigo-600 text-white shadow-lg' : 'text-gray-500 hover:text-white'"
-                            class="flex-1 md:flex-none px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all duration-300">
-                            <?php echo __('today'); ?>
+        <!-- NEW: Tabs Navigation -->
+        <div class="space-y-8">
+            <div class="w-full relative overflow-hidden">
+                <div class="flex overflow-x-auto pb-4 custom-horizontal-scrollbar touch-pan-x -mx-4 px-4 md:mx-0 md:px-0"
+                    style="scroll-behavior: smooth; -webkit-overflow-scrolling: touch;">
+                    <div class="flex gap-2 whitespace-nowrap min-w-max">
+                        <!-- Dashboard Tab -->
+                        <button @click="activeTab = 'dashboard'"
+                            :class="activeTab === 'dashboard' ? 'bg-indigo-600/20 text-indigo-400 border-indigo-500/30' : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border-white/5'"
+                            class="px-5 py-2.5 rounded-xl text-sm font-bold transition-all border flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z">
+                                </path>
+                            </svg>
+                            مركز التحليلات والتنبيهات
                         </button>
-                        <button @click="statsRange = 'week'; fetchStats()"
-                            :class="statsRange === 'week' ? 'bg-indigo-600 text-white shadow-lg' : 'text-gray-500 hover:text-white'"
-                            class="flex-1 md:flex-none px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all duration-300">
-                            <?php echo __('last_7_days'); ?>
+                        <!-- Auto Replies Tab -->
+                        <button @click="activeTab = 'replies'"
+                            :class="activeTab === 'replies' ? 'bg-indigo-600/20 text-indigo-400 border-indigo-500/30' : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border-white/5'"
+                            class="px-5 py-2.5 rounded-xl text-sm font-bold transition-all border flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z">
+                                </path>
+                            </svg>
+                            الردود التلقائية
                         </button>
-                        <button @click="statsRange = 'month'; fetchStats()"
-                            :class="statsRange === 'month' ? 'bg-indigo-600 text-white shadow-lg' : 'text-gray-500 hover:text-white'"
-                            class="flex-1 md:flex-none px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all duration-300">
-                            <?php echo __('last_30_days'); ?>
+                        <!-- AI Tab -->
+                        <button @click="activeTab = 'ai'"
+                            :class="activeTab === 'ai' ? 'bg-indigo-600/20 text-indigo-400 border-indigo-500/30' : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border-white/5'"
+                            class="px-5 py-2.5 rounded-xl text-sm font-bold transition-all border flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z">
+                                </path>
+                            </svg>
+                            الذكاء الاصطناعي
                         </button>
-                        <button @click="statsRange = 'all'; fetchStats()"
-                            :class="statsRange === 'all' ? 'bg-indigo-600 text-white shadow-lg' : 'text-gray-500 hover:text-white'"
-                            class="flex-1 md:flex-none px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all duration-300">
-                            <?php echo __('all_time'); ?>
-                        </button>
-                        <div class="w-px h-4 bg-white/10 mx-1 hidden md:block"></div>
-                        <button @click="openCustomRangeModal()"
-                            class="flex-1 md:flex-none px-4 py-2 rounded-xl text-[10px] font-black uppercase text-indigo-400 hover:bg-white/5 transition-all">
-                            <?php echo __('custom_period') ?? 'Custom Range'; ?>
-                        </button>
-                    </div>
-
-                    <!-- Additional Filters -->
-                    <div
-                        class="flex items-center gap-3 bg-white/5 p-1 rounded-2xl border border-white/10 backdrop-blur-md w-full md:w-auto">
-                        <select x-model="statsRule" @change="fetchStats()"
-                            class="bg-transparent text-gray-400 text-[10px] font-black uppercase px-4 py-2 border-none focus:ring-0 cursor-pointer hover:text-white transition-colors w-full md:w-48">
-                            <option value="" class="bg-gray-900"><?php echo __('all_rules') ?? 'All Rules'; ?></option>
-                            <option value="0" class="bg-gray-900"><?php echo __('default_reply'); ?></option>
-                            <template x-for="rule in rules" :key="rule.id">
-                                <option :value="rule.id" class="bg-gray-900" x-text="rule.keywords.split(',')[0]">
-                                </option>
-                            </template>
-                        </select>
                     </div>
                 </div>
+            </div>
 
-                <!-- Statistics Grid -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <!-- Total Interacted -->
-                    <div
-                        class="glass-panel p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all group overflow-hidden relative">
-                        <div class="relative z-10 flex justify-between items-start">
-                            <div>
-                                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
-                                    <?php echo __('total_interacted'); ?>
-                                </p>
-                                <h4 class="text-3xl font-black text-white group-hover:scale-110 transition-transform origin-left"
-                                    x-text="stats.total_interacted"></h4>
-                            </div>
-                            <div
-                                class="p-3 bg-indigo-500/10 rounded-2xl text-indigo-400 group-hover:rotate-12 transition-all">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
-                                    </path>
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="mt-4 flex items-center gap-2">
-                            <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
-                            <span
-                                class="text-[9px] text-gray-500 font-bold uppercase tracking-tighter"><?php echo __('live_database_feed'); ?></span>
-                        </div>
-                    </div>
+            <div x-show="activeTab === 'dashboard'">
+                <!-- NEW: Insight & Control Center Section -->
+                <template x-if="selectedPageId">
+                    <div x-transition.opacity class="mt-12 space-y-12 pb-24 border-t border-white/5 pt-12 relative">
 
-                    <!-- AI Success Rate -->
-                    <div
-                        class="glass-panel p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all group overflow-hidden relative">
-                        <div class="relative z-10 flex justify-between items-start">
-                            <div>
-                                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
-                                    <?php echo __('ai_success_rate'); ?>
-                                </p>
-                                <h4 class="text-3xl font-black text-white group-hover:scale-110 transition-transform origin-left"
-                                    x-text="stats.ai_success_rate"></h4>
-                            </div>
-                            <div
-                                class="p-3 bg-green-500/10 rounded-2xl text-green-400 group-hover:rotate-12 transition-all">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="mt-4 flex items-center gap-2">
-                            <div class="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
-                                <div class="h-full bg-green-500" :style="'width: ' + stats.ai_success_rate"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Active Handovers -->
-                    <div class="glass-panel p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all group overflow-hidden relative"
-                        :class="handoverConversations.length > 0 ? 'border-red-500/20' : ''">
-                        <div class="relative z-10 flex justify-between items-start">
-                            <div>
-                                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
-                                    <?php echo __('active_handovers'); ?>
-                                </p>
-                                <h4 class="text-3xl font-black text-white group-hover:scale-110 transition-transform origin-left"
-                                    x-text="stats.active_handovers"></h4>
-                            </div>
-                            <div class="p-3 bg-red-500/10 rounded-2xl text-red-500 group-hover:rotate-12 transition-all"
-                                :class="handoverConversations.length > 0 ? 'animate-pulse' : ''">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
-                                    </path>
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="mt-4 flex items-center gap-2">
-                            <div class="w-2 h-2 rounded-full"
-                                :class="handoverConversations.length > 0 ? 'bg-red-500 animate-ping' : 'bg-green-500'">
-                            </div>
-                            <span class="text-[10px] text-gray-600 uppercase font-bold tracking-tighter"
-                                x-text="handoverConversations.length > 0 ? '<?php echo __('human_intervention_needed'); ?>' : '<?php echo __('system_healthy'); ?>'"></span>
-                        </div>
-                    </div>
-
-                    <!-- Response Speed -->
-                    <div
-                        class="glass-panel p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all group overflow-hidden relative">
-                        <div class="relative z-10 flex justify-between items-start">
-                            <div>
-                                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
-                                    <?php echo __('avg_response_speed'); ?>
-                                </p>
-                                <h4 class="text-3xl font-black text-white group-hover:scale-110 transition-transform origin-left"
-                                    x-text="stats.avg_response_speed"></h4>
-                            </div>
-                            <div
-                                class="p-3 bg-indigo-500/10 rounded-2xl text-indigo-400 group-hover:rotate-12 transition-all">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="mt-4 flex items-center gap-2">
-                            <span
-                                class="text-[10px] text-indigo-400 uppercase font-black tracking-tighter"><?php echo __('instant_replies'); ?></span>
-                        </div>
-                    </div>
-
-                    <!-- Most Active Rule -->
-                    <div
-                        class="glass-panel p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all group overflow-hidden relative">
-                        <div class="relative z-10 flex justify-between items-start">
-                            <div class="min-w-0">
-                                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
-                                    <?php echo __('most_active_rule'); ?>
-                                </p>
-                                <h4 class="text-xl font-black text-white truncate" x-text="stats.top_rule"></h4>
-                            </div>
-                            <div
-                                class="p-3 bg-fuchsia-500/10 rounded-2xl text-fuchsia-400 group-hover:rotate-12 transition-all">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="mt-4 flex items-center gap-2">
-                            <span
-                                class="text-[9px] text-gray-500 font-bold uppercase tracking-tighter"><?php echo __('top_performing_logic'); ?></span>
-                        </div>
-                    </div>
-
-                    <!-- Peak Hour -->
-                    <div
-                        class="glass-panel p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all group overflow-hidden relative">
-                        <div class="relative z-10 flex justify-between items-start">
-                            <div>
-                                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
-                                    <?php echo __('peak_hour'); ?>
-                                </p>
-                                <h4 class="text-3xl font-black text-white" x-text="stats.peak_hour"></h4>
-                            </div>
-                            <div
-                                class="p-3 bg-amber-500/10 rounded-2xl text-amber-500 group-hover:rotate-12 transition-all">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="mt-4 flex items-center gap-2">
-                            <span
-                                class="text-[9px] text-gray-500 font-bold uppercase tracking-tighter"><?php echo __('highest_traffic_period'); ?></span>
-                        </div>
-                    </div>
-
-                    <!-- System Health -->
-                    <div
-                        class="glass-panel p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all group overflow-hidden relative">
-                        <div class="relative z-10 flex justify-between items-start">
-                            <div>
-                                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
-                                    <?php echo __('system_health'); ?>
-                                </p>
-                                <h4 class="text-3xl font-black text-green-400" x-text="stats.system_health"></h4>
-                            </div>
-                            <div
-                                class="p-3 bg-cyan-500/10 rounded-2xl text-cyan-400 group-hover:scale-110 transition-all">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
-                                    </path>
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="mt-4 flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full bg-green-500"></span>
-                            <span
-                                class="text-[9px] text-gray-500 font-bold uppercase tracking-tighter"><?php echo __('api_status_operational'); ?></span>
-                        </div>
-                    </div>
-
-                    <!-- Safety Alerts (The 4th card in 2nd row) -->
-                    <div
-                        class="glass-panel p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all group overflow-hidden relative">
-                        <div class="relative z-10 flex justify-between items-start">
-                            <div>
-                                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
-                                    <?php echo __('safety_alerts'); ?>
-                                </p>
-                                <h4 class="text-3xl font-black text-rose-400" x-text="stats.anger_alerts"></h4>
-                            </div>
-                            <div
-                                class="p-3 bg-rose-500/10 rounded-2xl text-rose-400 group-hover:scale-110 transition-all">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
-                                    </path>
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="mt-4 flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full"
-                                :class="stats.anger_alerts > 0 ? 'bg-rose-500 animate-pulse' : 'bg-green-500'"></span>
-                            <span
-                                class="text-[9px] text-gray-500 font-bold uppercase tracking-tighter"><?php echo __('ai_protection'); ?></span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Live Alerts Center (The Moved Handover Logic) -->
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                    <div class="lg:col-span-12">
+                        <!-- Background Glow -->
                         <div
-                            class="glass-panel p-8 rounded-[2.5rem] border border-white/5 bg-black/40 backdrop-blur-3xl relative overflow-hidden group">
-                            <div class="flex items-center justify-between mb-8">
-                                <div class="flex items-center gap-4">
-                                    <div class="p-3 bg-white/5 rounded-2xl border border-white/10">
-                                        <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
+                            class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-96 bg-indigo-600/5 blur-[120px] pointer-events-none -z-10">
+                        </div>
+
+                        <!-- Section Header -->
+                        <div
+                            class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 relative z-30">
+                            <div class="w-full md:w-auto">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <span class="w-8 h-[2px] bg-indigo-500 rounded-full"></span>
+                                    <span
+                                        class="text-[10px] font-black text-indigo-400 uppercase tracking-[0.3em]"><?php echo __('overview'); ?></span>
+                                </div>
+                                <h2 class="text-3xl font-black text-white leading-tightrtl:text-right">
+                                    <?php echo __('insight_control_center'); ?>
+                                </h2>
+                            </div>
+
+                            <!-- Range Filter -->
+                            <div class="relative group w-full md:w-auto">
+                                <select x-model="statsRange"
+                                    @change="if(statsRange === 'custom') { openCustomRangeModal() } else { fetchStats() }"
+                                    class="bg-white/5 border border-white/10 text-white text-[10px] font-black uppercase rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full md:w-48 pl-4 pr-10 py-2.5 appearance-none cursor-pointer hover:bg-white/10 transition-all shadow-lg">
+                                    <option value="today" class="bg-gray-900 text-gray-300"><?php echo __('today'); ?></option>
+                                    <option value="week" class="bg-gray-900 text-gray-300"><?php echo __('last_7_days'); ?></option>
+                                    <option value="month" class="bg-gray-900 text-gray-300"><?php echo __('last_30_days'); ?></option>
+                                    <option value="all" class="bg-gray-900 text-gray-300"><?php echo __('all_time'); ?></option>
+                                    <option value="custom" class="bg-gray-900 text-indigo-400"><?php echo __('custom_period') ?? 'Custom Range'; ?></option>
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
+                                    <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </div>
+                            </div>
+
+                            <!-- Additional Filters -->
+                            <div
+                                class="flex items-center gap-3 bg-white/5 p-1 rounded-2xl border border-white/10 backdrop-blur-md w-full md:w-auto">
+                                <select x-model="statsRule" @change="fetchStats()"
+                                    class="bg-transparent text-gray-400 text-[10px] font-black uppercase px-4 py-2 border-none focus:ring-0 cursor-pointer hover:text-white transition-colors w-full md:w-48">
+                                    <option value="" class="bg-gray-900"><?php echo __('all_rules') ?? 'All Rules'; ?>
+                                    </option>
+                                    <option value="0" class="bg-gray-900"><?php echo __('default_reply'); ?></option>
+                                    <template x-for="rule in rules" :key="rule.id">
+                                        <option :value="rule.id" class="bg-gray-900"
+                                            x-text="rule.keywords.split(',')[0]">
+                                        </option>
+                                    </template>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Statistics Grid -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <!-- Total Interacted -->
+                            <div
+                                class="glass-panel p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all group overflow-hidden relative">
+                                <div class="relative z-10 flex justify-between items-start">
+                                    <div>
+                                        <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
+                                            <?php echo __('total_interacted'); ?>
+                                        </p>
+                                        <h4 class="text-3xl font-black text-white group-hover:scale-110 transition-transform origin-left"
+                                            x-text="stats.total_interacted"></h4>
+                                    </div>
+                                    <div
+                                        class="p-3 bg-indigo-500/10 rounded-2xl text-indigo-400 group-hover:rotate-12 transition-all">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
+                                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
                                             </path>
                                         </svg>
                                     </div>
-                                    <div>
-                                        <h3 class="text-xl font-bold text-white"><?php echo __('live_alerts_center'); ?>
-                                        </h3>
-                                        <p class="text-xs text-gray-500 font-bold tracking-wide">
-                                            <?php echo __('monitor_alerts_desc'); ?>
-                                        </p>
-
-                                    </div>
                                 </div>
-                                <div class="flex items-center gap-2">
-                                    <button @click="fetchRules(); fetchHandover(); fetchStats();"
-                                        class="flex items-center gap-2 px-4 py-2 bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white rounded-xl transition-all border border-indigo-500/20 text-[10px] font-black uppercase tracking-widest"
-                                        :class="fetchingHandover ? 'animate-pulse' : ''">
-                                        <svg class="w-4 h-4" :class="fetchingHandover ? 'animate-spin' : ''" fill="none"
-                                            stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                        </svg>
-                                        <span><?php echo __('sync'); ?></span>
-                                    </button>
-
-                                    <button @click="markAllAsResolved()"
-                                        class="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-white rounded-xl transition-all border border-emerald-500/20 text-[10px] font-black uppercase tracking-widest">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M5 13l4 4L19 7" />
-                                        </svg>
-                                        <span><?php echo __('mark_all_resolved'); ?></span>
-                                    </button>
+                                <div class="mt-4 flex items-center gap-2">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
+                                    <span
+                                        class="text-[9px] text-gray-500 font-bold uppercase tracking-tighter"><?php echo __('live_database_feed'); ?></span>
                                 </div>
                             </div>
 
-                            <div class="space-y-4">
-                                <template x-if="handoverConversations.length > 0">
-                                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                        <template x-for="conv in handoverConversations" :key="conv.id">
-                                            <div
-                                                class="bg-white/[0.03] border border-white/5 p-5 rounded-3xl hover:border-red-500/30 transition-all group/item relative overflow-hidden">
-                                                <div
-                                                    class="absolute top-0 right-0 p-4 opacity-10 group-hover/item:opacity-20 transition-opacity">
-                                                    <svg class="w-12 h-12 text-red-500" fill="none"
-                                                        stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
-                                                        </path>
-                                                    </svg>
-                                                </div>
-                                                <div class="relative z-10">
-                                                    <div class="flex items-center gap-3 mb-4">
-                                                        <div class="w-10 h-10 rounded-2xl bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-black border border-indigo-500/20"
-                                                            x-text="conv.user_id.substring(0,2)"></div>
-                                                        <div class="min-w-0">
-                                                            <p
-                                                                class="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-0.5">
-                                                                <?php echo __('human_intervention_needed'); ?>
-                                                            </p>
-                                                            <p class="text-xs font-bold text-white truncate"
-                                                                x-text="conv.user_name || 'ID: ' + conv.user_id"></p>
+                            <!-- AI Success Rate -->
+                            <div
+                                class="glass-panel p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all group overflow-hidden relative">
+                                <div class="relative z-10 flex justify-between items-start">
+                                    <div>
+                                        <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
+                                            <?php echo __('ai_success_rate'); ?>
+                                        </p>
+                                        <h4 class="text-3xl font-black text-white group-hover:scale-110 transition-transform origin-left"
+                                            x-text="stats.ai_success_rate"></h4>
+                                    </div>
+                                    <div
+                                        class="p-3 bg-green-500/10 rounded-2xl text-green-400 group-hover:rotate-12 transition-all">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="mt-4 flex items-center gap-2">
+                                    <div class="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
+                                        <div class="h-full bg-green-500" :style="'width: ' + stats.ai_success_rate">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Active Handovers -->
+                            <div class="glass-panel p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all group overflow-hidden relative"
+                                :class="handoverConversations.length > 0 ? 'border-red-500/20' : ''">
+                                <div class="relative z-10 flex justify-between items-start">
+                                    <div>
+                                        <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
+                                            <?php echo __('active_handovers'); ?>
+                                        </p>
+                                        <h4 class="text-3xl font-black text-white group-hover:scale-110 transition-transform origin-left"
+                                            x-text="stats.active_handovers"></h4>
+                                    </div>
+                                    <div class="p-3 bg-red-500/10 rounded-2xl text-red-500 group-hover:rotate-12 transition-all"
+                                        :class="handoverConversations.length > 0 ? 'animate-pulse' : ''">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                                            </path>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="mt-4 flex items-center gap-2">
+                                    <div class="w-2 h-2 rounded-full"
+                                        :class="handoverConversations.length > 0 ? 'bg-red-500 animate-ping' : 'bg-green-500'">
+                                    </div>
+                                    <span class="text-[10px] text-gray-600 uppercase font-bold tracking-tighter"
+                                        x-text="handoverConversations.length > 0 ? '<?php echo __('human_intervention_needed'); ?>' : '<?php echo __('system_healthy'); ?>'"></span>
+                                </div>
+                            </div>
+
+                            <!-- Response Speed -->
+                            <div
+                                class="glass-panel p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all group overflow-hidden relative">
+                                <div class="relative z-10 flex justify-between items-start">
+                                    <div>
+                                        <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
+                                            <?php echo __('avg_response_speed'); ?>
+                                        </p>
+                                        <h4 class="text-3xl font-black text-white group-hover:scale-110 transition-transform origin-left"
+                                            x-text="stats.avg_response_speed"></h4>
+                                    </div>
+                                    <div
+                                        class="p-3 bg-indigo-500/10 rounded-2xl text-indigo-400 group-hover:rotate-12 transition-all">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="mt-4 flex items-center gap-2">
+                                    <span
+                                        class="text-[10px] text-indigo-400 uppercase font-black tracking-tighter"><?php echo __('instant_replies'); ?></span>
+                                </div>
+                            </div>
+
+                            <!-- Most Active Rule -->
+                            <div
+                                class="glass-panel p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all group overflow-hidden relative">
+                                <div class="relative z-10 flex justify-between items-start">
+                                    <div class="min-w-0">
+                                        <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
+                                            <?php echo __('most_active_rule'); ?>
+                                        </p>
+                                        <h4 class="text-xl font-black text-white truncate" x-text="stats.top_rule"></h4>
+                                    </div>
+                                    <div
+                                        class="p-3 bg-fuchsia-500/10 rounded-2xl text-fuchsia-400 group-hover:rotate-12 transition-all">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="mt-4 flex items-center gap-2">
+                                    <span
+                                        class="text-[9px] text-gray-500 font-bold uppercase tracking-tighter"><?php echo __('top_performing_logic'); ?></span>
+                                </div>
+                            </div>
+
+                            <!-- Peak Hour -->
+                            <div
+                                class="glass-panel p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all group overflow-hidden relative">
+                                <div class="relative z-10 flex justify-between items-start">
+                                    <div>
+                                        <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
+                                            <?php echo __('peak_hour'); ?>
+                                        </p>
+                                        <h4 class="text-3xl font-black text-white" x-text="stats.peak_hour"></h4>
+                                    </div>
+                                    <div
+                                        class="p-3 bg-amber-500/10 rounded-2xl text-amber-500 group-hover:rotate-12 transition-all">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="mt-4 flex items-center gap-2">
+                                    <span
+                                        class="text-[9px] text-gray-500 font-bold uppercase tracking-tighter"><?php echo __('highest_traffic_period'); ?></span>
+                                </div>
+                            </div>
+
+                            <!-- System Health -->
+                            <div
+                                class="glass-panel p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all group overflow-hidden relative">
+                                <div class="relative z-10 flex justify-between items-start">
+                                    <div>
+                                        <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
+                                            <?php echo __('system_health'); ?>
+                                        </p>
+                                        <h4 class="text-3xl font-black text-green-400" x-text="stats.system_health">
+                                        </h4>
+                                    </div>
+                                    <div
+                                        class="p-3 bg-cyan-500/10 rounded-2xl text-cyan-400 group-hover:scale-110 transition-all">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
+                                            </path>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="mt-4 flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                                    <span
+                                        class="text-[9px] text-gray-500 font-bold uppercase tracking-tighter"><?php echo __('api_status_operational'); ?></span>
+                                </div>
+                            </div>
+
+                            <!-- Safety Alerts (The 4th card in 2nd row) -->
+                            <div
+                                class="glass-panel p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all group overflow-hidden relative">
+                                <div class="relative z-10 flex justify-between items-start">
+                                    <div>
+                                        <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
+                                            <?php echo __('safety_alerts'); ?>
+                                        </p>
+                                        <h4 class="text-3xl font-black text-rose-400" x-text="stats.anger_alerts"></h4>
+                                    </div>
+                                    <div
+                                        class="p-3 bg-rose-500/10 rounded-2xl text-rose-400 group-hover:scale-110 transition-all">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                                            </path>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="mt-4 flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full"
+                                        :class="stats.anger_alerts > 0 ? 'bg-rose-500 animate-pulse' : 'bg-green-500'"></span>
+                                    <span
+                                        class="text-[9px] text-gray-500 font-bold uppercase tracking-tighter"><?php echo __('ai_protection'); ?></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Live Alerts Center (The Moved Handover Logic) -->
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                            <div class="lg:col-span-12">
+                                <div
+                                    class="glass-panel p-8 rounded-[2.5rem] border border-white/5 bg-black/40 backdrop-blur-3xl relative overflow-hidden group">
+                                    <div class="flex items-center justify-between mb-8">
+                                        <div class="flex items-center gap-4">
+                                            <div class="p-3 bg-white/5 rounded-2xl border border-white/10">
+                                                <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
+                                                    </path>
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <h3 class="text-xl font-bold text-white">
+                                                    <?php echo __('live_alerts_center'); ?>
+                                                </h3>
+                                                <p class="text-xs text-gray-500 font-bold tracking-wide">
+                                                    <?php echo __('monitor_alerts_desc'); ?>
+                                                </p>
+
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <button @click="fetchRules(); fetchHandover(); fetchStats();"
+                                                class="flex items-center gap-2 px-4 py-2 bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white rounded-xl transition-all border border-indigo-500/20 text-[10px] font-black uppercase tracking-widest"
+                                                :class="fetchingHandover ? 'animate-pulse' : ''">
+                                                <svg class="w-4 h-4" :class="fetchingHandover ? 'animate-spin' : ''"
+                                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                                </svg>
+                                                <span><?php echo __('sync'); ?></span>
+                                            </button>
+
+                                            <button @click="markAllAsResolved()"
+                                                class="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-white rounded-xl transition-all border border-emerald-500/20 text-[10px] font-black uppercase tracking-widest">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2" d="M5 13l4 4L19 7" />
+                                                </svg>
+                                                <span><?php echo __('mark_all_resolved'); ?></span>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div class="space-y-4">
+                                        <template x-if="handoverConversations.length > 0">
+                                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                                <template x-for="conv in handoverConversations" :key="conv.id">
+                                                    <div
+                                                        class="bg-white/[0.03] border border-white/5 p-5 rounded-3xl hover:border-red-500/30 transition-all group/item relative overflow-hidden">
+                                                        <div
+                                                            class="absolute top-0 right-0 p-4 opacity-10 group-hover/item:opacity-20 transition-opacity">
+                                                            <svg class="w-12 h-12 text-red-500" fill="none"
+                                                                stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2"
+                                                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                                                                </path>
+                                                            </svg>
+                                                        </div>
+                                                        <div class="relative z-10">
+                                                            <div class="flex items-center gap-3 mb-4">
+                                                                <div class="w-10 h-10 rounded-2xl bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-black border border-indigo-500/20"
+                                                                    x-text="conv.user_id.substring(0,2)"></div>
+                                                                <div class="min-w-0">
+                                                                    <p
+                                                                        class="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-0.5">
+                                                                        <?php echo __('human_intervention_needed'); ?>
+                                                                    </p>
+                                                                    <p class="text-xs font-bold text-white truncate"
+                                                                        x-text="conv.user_name || 'ID: ' + conv.user_id">
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                            <div class="mb-4" x-show="conv.last_user_message">
+                                                                <p
+                                                                    class="text-[10px] text-red-400 font-bold mb-1 uppercase tracking-tighter">
+                                                                    <?php echo __('last_message'); ?>:
+                                                                </p>
+                                                                <p class="text-xs text-gray-300 line-clamp-2 italic"
+                                                                    x-text="'&quot;' + conv.last_user_message + '&quot;'">
+                                                                </p>
+                                                            </div>
+                                                            <div class="mb-4">
+                                                                <p
+                                                                    class="text-[9px] text-gray-500 uppercase tracking-tighter mb-1">
+                                                                    <?php echo __('last_interaction'); ?>:
+                                                                </p>
+                                                                <p class="text-[10px] text-gray-400 truncate italic"
+                                                                    x-text="conv.last_bot_reply_text || '<?php echo __('waiting_response'); ?>'">
+                                                                </p>
+                                                            </div>
+                                                            <div class="flex flex-wrap gap-2 mb-4">
+                                                                <template x-if="conv.is_anger_detected == 1">
+                                                                    <span
+                                                                        class="px-2 py-1 bg-red-500/20 text-red-400 text-[8px] font-black rounded-lg border border-red-500/20 uppercase"><?php echo __('danger_alert'); ?></span>
+                                                                </template>
+                                                                <template x-if="conv.repeat_count >= 3">
+                                                                    <span
+                                                                        class="px-2 py-1 bg-orange-500/20 text-orange-400 text-[8px] font-black rounded-lg border border-orange-500/20 uppercase"><?php echo __('repetition_alert'); ?></span>
+                                                                </template>
+                                                            </div>
+                                                            <button @click="resolveHandover(conv.id)"
+                                                                class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-black rounded-xl transition-all shadow-lg shadow-indigo-600/20 uppercase tracking-widest flex items-center justify-center gap-2">
+                                                                <svg class="w-3 h-3" fill="none" stroke="currentColor"
+                                                                    viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                                        stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                                                </svg>
+                                                                <?php echo __('mark_as_resolved'); ?>
+                                                            </button>
                                                         </div>
                                                     </div>
-                                                    <div class="mb-4" x-show="conv.last_user_message">
-                                                        <p
-                                                            class="text-[10px] text-red-400 font-bold mb-1 uppercase tracking-tighter">
-                                                            <?php echo __('last_message'); ?>:
-                                                        </p>
-                                                        <p class="text-xs text-gray-300 line-clamp-2 italic"
-                                                            x-text="'&quot;' + conv.last_user_message + '&quot;'"></p>
-                                                    </div>
-                                                    <div class="mb-4">
-                                                        <p
-                                                            class="text-[9px] text-gray-500 uppercase tracking-tighter mb-1">
-                                                            <?php echo __('last_interaction'); ?>:
-                                                        </p>
-                                                        <p class="text-[10px] text-gray-400 truncate italic"
-                                                            x-text="conv.last_bot_reply_text || '<?php echo __('waiting_response'); ?>'">
-                                                        </p>
-                                                    </div>
-                                                    <div class="flex flex-wrap gap-2 mb-4">
-                                                        <template x-if="conv.is_anger_detected == 1">
-                                                            <span
-                                                                class="px-2 py-1 bg-red-500/20 text-red-400 text-[8px] font-black rounded-lg border border-red-500/20 uppercase"><?php echo __('danger_alert'); ?></span>
-                                                        </template>
-                                                        <template x-if="conv.repeat_count >= 3">
-                                                            <span
-                                                                class="px-2 py-1 bg-orange-500/20 text-orange-400 text-[8px] font-black rounded-lg border border-orange-500/20 uppercase"><?php echo __('repetition_alert'); ?></span>
-                                                        </template>
-                                                    </div>
-                                                    <button @click="resolveHandover(conv.id)"
-                                                        class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-black rounded-xl transition-all shadow-lg shadow-indigo-600/20 uppercase tracking-widest flex items-center justify-center gap-2">
-                                                        <svg class="w-3 h-3" fill="none" stroke="currentColor"
-                                                            viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                                stroke-width="3" d="M5 13l4 4L19 7"></path>
-                                                        </svg>
-                                                        <?php echo __('mark_as_resolved'); ?>
-                                                    </button>
+                                                </template>
+                                            </div>
+                                        </template>
+
+                                        <template x-if="handoverConversations.length === 0">
+                                            <div class="flex flex-col items-center justify-center py-12 text-center">
+                                                <div
+                                                    class="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mb-4 border border-green-500/20">
+                                                    <svg class="w-8 h-8 text-green-500" fill="none"
+                                                        stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                    </svg>
                                                 </div>
+                                                <h4 class="text-white font-bold mb-1">
+                                                    <?php echo __('no_active_alerts'); ?>
+                                                </h4>
                                             </div>
                                         </template>
                                     </div>
-                                </template>
 
-                                <template x-if="handoverConversations.length === 0">
-                                    <div class="flex flex-col items-center justify-center py-12 text-center">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+            </template>
+        </div>
+        <div x-show="activeTab === 'replies'">
+            <!-- Main Body: Preview (Left) & Rules (Right) -->
+            <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 pb-20">
+
+                <!-- Left Side: Preview Card -->
+                <div id="messenger-preview-section" class="lg:col-span-4 order-last lg:order-1">
+                    <div class="sticky top-24 space-y-6">
+                        <div
+                            class="glass-card rounded-[32px] border border-white/10 shadow-2xl overflow-hidden bg-[#18191a]">
+                            <!-- Title Bar -->
+                            <div
+                                class="bg-[#242526] border-b border-white/5 px-6 py-4 flex items-center justify-between">
+                                <h3 class="text-xs font-bold text-gray-300 uppercase tracking-wider">
+                                    <?php echo __('message_preview'); ?>
+                                </h3>
+                                <div class="flex gap-1">
+                                    <div class="w-2 h-2 rounded-full bg-gray-600"></div>
+                                    <div class="w-2 h-2 rounded-full bg-gray-600"></div>
+                                </div>
+                            </div>
+
+                            <div class="p-4 bg-[#18191a] h-[480px] flex flex-col font-sans">
+                                <!-- Helper Text -->
+                                <div class="text-center mb-6 mt-4">
+                                    <div
+                                        class="w-16 h-16 rounded-full bg-[#0084ff] flex items-center justify-center mx-auto mb-2 text-white text-3xl font-bold shadow-lg overflow-hidden">
+                                        <template x-if="getPageName()">
+                                            <span x-text="getPageName().charAt(0).toUpperCase()"></span>
+                                        </template>
+                                        <template x-if="!getPageName()">
+                                            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                                                <path
+                                                    d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                                            </svg>
+                                        </template>
+                                    </div>
+                                    <h4 class="font-bold text-white text-lg"
+                                        x-text="getPageName() || 'Marketation - Ù…Ø§Ø±ÙƒØªÙŠØ´Ù†'">
+                                    </h4>
+                                    <p class="text-xs text-gray-500">Messenger â€¢ Very Responsive</p>
+                                </div>
+
+                                <div class="flex-1 overflow-y-auto px-2 messenger-scrollbar space-y-6 pb-4">
+                                    <!-- User Message (Left) -->
+                                    <div class="flex items-end gap-2">
                                         <div
-                                            class="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mb-4 border border-green-500/20">
-                                            <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M5 13l4 4L19 7"></path>
+                                            class="w-6 h-6 rounded-full bg-gray-600 flex-shrink-0 flex items-center justify-center border border-white/5">
+                                            <svg class="w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 24 24">
+                                                <path
+                                                    d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
                                             </svg>
                                         </div>
-                                        <h4 class="text-white font-bold mb-1"><?php echo __('no_active_alerts'); ?></h4>
+                                        <div
+                                            class="bg-[#303030] text-gray-200 rounded-2xl rounded-bl-none px-3 py-2 max-w-[80%] text-[13px] shadow-sm">
+                                            <div class="font-bold text-[10px] text-gray-400 mb-0.5">
+                                                <?php echo __('customer_name_sample'); ?>
+                                            </div>
+                                            <div
+                                                x-text="previewMode === 'rule' ? previewCustomerMsg : '<?php echo __('customer_msg_sample'); ?>'">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Page Reply (Right) -->
+                                    <div class="flex items-end gap-2 justify-end">
+                                        <div
+                                            class="bg-[#0084ff] text-white rounded-2xl rounded-br-none px-3 py-2 max-w-[80%] text-[13px] shadow-lg">
+                                            <div class="whitespace-pre-wrap leading-snug"
+                                                x-text="previewMode === 'rule' ? previewReplyMsg : (defaultReplyText ? defaultReplyText : '<?php echo __('preview_empty_msg'); ?>')">
+                                            </div>
+                                        </div>
+                                        <div
+                                            class="w-6 h-6 rounded-full bg-[#0084ff] flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-white overflow-hidden shadow-md">
+                                            <template x-if="getPageName()">
+                                                <span x-text="getPageName().charAt(0).toUpperCase()"></span>
+                                            </template>
+                                            <template x-if="!getPageName()">
+                                                <svg class="w-3.5 h-3.5 text-white" fill="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path
+                                                        d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                                                </svg>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Input Area & Quick Replies Footer -->
+                                <div class="px-3 pb-4 pt-1 border-t border-white/5 bg-[#18191a]">
+                                    <!-- Quick Replies -->
+                                    <div class="flex flex-wrap gap-2 justify-center mb-3"
+                                        x-show="getCurrentPreviewButtons().length > 0">
+                                        <template x-for="btn in getCurrentPreviewButtons()">
+                                            <div class="px-4 py-1.5 rounded-full border border-[#0084ff] text-[#0084ff] text-[11px] font-bold bg-[#0084ff]/5 hover:bg-[#0084ff]/10 cursor-pointer transition-all"
+                                                x-text="btn.title || 'Button'"></div>
+                                        </template>
+                                    </div>
+
+                                    <!-- Mock Chat Input -->
+                                    <div
+                                        class="flex items-center gap-2 bg-[#242526] rounded-full px-4 py-2 border border-white/5">
+                                        <div class="text-[#0084ff]">
+                                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                                <path
+                                                    d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z" />
+                                            </svg>
+                                        </div>
+                                        <div class="flex-1 text-gray-500 text-xs italic">Aa</div>
+                                        <div class="flex gap-2 text-[#0084ff]">
+                                            <svg class="w-5 h-5 opacity-60" fill="currentColor" viewBox="0 0 24 24">
+                                                <path
+                                                    d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z" />
+                                            </svg>
+                                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                                <path
+                                                    d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Side: Rules Area -->
+                <div class="lg:col-span-8 space-y-8 order-first lg:order-2">
+
+                    <template x-if="!selectedPageId">
+                        <div
+                            class="glass-panel p-20 rounded-[3rem] border border-white/5 border-dashed flex flex-col items-center justify-center text-center group transition-all hover:bg-white/5">
+                            <div
+                                class="w-24 h-24 rounded-[2.5rem] bg-gray-800/50 flex items-center justify-center mb-8 border border-white/5 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
+                                <svg class="w-12 h-12 text-gray-600 group-hover:text-indigo-500 transition-colors"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z">
+                                    </path>
+                                </svg>
+                            </div>
+                            <h2 class="text-2xl font-bold text-white mb-3"><?php echo __('select_page_to_configure'); ?>
+                            </h2>
+                            <p class="text-gray-500 max-w-sm"><?php echo __('unselected_page_hint'); ?></p>
+                        </div>
+                    </template>
+
+                    <div x-show="selectedPageId" x-transition.opacity class="space-y-8" style="display: none;">
+
+
+
+                        <!-- Default Reply Card -->
+                        <div
+                            class="glass-panel p-8 rounded-[2rem] border border-white/10 bg-gray-800/40 backdrop-blur-2xl hover:border-indigo-500/30 transition-all shadow-2xl relative overflow-hidden group">
+                            <div class="absolute top-0 left-0 w-1 h-full bg-indigo-600 opacity-50"></div>
+
+                            <div class="flex justify-between items-start mb-6">
+                                <div>
+                                    <h3 class="text-2xl font-bold text-white mb-2"><?php echo __('default_reply'); ?>
+                                    </h3>
+                                    <p class="text-gray-400 text-sm max-w-md"><?php echo __('default_reply_hint'); ?>
+                                    </p>
+                                </div>
+                                <button @click="scrollToPreview()"
+                                    class="p-3 bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white rounded-2xl transition-all border border-indigo-500/20 group/eye"
+                                    title="<?php echo __('message_preview'); ?>">
+                                    <svg class="w-6 h-6 group-hover/eye:scale-110 transition-transform" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                        </path>
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <textarea x-model="defaultReplyText" rows="4"
+                                class="w-full bg-black/40 border border-white/10 rounded-2xl p-5 text-white placeholder-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all mb-6 text-base leading-relaxed"
+                                placeholder="<?php echo __('reply_placeholder'); ?>"></textarea>
+
+                        </div>
+
+                        <!-- Keyword Rules Section -->
+                        <div class="space-y-6">
+                            <div class="flex justify-between items-center">
+                                <h3 class="text-2xl font-bold text-white"><?php echo __('keyword_rules'); ?></h3>
+                                <button @click="openAddModal()"
+                                    class="bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white px-5 py-2.5 rounded-xl transition-all border border-indigo-500/20 flex items-center gap-2 font-bold text-sm">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 4v16m8-8H4">
+                                        </path>
+                                    </svg>
+                                    <?php echo __('add_new_rule'); ?>
+                                </button>
+                            </div>
+
+                            <div class="grid grid-cols-1 gap-4 max-h-[600px] overflow-y-auto pr-2 messenger-scrollbar">
+                                <template x-for="rule in rules" :key="rule.id">
+                                    <div
+                                        class="glass-panel p-4 md:p-6 rounded-2xl border border-white/5 bg-gray-800/20 hover:bg-gray-800/40 hover:border-indigo-500/30 transition-all group shrink-0">
+                                        <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+                                            <!-- Content Section -->
+                                            <div class="flex items-center gap-4 min-w-0 flex-1">
+                                                <div
+                                                    class="p-3 bg-indigo-500/10 rounded-2xl text-indigo-400 relative group-hover:scale-110 transition-transform flex-shrink-0">
+                                                    <svg class="w-6 h-6" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
+                                                        </path>
+                                                    </svg>
+                                                    <!-- Dynamic Label Badge -->
+                                                    <div class="absolute -top-3 -left-3 flex flex-col gap-1">
+                                                        <template x-if="getRuleType(rule) === 'entry'">
+                                                            <span
+                                                                class="px-2 py-0.5 bg-green-500/20 text-green-400 text-[9px] font-black rounded-lg border border-green-500/20 shadow-sm whitespace-nowrap uppercase tracking-tighter">
+                                                                <?php echo __('entry_point'); ?>
+                                                            </span>
+                                                        </template>
+                                                        <template x-if="getRuleType(rule) === 'button'">
+                                                            <span
+                                                                class="px-2 py-0.5 bg-blue-500/20 text-blue-400 text-[9px] font-black rounded-lg border border-blue-500/20 shadow-sm whitespace-nowrap uppercase tracking-tighter">
+                                                                <?php echo __('button_target'); ?>
+                                                            </span>
+                                                        </template>
+                                                    </div>
+                                                </div>
+                                                <div class="min-w-0 flex-1">
+                                                    <p class="text-xs font-black text-indigo-400 uppercase tracking-widest mb-1 truncate"
+                                                        x-text="'<?php echo __('keywords_label'); ?>: ' + rule.keywords">
+                                                    </p>
+                                                    <p class="text-sm text-white font-medium line-clamp-2 md:line-clamp-1"
+                                                        x-text="rule.reply_message">
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <!-- Action Buttons -->
+                                            <div
+                                                class="flex items-center gap-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex-shrink-0">
+                                                <button @click="previewRule(rule); scrollToPreview()"
+                                                    class="p-2.5 bg-indigo-600/10 hover:bg-indigo-600 rounded-xl text-indigo-400 hover:text-white transition-all border border-indigo-500/10"
+                                                    title="<?php echo __('message_preview'); ?>">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z">
+                                                        </path>
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                                        </path>
+                                                    </svg>
+                                                </button>
+                                                <button @click="editRule(rule)"
+                                                    class="p-2.5 bg-white/5 hover:bg-white/10 rounded-xl text-gray-400 hover:text-white transition-all border border-white/5">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                                                        </path>
+                                                    </svg>
+                                                </button>
+                                                <button @click="deleteRule(rule.id)"
+                                                    class="p-2.5 bg-red-500/10 hover:bg-red-500/20 rounded-xl text-red-500 transition-all border border-red-500/10">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                                        </path>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <template x-if="rules.length === 0">
+                                    <div class="p-12 border-2 border-white/5 border-dashed rounded-[2rem] text-center">
+                                        <p class="text-gray-500 text-sm italic font-medium">
+                                            <?php echo __('no_keyword_rules'); ?>
+                                        </p>
                                     </div>
                                 </template>
                             </div>
-
-                        </div>
-                    </div>
-                </div>
-            </div>
-</div>
-</template>
-
-<!-- Main Body: Preview (Left) & Rules (Right) -->
-<div class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 pb-20">
-
-    <!-- Left Side: Preview Card -->
-    <div id="messenger-preview-section" class="lg:col-span-4 order-last lg:order-1">
-        <div class="sticky top-24 space-y-6">
-            <div class="glass-card rounded-[32px] border border-white/10 shadow-2xl overflow-hidden bg-[#18191a]">
-                <!-- Title Bar -->
-                <div class="bg-[#242526] border-b border-white/5 px-6 py-4 flex items-center justify-between">
-                    <h3 class="text-xs font-bold text-gray-300 uppercase tracking-wider">
-                        <?php echo __('message_preview'); ?>
-                    </h3>
-                    <div class="flex gap-1">
-                        <div class="w-2 h-2 rounded-full bg-gray-600"></div>
-                        <div class="w-2 h-2 rounded-full bg-gray-600"></div>
-                    </div>
-                </div>
-
-                <div class="p-4 bg-[#18191a] h-[480px] flex flex-col font-sans">
-                    <!-- Helper Text -->
-                    <div class="text-center mb-6 mt-4">
-                        <div
-                            class="w-16 h-16 rounded-full bg-[#0084ff] flex items-center justify-center mx-auto mb-2 text-white text-3xl font-bold shadow-lg overflow-hidden">
-                            <template x-if="getPageName()">
-                                <span x-text="getPageName().charAt(0).toUpperCase()"></span>
-                            </template>
-                            <template x-if="!getPageName()">
-                                <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
-                                    <path
-                                        d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                                </svg>
-                            </template>
-                        </div>
-                        <h4 class="font-bold text-white text-lg" x-text="getPageName() || 'Marketation - ماركتيشن'">
-                        </h4>
-                        <p class="text-xs text-gray-500">Messenger • Very Responsive</p>
-                    </div>
-
-                    <div class="flex-1 overflow-y-auto px-2 messenger-scrollbar space-y-6 pb-4">
-                        <!-- User Message (Left) -->
-                        <div class="flex items-end gap-2">
-                            <div
-                                class="w-6 h-6 rounded-full bg-gray-600 flex-shrink-0 flex items-center justify-center border border-white/5">
-                                <svg class="w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 24 24">
-                                    <path
-                                        d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                                </svg>
-                            </div>
-                            <div
-                                class="bg-[#303030] text-gray-200 rounded-2xl rounded-bl-none px-3 py-2 max-w-[80%] text-[13px] shadow-sm">
-                                <div class="font-bold text-[10px] text-gray-400 mb-0.5">
-                                    <?php echo __('customer_name_sample'); ?>
-                                </div>
-                                <div
-                                    x-text="previewMode === 'rule' ? previewCustomerMsg : '<?php echo __('customer_msg_sample'); ?>'">
-                                </div>
-                            </div>
                         </div>
 
-                        <!-- Page Reply (Right) -->
-                        <div class="flex items-end gap-2 justify-end">
-                            <div
-                                class="bg-[#0084ff] text-white rounded-2xl rounded-br-none px-3 py-2 max-w-[80%] text-[13px] shadow-lg">
-                                <div class="whitespace-pre-wrap leading-snug"
-                                    x-text="previewMode === 'rule' ? previewReplyMsg : (defaultReplyText ? defaultReplyText : '<?php echo __('preview_empty_msg'); ?>')">
-                                </div>
-                            </div>
-                            <div
-                                class="w-6 h-6 rounded-full bg-[#0084ff] flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-white overflow-hidden shadow-md">
-                                <template x-if="getPageName()">
-                                    <span x-text="getPageName().charAt(0).toUpperCase()"></span>
-                                </template>
-                                <template x-if="!getPageName()">
-                                    <svg class="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                        <path
-                                            d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                                    </svg>
-                                </template>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Input Area & Quick Replies Footer -->
-                    <div class="px-3 pb-4 pt-1 border-t border-white/5 bg-[#18191a]">
-                        <!-- Quick Replies -->
-                        <div class="flex flex-wrap gap-2 justify-center mb-3"
-                            x-show="getCurrentPreviewButtons().length > 0">
-                            <template x-for="btn in getCurrentPreviewButtons()">
-                                <div class="px-4 py-1.5 rounded-full border border-[#0084ff] text-[#0084ff] text-[11px] font-bold bg-[#0084ff]/5 hover:bg-[#0084ff]/10 cursor-pointer transition-all"
-                                    x-text="btn.title || 'Button'"></div>
-                            </template>
-                        </div>
-
-                        <!-- Mock Chat Input -->
-                        <div class="flex items-center gap-2 bg-[#242526] rounded-full px-4 py-2 border border-white/5">
-                            <div class="text-[#0084ff]">
-                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                    <path
-                                        d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z" />
-                                </svg>
-                            </div>
-                            <div class="flex-1 text-gray-500 text-xs italic">Aa</div>
-                            <div class="flex gap-2 text-[#0084ff]">
-                                <svg class="w-5 h-5 opacity-60" fill="currentColor" viewBox="0 0 24 24">
-                                    <path
-                                        d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z" />
-                                </svg>
-                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                    <path
-                                        d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-                                </svg>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- Right Side: Rules Area -->
-    <div class="lg:col-span-8 space-y-8 order-first lg:order-2">
-
-        <template x-if="!selectedPageId">
-            <div
-                class="glass-panel p-20 rounded-[3rem] border border-white/5 border-dashed flex flex-col items-center justify-center text-center group transition-all hover:bg-white/5">
-                <div
-                    class="w-24 h-24 rounded-[2.5rem] bg-gray-800/50 flex items-center justify-center mb-8 border border-white/5 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
-                    <svg class="w-12 h-12 text-gray-600 group-hover:text-indigo-500 transition-colors" fill="none"
-                        stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z">
-                        </path>
-                    </svg>
-                </div>
-                <h2 class="text-2xl font-bold text-white mb-3"><?php echo __('select_page_to_configure'); ?>
-                </h2>
-                <p class="text-gray-500 max-w-sm"><?php echo __('unselected_page_hint'); ?></p>
-            </div>
-        </template>
-
-        <div x-show="selectedPageId" x-transition.opacity class="space-y-8" style="display: none;">
-
-
-
-            <!-- Default Reply Card -->
-            <div
-                class="glass-panel p-8 rounded-[2rem] border border-white/10 bg-gray-800/40 backdrop-blur-2xl hover:border-indigo-500/30 transition-all shadow-2xl relative overflow-hidden group">
-                <div class="absolute top-0 left-0 w-1 h-full bg-indigo-600 opacity-50"></div>
-
-                <div class="flex justify-between items-start mb-6">
-                    <div>
-                        <h3 class="text-2xl font-bold text-white mb-2"><?php echo __('default_reply'); ?></h3>
-                        <p class="text-gray-400 text-sm max-w-md"><?php echo __('default_reply_hint'); ?></p>
-                    </div>
-                    <button @click="scrollToPreview()"
-                        class="p-3 bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white rounded-2xl transition-all border border-indigo-500/20 group/eye"
-                        title="<?php echo __('message_preview'); ?>">
-                        <svg class="w-6 h-6 group-hover/eye:scale-110 transition-transform" fill="none"
-                            stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
-                            </path>
-                        </svg>
-                    </button>
-                </div>
-
-                <textarea x-model="defaultReplyText" rows="4"
-                    class="w-full bg-black/40 border border-white/10 rounded-2xl p-5 text-white placeholder-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all mb-6 text-base leading-relaxed"
-                    placeholder="<?php echo __('reply_placeholder'); ?>"></textarea>
-
-            </div>
-
-            <!-- Keyword Rules Section -->
-            <div class="space-y-6">
-                <div class="flex justify-between items-center">
-                    <h3 class="text-2xl font-bold text-white"><?php echo __('keyword_rules'); ?></h3>
-                    <button @click="openAddModal()"
-                        class="bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white px-5 py-2.5 rounded-xl transition-all border border-indigo-500/20 flex items-center gap-2 font-bold text-sm">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4">
-                            </path>
-                        </svg>
-                        <?php echo __('add_new_rule'); ?>
-                    </button>
-                </div>
-
-                <div class="grid grid-cols-1 gap-4 max-h-[600px] overflow-y-auto pr-2 messenger-scrollbar">
-                    <template x-for="rule in rules" :key="rule.id">
+        <div x-show="activeTab === 'ai'">
+            <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 pb-20">
+                <!-- Left Side: Preview Card -->
+                <div id="messenger-preview-section-ai" class="lg:col-span-4 order-last lg:order-1">
+                    <div class="sticky top-24 space-y-6">
                         <div
-                            class="glass-panel p-4 md:p-6 rounded-2xl border border-white/5 bg-gray-800/20 hover:bg-gray-800/40 hover:border-indigo-500/30 transition-all group shrink-0">
-                            <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-                                <!-- Content Section -->
-                                <div class="flex items-center gap-4 min-w-0 flex-1">
+                            class="glass-card rounded-[32px] border border-white/10 shadow-2xl overflow-hidden bg-[#18191a]">
+                            <!-- Title Bar -->
+                            <div
+                                class="bg-[#242526] border-b border-white/5 px-6 py-4 flex items-center justify-between">
+                                <h3 class="text-xs font-bold text-gray-300 uppercase tracking-wider">
+                                    <?php echo __('message_preview'); ?>
+                                </h3>
+                                <div class="flex gap-1">
+                                    <div class="w-2 h-2 rounded-full bg-gray-600"></div>
+                                    <div class="w-2 h-2 rounded-full bg-gray-600"></div>
+                                </div>
+                            </div>
+
+                            <div class="p-4 bg-[#18191a] h-[480px] flex flex-col font-sans">
+                                <!-- Helper Text -->
+                                <div class="text-center mb-6 mt-4">
                                     <div
-                                        class="p-3 bg-indigo-500/10 rounded-2xl text-indigo-400 relative group-hover:scale-110 transition-transform flex-shrink-0">
-                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
-                                            </path>
-                                        </svg>
-                                        <!-- Dynamic Label Badge -->
-                                        <div class="absolute -top-3 -left-3 flex flex-col gap-1">
-                                            <template x-if="getRuleType(rule) === 'entry'">
-                                                <span
-                                                    class="px-2 py-0.5 bg-green-500/20 text-green-400 text-[9px] font-black rounded-lg border border-green-500/20 shadow-sm whitespace-nowrap uppercase tracking-tighter">
-                                                    <?php echo __('entry_point'); ?>
-                                                </span>
+                                        class="w-16 h-16 rounded-full bg-[#0084ff] flex items-center justify-center mx-auto mb-2 text-white text-3xl font-bold shadow-lg overflow-hidden">
+                                        <template x-if="getPageName()">
+                                            <span x-text="getPageName().charAt(0).toUpperCase()"></span>
+                                        </template>
+                                        <template x-if="!getPageName()">
+                                            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                                                <path
+                                                    d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                                            </svg>
+                                        </template>
+                                    </div>
+                                    <h4 class="font-bold text-white text-lg"
+                                        x-text="getPageName() || 'Marketation - Ù…Ø§Ø±ÙƒØªÙŠØ´Ù†'">
+                                    </h4>
+                                    <p class="text-xs text-gray-500">Messenger â€¢ Very Responsive</p>
+                                </div>
+
+                                <div class="flex-1 overflow-y-auto px-2 messenger-scrollbar space-y-6 pb-4">
+                                    <!-- User Message (Left) -->
+                                    <div class="flex items-end gap-2">
+                                        <div
+                                            class="w-6 h-6 rounded-full bg-gray-600 flex-shrink-0 flex items-center justify-center border border-white/5">
+                                            <svg class="w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 24 24">
+                                                <path
+                                                    d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                                            </svg>
+                                        </div>
+                                        <div
+                                            class="bg-[#303030] text-gray-200 rounded-2xl rounded-bl-none px-3 py-2 max-w-[80%] text-[13px] shadow-sm">
+                                            <div class="font-bold text-[10px] text-gray-400 mb-0.5">
+                                                <?php echo __('customer_name_sample'); ?>
+                                            </div>
+                                            <div
+                                                x-text="previewMode === 'rule' ? previewCustomerMsg : '<?php echo __('customer_msg_sample'); ?>'">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Page Reply (Right) -->
+                                    <div class="flex items-end gap-2 justify-end">
+                                        <div
+                                            class="bg-[#0084ff] text-white rounded-2xl rounded-br-none px-3 py-2 max-w-[80%] text-[13px] shadow-lg">
+                                            <div class="whitespace-pre-wrap leading-snug"
+                                                x-text="previewMode === 'rule' ? previewReplyMsg : (defaultReplyText ? defaultReplyText : '<?php echo __('preview_empty_msg'); ?>')">
+                                            </div>
+                                        </div>
+                                        <div
+                                            class="w-6 h-6 rounded-full bg-[#0084ff] flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-white overflow-hidden shadow-md">
+                                            <template x-if="getPageName()">
+                                                <span x-text="getPageName().charAt(0).toUpperCase()"></span>
                                             </template>
-                                            <template x-if="getRuleType(rule) === 'button'">
-                                                <span
-                                                    class="px-2 py-0.5 bg-blue-500/20 text-blue-400 text-[9px] font-black rounded-lg border border-blue-500/20 shadow-sm whitespace-nowrap uppercase tracking-tighter">
-                                                    <?php echo __('button_target'); ?>
-                                                </span>
+                                            <template x-if="!getPageName()">
+                                                <svg class="w-3.5 h-3.5 text-white" fill="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path
+                                                        d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                                                </svg>
                                             </template>
                                         </div>
                                     </div>
-                                    <div class="min-w-0 flex-1">
-                                        <p class="text-xs font-black text-indigo-400 uppercase tracking-widest mb-1 truncate"
-                                            x-text="'<?php echo __('keywords_label'); ?>: ' + rule.keywords"></p>
-                                        <p class="text-sm text-white font-medium line-clamp-2 md:line-clamp-1"
-                                            x-text="rule.reply_message">
+                                </div>
+
+                                <!-- Input Area & Quick Replies Footer -->
+                                <div class="px-3 pb-4 pt-1 border-t border-white/5 bg-[#18191a]">
+                                    <!-- Quick Replies -->
+                                    <div class="flex flex-wrap gap-2 justify-center mb-3"
+                                        x-show="getCurrentPreviewButtons().length > 0">
+                                        <template x-for="btn in getCurrentPreviewButtons()">
+                                            <div class="px-4 py-1.5 rounded-full border border-[#0084ff] text-[#0084ff] text-[11px] font-bold bg-[#0084ff]/5 hover:bg-[#0084ff]/10 cursor-pointer transition-all"
+                                                x-text="btn.title || 'Button'"></div>
+                                        </template>
+                                    </div>
+
+                                    <!-- Mock Chat Input -->
+                                    <div
+                                        class="flex items-center gap-2 bg-[#242526] rounded-full px-4 py-2 border border-white/5">
+                                        <div class="text-[#0084ff]">
+                                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                                <path
+                                                    d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z" />
+                                            </svg>
+                                        </div>
+                                        <div class="flex-1 text-gray-500 text-xs italic">Aa</div>
+                                        <div class="flex gap-2 text-[#0084ff]">
+                                            <svg class="w-5 h-5 opacity-60" fill="currentColor" viewBox="0 0 24 24">
+                                                <path
+                                                    d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z" />
+                                            </svg>
+                                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                                <path
+                                                    d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="lg:col-span-8 space-y-8 order-first lg:order-2">
+                    <template x-if="!selectedPageId">
+                        <div
+                            class="glass-panel p-20 rounded-[3rem] border border-white/5 border-dashed flex flex-col items-center justify-center text-center group transition-all hover:bg-white/5">
+                            <div
+                                class="w-24 h-24 rounded-[2.5rem] bg-gray-800/50 flex items-center justify-center mb-8 border border-white/5 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
+                                <svg class="w-12 h-12 text-gray-600 group-hover:text-indigo-500 transition-colors"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z">
+                                    </path>
+                                </svg>
+                            </div>
+                            <h2 class="text-2xl font-bold text-white mb-3"><?php echo __('select_page_to_configure'); ?>
+                            </h2>
+                            <p class="text-gray-500 max-w-sm"><?php echo __('unselected_page_hint'); ?></p>
+                        </div>
+                    </template>
+                    <div x-show="selectedPageId" class="space-y-8">
+                        <!-- Advanced Intelligence & Scheduling -->
+                        <div
+                            class="glass-panel p-8 rounded-[2rem] border border-white/10 bg-indigo-500/10 backdrop-blur-2xl hover:border-indigo-400/30 transition-all shadow-2xl relative overflow-hidden group">
+                            <div class="absolute top-0 left-0 w-1 h-full bg-indigo-500"></div>
+
+                            <div class="flex justify-between items-start mb-6">
+                                <div>
+                                    <h3 class="text-2xl font-bold text-white mb-2 rtl:text-right">
+                                        <?php echo __('bot_intelligence_settings'); ?>
+                                    </h3>
+                                    <p class="text-gray-400 text-sm max-w-md rtl:text-right">
+                                        <?php echo __('human_takeover_hint'); ?>
+                                    </p>
+                                </div>
+
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <!-- Cooldown Section -->
+                                <div class="space-y-4">
+                                    <label
+                                        class="block text-sm font-bold text-white"><?php echo __('bot_cooldown'); ?></label>
+                                    <div class="flex gap-4">
+                                        <div class="flex-1">
+                                            <input type="number" x-model="cooldownHours" min="0"
+                                                class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-center focus:ring-2 focus:ring-indigo-500">
+                                            <span
+                                                class="block text-[10px] text-gray-500 text-center mt-1 uppercase"><?php echo __('hours'); ?></span>
+                                        </div>
+                                        <div class="flex-1">
+                                            <input type="number" x-model="cooldownMinutes" min="0" max="59"
+                                                class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-center focus:ring-2 focus:ring-indigo-500">
+                                            <span
+                                                class="block text-[10px] text-gray-500 text-center mt-1 uppercase"><?php echo __('minutes'); ?></span>
+                                        </div>
+                                        <div class="flex-1">
+                                            <input type="number" x-model="cooldownSeconds" min="0" max="59"
+                                                class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-center focus:ring-2 focus:ring-indigo-500">
+                                            <span
+                                                class="block text-[10px] text-gray-500 text-center mt-1 uppercase"><?php echo __('seconds'); ?></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Schedule & Keywords Section -->
+                                <div class="space-y-4">
+                                    <div class="flex items-center justify-between">
+                                        <label
+                                            class="block text-sm font-bold text-white"><?php echo __('bot_schedule'); ?></label>
+                                        <div
+                                            class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                                            <input type="checkbox" x-model="schEnabled" id="toggleSchedule"
+                                                class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
+                                            <label for="toggleSchedule"
+                                                :class="schEnabled ? 'bg-indigo-600' : 'bg-gray-700'"
+                                                class="toggle-label block overflow-hidden h-5 rounded-full cursor-pointer transition-colors"></label>
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4 mb-4"
+                                        :class="!schEnabled ? 'opacity-40 pointer-events-none' : ''">
+                                        <div>
+                                            <input type="time" x-model="schStart"
+                                                class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:ring-2 focus:ring-indigo-500">
+                                            <span
+                                                class="block text-[10px] text-gray-500 mt-1 uppercase"><?php echo __('start_time'); ?></span>
+                                        </div>
+                                        <div>
+                                            <input type="time" x-model="schEnd"
+                                                class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:ring-2 focus:ring-indigo-500">
+                                            <span
+                                                class="block text-[10px] text-gray-500 mt-1 uppercase"><?php echo __('end_time'); ?></span>
+                                        </div>
+                                    </div>
+
+
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- AI Protection Card -->
+                        <div
+                            class="glass-panel p-8 rounded-[2rem] border border-white/10 bg-white/5 backdrop-blur-2xl hover:border-indigo-500/20 transition-all shadow-2xl relative overflow-hidden group">
+                            <!-- Decorative Background -->
+                            <div
+                                class="absolute top-0 right-0 w-32 h-32 bg-indigo-600/10 blur-3xl -mr-16 -mt-16 pointer-events-none">
+                            </div>
+
+                            <div class="flex flex-col md:flex-row gap-8">
+                                <!-- Left Side: Toggle & Info -->
+                                <div class="flex-shrink-0 w-full md:w-64">
+                                    <div class="flex items-center gap-3 mb-4">
+                                        <div class="p-3 bg-indigo-500/20 rounded-xl">
+                                            <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                            </svg>
+                                        </div>
+                                        <h3 class="text-xl font-bold text-white"><?php echo __('ai_protection'); ?></h3>
+                                    </div>
+
+                                    <div class="bg-black/20 p-5 rounded-2xl border border-white/5 space-y-4">
+                                        <div class="flex items-center justify-between">
+                                            <span
+                                                class="text-xs font-bold text-gray-400 uppercase tracking-wider"><?php echo __('status'); ?></span>
+                                            <div
+                                                class="relative inline-block w-11 align-middle select-none transition duration-200 ease-in">
+                                                <input type="checkbox" x-model="aiSentimentEnabled"
+                                                    id="toggleAiSentimentCard"
+                                                    class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
+                                                <label for="toggleAiSentimentCard"
+                                                    :class="aiSentimentEnabled ? 'bg-indigo-600' : 'bg-gray-700'"
+                                                    class="toggle-label block overflow-hidden h-6 rounded-full cursor-pointer transition-colors"></label>
+                                            </div>
+                                        </div>
+                                        <p class="text-xs text-gray-500 leading-relaxed">
+                                            <?php echo __('human_takeover_hint'); ?>
+                                        </p>
+                                    </div>
+
+                                    <!-- Compact Exclude Toggle -->
+                                    <div
+                                        class="mt-4 flex items-center justify-between gap-3 p-3 rounded-xl border border-white/5 bg-white/5 hover:border-indigo-500/30 transition-all group">
+                                        <div class="flex items-center gap-2.5 min-w-0">
+                                            <div
+                                                class="w-1.5 h-1.5 rounded-full bg-indigo-500/50 group-hover:bg-indigo-400 group-hover:scale-125 transition-all flex-shrink-0">
+                                            </div>
+                                            <span
+                                                class="text-[11px] font-bold text-gray-400 uppercase tracking-widest truncate group-hover:text-gray-200 transition-colors">
+                                                <?php echo __('exclude_keyword_rules'); ?>
+                                            </span>
+                                        </div>
+
+                                        <div
+                                            class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in flex-shrink-0">
+                                            <input type="checkbox" x-model="botExcludeKeywords"
+                                                id="toggleGlobalExclCard"
+                                                class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-2 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
+                                            <label for="toggleGlobalExclCard"
+                                                :class="botExcludeKeywords ? 'bg-indigo-600' : 'bg-gray-700'"
+                                                class="toggle-label block overflow-hidden h-5 rounded-full cursor-pointer transition-colors"></label>
+                                        </div>
+                                    </div>
+
+                                    <!-- Repetition Threshold (Left Column) -->
+                                    <div class="mt-4">
+                                        <label
+                                            class="block text-xs font-bold text-gray-300 uppercase tracking-widest mb-2"><?php echo __('repetition_threshold'); ?></label>
+                                        <div class="flex items-center gap-3">
+                                            <input type="number" x-model="repetitionThreshold" min="1" max="10"
+                                                class="w-20 bg-black/40 border border-white/10 rounded-xl p-3 text-white text-center font-bold focus:ring-2 focus:ring-indigo-500 transition-all">
+                                            <p class="text-[10px] text-gray-500">
+                                                <?php echo __('repetition_threshold_hint') ?? 'Times a user can repeat the same message before handover.'; ?>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Right Side: Keywords & Settings -->
+                                <div class="flex-1" x-show="aiSentimentEnabled" x-transition.opacity>
+                                    <div class="space-y-4">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center gap-2">
+                                                <div class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+                                                <label
+                                                    class="text-xs font-bold text-gray-300 uppercase tracking-widest"><?php echo __('bot_anger_keywords'); ?></label>
+                                            </div>
+                                            <span
+                                                class="text-[10px] text-indigo-400 font-mono"><?php echo __('comma_separated'); ?></span>
+                                        </div>
+
+                                        <div class="relative group">
+                                            <textarea x-model="angerKeywords" rows="5"
+                                                placeholder="<?php echo __('anger_keywords_placeholder'); ?>"
+                                                class="w-full bg-black/40 border border-white/10 rounded-2xl p-5 text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all resize-none font-medium leading-relaxed group-hover:border-white/20"></textarea>
+                                        </div>
+
+                                        <div
+                                            class="flex items-start gap-3 text-xs text-gray-500 bg-white/5 p-4 rounded-xl border border-white/5">
+                                            <svg class="w-4 h-4 text-indigo-400 flex-shrink-0 mt-0.5" fill="none"
+                                                stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+                                                </path>
+                                            </svg>
+                                            <span><?php echo __('bot_anger_keywords_help'); ?></span>
+                                        </div>
+
+                                        <!-- Handover Reply (Right Column) -->
+                                        <div class="mt-4">
+                                            <label
+                                                class="block text-xs font-bold text-gray-300 uppercase tracking-widest mb-2"><?php echo __('handover_reply_msg'); ?></label>
+                                            <textarea x-model="handoverReply" rows="3"
+                                                placeholder="<?php echo __('handover_reply_placeholder') ?? 'Message to send before handing over...'; ?>"
+                                                class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-sm focus:ring-2 focus:ring-indigo-500 transition-all resize-none"></textarea>
+                                            <p class="text-[10px] text-gray-500 mt-2">
+                                                <?php echo __('handover_reply_help') ?? 'Optional: Bot will send this message once before silencing itself.'; ?>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Disabled State -->
+                                <div class="flex-1 flex flex-col items-center justify-center p-8 border-2 border-white/5 border-dashed rounded-2xl bg-black/10 min-h-[200px]"
+                                    x-show="!aiSentimentEnabled" x-transition.opacity>
+                                    <div class="p-4 bg-gray-800/50 rounded-full mb-4 text-gray-600">
+                                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636">
+                                            </path>
+                                        </svg>
+                                    </div>
+                                    <p class="text-sm text-gray-500 font-medium"><?php echo __('ai_system_disabled'); ?>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Global Save Bar (Moved here) -->
+                        <div x-show="selectedPageId" x-transition:enter="transition ease-out duration-300"
+                            x-transition:enter-start="opacity-0 transform translate-y-4"
+                            x-transition:enter-end="opacity-100 transform translate-y-0"
+                            class="mt-12 mb-12 flex justify-center">
+                            <div
+                                class="glass-panel p-3 rounded-[2rem] border border-white/10 bg-black/40 backdrop-blur-3xl flex flex-col md:flex-row items-center justify-between gap-6 w-full max-w-4xl shadow-2xl">
+                                <div class="flex items-center gap-4 px-6 text-center md:text-left">
+                                    <div class="relative">
+                                        <div
+                                            class="w-12 h-12 bg-indigo-600/20 rounded-2xl flex items-center justify-center">
+                                            <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                            </svg>
+                                        </div>
+                                        <div
+                                            class="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-gray-900 animate-pulse">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-bold text-white uppercase tracking-tight">
+                                            <?php echo __('wa_settings_ready') ?? 'Settings Ready to Save'; ?>
+                                        </p>
+                                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em]">
+                                            <?php echo __('unsaved_changes_hint'); ?>
                                         </p>
                                     </div>
                                 </div>
-
-                                <!-- Action Buttons -->
-                                <div
-                                    class="flex items-center gap-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex-shrink-0">
-                                    <button @click="previewRule(rule); scrollToPreview()"
-                                        class="p-2.5 bg-indigo-600/10 hover:bg-indigo-600 rounded-xl text-indigo-400 hover:text-white transition-all border border-indigo-500/10"
-                                        title="<?php echo __('message_preview'); ?>">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                <button @click="saveAllSettings()" :disabled="isGlobalSaving"
+                                    class="px-12 py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-[1.5rem] shadow-xl shadow-indigo-600/30 transition-all transform active:scale-95 flex items-center gap-3 group">
+                                    <template x-if="!isGlobalSaving">
+                                        <svg class="w-5 h-5 group-hover:translate-y-[-2px] transition-transform"
+                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                                d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4">
                                             </path>
                                         </svg>
-                                    </button>
-                                    <button @click="editRule(rule)"
-                                        class="p-2.5 bg-white/5 hover:bg-white/10 rounded-xl text-gray-400 hover:text-white transition-all border border-white/5">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                                    </template>
+                                    <template x-if="isGlobalSaving">
+                                        <svg class="animate-spin w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg"
+                                            fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                                stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor"
+                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
                                             </path>
                                         </svg>
-                                    </button>
-                                    <button @click="deleteRule(rule.id)"
-                                        class="p-2.5 bg-red-500/10 hover:bg-red-500/20 rounded-xl text-red-500 transition-all border border-red-500/10">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                                            </path>
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </template>
-
-                    <template x-if="rules.length === 0">
-                        <div class="p-12 border-2 border-white/5 border-dashed rounded-[2rem] text-center">
-                            <p class="text-gray-500 text-sm italic font-medium">
-                                <?php echo __('no_keyword_rules'); ?>
-                            </p>
-                        </div>
-                    </template>
-                </div>
-            </div>
-
-            <!-- Advanced Intelligence & Scheduling -->
-            <div
-                class="glass-panel p-8 rounded-[2rem] border border-white/10 bg-indigo-500/10 backdrop-blur-2xl hover:border-indigo-400/30 transition-all shadow-2xl relative overflow-hidden group">
-                <div class="absolute top-0 left-0 w-1 h-full bg-indigo-500"></div>
-
-                <div class="flex justify-between items-start mb-6">
-                    <div>
-                        <h3 class="text-2xl font-bold text-white mb-2 rtl:text-right">
-                            <?php echo __('bot_intelligence_settings'); ?>
-                        </h3>
-                        <p class="text-gray-400 text-sm max-w-md rtl:text-right">
-                            <?php echo __('human_takeover_hint'); ?>
-                        </p>
-                    </div>
-
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <!-- Cooldown Section -->
-                    <div class="space-y-4">
-                        <label class="block text-sm font-bold text-white"><?php echo __('bot_cooldown'); ?></label>
-                        <div class="flex gap-4">
-                            <div class="flex-1">
-                                <input type="number" x-model="cooldownHours" min="0"
-                                    class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-center focus:ring-2 focus:ring-indigo-500">
-                                <span
-                                    class="block text-[10px] text-gray-500 text-center mt-1 uppercase"><?php echo __('hours'); ?></span>
-                            </div>
-                            <div class="flex-1">
-                                <input type="number" x-model="cooldownMinutes" min="0" max="59"
-                                    class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-center focus:ring-2 focus:ring-indigo-500">
-                                <span
-                                    class="block text-[10px] text-gray-500 text-center mt-1 uppercase"><?php echo __('minutes'); ?></span>
-                            </div>
-                            <div class="flex-1">
-                                <input type="number" x-model="cooldownSeconds" min="0" max="59"
-                                    class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-center focus:ring-2 focus:ring-indigo-500">
-                                <span
-                                    class="block text-[10px] text-gray-500 text-center mt-1 uppercase"><?php echo __('seconds'); ?></span>
+                                    </template>
+                                    <span class="uppercase tracking-widest text-xs"
+                                        x-text="isGlobalSaving ? '<?php echo __('saving'); ?>...' : '<?php echo __('save_changes'); ?>'"></span>
+                                </button>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Schedule & Keywords Section -->
-                    <div class="space-y-4">
-                        <div class="flex items-center justify-between">
-                            <label class="block text-sm font-bold text-white"><?php echo __('bot_schedule'); ?></label>
-                            <div
-                                class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
-                                <input type="checkbox" x-model="schEnabled" id="toggleSchedule"
-                                    class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
-                                <label for="toggleSchedule" :class="schEnabled ? 'bg-indigo-600' : 'bg-gray-700'"
-                                    class="toggle-label block overflow-hidden h-5 rounded-full cursor-pointer transition-colors"></label>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4 mb-4"
-                            :class="!schEnabled ? 'opacity-40 pointer-events-none' : ''">
-                            <div>
-                                <input type="time" x-model="schStart"
-                                    class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:ring-2 focus:ring-indigo-500">
-                                <span
-                                    class="block text-[10px] text-gray-500 mt-1 uppercase"><?php echo __('start_time'); ?></span>
-                            </div>
-                            <div>
-                                <input type="time" x-model="schEnd"
-                                    class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:ring-2 focus:ring-indigo-500">
-                                <span
-                                    class="block text-[10px] text-gray-500 mt-1 uppercase"><?php echo __('end_time'); ?></span>
-                            </div>
-                        </div>
-
-
-                    </div>
-                </div>
-            </div>
-
-            <!-- AI Protection Card -->
-            <div
-                class="glass-panel p-8 rounded-[2rem] border border-white/10 bg-white/5 backdrop-blur-2xl hover:border-indigo-500/20 transition-all shadow-2xl relative overflow-hidden group">
-                <!-- Decorative Background -->
-                <div
-                    class="absolute top-0 right-0 w-32 h-32 bg-indigo-600/10 blur-3xl -mr-16 -mt-16 pointer-events-none">
-                </div>
-
-                <div class="flex flex-col md:flex-row gap-8">
-                    <!-- Left Side: Toggle & Info -->
-                    <div class="flex-shrink-0 w-full md:w-64">
-                        <div class="flex items-center gap-3 mb-4">
-                            <div class="p-3 bg-indigo-500/20 rounded-xl">
-                                <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                                </svg>
-                            </div>
-                            <h3 class="text-xl font-bold text-white"><?php echo __('ai_protection'); ?></h3>
-                        </div>
-
-                        <div class="bg-black/20 p-5 rounded-2xl border border-white/5 space-y-4">
-                            <div class="flex items-center justify-between">
-                                <span
-                                    class="text-xs font-bold text-gray-400 uppercase tracking-wider"><?php echo __('status'); ?></span>
-                                <div
-                                    class="relative inline-block w-11 align-middle select-none transition duration-200 ease-in">
-                                    <input type="checkbox" x-model="aiSentimentEnabled" id="toggleAiSentimentCard"
-                                        class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
-                                    <label for="toggleAiSentimentCard"
-                                        :class="aiSentimentEnabled ? 'bg-indigo-600' : 'bg-gray-700'"
-                                        class="toggle-label block overflow-hidden h-6 rounded-full cursor-pointer transition-colors"></label>
-                                </div>
-                            </div>
-                            <p class="text-xs text-gray-500 leading-relaxed">
-                                <?php echo __('human_takeover_hint'); ?>
-                            </p>
-                        </div>
-
-                        <!-- Compact Exclude Toggle -->
-                        <div
-                            class="mt-4 flex items-center justify-between gap-3 p-3 rounded-xl border border-white/5 bg-white/5 hover:border-indigo-500/30 transition-all group">
-                            <div class="flex items-center gap-2.5 min-w-0">
-                                <div
-                                    class="w-1.5 h-1.5 rounded-full bg-indigo-500/50 group-hover:bg-indigo-400 group-hover:scale-125 transition-all flex-shrink-0">
-                                </div>
-                                <span
-                                    class="text-[11px] font-bold text-gray-400 uppercase tracking-widest truncate group-hover:text-gray-200 transition-colors">
-                                    <?php echo __('exclude_keyword_rules'); ?>
-                                </span>
-                            </div>
-
-                            <div
-                                class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in flex-shrink-0">
-                                <input type="checkbox" x-model="botExcludeKeywords" id="toggleGlobalExclCard"
-                                    class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-2 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
-                                <label for="toggleGlobalExclCard"
-                                    :class="botExcludeKeywords ? 'bg-indigo-600' : 'bg-gray-700'"
-                                    class="toggle-label block overflow-hidden h-5 rounded-full cursor-pointer transition-colors"></label>
-                            </div>
-                        </div>
-
-                        <!-- Repetition Threshold (Left Column) -->
-                        <div class="mt-4">
-                            <label
-                                class="block text-xs font-bold text-gray-300 uppercase tracking-widest mb-2"><?php echo __('repetition_threshold'); ?></label>
-                            <div class="flex items-center gap-3">
-                                <input type="number" x-model="repetitionThreshold" min="1" max="10"
-                                    class="w-20 bg-black/40 border border-white/10 rounded-xl p-3 text-white text-center font-bold focus:ring-2 focus:ring-indigo-500 transition-all">
-                                <p class="text-[10px] text-gray-500">
-                                    <?php echo __('repetition_threshold_hint') ?? 'Times a user can repeat the same message before handover.'; ?>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Right Side: Keywords & Settings -->
-                    <div class="flex-1" x-show="aiSentimentEnabled" x-transition.opacity>
-                        <div class="space-y-4">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-2">
-                                    <div class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
-                                    <label
-                                        class="text-xs font-bold text-gray-300 uppercase tracking-widest"><?php echo __('bot_anger_keywords'); ?></label>
-                                </div>
-                                <span
-                                    class="text-[10px] text-indigo-400 font-mono"><?php echo __('comma_separated'); ?></span>
-                            </div>
-
-                            <div class="relative group">
-                                <textarea x-model="angerKeywords" rows="5"
-                                    placeholder="<?php echo __('anger_keywords_placeholder'); ?>"
-                                    class="w-full bg-black/40 border border-white/10 rounded-2xl p-5 text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all resize-none font-medium leading-relaxed group-hover:border-white/20"></textarea>
-                            </div>
-
-                            <div
-                                class="flex items-start gap-3 text-xs text-gray-500 bg-white/5 p-4 rounded-xl border border-white/5">
-                                <svg class="w-4 h-4 text-indigo-400 flex-shrink-0 mt-0.5" fill="none"
-                                    stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                <span><?php echo __('bot_anger_keywords_help'); ?></span>
-                            </div>
-
-                            <!-- Handover Reply (Right Column) -->
-                            <div class="mt-4">
-                                <label
-                                    class="block text-xs font-bold text-gray-300 uppercase tracking-widest mb-2"><?php echo __('handover_reply_msg'); ?></label>
-                                <textarea x-model="handoverReply" rows="3"
-                                    placeholder="<?php echo __('handover_reply_placeholder') ?? 'Message to send before handing over...'; ?>"
-                                    class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-sm focus:ring-2 focus:ring-indigo-500 transition-all resize-none"></textarea>
-                                <p class="text-[10px] text-gray-500 mt-2">
-                                    <?php echo __('handover_reply_help') ?? 'Optional: Bot will send this message once before silencing itself.'; ?>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Disabled State -->
-                    <div class="flex-1 flex flex-col items-center justify-center p-8 border-2 border-white/5 border-dashed rounded-2xl bg-black/10 min-h-[200px]"
-                        x-show="!aiSentimentEnabled" x-transition.opacity>
-                        <div class="p-4 bg-gray-800/50 rounded-full mb-4 text-gray-600">
-                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636">
-                                </path>
-                            </svg>
-                        </div>
-                        <p class="text-sm text-gray-500 font-medium"><?php echo __('ai_system_disabled'); ?></p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Global Save Bar (Moved here) -->
-            <div x-show="selectedPageId" x-transition:enter="transition ease-out duration-300"
-                x-transition:enter-start="opacity-0 transform translate-y-4"
-                x-transition:enter-end="opacity-100 transform translate-y-0" class="mt-12 mb-12 flex justify-center">
-                <div
-                    class="glass-panel p-3 rounded-[2rem] border border-white/10 bg-black/40 backdrop-blur-3xl flex flex-col md:flex-row items-center justify-between gap-6 w-full max-w-4xl shadow-2xl">
-                    <div class="flex items-center gap-4 px-6 text-center md:text-left">
-                        <div class="relative">
-                            <div class="w-12 h-12 bg-indigo-600/20 rounded-2xl flex items-center justify-center">
-                                <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                                </svg>
-                            </div>
-                            <div
-                                class="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-gray-900 animate-pulse">
-                            </div>
-                        </div>
-                        <div>
-                            <p class="text-sm font-bold text-white uppercase tracking-tight">
-                                <?php echo __('wa_settings_ready') ?? 'Settings Ready to Save'; ?>
-                            </p>
-                            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em]">
-                                <?php echo __('unsaved_changes_hint'); ?>
-                            </p>
-                        </div>
-                    </div>
-                    <button @click="saveAllSettings()" :disabled="isGlobalSaving"
-                        class="px-12 py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-[1.5rem] shadow-xl shadow-indigo-600/30 transition-all transform active:scale-95 flex items-center gap-3 group">
-                        <template x-if="!isGlobalSaving">
-                            <svg class="w-5 h-5 group-hover:translate-y-[-2px] transition-transform" fill="none"
-                                stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                                    d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4">
-                                </path>
-                            </svg>
-                        </template>
-                        <template x-if="isGlobalSaving">
-                            <svg class="animate-spin w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                    stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor"
-                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                                </path>
-                            </svg>
-                        </template>
-                        <span class="uppercase tracking-widest text-xs"
-                            x-text="isGlobalSaving ? '<?php echo __('saving'); ?>...' : '<?php echo __('save_changes'); ?>'"></span>
-                    </button>
                 </div>
             </div>
         </div>
-    </div>
 </div>
+
+
 
 </main>
 
@@ -1486,6 +1711,24 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
         background: rgba(99, 102, 241, 0.5);
     }
 
+    .custom-horizontal-scrollbar::-webkit-scrollbar {
+        height: 4px;
+    }
+
+    .custom-horizontal-scrollbar::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 4px;
+    }
+
+    .custom-horizontal-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(99, 102, 241, 0.3);
+        border-radius: 4px;
+    }
+
+    .custom-horizontal-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgba(99, 102, 241, 0.6);
+    }
+
     .toggle-checkbox:checked {
         right: 0;
     }
@@ -1498,6 +1741,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <script>
     function autoReplyApp() {
         return {
+            activeTab: localStorage.getItem('ar_active_tab_msg') || 'dashboard',
             selectedPageId: '',
             rules: [],
             defaultReplyText: '',
@@ -1615,6 +1859,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
             },
 
             init() {
+                this.$watch('activeTab', value => localStorage.setItem('ar_active_tab_msg', value));
                 this.fetchWebhookInfo();
                 const lastPage = localStorage.getItem('ar_last_page_msg');
                 if (lastPage) {
@@ -2037,8 +2282,8 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         title: '',
                         payload: '',
                         type: 'postback'
-                    });
-                }
+              });
+       }
             },
 
             removeButton(index) {

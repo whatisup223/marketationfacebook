@@ -329,7 +329,7 @@ require_once __DIR__ . '/../includes/header.php';
                                                     </svg>
                                                     <span class="text-[9px] text-gray-400 font-bold">
                                                         <?php echo __('token_expiry'); ?>:
-                                                        <?php echo $acc['expires_at'] ? date('Y-m-d', strtotime($acc['expires_at'])) : __('token_never'); ?>
+                                                        <?php echo !empty($acc['expires_at']) ? date('Y-m-d', strtotime($acc['expires_at'])) : __('token_never'); ?>
                                                     </span>
                                                 </div>
 
