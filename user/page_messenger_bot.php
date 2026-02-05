@@ -665,7 +665,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                             <div class="font-bold text-[10px] text-gray-400 mb-0.5">
                                                 <?php echo __('customer_name_sample'); ?>
                                             </div>
-                                            <div
+                                            <div class="break-words"
                                                 x-text="previewMode === 'rule' ? previewCustomerMsg : '<?php echo __('customer_msg_sample'); ?>'">
                                             </div>
                                         </div>
@@ -675,7 +675,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     <div class="flex items-end gap-2 justify-end">
                                         <div
                                             class="bg-[#0084ff] text-white rounded-2xl rounded-br-none px-3 py-2 max-w-[80%] text-[13px] shadow-lg">
-                                            <div class="whitespace-pre-wrap leading-snug"
+                                            <div class="whitespace-pre-wrap leading-snug break-words"
                                                 x-text="previewMode === 'rule' ? previewReplyMsg : (defaultReplyText ? defaultReplyText : '<?php echo __('preview_empty_msg'); ?>')">
                                             </div>
                                         </div>
@@ -1014,7 +1014,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                             <div class="font-bold text-[10px] text-gray-400 mb-0.5">
                                                 <?php echo __('customer_name_sample'); ?>
                                             </div>
-                                            <div
+                                            <div class="break-words"
                                                 x-text="previewMode === 'rule' ? previewCustomerMsg : '<?php echo __('customer_msg_sample'); ?>'">
                                             </div>
                                         </div>
@@ -1024,7 +1024,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     <div class="flex items-end gap-2 justify-end">
                                         <div
                                             class="bg-[#0084ff] text-white rounded-2xl rounded-br-none px-3 py-2 max-w-[80%] text-[13px] shadow-lg">
-                                            <div class="whitespace-pre-wrap leading-snug"
+                                            <div class="whitespace-pre-wrap leading-snug break-words"
                                                 x-text="previewMode === 'rule' ? previewReplyMsg : (defaultReplyText ? defaultReplyText : '<?php echo __('preview_empty_msg'); ?>')">
                                             </div>
                                         </div>

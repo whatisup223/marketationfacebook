@@ -209,15 +209,22 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <select x-model="statsRange"
                                     @change="if(statsRange === 'custom') { openCustomRangeModal() } else { fetchStats() }"
                                     class="bg-white/5 border border-white/10 text-white text-[10px] font-black uppercase rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full md:w-48 pl-4 pr-10 py-2.5 appearance-none cursor-pointer hover:bg-white/10 transition-all shadow-lg">
-                                    <option value="today" class="bg-gray-900 text-gray-300"><?php echo __('today'); ?></option>
-                                    <option value="week" class="bg-gray-900 text-gray-300"><?php echo __('last_7_days'); ?></option>
-                                    <option value="month" class="bg-gray-900 text-gray-300"><?php echo __('last_30_days'); ?></option>
-                                    <option value="all" class="bg-gray-900 text-gray-300"><?php echo __('all_time'); ?></option>
-                                    <option value="custom" class="bg-gray-900 text-indigo-400"><?php echo __('custom_period') ?? 'Custom Range'; ?></option>
+                                    <option value="today" class="bg-gray-900 text-gray-300"><?php echo __('today'); ?>
+                                    </option>
+                                    <option value="week" class="bg-gray-900 text-gray-300">
+                                        <?php echo __('last_7_days'); ?></option>
+                                    <option value="month" class="bg-gray-900 text-gray-300">
+                                        <?php echo __('last_30_days'); ?></option>
+                                    <option value="all" class="bg-gray-900 text-gray-300"><?php echo __('all_time'); ?>
+                                    </option>
+                                    <option value="custom" class="bg-gray-900 text-indigo-400">
+                                        <?php echo __('custom_period') ?? 'Custom Range'; ?></option>
                                 </select>
-                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
+                                <div
+                                    class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
                                     <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 9l-7 7-7-7"></path>
                                     </svg>
                                 </div>
                             </div>
@@ -674,7 +681,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                         <div class="font-bold text-xs mb-0.5 cursor-pointer hover:underline">
                                             <?php echo __('customer_name_sample'); ?>
                                         </div>
-                                        <div class="text-[13px]"
+                                        <div class="text-[13px] break-words"
                                             x-text="previewMode === 'rule' ? previewCustomerMsg : '<?php echo __('customer_msg_sample'); ?>'">
                                         </div>
                                     </div>
@@ -725,7 +732,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                             <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
                                         </svg>
                                     </div>
-                                    <div class="text-[13px] whitespace-pre-wrap leading-snug"
+                                    <div class="text-[13px] whitespace-pre-wrap leading-snug break-words"
                                         x-text="previewMode === 'rule' ? previewReplyMsg : (defaultReplyText ? defaultReplyText : '<?php echo __('preview_empty_msg'); ?>')">
                                     </div>
                                 </div>
