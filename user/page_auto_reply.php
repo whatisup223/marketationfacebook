@@ -72,9 +72,9 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             class="w-full bg-black/40 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-3.5 pr-10 appearance-none transition-all group-hover:border-white/20">
                             <option value=""><?php echo __('select_page'); ?>...</option>
                             <?php foreach ($pages as $page): ?>
-                                    <option value="<?php echo htmlspecialchars($page['page_id']); ?>">
-                                        <?php echo htmlspecialchars($page['page_name']); ?>
-                                    </option>
+                                <option value="<?php echo htmlspecialchars($page['page_id']); ?>">
+                                    <?php echo htmlspecialchars($page['page_name']); ?>
+                                </option>
                             <?php endforeach; ?>
                         </select>
                         <div
@@ -1725,6 +1725,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 formData.append('hide_comment', this.defaultHideComment ? '1' : '0');
                 formData.append('private_reply_enabled', this.defaultPrivateReplyEnabled ? '1' : '0');
                 formData.append('private_reply_text', this.defaultPrivateReplyText);
+                formData.append('auto_like_comment', this.defaultAutoLike ? '1' : '0');
                 return fetch('ajax_auto_reply.php?action=save_rule', { method: 'POST', body: formData })
                     .then(res => res.json());
             },
