@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom Styles if any, though most should be utility classes */
+.glass-panel {
+    @apply bg-white/5 backdrop-blur-lg border border-white/10;
+}

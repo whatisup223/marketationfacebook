@@ -144,7 +144,8 @@ $h_sidebar_collapsed = isset($_COOKIE['sidebar_collapsed']) && $_COOKIE['sidebar
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="<?php echo $site_name; ?>">
     <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS (Local) -->
+    <link href="<?php echo $base_url; ?>assets/css/style.css" rel="stylesheet">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -167,9 +168,9 @@ $h_sidebar_collapsed = isset($_COOKIE['sidebar_collapsed']) && $_COOKIE['sidebar
                 extend: {
                     fontFamily: {
                         <?php if ($lang === 'ar'): ?>
-                                                                                                                                                                                                                                                                                        sans: ['IBM Plex Sans Arabic', 'sans-serif'],
+                                                                                                                                                                                                                                                                                            sans: ['IBM Plex Sans Arabic', 'sans-serif'],
                         <?php else: ?>
-                                                                                                                                                                                                                                                                                        sans: ['Outfit', 'sans-serif'],
+                                                                                                                                                                                                                                                                                            sans: ['Outfit', 'sans-serif'],
                         <?php endif; ?>
                     },
                     colors: {

@@ -32,3 +32,6 @@ Thumbs.db
 
 # Cron flags
 user/cron_loop.flag
+
+tailwindcss.exe
+node_modules/
