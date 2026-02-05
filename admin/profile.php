@@ -55,31 +55,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit;
     }
 
-    // --- 2. Personal Details (Name, Username, Phone) ---
-    if (isset($_POST['update_profile'])) {
-        $name = trim(strip_tags($_POST['name']));
-        $username = trim(strip_tags($_POST['username']));
-        $phone = trim(strip_tags($_POST['phone']));
-
-        // Check availability of username (exclude current user)
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE username = ? AND id != ?");
-        $stmt->execute([$username, $user_id]);
-        if ($stmt->fetchColumn() > 0) {
-            set_flash('error', __("username_exists"));
-        } else {
-            $stmt = $pdo->prepare("UPDATE users SET name = ?, username = ?, phone = ? WHERE id = ?");
-            if ($stmt->execute([$name, $username, $phone, $user_id])) {
-                $_SESSION['name'] = $name;
-                $_SESSION['user_name'] = $username;
-                set_flash('success', __("profile_updated"));
-            } else {
-                set_flash('error', "Failed to update profile");
-            }
-        }
-        header("Location: profile.php");
-        exit;
-    }
-
     // --- 3. Avatar Handling ---
     if (isset($_POST['delete_avatar'])) {
         $stmt = $pdo->prepare("SELECT avatar FROM users WHERE id = ?");
@@ -119,6 +94,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         header("Location: profile.php");
         exit;
     }
+
+    // --- 2. Personal Details (Name, Username, Phone) ---
+    if (isset($_POST['update_profile'])) {
+        $name = trim(strip_tags($_POST['name']));
+        $username = trim(strip_tags($_POST['username']));
+        $phone = trim(strip_tags($_POST['phone']));
+
+        // Check availability of username (exclude current user)
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE username = ? AND id != ?");
+        $stmt->execute([$username, $user_id]);
+        if ($stmt->fetchColumn() > 0) {
+            set_flash('error', __("username_exists"));
+        } else {
+            $stmt = $pdo->prepare("UPDATE users SET name = ?, username = ?, phone = ? WHERE id = ?");
+            if ($stmt->execute([$name, $username, $phone, $user_id])) {
+                $_SESSION['name'] = $name;
+                $_SESSION['user_name'] = $username;
+                set_flash('success', __("profile_updated"));
+            } else {
+                set_flash('error', "Failed to update profile");
+            }
+        }
+        header("Location: profile.php");
+        exit;
+    }
+
 }
 
 // Fetch User

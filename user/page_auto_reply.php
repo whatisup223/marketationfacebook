@@ -1,12 +1,13 @@
 <?php
 require_once '../includes/functions.php';
-require_once '../includes/header.php';
 
 // Check login
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../login.php");
     exit;
 }
+
+require_once '../includes/header.php';
 
 // Get User Pages via Account Join - Robust query
 $pdo = getDB();
@@ -21,10 +22,11 @@ $stmt->execute([$_SESSION['user_id']]);
 $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
-<div id="main-user-container" class="main-user-container flex min-h-screen bg-gray-900 font-sans" x-data="autoReplyApp()">
+<div id="main-user-container" class="main-user-container flex min-h-screen bg-gray-900 font-sans"
+    x-data="autoReplyApp()">
     <?php include '../includes/user_sidebar.php'; ?>
 
-    <main class="flex-1 flex flex-col bg-gray-900/50 backdrop-blur-md relative p-6">
+    <main class="flex-1 flex flex-col bg-gray-900/50 backdrop-blur-md relative p-6 overflow-x-hidden">
 
         <!-- Header -->
         <div class="flex-none flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
@@ -134,7 +136,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <!-- Tabs Navigation -->
         <div class="space-y-8">
             <div class="w-full relative overflow-hidden">
-                <div class="flex overflow-x-auto pb-4 scrollbar-hide touch-pan-x -mx-4 px-4 md:mx-0 md:px-0"
+                <div class="flex overflow-x-auto pb-4 custom-horizontal-scrollbar touch-pan-x -mx-4 px-4 md:mx-0 md:px-0"
                     style="scroll-behavior: smooth; -webkit-overflow-scrolling: touch;">
                     <div class="flex gap-2 whitespace-nowrap min-w-max">
                         <!-- Dashboard Tab -->
@@ -759,7 +761,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         <template x-if="!selectedPageId">
             <div
-                class="glass-panel p-20 rounded-[3rem] border border-white/5 border-dashed flex flex-col items-center justify-center text-center group transition-all hover:bg-white/5">
+                class="glass-panel p-8 md:p-20 rounded-[3rem] border border-white/5 border-dashed flex flex-col items-center justify-center text-center group transition-all hover:bg-white/5">
                 <div
                     class="w-24 h-24 rounded-[2.5rem] bg-gray-800/50 flex items-center justify-center mb-8 border border-white/5 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
                     <svg class="w-12 h-12 text-gray-600 group-hover:text-indigo-500 transition-colors" fill="none"
@@ -1475,6 +1477,24 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         .messenger-scrollbar::-webkit-scrollbar-thumb:hover {
             background: rgba(99, 102, 241, 0.5);
+        }
+
+        .custom-horizontal-scrollbar::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .custom-horizontal-scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 4px;
+        }
+
+        .custom-horizontal-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.3);
+            border-radius: 4px;
+        }
+
+        .custom-horizontal-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.6);
         }
 
         .toggle-checkbox:checked {

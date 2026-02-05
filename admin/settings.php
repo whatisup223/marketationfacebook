@@ -383,7 +383,7 @@ require_once __DIR__ . '/../includes/header.php';
             <!-- Responsive Tabs Container -->
             <div class="w-full relative overflow-hidden">
                 <div id="tabs-scroll"
-                    class="flex overflow-x-auto pb-4 scrollbar-hide touch-pan-x -mx-4 px-4 md:mx-0 md:px-0"
+                    class="flex overflow-x-auto pb-4 custom-horizontal-scrollbar touch-pan-x -mx-4 px-4 md:mx-0 md:px-0"
                     style="scroll-behavior: smooth; -webkit-overflow-scrolling: touch;">
                     <div class="flex gap-2 whitespace-nowrap min-w-max">
                         <button onclick="switchTab('site')"
@@ -434,12 +434,12 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
 
         <?php if (isset($message)): ?>
-            <div class="bg-green-500/20 text-green-300 p-4 rounded-xl mb-6 border border-green-500/30 flex items-center">
-                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                </svg>
-                <?php echo $message; ?>
-            </div>
+                <div class="bg-green-500/20 text-green-300 p-4 rounded-xl mb-6 border border-green-500/30 flex items-center">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    <?php echo $message; ?>
+                </div>
         <?php endif; ?>
 
         <form method="POST" enctype="multipart/form-data" class="space-y-6">
@@ -448,6 +448,26 @@ require_once __DIR__ . '/../includes/header.php';
 
             <!-- Site Info Tab -->
             <div id="site-tab" class="tab-content hidden space-y-6">
+
+                <style>
+                    .custom-horizontal-scrollbar::-webkit-scrollbar {
+                        height: 4px;
+                    }
+
+                    .custom-horizontal-scrollbar::-webkit-scrollbar-track {
+                        background: rgba(255, 255, 255, 0.02);
+                        border-radius: 4px;
+                    }
+
+                    .custom-horizontal-scrollbar::-webkit-scrollbar-thumb {
+                        background: rgba(99, 102, 241, 0.3);
+                        border-radius: 4px;
+                    }
+
+                    .custom-horizontal-scrollbar::-webkit-scrollbar-thumb:hover {
+                        background: rgba(99, 102, 241, 0.6);
+                    }
+                </style>
 
                 <!-- 1. Brand Identity -->
                 <div class="glass-card p-6 md:p-8 rounded-2xl border border-white/5">
@@ -464,16 +484,16 @@ require_once __DIR__ . '/../includes/header.php';
                             <div
                                 class="relative group p-4 bg-gray-900 rounded-xl border border-gray-700/50 flex items-center justify-center">
                                 <?php if (!empty($settings['site_logo'])): ?>
-                                    <img src="../uploads/<?php echo $settings['site_logo']; ?>" class="h-12 object-contain">
-                                    <button type="submit" name="delete_site_logo"
-                                        class="absolute -top-2 -right-2 p-1.5 bg-red-600 rounded-full text-white shadow-md hover:bg-red-500 transition-colors">
-                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M6 18L18 6M6 6l12 12"></path>
-                                        </svg>
-                                    </button>
+                                        <img src="../uploads/<?php echo $settings['site_logo']; ?>" class="h-12 object-contain">
+                                        <button type="submit" name="delete_site_logo"
+                                            class="absolute -top-2 -right-2 p-1.5 bg-red-600 rounded-full text-white shadow-md hover:bg-red-500 transition-colors">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M6 18L18 6M6 6l12 12"></path>
+                                            </svg>
+                                        </button>
                                 <?php else: ?>
-                                    <span class="text-gray-600 text-xs italic">No logo set</span>
+                                        <span class="text-gray-600 text-xs italic">No logo set</span>
                                 <?php endif; ?>
                             </div>
                             <input type="file" name="site_logo"
@@ -487,17 +507,17 @@ require_once __DIR__ . '/../includes/header.php';
                             <div
                                 class="relative group p-4 bg-gray-900 rounded-xl border border-gray-700/50 flex items-center justify-center">
                                 <?php if (!empty($settings['site_favicon'])): ?>
-                                    <img src="../uploads/<?php echo $settings['site_favicon']; ?>"
-                                        class="h-8 object-contain">
-                                    <button type="submit" name="delete_site_favicon"
-                                        class="absolute -top-2 -right-2 p-1.5 bg-red-600 rounded-full text-white shadow-md hover:bg-red-500 transition-colors">
-                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M6 18L18 6M6 6l12 12"></path>
-                                        </svg>
-                                    </button>
+                                        <img src="../uploads/<?php echo $settings['site_favicon']; ?>"
+                                            class="h-8 object-contain">
+                                        <button type="submit" name="delete_site_favicon"
+                                            class="absolute -top-2 -right-2 p-1.5 bg-red-600 rounded-full text-white shadow-md hover:bg-red-500 transition-colors">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M6 18L18 6M6 6l12 12"></path>
+                                            </svg>
+                                        </button>
                                 <?php else: ?>
-                                    <span class="text-gray-600 text-xs italic">No favicon</span>
+                                        <span class="text-gray-600 text-xs italic">No favicon</span>
                                 <?php endif; ?>
                             </div>
                             <input type="file" name="site_favicon"
@@ -677,7 +697,8 @@ require_once __DIR__ . '/../includes/header.php';
                         <!-- Arabic Labels -->
                         <div class="space-y-4 p-6 bg-white/5 rounded-2xl border border-white/5">
                             <h4 class="text-emerald-400 font-bold mb-4 flex items-center gap-2 text-sm">
-                                <span class="w-6 h-6 rounded-lg bg-emerald-500/20 flex items-center justify-center text-[10px]">AR</span>
+                                <span
+                                    class="w-6 h-6 rounded-lg bg-emerald-500/20 flex items-center justify-center text-[10px]">AR</span>
                                 <?php echo __('arabic_labels'); ?>
                             </h4>
                             <div class="space-y-4">
@@ -697,9 +718,10 @@ require_once __DIR__ . '/../includes/header.php';
                                 ];
                                 foreach ($nav_items as $key => $trans): ?>
                                         <div>
-                                            <label class="block text-gray-400 text-xs font-bold uppercase mb-1"><?php echo __($trans); ?></label>
-                                            <input type="text" name="<?php echo $key; ?>_ar" 
-                                                value="<?php echo htmlspecialchars($settings[$key . '_ar'] ?? __($trans, 'ar')); ?>" 
+                                            <label
+                                                class="block text-gray-400 text-xs font-bold uppercase mb-1"><?php echo __($trans); ?></label>
+                                            <input type="text" name="<?php echo $key; ?>_ar"
+                                                value="<?php echo htmlspecialchars($settings[$key . '_ar'] ?? __($trans, 'ar')); ?>"
                                                 class="setting-input text-sm">
                                         </div>
                                 <?php endforeach; ?>
@@ -709,15 +731,17 @@ require_once __DIR__ . '/../includes/header.php';
                         <!-- English Labels -->
                         <div class="space-y-4 p-6 bg-white/5 rounded-2xl border border-white/5">
                             <h4 class="text-indigo-400 font-bold mb-4 flex items-center gap-2 text-sm">
-                                <span class="w-6 h-6 rounded-lg bg-indigo-500/20 flex items-center justify-center text-[10px]">EN</span>
+                                <span
+                                    class="w-6 h-6 rounded-lg bg-indigo-500/20 flex items-center justify-center text-[10px]">EN</span>
                                 <?php echo __('english_labels'); ?>
                             </h4>
                             <div class="space-y-4">
                                 <?php foreach ($nav_items as $key => $trans): ?>
                                         <div>
-                                            <label class="block text-gray-400 text-xs font-bold uppercase mb-1"><?php echo __($trans); ?></label>
-                                            <input type="text" name="<?php echo $key; ?>_en" 
-                                                value="<?php echo htmlspecialchars($settings[$key . '_en'] ?? __($trans, 'en')); ?>" 
+                                            <label
+                                                class="block text-gray-400 text-xs font-bold uppercase mb-1"><?php echo __($trans); ?></label>
+                                            <input type="text" name="<?php echo $key; ?>_en"
+                                                value="<?php echo htmlspecialchars($settings[$key . '_en'] ?? __($trans, 'en')); ?>"
                                                 class="setting-input text-sm">
                                         </div>
                                 <?php endforeach; ?>

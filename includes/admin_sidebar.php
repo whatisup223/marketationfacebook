@@ -45,16 +45,20 @@
 
     <!-- User Profile Area -->
     <div class="p-3 border-b border-white/5 overflow-hidden">
-        <?php if (isset($current_user)): ?>
+        <?php
+        $pdo = getDB();
+        $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
+        $stmt->execute([$_SESSION['user_id']]);
+        $current_user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($current_user):
+            $avatar_path = !empty($current_user['avatar']) ? '../' . $current_user['avatar'] : '';
+            ?>
             <a href="profile.php"
                 class="flex items-center p-2 bg-white/5 rounded-2xl border border-white/5 hover:bg-white/10 transition-all group/user overflow-hidden group"
                 :class="sidebarCollapsed ? 'justify-center' : 'gap-3'">
                 <div class="shrink-0">
-                    <?php
-                    $user_avatar = $current_user['avatar'];
-                    $avatar_path = !empty($user_avatar) ? $prefix . $user_avatar : null;
-                    ?>
-                    <?php if ($avatar_path): ?>
+                    <?php if ($avatar_path && file_exists(__DIR__ . '/../' . $current_user['avatar'])): ?>
                         <img src="<?php echo $avatar_path; ?>"
                             class="w-8 h-8 rounded-xl object-cover border border-indigo-500/30 group-hover/user:scale-105 transition-transform">
                     <?php else: ?>
@@ -191,10 +195,10 @@
                     :class="sidebarCollapsed ? 'w-0 opacity-0 absolute' : 'w-auto opacity-100'"><?php echo __('notifications'); ?></span>
             </div>
             <?php if ($admin_unread_count > 0): ?>
-                    <span x-show="!sidebarCollapsed"
-                        class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm transition-all duration-300">
-                        <?php echo $admin_unread_count > 9 ? '9+' : $admin_unread_count; ?>
-                    </span>
+                <span x-show="!sidebarCollapsed"
+                    class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm transition-all duration-300">
+                    <?php echo $admin_unread_count > 9 ? '9+' : $admin_unread_count; ?>
+                </span>
             <?php endif; ?>
         </a>
 
@@ -212,19 +216,19 @@
                     <?php
                     $admin_ticket_unread = getAdminTicketUnreadCount();
                     if ($admin_ticket_unread > 0): ?>
-                            <div x-show="sidebarCollapsed"
-                                class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border border-gray-900 animate-pulse">
-                            </div>
+                        <div x-show="sidebarCollapsed"
+                            class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border border-gray-900 animate-pulse">
+                        </div>
                     <?php endif; ?>
                 </div>
                 <span class="text-sm whitespace-nowrap transition-all duration-300"
                     :class="sidebarCollapsed ? 'w-0 opacity-0 absolute' : 'w-auto opacity-100'"><?php echo __('support_tickets'); ?></span>
             </div>
             <?php if ($admin_ticket_unread > 0): ?>
-                    <span x-show="!sidebarCollapsed"
-                        class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm transition-all duration-300">
-                        <?php echo $admin_ticket_unread > 9 ? '9+' : $admin_ticket_unread; ?>
-                    </span>
+                <span x-show="!sidebarCollapsed"
+                    class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm transition-all duration-300">
+                    <?php echo $admin_ticket_unread > 9 ? '9+' : $admin_ticket_unread; ?>
+                </span>
             <?php endif; ?>
         </a>
 
