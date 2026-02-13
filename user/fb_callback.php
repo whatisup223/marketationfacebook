@@ -50,11 +50,33 @@ if (isset($_GET['code'])) {
     // A. Exchange Code for Access Token
     $token_url = "https://graph.facebook.com/{$api_version}/oauth/access_token?client_id={$app_id}&redirect_uri=" . urlencode($redirect_uri) . "&client_secret={$app_secret}&code={$code}";
 
-    $response = @file_get_contents($token_url);
+    function fetchUrl($url)
+    {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // For dev/test. In prod, strict SSL is better.
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        $response = curl_exec($ch);
+        $error = curl_error($ch);
+        curl_close($ch);
+        return [$response, $error];
+    }
+
+    list($response, $curl_err) = fetchUrl($token_url);
+
+    if ($response === false) {
+        die(__('fb_error') . " Connection failed: " . $curl_err);
+    }
+
     $data = json_decode($response, true);
 
     if (!isset($data['access_token'])) {
-        die(__('fb_error') . ($data['error']['message'] ?? 'Unknown error'));
+        // Output detailed error for debugging
+        $error_detail = $data['error']['message'] ?? 'Unknown error';
+        $error_type = $data['error']['type'] ?? '';
+        $error_code = $data['error']['code'] ?? '';
+        die(__("fb_error") . " [API Error] $error_detail (Type: $error_type, Code: $error_code)");
     }
 
     $short_lived_token = $data['access_token'];
