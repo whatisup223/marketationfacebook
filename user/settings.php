@@ -310,8 +310,12 @@ include '../includes/header.php';
                                             'pages_manage_metadata',
                                             'pages_read_user_content',
                                             'pages_manage_posts',
-                                            'pages_messaging'
-                                            // Add Instagram perms if needed: instagram_basic, instagram_manage_comments, instagram_manage_messages
+                                            'pages_messaging',
+                                            // Instagram Permissions
+                                            'instagram_basic',
+                                            'instagram_manage_comments',
+                                            'instagram_manage_messages',
+                                            'instagram_content_publish'
                                         ];
                                         $login_url = "https://www.facebook.com/v18.0/dialog/oauth?client_id={$fb_app_id}&redirect_uri=" . urlencode($redirect_uri) . "&state={$_SESSION['fb_oauth_state']}&scope=" . implode(',', $permissions);
                                         ?>
