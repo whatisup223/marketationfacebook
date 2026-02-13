@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once '../includes/functions.php';
 
 // Check login
@@ -1341,952 +1341,774 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     </main>
 
-    <!-- Flow Builder Overlay (Fixed & Zapped) -->
-    <div x-show="showModal" x-cloak style="display: none;"
-        class="fixed top-0 left-0 w-full h-full z-[9999] bg-[#0f111a] flex flex-col transition-all duration-300 transform origin-bottom"
-        x-transition:enter="transition ease-out duration-300" x-transition:enter-start="translate-y-full opacity-0"
-        x-transition:enter-end="translate-y-0 opacity-100" x-transition:leave="transition ease-in duration-200"
-        x-transition:leave-start="translate-y-0 opacity-100" x-transition:leave-end="translate-y-full opacity-0">
+    <!-- Modal -->
+<div x-show="showModal" style="display: none;"
+    class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+    x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0"
+    x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200"
+    x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
 
-        <!-- Header -->
+    <div class="bg-gray-900 border border-white/10 rounded-[2.5rem] w-full max-w-lg shadow-2xl relative flex flex-col max-h-[90vh] overflow-hidden"
+        @click.away="closeModal()">
+        
+        <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-600/10 blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
+
+        <div class="p-8 relative z-10 overflow-y-auto messenger-scrollbar">
+            
+            <div class="flex justify-between items-center mb-8">
+                 <h3 class="text-2xl font-bold text-white flex items-center gap-3">
+                    <div class="p-2 bg-indigo-600/20 rounded-xl">
+                        <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                    </div>
+                    <span x-text="editMode ? '<?php echo __('edit_rule'); ?>' : '<?php echo __('add_new_rule'); ?>'"></span>
+                </h3>
+                <button @click="closeModal()" class="text-gray-500 hover:text-white transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="space-y-6">
+                
+                <!-- Trigger Keyword -->
+                <div>
+                     <label class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-3"><?php echo __('trigger_keyword'); ?></label>
+                     <input type="text" x-model="modalKeywords" placeholder="<?php echo __('keyword_placeholder'); ?>" class="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-sm">
+                </div>
+
+                 <!-- Reply Message -->
+                 <div>
+                     <label class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-3"><?php echo __('reply_message'); ?></label>
+                     <textarea x-model="modalReply" rows="5" placeholder="<?php echo __('reply_placeholder'); ?>" class="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all resize-none text-sm leading-relaxed"></textarea>
+                     <p class="text-[10px] text-gray-500 mt-2 italic"><?php echo __('spintax_hint'); ?></p>
+                </div>
+
+                <!-- Private Reply Card -->
+                <div class="flex flex-col gap-3 p-4 bg-white/5 rounded-2xl border border-white/5">
+                    <div class="flex items-center justify-between cursor-pointer" @click="modalPrivateReplyEnabled = !modalPrivateReplyEnabled">
+                         <div class="flex items-center gap-3">
+                             <div class="p-2.5 bg-blue-500/10 rounded-xl text-blue-400">
+                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                             </div>
+                             <span class="text-[11px] font-black text-white uppercase tracking-wider"><?php echo __('send_private_reply'); ?></span>
+                         </div>
+                         <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                            <input type="checkbox" x-model="modalPrivateReplyEnabled" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300"/>
+                             <label class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-700 cursor-pointer" :class="modalPrivateReplyEnabled ? 'bg-indigo-600' : 'bg-gray-700'"></label>
+                        </div>
+                    </div>
+                    <div x-show="modalPrivateReplyEnabled" x-transition class="pt-2">
+                        <textarea x-model="modalPrivateReplyText" rows="3" class="w-full bg-black/40 border border-white/10 rounded-2xl px-4 py-3 text-white text-xs focus:ring-2 focus:ring-indigo-500/50" placeholder="<?php echo __('private_reply_placeholder'); ?>"></textarea>
+                    </div>
+                </div>
+
+                <!-- Toggles Grid 1: Hide & Like -->
+                <div class="grid grid-cols-2 gap-3">
+                    <!-- Hide Comment -->
+                    <div class="flex flex-col gap-3 p-4 bg-white/5 rounded-2xl border border-white/5">
+                        <div class="flex items-center justify-between">
+                            <div class="p-2.5 bg-gray-500/10 rounded-xl text-gray-400">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path></svg>
+                            </div>
+                            <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                                <input type="checkbox" x-model="modalHideComment" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300"/>
+                                <label class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-700 cursor-pointer" :class="modalHideComment ? 'bg-indigo-600' : 'bg-gray-700'"></label>
+                            </div>
+                        </div>
+                        <span class="text-[9px] font-black text-white uppercase tracking-wider"><?php echo __('hide_comment'); ?></span>
+                    </div>
+                    
+                    <!-- Auto Like -->
+                    <div class="flex flex-col gap-3 p-4 bg-white/5 rounded-2xl border border-white/5">
+                        <div class="flex items-center justify-between">
+                            <div class="p-2.5 bg-pink-500/10 rounded-xl text-pink-400">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"></path></svg>
+                            </div>
+                            <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                                <input type="checkbox" x-model="modalAutoLike" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300"/>
+                                <label class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-700 cursor-pointer" :class="modalAutoLike ? 'bg-indigo-600' : 'bg-gray-700'"></label>
+                            </div>
+                        </div>
+                        <span class="text-[9px] font-black text-white uppercase tracking-wider"><?php echo __('auto_like'); ?></span>
+                    </div>
+                </div>
+
+                 <div class="grid grid-cols-3 gap-3">
+                      <div class="flex flex-col gap-3 p-4 bg-white/5 rounded-2xl border border-white/5">
+                           <div class="flex items-center justify-between">
+                                <div class="p-2.5 bg-indigo-500/10 rounded-xl text-indigo-400">
+                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                                </div>
+                                <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                                     <input type="checkbox" x-model="modalAiSafe" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300"/>
+                                     <label class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-700 cursor-pointer" :class="modalAiSafe ? 'bg-indigo-600' : 'bg-gray-700'"></label>
+                                </div>
+                           </div>
+                           <span class="text-[9px] font-black text-white uppercase tracking-wider"><?php echo __('ai_safe_rule'); ?></span>
+                      </div>
+                      <div class="flex flex-col gap-3 p-4 bg-white/5 rounded-2xl border border-white/5">
+                           <div class="flex items-center justify-between">
+                                <div class="p-2.5 bg-orange-500/10 rounded-xl text-orange-400">
+                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                </div>
+                                <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                                     <input type="checkbox" x-model="modalBypassSchedule" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300"/>
+                                     <label class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-700 cursor-pointer" :class="modalBypassSchedule ? 'bg-indigo-600' : 'bg-gray-700'"></label>
+                                </div>
+                           </div>
+                           <span class="text-[9px] font-black text-white uppercase tracking-wider"><?php echo __('bypass_schedule_rule'); ?></span>
+                      </div>
+                      <div class="flex flex-col gap-3 p-4 bg-white/5 rounded-2xl border border-white/5">
+                           <div class="flex items-center justify-between">
+                                <div class="p-2.5 bg-green-500/10 rounded-xl text-green-400">
+                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                </div>
+                                <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                                     <input type="checkbox" x-model="modalBypassCooldown" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300"/>
+                                     <label class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-700 cursor-pointer" :class="modalBypassCooldown ? 'bg-indigo-600' : 'bg-gray-700'"></label>
+                                </div>
+                           </div>
+                           <span class="text-[9px] font-black text-white uppercase tracking-wider"><?php echo __('bypass_cooldown_rule'); ?></span>
+                      </div>
+                 </div>
+
+                 <button @click="saveRule()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-2xl shadow-xl shadow-indigo-600/20 transition-all transform active:scale-95 text-lg">
+                    <?php echo __('save_changes'); ?>
+                 </button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .toggle-checkbox:checked { right: 0; }
+    .toggle-checkbox { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+</style>
+
+
+<!-- Custom Range Modal -->
+    <div x-show="showCustomRangeModal" class="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6"
+        style="display: none;" x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+        x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 scale-100"
+        x-transition:leave-end="opacity-0 scale-95">
+        <div class="fixed inset-0 bg-black/80 backdrop-blur-xl" @click="closeCustomRangeModal()"></div>
+
         <div
-            class="flex-none h-20 border-b border-white/5 flex items-center justify-between px-6 lg:px-12 bg-[#0f111a] sticky top-0 z-50 shadow-2xl">
-            <div class="flex items-center gap-4">
-                <button @click="closeModal()"
-                    class="p-2 hover:bg-white/5 rounded-full text-gray-400 hover:text-white transition-colors">
+            class="glass-panel p-6 sm:p-10 rounded-[3rem] border border-white/10 bg-gray-900 w-full max-w-2xl relative z-10 shadow-[0_32px_120px_-15px_rgba(0,0,0,0.8)] max-h-[90vh] overflow-y-auto messenger-scrollbar">
+            <div class="flex items-center justify-between mb-10">
+                <div class="flex items-center gap-4">
+                    <div class="p-3 bg-indigo-500/10 rounded-2xl text-indigo-400">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002-2z">
+                            </path>
+                        </svg>
+                    </div>
+                    <h3 class="text-3xl font-black text-white leading-none"><?php echo __('custom_period'); ?>
+                    </h3>
+                </div>
+                <button @click="closeCustomRangeModal()"
+                    class="p-3 bg-white/5 hover:bg-white/10 rounded-2xl text-gray-500 hover:text-white transition-all">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
                         </path>
                     </svg>
                 </button>
-                <h3 class="text-xl font-bold text-white flex items-center gap-3">
-                    <span class="bg-indigo-600/20 text-indigo-400 p-2 rounded-lg">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                        </svg>
-                    </span>
-                    <span
-                        x-text="editMode ? '<?php echo __('edit_rule'); ?>' : '<?php echo __('add_new_rule'); ?>'"></span>
-                </h3>
             </div>
-            <div class="flex items-center gap-3">
-                <button @click="saveRule()"
-                    class="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/20 transition-all flex items-center gap-2 hover:scale-105 active:scale-95">
-                    <span><?php echo __('save_changes'); ?></span>
+
+            <div class="space-y-12">
+                <!-- Start Date & Time -->
+                <div class="space-y-6">
+                    <div class="flex items-center gap-3">
+                        <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                        <span
+                            class="text-sm font-black text-gray-400 uppercase tracking-widest"><?php echo __('start_date'); ?></span>
+                    </div>
+                    <div class="relative group">
+                        <input type="datetime-local" x-model="customStartDate"
+                            class="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-sm">
+                    </div>
+                </div>
+
+                <!-- End Date & Time -->
+                <div class="space-y-6">
+                    <div class="flex items-center gap-3">
+                        <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                        <span
+                            class="text-sm font-black text-gray-400 uppercase tracking-widest"><?php echo __('end_date'); ?></span>
+                    </div>
+                    <div class="relative group">
+                        <input type="datetime-local" x-model="customEndDate"
+                            class="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-sm">
+                    </div>
+                </div>
+
+                <button @click="applyCustomRange()"
+                    class="w-full py-6 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-[2rem] shadow-2xl shadow-indigo-600/40 transition-all transform active:scale-[0.98] uppercase tracking-[0.2em] text-sm flex items-center justify-center gap-3">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7">
+                        </path>
                     </svg>
+                    <?php echo __('apply_filter'); ?>
                 </button>
-            </div>
-        </div>
-
-        <!-- Flow Canvas -->
-        <div class="flex-1 overflow-y-auto bg-[#0f111a] relative custom-scrollbar pb-32">
-            <!-- Central Line -->
-            <div
-                class="absolute left-1/2 top-0 h-full w-0.5 bg-gradient-to-b from-indigo-500/20 via-indigo-500/10 to-transparent -translate-x-1/2 hidden md:block pointer-events-none">
-            </div>
-
-            <div class="max-w-3xl mx-auto py-12 px-6 space-y-12 relative animate-fade-in-up">
-
-                <!-- STEP 1: TRIGGER -->
-                <div class="relative group">
-                    <div class="absolute -left-12 top-0 hidden md:flex flex-col items-center gap-2">
-                        <div
-                            class="w-8 h-8 rounded-full bg-indigo-600 border-4 border-[#0f111a] flex items-center justify-center text-xs font-bold text-white z-10 shadow-lg shadow-indigo-600/50">
-                            1</div>
-                    </div>
-
-                    <div
-                        class="bg-[#161925] border border-white/5 p-1 rounded-3xl shadow-xl hover:border-indigo-500/30 transition-all duration-300 group-hover:shadow-indigo-500/10">
-                        <div class="bg-[#1a1d2d] rounded-[1.3rem] p-6 border border-white/5 relative overflow-hidden">
-                            <!-- Background Accent -->
-                            <div
-                                class="absolute top-0 right-0 w-32 h-32 bg-indigo-600/5 blur-3xl rounded-full pointer-events-none">
-                            </div>
-
-                            <div class="flex items-center gap-3 mb-6 relative z-10">
-                                <div class="p-2 bg-indigo-500/10 rounded-lg text-indigo-400">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122">
-                                        </path>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h4 class="text-white font-bold text-lg"><?php echo __('trigger_keyword'); ?></h4>
-                                    <p class="text-xs text-gray-500"><?php echo __('keywords_hint'); ?></p>
-                                </div>
-                            </div>
-
-                            <input type="text" x-model="modalKeywords"
-                                placeholder="<?php echo __('keyword_placeholder'); ?>"
-                                class="w-full bg-black/30 border border-white/10 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all text-sm placeholder-gray-600 font-mono tracking-wide">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Connector -->
-                <div class="flex justify-center py-2 relative z-10">
-                    <div
-                        class="w-8 h-8 rounded-full bg-[#1a1d2d] border border-white/10 flex items-center justify-center text-gray-500 shadow-lg z-10">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
-                        </svg>
-                    </div>
-                </div>
-
-                <!-- STEP 2: CONDITIONS (Optional) -->
-                <div x-data="{ expanded: false }" class="relative z-10">
-                    <div class="absolute -left-12 top-0 hidden md:flex flex-col items-center gap-2">
-                        <div
-                            class="w-8 h-8 rounded-full bg-gray-700 border-4 border-[#0f111a] flex items-center justify-center text-xs font-bold text-white z-10">
-                            2</div>
-                    </div>
-
-                    <div class="border border-dashed border-white/10 rounded-3xl p-1 bg-white/[0.02] hover:bg-white/[0.04] transition-colors cursor-pointer"
-                        @click="expanded = !expanded">
-                        <div class="px-6 py-4 flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4">
-                                    </path>
-                                </svg>
-                                <span
-                                    class="text-sm font-bold text-gray-300"><?php echo __('moderation_rules'); ?></span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <span class="text-[10px] text-gray-500 uppercase font-bold"
-                                    x-show="!expanded"><?php echo __('click_to_configure'); ?></span>
-                                <svg class="w-4 h-4 text-gray-500 transition-transform duration-300"
-                                    :class="expanded ? 'rotate-180' : ''" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M19 9l-7 7-7-7"></path>
-                                </svg>
-                            </div>
-                        </div>
-
-                        <div x-show="expanded" x-collapse
-                            class="px-6 pb-6 pt-2 border-t border-white/5 grid grid-cols-1 md:grid-cols-3 gap-3">
-                            <!-- Toggle Items -->
-                            <div class="p-3 bg-black/20 rounded-xl border border-white/5 flex items-center justify-between hover:bg-white/5 transition-colors"
-                                @click.stop="modalAiSafe = !modalAiSafe">
-                                <span class="text-xs text-gray-400 font-bold"><?php echo __('ai_safe_rule'); ?></span>
-                                <div class="w-9 h-5 rounded-full relative transition-colors border border-white/10"
-                                    :class="modalAiSafe ? 'bg-indigo-600 border-indigo-500' : 'bg-gray-800'">
-                                    <div class="w-3 h-3 bg-white rounded-full absolute top-1 transition-all shadow-sm"
-                                        :class="modalAiSafe ? 'left-5' : 'left-1'"></div>
-                                </div>
-                            </div>
-                            <div class="p-3 bg-black/20 rounded-xl border border-white/5 flex items-center justify-between hover:bg-white/5 transition-colors"
-                                @click.stop="modalBypassSchedule = !modalBypassSchedule">
-                                <span
-                                    class="text-xs text-gray-400 font-bold"><?php echo __('bypass_schedule_rule'); ?></span>
-                                <div class="w-9 h-5 rounded-full relative transition-colors border border-white/10"
-                                    :class="modalBypassSchedule ? 'bg-indigo-600 border-indigo-500' : 'bg-gray-800'">
-                                    <div class="w-3 h-3 bg-white rounded-full absolute top-1 transition-all shadow-sm"
-                                        :class="modalBypassSchedule ? 'left-5' : 'left-1'"></div>
-                                </div>
-                            </div>
-                            <div class="p-3 bg-black/20 rounded-xl border border-white/5 flex items-center justify-between hover:bg-white/5 transition-colors"
-                                @click.stop="modalBypassCooldown = !modalBypassCooldown">
-                                <span
-                                    class="text-xs text-gray-400 font-bold"><?php echo __('bypass_cooldown_rule'); ?></span>
-                                <div class="w-9 h-5 rounded-full relative transition-colors border border-white/10"
-                                    :class="modalBypassCooldown ? 'bg-indigo-600 border-indigo-500' : 'bg-gray-800'">
-                                    <div class="w-3 h-3 bg-white rounded-full absolute top-1 transition-all shadow-sm"
-                                        :class="modalBypassCooldown ? 'left-5' : 'left-1'"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Connector -->
-                <div class="flex justify-center py-2 relative z-10">
-                    <div
-                        class="w-8 h-8 rounded-full bg-[#1a1d2d] border border-white/10 flex items-center justify-center text-gray-500 shadow-lg z-10">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M17 13l-5 5m0 0l-5-5m5 5V6"></path>
-                        </svg>
-                    </div>
-                </div>
-
-                <!-- STEP 3: ACTION / RESPONSE -->
-                <div class="relative group">
-                    <div class="absolute -left-12 top-0 hidden md:flex flex-col items-center gap-2">
-                        <div
-                            class="w-8 h-8 rounded-full bg-emerald-600 border-4 border-[#0f111a] flex items-center justify-center text-xs font-bold text-white z-10 shadow-lg shadow-emerald-600/50">
-                            3</div>
-                    </div>
-
-                    <div
-                        class="bg-gradient-to-br from-indigo-900/10 to-purple-900/10 border border-indigo-500/20 p-1 rounded-3xl shadow-[0_0_30px_rgba(79,70,229,0.05)] hover:shadow-[0_0_50px_rgba(79,70,229,0.1)] transition-all">
-                        <div class="bg-[#1a1d2d]/90 backdrop-blur-sm rounded-[1.3rem] p-6 border border-white/5">
-                            <div class="flex items-center gap-3 mb-6">
-                                <div class="p-2 bg-emerald-500/10 rounded-lg text-emerald-400">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z">
-                                        </path>
-                                    </svg>
-                                </div>
-                                <h4 class="text-white font-bold text-lg"><?php echo __('reply_message'); ?></h4>
-                            </div>
-
-                            <!-- Comment Reply -->
-                            <div class="mb-8">
-                                <textarea x-model="modalReply" rows="4"
-                                    placeholder="<?php echo __('reply_placeholder'); ?>"
-                                    class="w-full bg-black/30 border border-white/10 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all resize-none text-sm leading-relaxed mb-2"></textarea>
-                                <div class="flex gap-4 text-[10px] text-gray-500 font-mono">
-                                    <span class="flex items-center gap-1"><span
-                                            class="text-indigo-400">{Hi|Hello}</span>
-                                        SPINTAX</span>
-                                    <span class="flex items-center gap-1"><span class="text-indigo-400">{name}</span>
-                                        Variable</span>
-                                </div>
-                            </div>
-
-                            <!-- Post-Actions (Checkboxes) -->
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <!-- Action: Hide -->
-                                <div class="flex items-center justify-between p-4 bg-black/20 rounded-xl border border-white/5 cursor-pointer hover:bg-white/5 transition-colors group/check"
-                                    @click="modalHideComment = !modalHideComment">
-                                    <div class="flex items-center gap-3">
-                                        <div class="p-2 bg-red-500/10 rounded-lg text-red-400">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268-2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21">
-                                                </path>
-                                            </svg>
-                                        </div>
-                                        <div>
-                                            <span
-                                                class="text-sm font-bold text-gray-300 block"><?php echo __('hide_comment'); ?></span>
-                                            <span
-                                                class="text-[10px] text-gray-600"><?php echo __('hide_comment_help'); ?></span>
-                                        </div>
-                                    </div>
-                                    <div class="w-6 h-6 rounded border border-gray-600 flex items-center justify-center transition-colors shadow-inner"
-                                        :class="modalHideComment ? 'bg-indigo-500 border-indigo-500' : ''">
-                                        <svg x-show="modalHideComment" class="w-4 h-4 text-white" fill="none"
-                                            stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
-                                                d="M5 13l4 4L19 7"></path>
-                                        </svg>
-                                    </div>
-                                </div>
-
-                                <!-- Action: Like -->
-                                <div class="flex items-center justify-between p-4 bg-black/20 rounded-xl border border-white/5 cursor-pointer hover:bg-white/5 transition-colors group/check"
-                                    @click="modalAutoLike = !modalAutoLike">
-                                    <div class="flex items-center gap-3">
-                                        <div class="p-2 bg-pink-500/10 rounded-lg text-pink-400">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z">
-                                                </path>
-                                            </svg>
-                                        </div>
-                                        <div>
-                                            <span
-                                                class="text-sm font-bold text-gray-300 block"><?php echo __('auto_like'); ?></span>
-                                            <span
-                                                class="text-[10px] text-gray-600"><?php echo __('auto_like_help'); ?></span>
-                                        </div>
-                                    </div>
-                                    <div class="w-6 h-6 rounded border border-gray-600 flex items-center justify-center transition-colors shadow-inner"
-                                        :class="modalAutoLike ? 'bg-indigo-500 border-indigo-500' : ''">
-                                        <svg x-show="modalAutoLike" class="w-4 h-4 text-white" fill="none"
-                                            stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
-                                                d="M5 13l4 4L19 7"></path>
-                                        </svg>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Private Reply (Expandable) -->
-                            <div class="mt-4 p-4 bg-black/20 rounded-xl border border-white/5 transition-all duration-300"
-                                :class="modalPrivateReplyEnabled ? 'bg-indigo-900/10 border-indigo-500/30 shadow-lg' : ''">
-                                <div class="flex items-center justify-between cursor-pointer"
-                                    @click="modalPrivateReplyEnabled = !modalPrivateReplyEnabled">
-                                    <div class="flex items-center gap-3">
-                                        <div class="p-2 bg-blue-500/10 rounded-lg text-blue-400">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z">
-                                                </path>
-                                            </svg>
-                                        </div>
-                                        <div>
-                                            <span
-                                                class="text-sm font-bold text-gray-300 block"><?php echo __('send_private_reply'); ?></span>
-                                            <span
-                                                class="text-[10px] text-gray-500"><?php echo __('send_private_reply_hint'); ?></span>
-                                        </div>
-                                    </div>
-                                    <div class="relative w-11 h-6 transition-all duration-200 ease-in-out rounded-full border border-white/5"
-                                        :class="modalPrivateReplyEnabled ? 'bg-indigo-600' : 'bg-gray-700'">
-                                        <div class="absolute w-4 h-4 transition-all duration-200 ease-in-out bg-white rounded-full top-1 shadow-sm"
-                                            :class="modalPrivateReplyEnabled ? 'left-6' : 'left-1'"></div>
-                                    </div>
-                                </div>
-
-                                <div x-show="modalPrivateReplyEnabled" x-collapse
-                                    class="mt-4 pt-4 border-t border-white/5">
-                                    <label
-                                        class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-2 block"><?php echo __('private_reply_content'); ?></label>
-                                    <textarea x-model="modalPrivateReplyText" rows="3"
-                                        class="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white placeholder-gray-600 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm leading-relaxed"
-                                        placeholder="<?php echo __('private_reply_placeholder'); ?>"></textarea>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-
-                <div class="h-20"></div> <!-- Spacer -->
             </div>
         </div>
     </div>
 
+    <style>
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
 
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            /* IE and Edge */
+            scrollbar-width: none;
+            /* Firefox */
+        }
 
-    <div class="max-w-3xl mx-auto py-12 px-6 space-y-12 relative animate-fade-in-up">
+        .messenger-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
 
+        .messenger-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
 
+        .messenger-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.2);
+            border-radius: 20px;
+        }
 
+        .messenger-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.5);
+        }
 
+        .custom-horizontal-scrollbar::-webkit-scrollbar {
+            height: 4px;
+        }
 
+        .custom-horizontal-scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 4px;
+        }
 
+        .custom-horizontal-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.3);
+            border-radius: 4px;
+        }
 
-        <!-- Custom Range Modal -->
-        <div x-show="showCustomRangeModal" class="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6"
-            style="display: none;" x-transition:enter="transition ease-out duration-300"
-            x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
-            x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 scale-100"
-            x-transition:leave-end="opacity-0 scale-95">
-            <div class="fixed inset-0 bg-black/80 backdrop-blur-xl" @click="closeCustomRangeModal()"></div>
+        .custom-horizontal-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.6);
+        }
 
-            <div
-                class="glass-panel p-6 sm:p-10 rounded-[3rem] border border-white/10 bg-gray-900 w-full max-w-2xl relative z-10 shadow-[0_32px_120px_-15px_rgba(0,0,0,0.8)] max-h-[90vh] overflow-y-auto messenger-scrollbar">
-                <div class="flex items-center justify-between mb-10">
-                    <div class="flex items-center gap-4">
-                        <div class="p-3 bg-indigo-500/10 rounded-2xl text-indigo-400">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002-2z">
-                                </path>
-                            </svg>
-                        </div>
-                        <h3 class="text-3xl font-black text-white leading-none"><?php echo __('custom_period'); ?></h3>
-                    </div>
-                    <button @click="closeCustomRangeModal()"
-                        class="p-3 bg-white/5 hover:bg-white/10 rounded-2xl text-gray-500 hover:text-white transition-all">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M6 18L18 6M6 6l12 12">
-                            </path>
-                        </svg>
-                    </button>
-                </div>
+        .toggle-checkbox:checked {
+            right: 0;
+        }
 
-                <div class="space-y-12">
-                    <!-- Start Date & Time -->
-                    <div class="space-y-6">
-                        <div class="flex items-center gap-3">
-                            <span class="w-2 h-2 rounded-full bg-green-500"></span>
-                            <span
-                                class="text-sm font-black text-gray-400 uppercase tracking-widest"><?php echo __('start_date'); ?></span>
-                        </div>
-                        <div class="relative group">
-                            <input type="datetime-local" x-model="customStartDate"
-                                class="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-sm">
-                        </div>
-                    </div>
+        .toggle-checkbox {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
 
-                    <!-- End Date & Time -->
-                    <div class="space-y-6">
-                        <div class="flex items-center gap-3">
-                            <span class="w-2 h-2 rounded-full bg-red-500"></span>
-                            <span
-                                class="text-sm font-black text-gray-400 uppercase tracking-widest"><?php echo __('end_date'); ?></span>
-                        </div>
-                        <div class="relative group">
-                            <input type="datetime-local" x-model="customEndDate"
-                                class="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-sm">
-                        </div>
-                    </div>
+</div><!-- Final Alpine Container Close -->
 
-                    <button @click="applyCustomRange()"
-                        class="w-full py-6 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-[2rem] shadow-2xl shadow-indigo-600/40 transition-all transform active:scale-[0.98] uppercase tracking-[0.2em] text-sm flex items-center justify-center gap-3">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7">
-                            </path>
-                        </svg>
-                        <?php echo __('apply_filter'); ?>
-                    </button>
-                </div>
-            </div>
-        </div>
+<script>
+    function autoReplyApp() {
+        return {
+            activeTab: localStorage.getItem('ar_active_tab') || 'dashboard',
+            init() {
+                this.$watch('activeTab', value => localStorage.setItem('ar_active_tab', value));
+            },
+            selectedPageId: '',
+            rules: [],
+            defaultReplyText: '',
+            defaultHideComment: false,
+            defaultPrivateReplyEnabled: false,
+            defaultPrivateReplyText: '',
+            defaultAutoLike: false,
+            savingDefault: false,
+            showModal: false,
+            editMode: false,
+            currentRuleId: null,
+            modalKeywords: '',
+            modalReply: '',
+            modalHideComment: false,
+            modalPrivateReplyEnabled: false,
+            modalPrivateReplyText: '',
+            modalAutoLike: false, // Added missing variable
+            subscribing: false,
+            stopping: false,
+            modalAiSafe: true,
+            modalBypassSchedule: false,
+            modalBypassCooldown: false,
+            debugInfo: null,
+            webhookUrl: 'Loading...',
+            verifyToken: 'Loading...',
+            pages: <?php echo json_encode($pages); ?>,
 
-        <style>
-            .no-scrollbar::-webkit-scrollbar {
-                display: none;
-            }
+            // Bot Intelligence Settings
+            cooldownHours: 0,
+            cooldownMinutes: 0,
+            cooldownSeconds: 0,
+            schEnabled: false,
+            schStart: '00:00',
+            schEnd: '23:59',
+            botExcludeKeywords: false,
+            aiSentimentEnabled: true,
+            angerKeywords: '',
+            repetitionThreshold: 3,
+            handoverReply: '',
+            handoverConversations: [],
+            fetchingHandover: false,
+            savingPageSettings: false,
+            isGlobalSaving: false,
+            statsRange: 'all',
+            stats: {
+                total_interacted: 0,
+                active_handovers: 0,
+                ai_success_rate: '0%',
+                avg_response_speed: '0s',
+                top_rule: '--',
+                peak_hour: '--:--',
+                system_health: '100%',
+                anger_alerts: 0,
+                ai_filtered: 0
+            },
+            showCustomRangeModal: false,
+            customStartDate: '',
+            customEndDate: '',
+            statsRule: '',
 
-            .no-scrollbar {
-                -ms-overflow-style: none;
-                /* IE and Edge */
-                scrollbar-width: none;
-                /* Firefox */
-            }
+            // Search & Filter (NEW)
+            searchTerm: '',
 
-            .messenger-scrollbar::-webkit-scrollbar {
-                width: 4px;
-            }
+            get filteredRules() {
+                if (!this.searchTerm) return this.rules;
+                const term = this.searchTerm.toLowerCase();
+                return this.rules.filter(rule =>
+                    rule.keywords.toLowerCase().includes(term) ||
+                    rule.reply_message.toLowerCase().includes(term)
+                );
+            },
 
-            .messenger-scrollbar::-webkit-scrollbar-track {
-                background: transparent;
-            }
+            get topRules() {
+                // Get rules sorted by usage_count DESC (Top 5)
+                const sorted = [...this.filteredRules].sort((a, b) => (b.usage_count || 0) - (a.usage_count || 0));
+                return sorted.slice(0, 5);
+            },
 
-            .messenger-scrollbar::-webkit-scrollbar-thumb {
-                background: rgba(99, 102, 241, 0.2);
-                border-radius: 20px;
-            }
+            get otherRules() {
+                // The rest
+                const sorted = [...this.filteredRules].sort((a, b) => (b.usage_count || 0) - (a.usage_count || 0));
+                return sorted.slice(5);
+            },
 
-            .messenger-scrollbar::-webkit-scrollbar-thumb:hover {
-                background: rgba(99, 102, 241, 0.5);
-            }
+            toggleRuleStatus(ruleId) {
+                const rule = this.rules.find(r => r.id === ruleId);
+                if (!rule) return;
 
-            .custom-horizontal-scrollbar::-webkit-scrollbar {
-                height: 4px;
-            }
+                // Optimistic UI Update
+                rule.is_active = rule.is_active == 1 ? 0 : 1;
 
-            .custom-horizontal-scrollbar::-webkit-scrollbar-track {
-                background: rgba(255, 255, 255, 0.02);
-                border-radius: 4px;
-            }
+                let formData = new FormData();
+                formData.append('rule_id', ruleId);
+                formData.append('is_active', rule.is_active);
 
-            .custom-horizontal-scrollbar::-webkit-scrollbar-thumb {
-                background: rgba(99, 102, 241, 0.3);
-                border-radius: 4px;
-            }
-
-            .custom-horizontal-scrollbar::-webkit-scrollbar-thumb:hover {
-                background: rgba(99, 102, 241, 0.6);
-            }
-
-            .toggle-checkbox:checked {
-                right: 0;
-            }
-
-            .toggle-checkbox {
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            }
-        </style>
-
-    </div><!-- Final Alpine Container Close -->
-
-    <script>
-        function autoReplyApp() {
-            return {
-                activeTab: localStorage.getItem('ar_active_tab') || 'dashboard',
-                init() {
-                    this.$watch('activeTab', value => localStorage.setItem('ar_active_tab', value));
-                },
-                selectedPageId: '',
-                rules: [],
-                defaultReplyText: '',
-                defaultHideComment: false,
-                defaultPrivateReplyEnabled: false,
-                defaultPrivateReplyText: '',
-                defaultAutoLike: false,
-                savingDefault: false,
-                showModal: false,
-                editMode: false,
-                currentRuleId: null,
-                modalKeywords: '',
-                modalReply: '',
-                modalHideComment: false,
-                modalPrivateReplyEnabled: false,
-                modalPrivateReplyText: '',
-                modalAutoLike: false, // Added missing variable
-                subscribing: false,
-                stopping: false,
-                modalAiSafe: true,
-                modalBypassSchedule: false,
-                modalBypassCooldown: false,
-                debugInfo: null,
-                webhookUrl: 'Loading...',
-                verifyToken: 'Loading...',
-                pages: <?php echo json_encode($pages); ?>,
-
-                // Bot Intelligence Settings
-                cooldownHours: 0,
-                cooldownMinutes: 0,
-                cooldownSeconds: 0,
-                schEnabled: false,
-                schStart: '00:00',
-                schEnd: '23:59',
-                botExcludeKeywords: false,
-                aiSentimentEnabled: true,
-                angerKeywords: '',
-                repetitionThreshold: 3,
-                handoverReply: '',
-                handoverConversations: [],
-                fetchingHandover: false,
-                savingPageSettings: false,
-                isGlobalSaving: false,
-                statsRange: 'all',
-                stats: {
-                    total_interacted: 0,
-                    active_handovers: 0,
-                    ai_success_rate: '0%',
-                    avg_response_speed: '0s',
-                    top_rule: '--',
-                    peak_hour: '--:--',
-                    system_health: '100%',
-                    anger_alerts: 0,
-                    ai_filtered: 0
-                },
-                showCustomRangeModal: false,
-                customStartDate: '',
-                customEndDate: '',
-                statsRule: '',
-
-                // Search & Filter (NEW)
-                searchTerm: '',
-
-                get filteredRules() {
-                    if (!this.searchTerm) return this.rules;
-                    const term = this.searchTerm.toLowerCase();
-                    return this.rules.filter(rule =>
-                        rule.keywords.toLowerCase().includes(term) ||
-                        rule.reply_message.toLowerCase().includes(term)
-                    );
-                },
-
-                get topRules() {
-                    // Get rules sorted by usage_count DESC (Top 5)
-                    const sorted = [...this.filteredRules].sort((a, b) => (b.usage_count || 0) - (a.usage_count || 0));
-                    return sorted.slice(0, 5);
-                },
-
-                get otherRules() {
-                    // The rest
-                    const sorted = [...this.filteredRules].sort((a, b) => (b.usage_count || 0) - (a.usage_count || 0));
-                    return sorted.slice(5);
-                },
-
-                toggleRuleStatus(ruleId) {
-                    const rule = this.rules.find(r => r.id === ruleId);
-                    if (!rule) return;
-
-                    // Optimistic UI Update
-                    rule.is_active = rule.is_active == 1 ? 0 : 1;
-
-                    let formData = new FormData();
-                    formData.append('rule_id', ruleId);
-                    formData.append('is_active', rule.is_active);
-
-                    fetch('ajax_auto_reply.php?action=toggle_rule', { method: 'POST', body: formData })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (!data.success) {
-                                // Revert if failed
-                                rule.is_active = rule.is_active == 1 ? 0 : 1;
-                                alert('Failed to update status');
-                            }
-                        });
-                },
-
-                scrollToPreview() {
-                    const element = document.getElementById('comment-preview-section');
-                    if (element) {
-                        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }
-                },
-
-                // Preview State
-                previewMode: 'default', // 'default' or 'rule'
-                previewCustomerMsg: '',
-                previewReplyMsg: '',
-                previewHideComment: false,
-
-                getPageName() {
-                    const page = this.pages.find(p => p.page_id == this.selectedPageId);
-                    return page ? page.page_name : '';
-                },
-
-                init() {
-                    this.fetchWebhookInfo();
-                    const lastPage = localStorage.getItem('ar_last_page');
-                    if (lastPage) {
-                        this.selectedPageId = lastPage;
-                        this.fetchTokenDebug();
-                        this.fetchPageSettings();
-                        this.fetchRules();
-                        this.fetchHandover();
-                        this.fetchStats();
-                    }
-
-                    this.$watch('defaultReplyText', () => {
-                        this.previewMode = 'default';
-                    });
-
-                    // Auto-save default reply settings when changed
-                    this.$watch('defaultHideComment', () => { this.saveDefaultSettings(); });
-                    this.$watch('defaultAutoLike', () => { this.saveDefaultSettings(); });
-                    this.$watch('defaultPrivateReplyEnabled', () => { this.saveDefaultSettings(); });
-                    this.$watch('defaultPrivateReplyText', () => { this.saveDefaultSettings(); });
-
-                    setInterval(() => {
-                        this.fetchHandover();
-                        this.fetchStats();
-                        const urlParams = new URLSearchParams(window.location.search);
-                        if (urlParams.has('preview')) {
-                            setTimeout(() => this.scrollToPreview(), 1000);
+                fetch('ajax_auto_reply.php?action=toggle_rule', { method: 'POST', body: formData })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (!data.success) {
+                            // Revert if failed
+                            rule.is_active = rule.is_active == 1 ? 0 : 1;
+                            alert('Failed to update status');
                         }
-                    }, 30000);
-
-                    this.$watch('showModal', value => {
-                        document.body.style.overflow = value ? 'hidden' : '';
                     });
-                },
+            },
 
-                previewRule(rule) {
-                    this.previewMode = 'rule';
-                    this.previewCustomerMsg = rule.keywords.split(',')[0].trim();
-                    this.previewReplyMsg = rule.reply_message;
-                    this.previewHideComment = (rule.hide_comment == 1);
-                },
-
-                fetchTokenDebug() {
-                    if (!this.selectedPageId) return;
-                    fetch(`ajax_auto_reply.php?action=debug_token_info&page_id=${this.selectedPageId}`)
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.success) {
-                                this.debugInfo = data;
-                            }
-                        });
-                },
-
-                subscribePage() {
-                    if (!this.selectedPageId) return;
-                    this.subscribing = true;
-                    let formData = new FormData();
-                    formData.append('page_id', this.selectedPageId);
-                    fetch('ajax_auto_reply.php?action=subscribe_page', { method: 'POST', body: formData })
-                        .then(res => res.json())
-                        .then(data => {
-                            this.subscribing = false;
-                            alert(data.message || data.error);
-                        }).catch(() => { this.subscribing = false; alert('Network Error'); });
-                },
-
-                stopAutoReply() {
-                    if (!this.selectedPageId) return;
-                    if (!confirm('<?php echo __('confirm_stop_auto_reply'); ?>')) return;
-                    this.stopping = true;
-                    let formData = new FormData();
-                    formData.append('page_id', this.selectedPageId);
-                    fetch('ajax_auto_reply.php?action=unsubscribe_page', { method: 'POST', body: formData })
-                        .then(res => res.json())
-                        .then(data => {
-                            this.stopping = false;
-                            alert(data.message || data.error);
-                        }).catch(() => { this.stopping = false; alert('Network Error'); });
-                },
-
-                fetchWebhookInfo() {
-                    fetch('ajax_auto_reply.php?action=get_webhook_info')
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.success) {
-                                this.webhookUrl = data.webhook_url;
-                                this.verifyToken = data.verify_token;
-                            }
-                        });
-                },
-
-                fetchPageSettings() {
-                    if (!this.selectedPageId) return;
-                    fetch(`ajax_auto_reply.php?action=fetch_page_settings&page_id=${this.selectedPageId}`)
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.success) {
-                                const s = data.settings;
-                                const totalSec = parseInt(s.bot_cooldown_seconds || 0);
-                                this.cooldownHours = Math.floor(totalSec / 3600);
-                                this.cooldownMinutes = Math.floor((totalSec % 3600) / 60);
-                                this.cooldownSeconds = totalSec % 60;
-                                this.schEnabled = (s.bot_schedule_enabled == 1);
-                                this.schStart = s.bot_schedule_start ? s.bot_schedule_start.substring(0, 5) : '00:00';
-                                this.schEnd = s.bot_schedule_end ? s.bot_schedule_end.substring(0, 5) : '23:59';
-                                this.botExcludeKeywords = (s.bot_exclude_keywords == 1);
-                                this.aiSentimentEnabled = (s.bot_ai_sentiment_enabled == 1);
-                                this.angerKeywords = s.bot_anger_keywords || '';
-                                this.repetitionThreshold = parseInt(s.bot_repetition_threshold || 3);
-                                this.handoverReply = s.bot_handover_reply || '';
-                            }
-                        });
-                },
-
-                savePageSettings() {
-                    // Internal use for global save
-                    const totalSec = (parseInt(this.cooldownHours) * 3600) + (parseInt(this.cooldownMinutes) * 60) + parseInt(this.cooldownSeconds);
-                    let formData = new FormData();
-                    formData.append('page_id', this.selectedPageId);
-                    formData.append('cooldown_seconds', totalSec);
-                    formData.append('schedule_enabled', this.schEnabled ? '1' : '0');
-                    formData.append('schedule_start', this.schStart);
-                    formData.append('schedule_end', this.schEnd);
-                    formData.append('exclude_keywords', this.botExcludeKeywords ? '1' : '0');
-                    formData.append('ai_sentiment_enabled', this.aiSentimentEnabled ? '1' : '0');
-                    formData.append('anger_keywords', this.angerKeywords);
-                    formData.append('repetition_count', this.repetitionThreshold);
-                    formData.append('handover_reply', this.handoverReply);
-
-                    return fetch('ajax_auto_reply.php?action=save_page_settings', { method: 'POST', body: formData })
-                        .then(res => res.json());
-                },
-
-                saveDefaultReply() {
-                    // Internal use for global save
-                    let formData = new FormData();
-                    formData.append('page_id', this.selectedPageId);
-                    formData.append('type', 'default');
-                    formData.append('reply', this.defaultReplyText);
-                    formData.append('keywords', '*');
-                    formData.append('hide_comment', this.defaultHideComment ? '1' : '0');
-                    formData.append('private_reply_enabled', this.defaultPrivateReplyEnabled ? '1' : '0');
-                    formData.append('private_reply_text', this.defaultPrivateReplyText);
-                    formData.append('auto_like_comment', this.defaultAutoLike ? '1' : '0');
-                    return fetch('ajax_auto_reply.php?action=save_rule', { method: 'POST', body: formData })
-                        .then(res => res.json());
-                },
-
-                saveAllSettings() {
-                    if (!this.selectedPageId) return;
-                    this.isGlobalSaving = true;
-
-                    Promise.all([this.savePageSettings(), this.saveDefaultReply()])
-                        .then(([res1, res2]) => {
-                            this.isGlobalSaving = false;
-                            if (res1.success && res2.success) {
-                                alert('<?php echo __('wa_settings_saved'); ?>'); // Reusing existing key
-                            } else {
-                                alert(res1.error || res2.error || 'Error saving settings');
-                            }
-                        })
-                        .catch(() => {
-                            this.isGlobalSaving = false;
-                            alert('Network Error');
-                        });
-                },
-
-                copyToClipboard(text) {
-                    navigator.clipboard.writeText(text).then(() => { alert('<?php echo __('copied'); ?>'); });
-                },
-
-                fetchRules() {
-                    if (!this.selectedPageId) return;
-                    localStorage.setItem('ar_last_page', this.selectedPageId);
-                    this.rules = [];
-                    this.defaultReplyText = '';
-                    this.fetchPageSettings();
-                    fetch(`ajax_auto_reply.php?action=fetch_rules&page_id=${this.selectedPageId}`)
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.success) {
-                                this.rules = data.rules.filter(r => r.trigger_type === 'keyword');
-                                const defRule = data.rules.find(r => r.trigger_type === 'default');
-                                if (defRule) {
-                                    this.defaultReplyText = defRule.reply_message;
-                                    this.defaultHideComment = (defRule.hide_comment == 1);
-                                    this.defaultPrivateReplyEnabled = (defRule.private_reply_enabled == 1);
-                                    this.defaultPrivateReplyText = defRule.private_reply_text || '';
-                                    this.defaultAutoLike = (defRule.auto_like_comment == 1);
-                                }
-                            }
-                        });
-                    this.fetchHandover();
-                },
-
-                fetchStats(customStart = '', customEnd = '') {
-                    if (!this.selectedPageId) return;
-                    let url = `ajax_auto_reply.php?action=fetch_page_stats&page_id=${this.selectedPageId}&range=${this.statsRange}&source=comment`;
-                    if (this.statsRange === 'custom') {
-                        url += `&start=${customStart}&end=${customEnd}`;
-                    }
-                    if (this.statsRule !== '') {
-                        url += `&rule_id=${this.statsRule}`;
-                    }
-                    fetch(url)
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.success) {
-                                this.stats = data.stats;
-                            }
-                        });
-                },
-
-                openCustomRangeModal() {
-                    const now = new Date();
-                    const pad = (n) => n.toString().padStart(2, '0');
-                    const formatDate = (date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-                    this.customStartDate = formatDate(new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0));
-                    this.customEndDate = formatDate(new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59));
-                    this.showCustomRangeModal = true;
-                },
-
-                closeCustomRangeModal() {
-                    this.showCustomRangeModal = false;
-                },
-
-                applyCustomRange() {
-                    if (!this.customStartDate || !this.customEndDate) return;
-                    const startStr = this.customStartDate.replace('T', ' ') + ':00';
-                    const endStr = this.customEndDate.replace('T', ' ') + ':59';
-
-                    this.statsRange = 'custom';
-                    this.fetchStats(startStr, endStr);
-                    this.closeCustomRangeModal();
-                },
-
-                fetchHandover() {
-                    if (!this.selectedPageId) return;
-                    this.fetchingHandover = true;
-                    fetch(`ajax_auto_reply.php?action=fetch_handover_conversations&page_id=${this.selectedPageId}&source=comment&t=${new Date().getTime()}`)
-                        .then(res => res.json())
-                        .then(data => {
-                            this.fetchingHandover = false;
-                            if (data.success) {
-                                this.handoverConversations = data.conversations;
-                            }
-                        }).catch(() => { this.fetchingHandover = false; });
-                },
-
-                resolveHandover(id) {
-                    let formData = new FormData();
-                    formData.append('id', id);
-                    fetch('ajax_auto_reply.php?action=mark_as_resolved', { method: 'POST', body: formData })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.success) this.fetchHandover();
-                        });
-                },
-
-                markAllAsResolved() {
-                    if (!this.selectedPageId || this.handoverConversations.length === 0) return;
-                    if (!confirm('<?php echo __('confirm_mark_all_resolved'); ?>')) return;
-                    let formData = new FormData();
-                    formData.append('page_id', this.selectedPageId);
-                    formData.append('source', 'comment');
-                    fetch('ajax_auto_reply.php?action=mark_all_as_resolved', { method: 'POST', body: formData })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.success) {
-                                this.fetchHandover();
-                                this.fetchStats();
-                            }
-                        });
-                },
-
-                openAddModal() {
-                    if (!this.selectedPageId) { alert('Please select a page first'); return; }
-                    this.editMode = false;
-                    this.currentRuleId = null;
-                    this.modalKeywords = '';
-                    this.modalReply = '';
-                    this.modalHideComment = false;
-                    this.modalPrivateReplyEnabled = false;
-                    this.modalPrivateReplyText = '';
-                    this.modalAutoLike = false; // Reset
-                    this.modalAiSafe = true;
-                    this.modalBypassSchedule = false;
-                    this.modalBypassCooldown = false;
-                    this.showModal = true;
-                },
-
-                editRule(rule) {
-                    this.editMode = true;
-                    this.currentRuleId = rule.id;
-                    this.modalKeywords = rule.keywords;
-                    this.modalReply = rule.reply_message;
-                    this.modalHideComment = (rule.hide_comment == 1);
-                    this.modalPrivateReplyEnabled = (rule.private_reply_enabled == 1);
-                    this.modalPrivateReplyText = rule.private_reply_text || '';
-                    this.modalAutoLike = (rule.auto_like_comment == 1);
-                    this.modalAiSafe = (rule.is_ai_safe == 1);
-                    this.modalBypassSchedule = (rule.bypass_schedule == 1);
-                    this.modalBypassCooldown = (rule.bypass_cooldown == 1);
-                    this.showModal = true;
-                },
-
-                closeModal() { this.showModal = false; },
-
-                saveDefaultSettings() {
-                    if (!this.selectedPageId) return;
-                    let formData = new FormData();
-                    formData.append('page_id', this.selectedPageId);
-                    formData.append('type', 'default');
-                    formData.append('reply', this.defaultReplyText);
-                    formData.append('hide_comment', this.defaultHideComment ? '1' : '0');
-                    formData.append('private_reply_enabled', this.defaultPrivateReplyEnabled ? '1' : '0');
-                    formData.append('private_reply_text', this.defaultPrivateReplyText);
-                    formData.append('auto_like_comment', this.defaultAutoLike ? '1' : '0');
-                    fetch('ajax_auto_reply.php?action=save_rule', { method: 'POST', body: formData })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (!data.success) console.error('Failed to save default settings');
-                        });
-                },
-
-                saveRule() {
-                    if (!this.selectedPageId || !this.modalReply) return;
-                    let formData = new FormData();
-                    formData.append('page_id', this.selectedPageId);
-                    formData.append('type', 'keyword');
-                    formData.append('keywords', this.modalKeywords);
-                    formData.append('reply', this.modalReply);
-                    formData.append('hide_comment', this.modalHideComment ? '1' : '0');
-                    formData.append('private_reply_enabled', this.modalPrivateReplyEnabled ? '1' : '0');
-                    formData.append('private_reply_text', this.modalPrivateReplyText);
-                    formData.append('auto_like_comment', this.modalAutoLike ? '1' : '0'); // Save
-                    formData.append('is_ai_safe', this.modalAiSafe ? '1' : '0');
-                    formData.append('bypass_schedule', this.modalBypassSchedule ? '1' : '0');
-                    formData.append('bypass_cooldown', this.modalBypassCooldown ? '1' : '0');
-                    if (this.editMode) formData.append('rule_id', this.currentRuleId);
-                    fetch('ajax_auto_reply.php?action=save_rule', { method: 'POST', body: formData })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.success) { this.closeModal(); this.fetchRules(); }
-                            else alert(data.error);
-                        });
-                },
-
-                deleteRule(id) {
-                    if (!confirm('<?php echo __('confirm_delete_rule'); ?>')) return;
-                    let formData = new FormData();
-                    formData.append('id', id);
-                    fetch('ajax_auto_reply.php?action=delete_rule', { method: 'POST', body: formData })
-                        .then(res => res.json())
-                        .then(data => { if (data.success) this.fetchRules(); });
+            scrollToPreview() {
+                const element = document.getElementById('comment-preview-section');
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
+            },
+
+            // Preview State
+            previewMode: 'default', // 'default' or 'rule'
+            previewCustomerMsg: '',
+            previewReplyMsg: '',
+            previewHideComment: false,
+
+            getPageName() {
+                const page = this.pages.find(p => p.page_id == this.selectedPageId);
+                return page ? page.page_name : '';
+            },
+
+            init() {
+                this.fetchWebhookInfo();
+                const lastPage = localStorage.getItem('ar_last_page');
+                if (lastPage) {
+                    this.selectedPageId = lastPage;
+                    this.fetchTokenDebug();
+                    this.fetchPageSettings();
+                    this.fetchRules();
+                    this.fetchHandover();
+                    this.fetchStats();
+                }
+
+                this.$watch('defaultReplyText', () => {
+                    this.previewMode = 'default';
+                });
+
+                // Auto-save default reply settings when changed
+                this.$watch('defaultHideComment', () => { this.saveDefaultSettings(); });
+                this.$watch('defaultAutoLike', () => { this.saveDefaultSettings(); });
+                this.$watch('defaultPrivateReplyEnabled', () => { this.saveDefaultSettings(); });
+                this.$watch('defaultPrivateReplyText', () => { this.saveDefaultSettings(); });
+
+                setInterval(() => {
+                    this.fetchHandover();
+                    this.fetchStats();
+                    const urlParams = new URLSearchParams(window.location.search);
+                    if (urlParams.has('preview')) {
+                        setTimeout(() => this.scrollToPreview(), 1000);
+                    }
+                }, 30000);
+
+                this.$watch('showModal', value => {
+                    document.body.style.overflow = value ? 'hidden' : '';
+                });
+            },
+
+            previewRule(rule) {
+                this.previewMode = 'rule';
+                this.previewCustomerMsg = rule.keywords.split(',')[0].trim();
+                this.previewReplyMsg = rule.reply_message;
+                this.previewHideComment = (rule.hide_comment == 1);
+            },
+
+            fetchTokenDebug() {
+                if (!this.selectedPageId) return;
+                fetch(`ajax_auto_reply.php?action=debug_token_info&page_id=${this.selectedPageId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            this.debugInfo = data;
+                        }
+                    });
+            },
+
+            subscribePage() {
+                if (!this.selectedPageId) return;
+                this.subscribing = true;
+                let formData = new FormData();
+                formData.append('page_id', this.selectedPageId);
+                fetch('ajax_auto_reply.php?action=subscribe_page', { method: 'POST', body: formData })
+                    .then(res => res.json())
+                    .then(data => {
+                        this.subscribing = false;
+                        alert(data.message || data.error);
+                    }).catch(() => { this.subscribing = false; alert('Network Error'); });
+            },
+
+            stopAutoReply() {
+                if (!this.selectedPageId) return;
+                if (!confirm('<?php echo __('confirm_stop_auto_reply'); ?>')) return;
+                this.stopping = true;
+                let formData = new FormData();
+                formData.append('page_id', this.selectedPageId);
+                fetch('ajax_auto_reply.php?action=unsubscribe_page', { method: 'POST', body: formData })
+                    .then(res => res.json())
+                    .then(data => {
+                        this.stopping = false;
+                        alert(data.message || data.error);
+                    }).catch(() => { this.stopping = false; alert('Network Error'); });
+            },
+
+            fetchWebhookInfo() {
+                fetch('ajax_auto_reply.php?action=get_webhook_info')
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            this.webhookUrl = data.webhook_url;
+                            this.verifyToken = data.verify_token;
+                        }
+                    });
+            },
+
+            fetchPageSettings() {
+                if (!this.selectedPageId) return;
+                fetch(`ajax_auto_reply.php?action=fetch_page_settings&page_id=${this.selectedPageId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            const s = data.settings;
+                            const totalSec = parseInt(s.bot_cooldown_seconds || 0);
+                            this.cooldownHours = Math.floor(totalSec / 3600);
+                            this.cooldownMinutes = Math.floor((totalSec % 3600) / 60);
+                            this.cooldownSeconds = totalSec % 60;
+                            this.schEnabled = (s.bot_schedule_enabled == 1);
+                            this.schStart = s.bot_schedule_start ? s.bot_schedule_start.substring(0, 5) : '00:00';
+                            this.schEnd = s.bot_schedule_end ? s.bot_schedule_end.substring(0, 5) : '23:59';
+                            this.botExcludeKeywords = (s.bot_exclude_keywords == 1);
+                            this.aiSentimentEnabled = (s.bot_ai_sentiment_enabled == 1);
+                            this.angerKeywords = s.bot_anger_keywords || '';
+                            this.repetitionThreshold = parseInt(s.bot_repetition_threshold || 3);
+                            this.handoverReply = s.bot_handover_reply || '';
+                        }
+                    });
+            },
+
+            savePageSettings() {
+                // Internal use for global save
+                const totalSec = (parseInt(this.cooldownHours) * 3600) + (parseInt(this.cooldownMinutes) * 60) + parseInt(this.cooldownSeconds);
+                let formData = new FormData();
+                formData.append('page_id', this.selectedPageId);
+                formData.append('cooldown_seconds', totalSec);
+                formData.append('schedule_enabled', this.schEnabled ? '1' : '0');
+                formData.append('schedule_start', this.schStart);
+                formData.append('schedule_end', this.schEnd);
+                formData.append('exclude_keywords', this.botExcludeKeywords ? '1' : '0');
+                formData.append('ai_sentiment_enabled', this.aiSentimentEnabled ? '1' : '0');
+                formData.append('anger_keywords', this.angerKeywords);
+                formData.append('repetition_count', this.repetitionThreshold);
+                formData.append('handover_reply', this.handoverReply);
+
+                return fetch('ajax_auto_reply.php?action=save_page_settings', { method: 'POST', body: formData })
+                    .then(res => res.json());
+            },
+
+            saveDefaultReply() {
+                // Internal use for global save
+                let formData = new FormData();
+                formData.append('page_id', this.selectedPageId);
+                formData.append('type', 'default');
+                formData.append('reply', this.defaultReplyText);
+                formData.append('keywords', '*');
+                formData.append('hide_comment', this.defaultHideComment ? '1' : '0');
+                formData.append('private_reply_enabled', this.defaultPrivateReplyEnabled ? '1' : '0');
+                formData.append('private_reply_text', this.defaultPrivateReplyText);
+                formData.append('auto_like_comment', this.defaultAutoLike ? '1' : '0');
+                return fetch('ajax_auto_reply.php?action=save_rule', { method: 'POST', body: formData })
+                    .then(res => res.json());
+            },
+
+            saveAllSettings() {
+                if (!this.selectedPageId) return;
+                this.isGlobalSaving = true;
+
+                Promise.all([this.savePageSettings(), this.saveDefaultReply()])
+                    .then(([res1, res2]) => {
+                        this.isGlobalSaving = false;
+                        if (res1.success && res2.success) {
+                            alert('<?php echo __('wa_settings_saved'); ?>'); // Reusing existing key
+                        } else {
+                            alert(res1.error || res2.error || 'Error saving settings');
+                        }
+                    })
+                    .catch(() => {
+                        this.isGlobalSaving = false;
+                        alert('Network Error');
+                    });
+            },
+
+            copyToClipboard(text) {
+                navigator.clipboard.writeText(text).then(() => { alert('<?php echo __('copied'); ?>'); });
+            },
+
+            fetchRules() {
+                if (!this.selectedPageId) return;
+                localStorage.setItem('ar_last_page', this.selectedPageId);
+                this.rules = [];
+                this.defaultReplyText = '';
+                this.fetchPageSettings();
+                fetch(`ajax_auto_reply.php?action=fetch_rules&page_id=${this.selectedPageId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            this.rules = data.rules.filter(r => r.trigger_type === 'keyword');
+                            const defRule = data.rules.find(r => r.trigger_type === 'default');
+                            if (defRule) {
+                                this.defaultReplyText = defRule.reply_message;
+                                this.defaultHideComment = (defRule.hide_comment == 1);
+                                this.defaultPrivateReplyEnabled = (defRule.private_reply_enabled == 1);
+                                this.defaultPrivateReplyText = defRule.private_reply_text || '';
+                                this.defaultAutoLike = (defRule.auto_like_comment == 1);
+                            }
+                        }
+                    });
+                this.fetchHandover();
+            },
+
+            fetchStats(customStart = '', customEnd = '') {
+                if (!this.selectedPageId) return;
+                let url = `ajax_auto_reply.php?action=fetch_page_stats&page_id=${this.selectedPageId}&range=${this.statsRange}&source=comment`;
+                if (this.statsRange === 'custom') {
+                    url += `&start=${customStart}&end=${customEnd}`;
+                }
+                if (this.statsRule !== '') {
+                    url += `&rule_id=${this.statsRule}`;
+                }
+                fetch(url)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            this.stats = data.stats;
+                        }
+                    });
+            },
+
+            openCustomRangeModal() {
+                const now = new Date();
+                const pad = (n) => n.toString().padStart(2, '0');
+                const formatDate = (date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+                this.customStartDate = formatDate(new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0));
+                this.customEndDate = formatDate(new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59));
+                this.showCustomRangeModal = true;
+            },
+
+            closeCustomRangeModal() {
+                this.showCustomRangeModal = false;
+            },
+
+            applyCustomRange() {
+                if (!this.customStartDate || !this.customEndDate) return;
+                const startStr = this.customStartDate.replace('T', ' ') + ':00';
+                const endStr = this.customEndDate.replace('T', ' ') + ':59';
+
+                this.statsRange = 'custom';
+                this.fetchStats(startStr, endStr);
+                this.closeCustomRangeModal();
+            },
+
+            fetchHandover() {
+                if (!this.selectedPageId) return;
+                this.fetchingHandover = true;
+                fetch(`ajax_auto_reply.php?action=fetch_handover_conversations&page_id=${this.selectedPageId}&source=comment&t=${new Date().getTime()}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        this.fetchingHandover = false;
+                        if (data.success) {
+                            this.handoverConversations = data.conversations;
+                        }
+                    }).catch(() => { this.fetchingHandover = false; });
+            },
+
+            resolveHandover(id) {
+                let formData = new FormData();
+                formData.append('id', id);
+                fetch('ajax_auto_reply.php?action=mark_as_resolved', { method: 'POST', body: formData })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) this.fetchHandover();
+                    });
+            },
+
+            markAllAsResolved() {
+                if (!this.selectedPageId || this.handoverConversations.length === 0) return;
+                if (!confirm('<?php echo __('confirm_mark_all_resolved'); ?>')) return;
+                let formData = new FormData();
+                formData.append('page_id', this.selectedPageId);
+                formData.append('source', 'comment');
+                fetch('ajax_auto_reply.php?action=mark_all_as_resolved', { method: 'POST', body: formData })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            this.fetchHandover();
+                            this.fetchStats();
+                        }
+                    });
+            },
+
+            openAddModal() {
+                if (!this.selectedPageId) { alert('Please select a page first'); return; }
+                this.editMode = false;
+                this.currentRuleId = null;
+                this.modalKeywords = '';
+                this.modalReply = '';
+                this.modalHideComment = false;
+                this.modalPrivateReplyEnabled = false;
+                this.modalPrivateReplyText = '';
+                this.modalAutoLike = false; // Reset
+                this.modalAiSafe = true;
+                this.modalBypassSchedule = false;
+                this.modalBypassCooldown = false;
+                this.showModal = true;
+            },
+
+            editRule(rule) {
+                this.editMode = true;
+                this.currentRuleId = rule.id;
+                this.modalKeywords = rule.keywords;
+                this.modalReply = rule.reply_message;
+                this.modalHideComment = (rule.hide_comment == 1);
+                this.modalPrivateReplyEnabled = (rule.private_reply_enabled == 1);
+                this.modalPrivateReplyText = rule.private_reply_text || '';
+                this.modalAutoLike = (rule.auto_like_comment == 1);
+                this.modalAiSafe = (rule.is_ai_safe == 1);
+                this.modalBypassSchedule = (rule.bypass_schedule == 1);
+                this.modalBypassCooldown = (rule.bypass_cooldown == 1);
+                this.showModal = true;
+            },
+
+            closeModal() { this.showModal = false; },
+
+            saveDefaultSettings() {
+                if (!this.selectedPageId) return;
+                let formData = new FormData();
+                formData.append('page_id', this.selectedPageId);
+                formData.append('type', 'default');
+                formData.append('reply', this.defaultReplyText);
+                formData.append('hide_comment', this.defaultHideComment ? '1' : '0');
+                formData.append('private_reply_enabled', this.defaultPrivateReplyEnabled ? '1' : '0');
+                formData.append('private_reply_text', this.defaultPrivateReplyText);
+                formData.append('auto_like_comment', this.defaultAutoLike ? '1' : '0');
+                fetch('ajax_auto_reply.php?action=save_rule', { method: 'POST', body: formData })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (!data.success) console.error('Failed to save default settings');
+                    });
+            },
+
+            saveRule() {
+                if (!this.selectedPageId || !this.modalReply) return;
+                let formData = new FormData();
+                formData.append('page_id', this.selectedPageId);
+                formData.append('type', 'keyword');
+                formData.append('keywords', this.modalKeywords);
+                formData.append('reply', this.modalReply);
+                formData.append('hide_comment', this.modalHideComment ? '1' : '0');
+                formData.append('private_reply_enabled', this.modalPrivateReplyEnabled ? '1' : '0');
+                formData.append('private_reply_text', this.modalPrivateReplyText);
+                formData.append('auto_like_comment', this.modalAutoLike ? '1' : '0'); // Save
+                formData.append('is_ai_safe', this.modalAiSafe ? '1' : '0');
+                formData.append('bypass_schedule', this.modalBypassSchedule ? '1' : '0');
+                formData.append('bypass_cooldown', this.modalBypassCooldown ? '1' : '0');
+                if (this.editMode) formData.append('rule_id', this.currentRuleId);
+                fetch('ajax_auto_reply.php?action=save_rule', { method: 'POST', body: formData })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) { this.closeModal(); this.fetchRules(); }
+                        else alert(data.error);
+                    });
+            },
+
+            deleteRule(id) {
+                if (!confirm('<?php echo __('confirm_delete_rule'); ?>')) return;
+                let formData = new FormData();
+                formData.append('id', id);
+                fetch('ajax_auto_reply.php?action=delete_rule', { method: 'POST', body: formData })
+                    .then(res => res.json())
+                    .then(data => { if (data.success) this.fetchRules(); });
             }
         }
-    </script>
+    }
+</script>
 
-    <?php require_once '../includes/footer.php'; ?>
+<?php require_once '../includes/footer.php'; ?>
+
