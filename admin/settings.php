@@ -392,6 +392,9 @@ require_once __DIR__ . '/../includes/header.php';
                         <button onclick="switchTab('header')"
                             class="tab-btn px-5 py-2.5 rounded-xl text-sm font-bold transition-all border border-white/5"
                             data-tab="header"><?php echo __('header_settings'); ?></button>
+                        <button onclick="switchTab('facebook_app')"
+                            class="tab-btn px-5 py-2.5 rounded-xl text-sm font-bold transition-all border border-white/5"
+                            data-tab="facebook_app"><?php echo __('fb_app_tab'); ?></button>
                         <button onclick="switchTab('hero')"
                             class="tab-btn px-5 py-2.5 rounded-xl text-sm font-bold transition-all border border-white/5"
                             data-tab="hero"><?php echo __('hero_section'); ?></button>
@@ -1192,6 +1195,69 @@ require_once __DIR__ . '/../includes/header.php';
                                 class="setting-input font-mono text-sm"
                                 placeholder="<?php echo __('about_btn_url_placeholder'); ?>">
                             <p class="text-xs text-gray-500 mt-2"><?php echo __('about_btn_url_hint'); ?></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Facebook App Settings Tab -->
+            <div id="facebook_app-tab" class="tab-content hidden space-y-6">
+                <div class="glass-card p-6 md:p-8 rounded-2xl border border-white/5">
+                    <h3 class="text-lg font-bold text-white mb-6 flex items-center">
+                        <span class="w-2 h-6 bg-blue-600 rounded-full mr-3"></span>
+                        <?php echo __('fb_app_config_title'); ?>
+                    </h3>
+
+                    <div class="grid lg:grid-cols-2 gap-8">
+                        <div class="space-y-4">
+                            <div>
+                                <label
+                                    class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('fb_app_id'); ?></label>
+                                <input type="text" name="fb_app_id"
+                                    value="<?php echo htmlspecialchars($settings['fb_app_id'] ?? ''); ?>"
+                                    class="setting-input font-mono" placeholder="1234567890">
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('fb_app_secret'); ?></label>
+                                <input type="password" name="fb_app_secret"
+                                    value="<?php echo htmlspecialchars($settings['fb_app_secret'] ?? ''); ?>"
+                                    class="setting-input font-mono" placeholder="****************">
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-gray-400 text-sm font-medium mb-2"><?php echo __('fb_api_version'); ?></label>
+                                <input type="text" name="fb_api_version"
+                                    value="<?php echo htmlspecialchars($settings['fb_api_version'] ?? 'v18.0'); ?>"
+                                    class="setting-input font-mono" placeholder="v18.0">
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+                                <h4 class="text-blue-400 font-bold mb-2 text-sm">
+                                    <?php echo __('valid_oauth_redirects'); ?></h4>
+                                <p class="text-xs text-gray-400 mb-2"><?php echo __('oauth_redirect_hint'); ?></p>
+                                <code
+                                    class="block bg-black/30 p-2 rounded text-xs break-all text-gray-300 font-mono select-all">
+                                    <?php
+                                    $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
+                                    $host = $_SERVER['HTTP_HOST'];
+                                    // Assuming callback is in user/fb_callback.php. Adjust path if served from subdirectory.
+                                    $current_dir = dirname($_SERVER['PHP_SELF']);
+                                    // If admin/settings.php -> /admin
+                                    // we need /user/fb_callback.php
+                                    $base_url = str_replace('/admin', '', $protocol . '://' . $host . $current_dir);
+                                    echo $base_url . '/user/fb_callback.php';
+                                    ?>
+                                </code>
+                            </div>
+                            <div class="p-4 bg-orange-500/10 border border-orange-500/20 rounded-xl">
+                                <h4 class="text-orange-400 font-bold mb-2 text-sm">
+                                    <?php echo __('https_warning_title'); ?></h4>
+                                <p class="text-xs text-gray-400">
+                                    <?php echo __('https_warning_desc'); ?>
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>

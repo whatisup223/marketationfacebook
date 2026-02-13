@@ -282,64 +282,88 @@ include '../includes/header.php';
                                 </div>
                             </template>
 
-                            <!-- Add Account Form -->
+                            <!-- Add Account / Connect Button -->
                             <template x-if="showAddForm">
-                                <form method="POST"
-                                    class="space-y-6 flex-1 flex flex-col animate-in fade-in slide-in-from-right-4 duration-300">
-                                    <div class="space-y-4 flex-1">
-                                        <!-- Account Name -->
-                                        <div>
-                                            <label
-                                                class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1">
-                                                <?php echo __('account_name_label'); ?> <span
-                                                    class="text-gray-600 normal-case">(<?php echo __('optional'); ?>)</span>
-                                            </label>
-                                            <input type="text" name="fb_name"
-                                                class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all placeholder-gray-600"
-                                                placeholder="<?php echo __('account_name_placeholder'); ?>">
-                                        </div>
+                                <div
+                                    class="flex-1 flex flex-col items-center justify-center animate-in fade-in slide-in-from-right-4 duration-300 gap-6 text-center">
 
-                                        <!-- FB ID -->
-                                        <div>
-                                            <label
-                                                class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1"><?php echo __('fb_id_label'); ?></label>
-                                            <input type="text" name="fb_id"
-                                                class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-mono placeholder-gray-600"
-                                                placeholder="<?php echo __('fb_id_placeholder'); ?>">
-                                        </div>
+                                    <?php
+                                    // Fetch App ID for button
+                                    $stmt_appid = $pdo->query("SELECT setting_value FROM settings WHERE setting_key = 'fb_app_id'");
+                                    $fb_app_id = $stmt_appid->fetchColumn();
 
-                                        <!-- Access Token -->
-                                        <div>
-                                            <label
-                                                class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1"><?php echo __('access_token_label'); ?></label>
-                                            <textarea name="access_token" rows="5"
-                                                class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-mono text-xs leading-relaxed placeholder-gray-600 custom-scrollbar resize-none"
-                                                placeholder="<?php echo __('access_token_placeholder'); ?>"
-                                                required></textarea>
-                                            <p
-                                                class="text-[10px] text-gray-500 mt-2 flex items-start gap-1.5 leading-tight">
-                                                <svg class="w-3.5 h-3.5 shrink-0 text-indigo-400" fill="currentColor"
-                                                    viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd"
-                                                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                                                        clip-rule="evenodd"></path>
+                                    if ($fb_app_id):
+                                        $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
+                                        $host = $_SERVER['HTTP_HOST'];
+                                        $current_path = strtok($_SERVER["REQUEST_URI"], '?');
+                                        // Assume callback is at user/fb_callback.php relative to root? No, relative to current usually.
+                                        // user/settings.php is current. user/fb_callback.php is sibling.
+                                        $redirect_uri = $protocol . '://' . $host . dirname($_SERVER['PHP_SELF']) . '/fb_callback.php';
+
+                                        // CSRF Protection
+                                        $_SESSION['fb_oauth_state'] = bin2hex(random_bytes(16));
+
+                                        $permissions = [
+                                            'public_profile',
+                                            'pages_show_list',
+                                            'pages_read_engagement',
+                                            'pages_manage_metadata',
+                                            'pages_read_user_content',
+                                            'pages_manage_posts',
+                                            'pages_messaging'
+                                            // Add Instagram perms if needed: instagram_basic, instagram_manage_comments, instagram_manage_messages
+                                        ];
+                                        $login_url = "https://www.facebook.com/v18.0/dialog/oauth?client_id={$fb_app_id}&redirect_uri=" . urlencode($redirect_uri) . "&state={$_SESSION['fb_oauth_state']}&scope=" . implode(',', $permissions);
+                                        ?>
+
+                                        <div class="space-y-4 max-w-sm">
+                                            <div
+                                                class="w-16 h-16 bg-[#1877F2]/10 rounded-full flex items-center justify-center mx-auto text-[#1877F2]">
+                                                <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path
+                                                        d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                                                 </svg>
-                                                <?php echo __('access_token_note'); ?>
+                                            </div>
+                                            <h3 class="text-xl font-bold text-white">
+                                                <?php echo __('connect_facebook_title') ?? 'Connect Facebook'; ?>
+                                            </h3>
+                                            <p class="text-sm text-gray-400 leading-relaxed">
+                                                <?php echo __('connect_facebook_desc') ?? 'Connect your Facebook account to manage pages, auto-reply to comments, and schedule posts automatically.'; ?>
                                             </p>
                                         </div>
-                                    </div>
 
-                                    <button type="submit" name="add_account"
-                                        class="w-full py-4 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/20 transition-all transform hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2 mt-4 group">
-                                        <svg class="w-5 h-5 transition-transform group-hover:rotate-180" fill="none"
-                                            stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.826L10.242 9.172a4 4 0 015.656 0l4 4a4 4 0 11-5.656 5.656l-1.101-1.102">
-                                            </path>
-                                        </svg>
-                                        <?php echo __('btn_link_account'); ?>
-                                    </button>
-                                </form>
+                                        <a href="<?php echo htmlspecialchars($login_url); ?>"
+                                            class="px-8 py-4 bg-[#1877F2] hover:bg-[#166fe5] text-white font-bold rounded-xl shadow-lg shadow-blue-900/20 transition-all transform hover:-translate-y-1 flex items-center gap-3 w-full max-w-xs justify-center group">
+                                            <svg class="w-6 h-6 transition-transform group-hover:scale-110"
+                                                fill="currentColor" viewBox="0 0 24 24">
+                                                <path
+                                                    d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                                            </svg>
+                                            <?php echo __('btn_connect_facebook') ?? 'Continue with Facebook'; ?>
+                                        </a>
+
+                                        <p class="text-xs text-gray-500 mt-4">
+                                            <?php echo __('secure_connection_note') ?? 'We adhere to strict Facebook data privacy policies.'; ?>
+                                        </p>
+
+                                    <?php else: ?>
+                                        <div
+                                            class="text-center p-8 border border-yellow-500/20 bg-yellow-500/5 rounded-2xl">
+                                            <div
+                                                class="w-12 h-12 bg-yellow-500/10 rounded-full flex items-center justify-center mx-auto text-yellow-500 mb-4">
+                                                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                                </svg>
+                                            </div>
+                                            <h3 class="text-white font-bold mb-2"><?php echo __('config_required_title'); ?>
+                                            </h3>
+                                            <p class="text-gray-400 text-sm">
+                                                <?php echo __('config_required_desc'); ?>
+                                            </p>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
                             </template>
                         </div>
 

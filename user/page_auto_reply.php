@@ -699,7 +699,6 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 </div>
                             </div>
                         </div>
-
                         <!-- Page Reply -->
                         <div class="flex gap-2 ml-10">
                             <div
