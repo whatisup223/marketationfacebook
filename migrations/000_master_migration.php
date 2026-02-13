@@ -90,6 +90,8 @@ try {
         `fb_user_name` varchar(255) DEFAULT NULL,
         `access_token` text NOT NULL,
         `is_active` tinyint(1) DEFAULT 1,
+        `token_type` varchar(50) DEFAULT 'Bearer',
+        `expires_at` datetime DEFAULT NULL,
         `status` enum('active','expired') NOT NULL DEFAULT 'active',
         `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
         PRIMARY KEY (`id`),
@@ -547,6 +549,14 @@ try {
             // For safety in this migration, we just log.
             echo "⚠️ Notice: Could not add unique index 'idx_lead_source_post' to fb_leads. You may have duplicate entries.\n";
         }
+    }
+
+    // --- 042: Add token_type and expires_at to fb_accounts ---
+    if (!columnExists($pdo, 'fb_accounts', 'token_type')) {
+        $pdo->exec("ALTER TABLE `fb_accounts` ADD COLUMN `token_type` varchar(50) DEFAULT 'Bearer'");
+    }
+    if (!columnExists($pdo, 'fb_accounts', 'expires_at')) {
+        $pdo->exec("ALTER TABLE `fb_accounts` ADD COLUMN `expires_at` datetime DEFAULT NULL");
     }
 
     echo "✅ Master Migration completed successfully!\n";
