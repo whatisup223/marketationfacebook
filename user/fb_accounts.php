@@ -71,14 +71,17 @@ if (isset($_GET['sync'])) {
             $count = 0;
             // The UNIQUE KEY unique_page_id (page_id) ensures NO DUPLICATES are possible.
             // ON DUPLICATE KEY UPDATE will simply refresh the data for existing pages.
-            $insertPage = $pdo->prepare("INSERT INTO fb_pages (account_id, page_name, page_id, page_access_token, category, picture_url) 
-                                         VALUES (?, ?, ?, ?, ?, ?)
+            $insertPage = $pdo->prepare("INSERT INTO fb_pages (account_id, page_name, page_id, page_access_token, category, picture_url, ig_business_id, ig_username, ig_profile_picture) 
+                                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                                          ON DUPLICATE KEY UPDATE 
                                             account_id = VALUES(account_id),
                                             page_name = VALUES(page_name), 
                                             page_access_token = VALUES(page_access_token), 
                                             category = VALUES(category),
-                                            picture_url = VALUES(picture_url)");
+                                            picture_url = VALUES(picture_url),
+                                            ig_business_id = VALUES(ig_business_id),
+                                            ig_username = VALUES(ig_username),
+                                            ig_profile_picture = VALUES(ig_profile_picture)");
 
             $total_pages_found = count($response['data']);
             $failed_pages = [];
@@ -92,13 +95,21 @@ if (isset($_GET['sync'])) {
                         continue;
                     }
 
+                    $ig_info = $page['instagram_business_account'] ?? null;
+                    $ig_id = $ig_info['id'] ?? null;
+                    $ig_username = $ig_info['username'] ?? null;
+                    $ig_pic = $ig_info['profile_picture_url'] ?? null;
+
                     $result = $insertPage->execute([
                         $acc_id,
                         $page['name'] ?? 'Unknown Page',
                         trim($page['id']),
                         $page['access_token'],
                         $page['category'] ?? 'General',
-                        $picture
+                        $picture,
+                        $ig_id,
+                        $ig_username,
+                        $ig_pic
                     ]);
 
                     if ($result) {

@@ -398,7 +398,7 @@ class FacebookAPI
     public function getAccounts($access_token)
     {
         return $this->makeRequest("me/accounts", [
-            'fields' => 'id,name,access_token,category,picture',
+            'fields' => 'id,name,access_token,category,picture,instagram_business_account{id,username,name,profile_picture_url}',
             'limit' => 100
         ], $access_token);
     }

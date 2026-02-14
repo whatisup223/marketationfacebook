@@ -559,6 +559,15 @@ try {
         $pdo->exec("ALTER TABLE `fb_accounts` ADD COLUMN `expires_at` datetime DEFAULT NULL");
     }
 
+    // --- 043: Instagram Integration Columns ---
+    if (!columnExists($pdo, 'fb_pages', 'ig_business_id')) {
+        $pdo->exec("ALTER TABLE `fb_pages` 
+                    ADD COLUMN `ig_business_id` VARCHAR(50) DEFAULT NULL,
+                    ADD COLUMN `ig_username` VARCHAR(100) DEFAULT NULL,
+                    ADD COLUMN `ig_profile_picture` TEXT DEFAULT NULL,
+                    ADD KEY `idx_ig_business` (`ig_business_id`)");
+    }
+
     echo "✅ Master Migration completed successfully!\n";
 
 } catch (Exception $e) {

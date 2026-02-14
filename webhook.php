@@ -59,15 +59,16 @@ if (isset($data['instance']) && isset($data['event'])) {
 // ----------------------------------------------------------------------
 function handleFacebookEvent($data, $pdo)
 {
+    $platform = ($data['object'] === 'instagram') ? 'instagram' : 'facebook';
     foreach ($data['entry'] as $entry) {
-        $page_id = $entry['id'] ?? '';
+        $id = $entry['id'] ?? ''; // This could be Page ID or Instagram Business ID
 
         // Handle Messaging (Messenger)
         if (isset($entry['messaging'])) {
             foreach ($entry['messaging'] as $messaging) {
                 $sender_id = $messaging['sender']['id'] ?? '';
-                if ($sender_id == $page_id)
-                    continue; // Skip messages sent by the page itself
+                if ($sender_id == $id)
+                    continue; // Skip messages sent by the page/account itself
 
                 // Check for Text Message, Quick Reply, or Postback (Button Click)
                 $message_text = '';
@@ -82,33 +83,35 @@ function handleFacebookEvent($data, $pdo)
                 if (!$message_text)
                     continue;
 
-                processAutoReply($pdo, $page_id, $sender_id, $message_text, 'message', null, '');
+                processAutoReply($pdo, $id, $sender_id, $message_text, 'message', null, '', $platform);
             }
         }
 
-        // Handle Feed (Comments)
+        // Handle Feed/Comments (Comments)
         if (isset($entry['changes'])) {
             foreach ($entry['changes'] as $change) {
-                if ($change['field'] === 'feed') {
+                if ($change['field'] === 'feed' || $change['field'] === 'comments') {
                     $val = $change['value'];
-                    if ($val['item'] === 'comment') {
-                        $verb = $val['verb'] ?? '';
+                    // For Instagram, sometimes it's not under 'item'
+                    $item = $val['item'] ?? ($platform === 'instagram' ? 'comment' : '');
+                    if ($item === 'comment') {
+                        $verb = $val['verb'] ?? ($platform === 'instagram' ? 'add' : '');
                         if ($verb === 'add' || $verb === 'edited') {
                             $sender_id = $val['from']['id'] ?? '';
-                            if ($sender_id == $page_id)
+                            if ($sender_id == $id)
                                 continue;
 
                             $comment_id = $val['comment_id'] ?? $val['id'] ?? '';
-                            $message_text = $val['message'] ?? '';
-                            $sender_name = $val['from']['name'] ?? '';
+                            $message_text = $val['message'] ?? $val['text'] ?? '';
+                            $sender_name = $val['from']['name'] ?? $val['from']['username'] ?? '';
                             $sender_id = $val['from']['id'] ?? '';
 
                             // 1. Check Moderation (Must check for both additions and edits)
-                            $is_moderated = processModeration($pdo, $page_id, $comment_id, $message_text, $sender_name);
+                            $is_moderated = processModeration($pdo, $id, $comment_id, $message_text, $sender_name, $platform);
 
                             // 2. Only Auto-Reply if it's a NEW comment and NOT moderated
                             if ($verb === 'add' && !$is_moderated) {
-                                processAutoReply($pdo, $page_id, $comment_id, $message_text, 'comment', $sender_id, $sender_name);
+                                processAutoReply($pdo, $id, $comment_id, $message_text, 'comment', $sender_id, $sender_name, $platform);
                             }
                         }
                     }
@@ -118,13 +121,14 @@ function handleFacebookEvent($data, $pdo)
     }
 }
 
-function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $actual_sender_id = null, $sender_name = '')
+function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $actual_sender_id = null, $sender_name = '', $platform = 'facebook')
 {
     // 1. Fetch Page Settings (Token, Schedule, Cooldown, AI Intelligence)
+    $id_column = ($platform === 'instagram') ? 'ig_business_id' : 'page_id';
     $stmt = $pdo->prepare("SELECT p.page_access_token, p.page_name, p.bot_cooldown_seconds, p.bot_schedule_enabled, p.bot_schedule_start, p.bot_schedule_end, p.bot_exclude_keywords, p.bot_ai_sentiment_enabled, p.bot_anger_keywords, p.bot_repetition_threshold, p.bot_handover_reply, a.user_id 
                            FROM fb_pages p 
                            JOIN fb_accounts a ON p.account_id = a.id 
-                           WHERE p.page_id = ?");
+                           WHERE p.$id_column = ?");
     $stmt->execute([$page_id]);
     $page = $stmt->fetch(PDO::FETCH_ASSOC);
     if (!$page || !$page['page_access_token'])
@@ -156,8 +160,8 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 
     // 2. Find Rule Match
     // 2.1 Try Keywords First
-    $stmt = $pdo->prepare("SELECT * FROM auto_reply_rules WHERE page_id = ? AND reply_source = ? AND trigger_type = 'keyword' ORDER BY created_at DESC");
-    $stmt->execute([$page_id, $source]);
+    $stmt = $pdo->prepare("SELECT * FROM auto_reply_rules WHERE page_id = ? AND reply_source = ? AND platform = ? AND trigger_type = 'keyword' ORDER BY created_at DESC");
+    $stmt->execute([$page_id, $source, $platform]);
     $rules = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     $reply_msg = '';
@@ -253,8 +257,8 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 
     // 2.3 If no keyword match AND no anger silence, try Default Rule
     if (!$reply_msg) {
-        $stmt = $pdo->prepare("SELECT * FROM auto_reply_rules WHERE page_id = ? AND reply_source = ? AND trigger_type = 'default' LIMIT 1");
-        $stmt->execute([$page_id, $source]);
+        $stmt = $pdo->prepare("SELECT * FROM auto_reply_rules WHERE page_id = ? AND reply_source = ? AND platform = ? AND trigger_type = 'default' LIMIT 1");
+        $stmt->execute([$page_id, $source, $platform]);
         $def = $stmt->fetch(PDO::FETCH_ASSOC);
 
         // DEBUG
@@ -560,11 +564,11 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
     }
 }
 
-function processModeration($pdo, $page_id, $comment_id, $message_text, $sender_name = '')
+function processModeration($pdo, $page_id, $comment_id, $message_text, $sender_name = '', $platform = 'facebook')
 {
     // 1. Get Rules
-    $stmt = $pdo->prepare("SELECT * FROM fb_moderation_rules WHERE page_id = ? AND is_active = 1");
-    $stmt->execute([$page_id]);
+    $stmt = $pdo->prepare("SELECT * FROM fb_moderation_rules WHERE page_id = ? AND platform = ? AND is_active = 1");
+    $stmt->execute([$page_id, $platform]);
     $rules = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$rules)
@@ -605,20 +609,21 @@ function processModeration($pdo, $page_id, $comment_id, $message_text, $sender_n
 
     if ($violation) {
         $fb = new FacebookAPI();
-        $stmt = $pdo->prepare("SELECT page_access_token FROM fb_pages WHERE page_id = ?");
+        $id_column = ($platform === 'instagram') ? 'ig_business_id' : 'page_id';
+        $stmt = $pdo->prepare("SELECT page_access_token FROM fb_pages WHERE $id_column = ?");
         $stmt->execute([$page_id]);
         $token = $stmt->fetchColumn();
 
         if ($token) {
             if ($rules['action_type'] === 'hide') {
-                $fb->hideComment($comment_id, $token, true);
+                $fb->hideComment($comment_id, $token, ($platform === 'instagram'));
             } else {
                 $fb->makeRequest($comment_id, [], $token, 'DELETE');
             }
 
             // Log the action
-            $stmt = $pdo->prepare("INSERT INTO fb_moderation_logs (user_id, page_id, comment_id, comment_text, sender_name, reason, action_taken) VALUES (?, ?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$rules['user_id'], $page_id, $comment_id, $message_text, $sender_name, $reason, $rules['action_type']]);
+            $stmt = $pdo->prepare("INSERT INTO fb_moderation_logs (user_id, page_id, comment_id, comment_text, sender_name, reason, action_taken, platform) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$rules['user_id'], $page_id, $comment_id, $message_text, $sender_name, $reason, $rules['action_type'], $platform]);
         }
         return true; // Handled by moderation
     }

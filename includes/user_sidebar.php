@@ -96,12 +96,15 @@ $initial_width_class = $sidebar_collapsed ? 'w-20' : 'w-64';
         <?php
         $fb_pages = ['fb_accounts.php', 'page_inbox.php', 'create_campaign.php', 'page_auto_reply.php', 'page_moderator.php', 'fb_scheduler.php', 'page_messenger_bot.php'];
         $wa_pages = ['wa_accounts.php', 'wa_bulk_send.php', 'wa_settings.php'];
+        $ig_pages = ['ig_accounts.php', 'ig_auto_reply.php', 'ig_messenger_bot.php', 'ig_moderator.php'];
         $current_page = basename($_SERVER['PHP_SELF']);
         $is_fb_open = in_array($current_page, $fb_pages) ? 'true' : 'false';
         $is_wa_open = in_array($current_page, $wa_pages) ? 'true' : 'false';
+        $is_ig_open = in_array($current_page, $ig_pages) ? 'true' : 'false';
         ?>
 
-        <nav class="space-y-1" x-data="{ fbOpen: <?php echo $is_fb_open; ?>, waOpen: <?php echo $is_wa_open; ?> }">
+        <nav class="space-y-1"
+            x-data="{ fbOpen: <?php echo $is_fb_open; ?>, waOpen: <?php echo $is_wa_open; ?>, igOpen: <?php echo $is_ig_open; ?> }">
             <!-- Dashboard -->
             <a href="dashboard.php"
                 class="flex items-center px-3 py-2.5 rounded-xl transition-all <?php echo $current_page == 'dashboard.php' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'text-gray-400 hover:bg-white/5 hover:text-white'; ?>">
@@ -151,6 +154,35 @@ $initial_width_class = $sidebar_collapsed ? 'w-20' : 'w-64';
                         class="block py-1.5 text-xs <?php echo $current_page == 'page_moderator.php' ? 'text-indigo-400 font-bold' : 'text-gray-500 hover:text-gray-300'; ?>"><?php echo __('auto_moderator'); ?></a>
                 </div>
             </div>
+
+            <!-- Instagram Menu -->
+            <div>
+                <button @click="sidebarCollapsed ? (toggleSidebar(), igOpen = true) : igOpen = !igOpen"
+                    class="w-full flex items-center px-3 py-2.5 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition-all group">
+                    <div class="w-6 h-6 flex items-center justify-center shrink-0 transition-all duration-300"
+                        :class="sidebarCollapsed ? 'w-full' : 'w-6'">
+                        <svg class="w-5 h-5 group-hover:text-pink-500 transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+                        </svg>
+                    </div>
+                    <span
+                        class="ms-3 text-sm font-medium hide-on-collapse transition-all duration-300"><?php echo __('instagram'); ?></span>
+                    <svg class="w-4 h-4 ms-auto transition-transform hide-on-collapse"
+                        :class="igOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <div :class="{ 'is-active': igOpen && !sidebarCollapsed }"
+                    class="navigation-submenu pl-12 rtl:pl-0 rtl:pr-12 space-y-1 <?php echo ($is_ig_open == 'true' && !$sidebar_collapsed) ? 'is-active' : ''; ?>">
+                    <a href="ig_accounts.php" title="<?php echo __('ig_accounts'); ?>"
+                        class="block py-1.5 text-xs <?php echo $current_page == 'ig_accounts.php' ? 'text-indigo-400 font-bold' : 'text-gray-500 hover:text-gray-300'; ?>"><?php echo __('ig_accounts'); ?></a>
+                    <a href="ig_auto_reply.php" title="<?php echo __('auto_reply'); ?>"
+                        class="block py-1.5 text-xs <?php echo $current_page == 'ig_auto_reply.php' ? 'text-indigo-400 font-bold' : 'text-gray-500 hover:text-gray-300'; ?>"><?php echo __('auto_reply'); ?></a>
+                    <a href="ig_messenger_bot.php" title="<?php echo __('auto_reply_messages'); ?>"
+                        class="block py-1.5 text-xs <?php echo $current_page == 'ig_messenger_bot.php' ? 'text-indigo-400 font-bold' : 'text-gray-500 hover:text-gray-300'; ?>"><?php echo __('auto_reply_messages'); ?></a>
+                    <a href="ig_moderator.php" title="<?php echo __('auto_moderator'); ?>"
+                        class="block py-1.5 text-xs <?php echo $current_page == 'ig_moderator.php' ? 'text-indigo-400 font-bold' : 'text-gray-500 hover:text-gray-300'; ?>"><?php echo __('auto_moderator'); ?></a>
+                </div>
 
             <!-- WhatsApp Menu -->
             <div>
