@@ -48,6 +48,23 @@ require_once __DIR__ . '/includes/ComplianceEngine.php';
 
 $pdo = getDB();
 
+// --- PRODUCTION PATCH: Ensure columns exist before using them ---
+try {
+    $cols = $pdo->query("SHOW COLUMNS FROM fb_pages")->fetchAll(PDO::FETCH_COLUMN);
+    if (!in_array('ig_business_id', $cols))
+        $pdo->exec("ALTER TABLE fb_pages ADD COLUMN ig_business_id VARCHAR(100) NULL");
+
+    $rules_cols = $pdo->query("SHOW COLUMNS FROM auto_reply_rules")->fetchAll(PDO::FETCH_COLUMN);
+    if (!in_array('platform', $rules_cols))
+        $pdo->exec("ALTER TABLE auto_reply_rules ADD COLUMN platform ENUM('facebook', 'instagram') DEFAULT 'facebook'");
+    if (!in_array('auto_like_comment', $rules_cols))
+        $pdo->exec("ALTER TABLE auto_reply_rules ADD COLUMN auto_like_comment TINYINT(1) DEFAULT 0");
+    if (!in_array('private_reply_enabled', $rules_cols))
+        $pdo->exec("ALTER TABLE auto_reply_rules ADD COLUMN private_reply_enabled TINYINT(1) DEFAULT 0");
+} catch (Exception $em) {
+    debugLog("Migration Error: " . $em->getMessage());
+}
+
 // A. Check if it's Facebook Webhook
 if (isset($data['object']) && ($data['object'] === 'page' || $data['object'] === 'instagram')) {
     file_put_contents('debug_webhook.txt', date('Y-m-d H:i:s') . " - Processing FB Event: " . json_encode($data) . "\n", FILE_APPEND);
@@ -148,21 +165,22 @@ function handleFacebookEvent($data, $pdo)
 function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $actual_sender_id = null, $sender_name = '', $platform = 'facebook', $post_id = null, $parent_id = null)
 {
     // 1. Fetch Page Settings (Token, Schedule, Cooldown, AI Intelligence)
-    // Robust lookup: Search in both page_id and ig_business_id to handle platform cross-talk
-    $stmt = $pdo->prepare("SELECT p.page_id as fb_page_id, p.ig_business_id, p.page_access_token, p.page_name, p.bot_cooldown_seconds, p.bot_schedule_enabled, p.bot_schedule_start, p.bot_schedule_end, p.bot_exclude_keywords, p.bot_ai_sentiment_enabled, p.bot_anger_keywords, p.bot_repetition_threshold, p.bot_handover_reply, a.user_id 
+    // Try primary lookup by whichever ID Meta sent
+    $stmt = $pdo->prepare("SELECT p.page_id as fb_page_id, p.page_access_token, p.page_name, p.bot_cooldown_seconds, p.bot_schedule_enabled, p.bot_schedule_start, p.bot_schedule_end, p.bot_exclude_keywords, p.bot_ai_sentiment_enabled, p.bot_anger_keywords, p.bot_repetition_threshold, p.bot_handover_reply, a.user_id 
                            FROM fb_pages p 
                            JOIN fb_accounts a ON p.account_id = a.id 
                            WHERE p.page_id = ? OR p.ig_business_id = ?");
     $stmt->execute([$page_id, $page_id]);
     $page = $stmt->fetch(PDO::FETCH_ASSOC);
+
     if (!$page || !$page['page_access_token'])
         return;
 
-    // Match Rule ID: Determine which ID the dashboard used to save rules
-    // Dashboard uses ig_business_id for Instagram and page_id for Facebook
-    $db_page_id = ($platform === 'instagram') ? ($page['ig_business_id'] ?? $page_id) : ($page['fb_page_id'] ?? $page_id);
+    // Match Rule ID: Dashboard usually saves by the ID provided in the dropdown
+    // For Instagram it's Business ID, for Facebook it's Page ID
+    $db_page_id = $page_id;
 
-    // Use FB Page ID for API actor (most actions are performed in Page context)
+    // Use FB Page ID for API actor
     $fb_page_id = $page['fb_page_id'];
     $api_actor_id = $fb_page_id;
     $access_token = $page['page_access_token'];
@@ -178,8 +196,8 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 
     // 2. Check Conversation State (Handover Protocol)
     if ($customer_id) {
-        $stmt = $pdo->prepare("SELECT * FROM bot_conversation_states WHERE (page_id = ? OR page_id = ?) AND user_id = ? AND reply_source = ? AND platform = ? LIMIT 1");
-        $stmt->execute([$page['fb_page_id'], $page['ig_business_id'], $customer_id, $source, $platform]);
+        $stmt = $pdo->prepare("SELECT * FROM bot_conversation_states WHERE page_id = ? AND user_id = ? AND reply_source = ? AND platform = ? LIMIT 1");
+        $stmt->execute([$page_id, $customer_id, $source, $platform]);
         $state = $stmt->fetch(PDO::FETCH_ASSOC);
 
         // If state is handover, bot is manually silenced for this user
@@ -614,10 +632,9 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 
 function processModeration($pdo, $id, $comment_id, $message_text, $sender_name = '', $platform = 'facebook', $post_id = null)
 {
-    // Get Moderation Settings (by Page or IG ID)
-    $id = trim($id);
-    $stmt = $pdo->prepare("SELECT * FROM fb_moderation_rules WHERE (page_id = ? OR ig_business_id = ?) AND platform = ? LIMIT 1");
-    $stmt->execute([$id, $id, $platform]);
+    // Get Moderation Settings
+    $stmt = $pdo->prepare("SELECT * FROM fb_moderation_rules WHERE page_id = ? AND platform = ? LIMIT 1");
+    $stmt->execute([$id, $platform]);
     $rules = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$rules || (isset($rules['is_active']) && !$rules['is_active'])) {
@@ -669,6 +686,13 @@ function processModeration($pdo, $id, $comment_id, $message_text, $sender_name =
         $stmt = $pdo->prepare("SELECT page_access_token FROM fb_pages WHERE page_id = ? OR ig_business_id = ?");
         $stmt->execute([$id, $id]);
         $token = $stmt->fetchColumn();
+
+        // Fallback for token if ig_business_id column failed
+        if (!$token) {
+            $stmt = $pdo->prepare("SELECT page_access_token FROM fb_pages WHERE page_id = ?");
+            $stmt->execute([$id]);
+            $token = $stmt->fetchColumn();
+        }
 
         if ($token) {
             if ($rules['action_type'] === 'hide') {
