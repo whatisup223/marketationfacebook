@@ -922,9 +922,9 @@ class FacebookAPI
     public function subscribeApp($id, $access_token, $platform = 'facebook')
     {
         if ($platform === 'instagram') {
-            // Instagram specific fields
+            // Instagram specific fields (Subscribed on the Page ID)
             return $this->makeRequest("$id/subscribed_apps", [
-                'subscribed_fields' => 'comments,live_comments'
+                'subscribed_fields' => ['comments', 'mentions']
             ], $access_token, 'POST');
         }
 

@@ -161,6 +161,7 @@ if ($action === 'delete_log' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // 5. Token Debug/Webhook Check
 if ($action === 'get_token_debug') {
+    $page_id = $_GET['page_id'] ?? '';
     $platform = $_GET['platform'] ?? 'facebook';
     $id_column = ($platform === 'instagram') ? 'ig_business_id' : 'page_id';
 
@@ -250,8 +251,8 @@ if ($action === 'subscribe_page' && $_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
 
-        // Use platform-specific ID for subscription
-        $target_subscribe_id = ($platform === 'instagram') ? $page_id : $page['page_id'];
+        // Subscription MUST always be done on the Facebook Page ID, even for Instagram
+        $target_subscribe_id = $page['page_id'];
 
         $fb = new FacebookAPI();
         // Subscribe the app
@@ -289,7 +290,8 @@ if ($action === 'unsubscribe_page' && $_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
 
-        $target_unsubscribe_id = ($platform === 'instagram') ? $page_id : $page['page_id'];
+        // Unsubscription must be done on the Facebook Page ID
+        $target_unsubscribe_id = $page['page_id'];
         $fb = new FacebookAPI();
         // Unsubscribe
         $res = $fb->makeRequest("$target_unsubscribe_id/subscribed_apps", [], $page['page_access_token'], 'DELETE');
