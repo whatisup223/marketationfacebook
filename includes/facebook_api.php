@@ -915,8 +915,9 @@ class FacebookAPI
         }
 
         // Expanded fields for Instagram comments and messaging
+        // Note: 'comments' is not a valid field for subscribed_apps edge. It is covered by 'feed' or specific webhooks.
         return $this->makeRequest("$page_id/subscribed_apps", [
-            'subscribed_fields' => ['feed', 'messages', 'messaging_postbacks', 'messaging_optins', 'message_deliveries', 'message_reads', 'comments']
+            'subscribed_fields' => ['feed', 'messages', 'messaging_postbacks', 'messaging_optins', 'message_deliveries', 'message_reads']
         ], $access_token, 'POST');
     }
 }
