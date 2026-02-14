@@ -44,7 +44,12 @@ $pdo = getDB();
 
 // A. Check if it's Facebook Webhook
 if (isset($data['object']) && ($data['object'] === 'page' || $data['object'] === 'instagram')) {
-    handleFacebookEvent($data, $pdo);
+    file_put_contents('debug_webhook.txt', date('Y-m-d H:i:s') . " - Processing FB Event: " . json_encode($data) . "\n", FILE_APPEND);
+    try {
+        handleFacebookEvent($data, $pdo);
+    } catch (Exception $e) {
+        file_put_contents('debug_webhook.txt', date('Y-m-d H:i:s') . " - EXCEPTION: " . $e->getMessage() . "\n", FILE_APPEND);
+    }
     exit;
 }
 
