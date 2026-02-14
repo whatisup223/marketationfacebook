@@ -318,8 +318,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id_column = ($platform === 'instagram') ? 'ig_business_id' : 'page_id';
 
             // Get page access token AND verify page exists via correct column
-            // We also need the FB page_id because subscription is done on the FB Page object
-            $stmt = $pdo->prepare("SELECT page_access_token, page_id FROM fb_pages WHERE $id_column = ?");
+            // We join with fb_accounts to get the user token for refreshing the page token if needed
+            $stmt = $pdo->prepare("SELECT p.page_access_token, p.page_id, p.account_id, a.access_token as user_access_token 
+                                   FROM fb_pages p 
+                                   JOIN fb_accounts a ON p.account_id = a.id 
+                                   WHERE p.$id_column = ?");
             $stmt->execute([$page_id]);
             $page = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -330,16 +333,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // For API subscription, we ALWAYS use the Facebook Page ID
             $target_subscribe_id = $page['page_id'];
+            $page_token = $page['page_access_token'];
+            $user_token = $page['user_access_token'];
 
             require_once '../includes/facebook_api.php';
             $fb = new FacebookAPI();
-            // Pass correct page_id to subscribe
-            $res = $fb->subscribeApp($target_subscribe_id, $page['page_access_token']);
+
+            // Attempt to get a fresh Page Access Token using User Token (Recommended by FB)
+            // This ensures we have the latest permissions and correct scope
+            if (!empty($user_token)) {
+                $fresh_token = $fb->getPageAccessToken($user_token, $target_subscribe_id);
+                if ($fresh_token && $fresh_token !== $page_token) {
+                    // Update DB with fresh token
+                    $update = $pdo->prepare("UPDATE fb_pages SET page_access_token = ? WHERE page_id = ?");
+                    $update->execute([$fresh_token, $target_subscribe_id]);
+                    $page_token = $fresh_token;
+                }
+            }
+
+            // Pass correct page_id and fresh token to subscribe
+            $res = $fb->subscribeApp($target_subscribe_id, $page_token);
 
             if (isset($res['success']) && $res['success']) {
                 echo json_encode(['success' => true, 'message' => __('page_protected_success')]);
             } else {
-                echo json_encode(['success' => false, 'error' => $res['error']['message'] ?? 'Unknown error']);
+                $error_msg = $res['error']['message'] ?? 'Unknown error';
+                // Add specific advice for common errors
+                if (strpos($error_msg, 'access token') !== false) {
+                    $error_msg .= " (Try re-connecting your Facebook account)";
+                }
+                echo json_encode(['success' => false, 'error' => $error_msg]);
             }
         } catch (Exception $e) {
             echo json_encode(['success' => false, 'error' => $e->getMessage()]);

@@ -405,15 +405,15 @@ class FacebookAPI
     // NEW: Function to get real Page Token
     public function getPageAccessToken($user_token, $page_id)
     {
-        // Try to get token type first if possible or just handle error silently
-        $res = $this->makeRequest("me/accounts", [], $user_token);
+        // Explicitly request access_token field
+        $res = $this->makeRequest("me/accounts", ['fields' => 'access_token,name,id'], $user_token);
         if (isset($res['data'])) {
             foreach ($res['data'] as $page) {
-                if ($page['id'] == $page_id)
+                if ($page['id'] == $page_id && !empty($page['access_token']))
                     return $page['access_token'];
             }
         }
-        return $user_token; // If not found or error, return original
+        return false; // Return false instead of user token on failure to avoid using bad token
     }
 
 
