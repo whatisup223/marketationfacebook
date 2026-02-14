@@ -4,10 +4,10 @@
  * Handles both Evolution API (WhatsApp) and Facebook (Comments & Messenger)
  */
 
-$logFile = 'c:/Users/AHL ELSONA/Desktop/marketationfacebook/webhook_log.txt';
+$logFile = __DIR__ . '/webhook_log.txt';
 $input = file_get_contents('php://input');
 // For debugging - remove in production
-// file_put_contents($logFile, date('Y-m-d H:i:s') . " - Input: " . $input . "\n", FILE_APPEND);
+file_put_contents($logFile, date('Y-m-d H:i:s') . " - Input: " . $input . "\n", FILE_APPEND);
 
 // 1. Handle Facebook Verification (GET request)
 if (isset($_GET['hub_mode']) && $_GET['hub_mode'] === 'subscribe') {
@@ -256,10 +256,17 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
         $stmt = $pdo->prepare("SELECT * FROM auto_reply_rules WHERE page_id = ? AND reply_source = ? AND trigger_type = 'default' LIMIT 1");
         $stmt->execute([$page_id, $source]);
         $def = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        // DEBUG
+        if (!$def) {
+            error_log("WEBHOOK DEBUG: No default rule found for page $page_id and source $source");
+        } else {
+            error_log("WEBHOOK DEBUG: Found default rule for page $page_id. Msg: " . substr($def['reply_message'], 0, 20));
+        }
+
         if ($def) {
             $reply_msg = $def['reply_message'];
             $hide_comment = $def['hide_comment'];
-            $matched_rule = $def;
             $matched_rule = $def;
         }
     }
@@ -494,6 +501,8 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
         } else {
             $res = $fb->sendMessage($page_id, $access_token, $target_id, $reply_msg);
         }
+
+        error_log("WEBHOOK DEBUG: Messenger Send Res: " . json_encode($res));
     } else {
         $res = $fb->replyToComment($target_id, $reply_msg, $access_token);
 
