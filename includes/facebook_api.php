@@ -165,15 +165,17 @@ class FacebookAPI
         return $res ?? ['error' => 'No message content'];
     }
 
-    // 3. Quick Replies (Horizontal Buttons)
+    // 3. Quick Replies (Horizontal Buttons) - Now with Fallback protection
     public function sendButtonMessage($page_id, $access_token, $recipient_id, $text, $buttons)
     {
         $quick_replies = [];
         foreach ($buttons as $btn) {
+            // Instagram strict limit: Title max 20 chars
+            $title = mb_substr($btn['title'], 0, 20);
             $quick_replies[] = [
                 'content_type' => 'text',
-                'title' => $btn['title'],
-                'payload' => $btn['payload']
+                'title' => $title,
+                'payload' => $btn['payload'] ?: 'default_payload'
             ];
         }
 
@@ -187,10 +189,17 @@ class FacebookAPI
         ];
 
         $endpoint = 'me/messages';
-        return $this->makeRequest($endpoint, $payload, $access_token, 'POST');
+        $res = $this->makeRequest($endpoint, $payload, $access_token, 'POST');
+
+        // Fallback: If buttons fail (IG is very strict), send text only
+        if (isset($res['error'])) {
+            return $this->sendMessage($page_id, $access_token, $recipient_id, $text);
+        }
+
+        return $res;
     }
 
-    // 4. Send Image Message
+    // 4. Send Image Message - Now with Fallback protection
     public function sendImageMessage($page_id, $access_token, $recipient_id, $image_url)
     {
         $payload = [
@@ -208,7 +217,14 @@ class FacebookAPI
         ];
 
         $endpoint = 'me/messages';
-        return $this->makeRequest($endpoint, $payload, $access_token, 'POST');
+        $res = $this->makeRequest($endpoint, $payload, $access_token, 'POST');
+
+        // Fallback for Instagram (sometimes images from non-SSL or specific domains fail)
+        if (isset($res['error'])) {
+            error_log("FB API Error: Image delivery failed. Target: $recipient_id. Error: " . json_encode($res['error']));
+        }
+
+        return $res;
     }
 
     /**
