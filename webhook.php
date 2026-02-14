@@ -335,19 +335,20 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 
     // 2.3 If no keyword match AND no anger silence, try Default Rule
     if (!$matched_rule) {
+        debugLog("Looking for Default Rule for $platform ($source)...");
         foreach ($all_rules as $rule) {
             if ($rule['trigger_type'] === 'default') {
                 $matched_rule = $rule;
                 $reply_msg = $rule['reply_message'];
                 $hide_comment = (int) $rule['hide_comment'];
-                debugLog("Matched Default Rule for $target_id");
+                debugLog("Matched Default Rule (ID: {$rule['id']}) for $target_id");
                 break;
             }
         }
     }
 
     if (!$matched_rule) {
-        debugLog("No rule matched (keywords or default) for $target_id");
+        debugLog("NO RULE MATCHED (Keywords or Default) for user $customer_id on platform $platform source $source");
         return;
     }
 
@@ -477,8 +478,10 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
         $end = !empty($page['bot_schedule_end']) ? substr($page['bot_schedule_end'], 0, 5) : '23:59';
 
         $is_inside = ($start <= $end) ? ($now >= $start && $now <= $end) : ($now >= $start || $now <= $end);
-        if (!$is_inside)
+        if (!$is_inside) {
+            debugLog("SILENCE: Outside working hours ($now) for $customer_id. Range: $start - $end");
             return;
+        }
     }
 
     // 5.2 Cooldown / Human Takeover Logic
@@ -486,6 +489,7 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
     $should_check_cooldown = ($cooldown_seconds > 0 && !$bypass_cooldown);
 
     if ($should_check_cooldown) {
+        debugLog("Checking Cooldown ($cooldown_seconds s) for user $customer_id...");
         // Cooldown check is only relevant for Messenger or identification-based sources
         // For comments, we check the user thread via target_id (sender_id)
         $thread_user_id = ($source === 'message') ? $target_id : $actual_sender_id;
