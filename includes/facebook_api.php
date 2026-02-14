@@ -526,13 +526,13 @@ class FacebookAPI
     /**
      * Like a comment
      */
-    public function likeComment($comment_id, $access_token, $platform = 'facebook')
+    public function likeComment($comment_id, $access_token, $platform = 'facebook', $is_hidden = false)
     {
         if ($platform === 'instagram') {
-            // Instagram Like: Try both query param and body for maximum compatibility
-            // POST /v18.0/{comment_id}?user_liked=true
-            // Note: Body parameter 'user_liked' is also expected by some API versions
-            return $this->makeRequest($comment_id . "?user_liked=true", ['user_liked' => true], $access_token, 'POST');
+            // Instagram Like: Requires 'user_liked' AND 'hide' as parameters
+            // Failing to provide 'hide' results in error (#100) The parameter hide is required
+            $h_val = $is_hidden ? 'true' : 'false';
+            return $this->makeRequest($comment_id . "?user_liked=true&hide=$h_val", [], $access_token, 'POST');
         }
         $endpoint = "$comment_id/likes";
         return $this->makeRequest($endpoint, [], $access_token, 'POST');

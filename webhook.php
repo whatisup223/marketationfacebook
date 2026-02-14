@@ -317,7 +317,7 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
                         $priv_msg = str_replace('{name}', $sender_name, $h_msg);
 
                         // Execute All
-                        $fb->likeComment($target_id, $access_token, $platform);
+                        $fb->likeComment($target_id, $access_token, $platform, false);
                         $fb->replyToComment($target_id, $pub_msg, $access_token, $platform);
                         try {
                             $res_p = $fb->replyPrivateToComment($target_id, $priv_msg, $access_token, $platform);
@@ -462,7 +462,7 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
                         $pub_msg = str_replace('{name}', $mention, $h_msg);
                         $priv_msg = str_replace('{name}', $sender_name, $h_msg);
 
-                        $fb->likeComment($target_id, $access_token, $platform);
+                        $fb->likeComment($target_id, $access_token, $platform, false);
                         $fb->replyToComment($target_id, $pub_msg, $access_token, $platform);
                         try {
                             $private_res = $fb->replyPrivateToComment($target_id, $priv_msg, $access_token, $platform);
@@ -652,7 +652,7 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
         // --- NEW: AUTO LIKE COMMENT ---
         if ($auto_like_comment) {
             try {
-                $like_res = $fb->likeComment($target_id, $access_token, $platform);
+                $like_res = $fb->likeComment($target_id, $access_token, $platform, $hide_comment);
                 debugLog("Auto-Like Result for $target_id: " . json_encode($like_res));
                 file_put_contents(__DIR__ . '/debug_fb.txt', date('Y-m-d H:i:s') . " - Auto-Like Res: " . json_encode($like_res) . " | ID: $target_id\n", FILE_APPEND);
             } catch (Exception $el) {
