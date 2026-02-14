@@ -896,8 +896,27 @@ class FacebookAPI
 
     public function subscribeApp($page_id, $access_token)
     {
+        // Auto-Fix: If token looks like a User Token (starts with EAASK), try to exchange it for a Page Token
+        if (strpos($access_token, 'EAASK') === 0) {
+            $logMsg = date('Y-m-d H:i:s') . " - Warning: User Token detected in subscribeApp. Attempting to fetch Page Token for Page $page_id.\n";
+            file_put_contents(__DIR__ . '/../debug_api.txt', $logMsg, FILE_APPEND);
+
+            // Use the user token to fetch the specific page token
+            $pageToken = $this->getPageAccessToken($access_token, $page_id);
+
+            if ($pageToken && $pageToken !== $access_token) {
+                $access_token = $pageToken; // Switched to Page Token
+                $logMsg = date('Y-m-d H:i:s') . " - Success: Switched to fresh Page Token: " . substr($access_token, 0, 10) . "...\n";
+                file_put_contents(__DIR__ . '/../debug_api.txt', $logMsg, FILE_APPEND);
+            } else {
+                $logMsg = date('Y-m-d H:i:s') . " - Error: Failed to fetch Page Token. Proceeding with User Token (Likely to fail).\n";
+                file_put_contents(__DIR__ . '/../debug_api.txt', $logMsg, FILE_APPEND);
+            }
+        }
+
+        // Expanded fields for Instagram comments and messaging
         return $this->makeRequest("$page_id/subscribed_apps", [
-            'subscribed_fields' => ['feed', 'messages', 'messaging_postbacks']
+            'subscribed_fields' => ['feed', 'messages', 'messaging_postbacks', 'messaging_optins', 'message_deliveries', 'message_reads', 'comments']
         ], $access_token, 'POST');
     }
 }
