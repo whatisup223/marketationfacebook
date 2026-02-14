@@ -529,9 +529,10 @@ class FacebookAPI
     public function likeComment($comment_id, $access_token, $platform = 'facebook')
     {
         if ($platform === 'instagram') {
-            // Instagram Like: Uses query param user_liked=true, NOT body
+            // Instagram Like: Try both query param and body for maximum compatibility
             // POST /v18.0/{comment_id}?user_liked=true
-            return $this->makeRequest($comment_id . "?user_liked=true", [], $access_token, 'POST');
+            // Note: Body parameter 'user_liked' is also expected by some API versions
+            return $this->makeRequest($comment_id . "?user_liked=true", ['user_liked' => true], $access_token, 'POST');
         }
         $endpoint = "$comment_id/likes";
         return $this->makeRequest($endpoint, [], $access_token, 'POST');

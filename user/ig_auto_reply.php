@@ -66,7 +66,8 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             class="w-full bg-black/40 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500 block p-3.5 pr-10 appearance-none transition-all group-hover:border-white/20">
                             <option value=""><?php echo __('select_page'); ?>...</option>
                             <?php foreach ($pages as $page): ?>
-                                <option value="<?php echo htmlspecialchars($page['ig_business_id'] ?? $page['page_id']); ?>">
+                                <option
+                                    value="<?php echo htmlspecialchars($page['ig_business_id'] ?? $page['page_id']); ?>">
                                     @<?php echo htmlspecialchars($page['ig_username'] ?? $page['page_name']); ?>
                                 </option>
                             <?php endforeach; ?>
@@ -922,7 +923,8 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <div>
                                 <h4 class="font-bold text-white text-sm"><?php echo __('ai_safe_rule'); ?></h4>
                                 <p class="text-[10px] text-gray-500 mt-1">
-                                    <?php echo __('ai_safe_hint') ?? 'تجنب الرد المتكرر أو الخاطئ'; ?></p>
+                                    <?php echo __('ai_safe_hint') ?? 'تجنب الرد المتكرر أو الخاطئ'; ?>
+                                </p>
                             </div>
                         </div>
 
@@ -945,7 +947,8 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <div>
                                 <h4 class="font-bold text-white text-sm"><?php echo __('bypass_schedule_rule'); ?></h4>
                                 <p class="text-[10px] text-gray-500 mt-1">
-                                    <?php echo __('bypass_schedule_hint') ?? 'تجاهل جدول المواعيد'; ?></p>
+                                    <?php echo __('bypass_schedule_hint') ?? 'تجاهل جدول المواعيد'; ?>
+                                </p>
                             </div>
                         </div>
 
@@ -968,7 +971,8 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <div>
                                 <h4 class="font-bold text-white text-sm"><?php echo __('bypass_cooldown_rule'); ?></h4>
                                 <p class="text-[10px] text-gray-500 mt-1">
-                                    <?php echo __('bypass_cooldown_hint') ?? 'تجاهل نشاط المسؤولين'; ?></p>
+                                    <?php echo __('bypass_cooldown_hint') ?? 'تجاهل نشاط المسؤولين'; ?>
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -1885,7 +1889,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
             previewHideComment: false,
 
             getPageName() {
-                const page = this.pages.find(p => p.page_id == this.selectedPageId);
+                const page = this.pages.find(p => p.page_id == this.selectedPageId || p.ig_business_id == this.selectedPageId);
                 return page ? page.page_name : '';
             },
 
@@ -1952,7 +1956,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 this.subscribing = true;
                 let formData = new FormData();
                 formData.append('page_id', this.selectedPageId);
-                    formData.append('platform', 'instagram');
+                formData.append('platform', 'instagram');
                 fetch('ajax_auto_reply.php?platform=instagram&action=subscribe_page', { method: 'POST', body: formData })
                     .then(res => res.json())
                     .then(data => {
@@ -1967,7 +1971,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 this.stopping = true;
                 let formData = new FormData();
                 formData.append('page_id', this.selectedPageId);
-                    formData.append('platform', 'instagram');
+                formData.append('platform', 'instagram');
                 fetch('ajax_auto_reply.php?platform=instagram&action=unsubscribe_page', { method: 'POST', body: formData })
                     .then(res => res.json())
                     .then(data => {
@@ -2015,7 +2019,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 const totalSec = (parseInt(this.cooldownHours) * 3600) + (parseInt(this.cooldownMinutes) * 60) + parseInt(this.cooldownSeconds);
                 let formData = new FormData();
                 formData.append('page_id', this.selectedPageId);
-                    formData.append('platform', 'instagram');
+                formData.append('platform', 'instagram');
                 formData.append('cooldown_seconds', totalSec);
                 formData.append('schedule_enabled', this.schEnabled ? '1' : '0');
                 formData.append('schedule_start', this.schStart);
@@ -2034,7 +2038,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 // Internal use for global save
                 let formData = new FormData();
                 formData.append('page_id', this.selectedPageId);
-                    formData.append('platform', 'instagram');
+                formData.append('platform', 'instagram');
                 formData.append('type', 'default');
                 formData.append('reply', this.defaultReplyText);
                 formData.append('keywords', '*');
@@ -2169,7 +2173,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 if (!confirm('<?php echo __('confirm_mark_all_resolved'); ?>')) return;
                 let formData = new FormData();
                 formData.append('page_id', this.selectedPageId);
-                    formData.append('platform', 'instagram');
+                formData.append('platform', 'instagram');
                 formData.append('source', 'comment');
                 fetch('ajax_auto_reply.php?platform=instagram&action=mark_all_as_resolved', { method: 'POST', body: formData })
                     .then(res => res.json())
@@ -2218,7 +2222,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 if (!this.selectedPageId) return;
                 let formData = new FormData();
                 formData.append('page_id', this.selectedPageId);
-                    formData.append('platform', 'instagram');
+                formData.append('platform', 'instagram');
                 formData.append('type', 'default');
                 formData.append('source', 'comment');
                 formData.append('reply', this.defaultReplyText);
@@ -2240,7 +2244,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 if (!this.selectedPageId || !this.modalReply) return;
                 let formData = new FormData();
                 formData.append('page_id', this.selectedPageId);
-                    formData.append('platform', 'instagram');
+                formData.append('platform', 'instagram');
                 formData.append('type', 'keyword');
                 formData.append('source', 'comment');
                 formData.append('keywords', this.modalKeywords);
@@ -2274,4 +2278,3 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 </script>
 
 <?php require_once '../includes/footer.php'; ?>
-
