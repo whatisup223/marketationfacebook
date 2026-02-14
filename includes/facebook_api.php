@@ -70,6 +70,7 @@ class FacebookAPI
                 } else {
                     // Empty body POST
                     curl_setopt($ch, CURLOPT_POSTFIELDS, "");
+                    $headers[] = 'Content-Length: 0';
                 }
             }
         } else {
