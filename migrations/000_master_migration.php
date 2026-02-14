@@ -630,6 +630,17 @@ try {
         $pdo->exec("ALTER TABLE `bot_sent_messages` ADD COLUMN `platform` ENUM('facebook', 'instagram') DEFAULT 'facebook' AFTER `page_id` ");
     }
 
+    // --- 045: Bot AI Sentiment \u0026 Handover Columns ---
+    if (!columnExists($pdo, 'fb_pages', 'bot_anger_keywords')) {
+        $pdo->exec("ALTER TABLE `fb_pages` ADD COLUMN `bot_anger_keywords` TEXT DEFAULT NULL AFTER `bot_ai_sentiment_enabled`");
+    }
+    if (!columnExists($pdo, 'fb_pages', 'bot_repetition_threshold')) {
+        $pdo->exec("ALTER TABLE `fb_pages` ADD COLUMN `bot_repetition_threshold` INT DEFAULT 3 AFTER `bot_anger_keywords`");
+    }
+    if (!columnExists($pdo, 'fb_pages', 'bot_handover_reply')) {
+        $pdo->exec("ALTER TABLE `fb_pages` ADD COLUMN `bot_handover_reply` TEXT DEFAULT NULL AFTER `bot_repetition_threshold`");
+    }
+
     echo "✅ Master Migration completed successfully!\n";
 
 } catch (Exception $e) {
