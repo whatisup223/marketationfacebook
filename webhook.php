@@ -863,21 +863,29 @@ function processModeration($pdo, $id, $comment_id, $message_text, $sender_name =
 
             // Log the action to DB
             try {
+                $user_id_to_log = $rules['user_id'] ?? 0;
+                if (!$user_id_to_log) {
+                    // Fallback: try to find user_id from fb_pages if rules didn't have it
+                    $uStmt = $pdo->prepare("SELECT a.user_id FROM fb_pages p JOIN fb_accounts a ON p.account_id = a.id WHERE p.page_id = ? OR p.ig_business_id = ? LIMIT 1");
+                    $uStmt->execute([$id, $id]);
+                    $user_id_to_log = $uStmt->fetchColumn() ?: 0;
+                }
+
                 $stmt = $pdo->prepare("INSERT INTO fb_moderation_logs (user_id, page_id, post_id, comment_id, content, user_name, reason, action_taken, platform) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 $log_res = $stmt->execute([
-                    $rules['user_id'],
-                    $id,
-                    $post_id,
-                    $comment_id,
-                    $message_text,
-                    $sender_name,
-                    $reason,
-                    $action,
-                    $platform
+                    $user_id_to_log,
+                    (string) $id,
+                    (string) $post_id,
+                    (string) $comment_id,
+                    (string) $message_text,
+                    (string) $sender_name,
+                    (string) $reason,
+                    (string) $action,
+                    (string) $platform
                 ]);
-                debugLog("DB Logging result: " . ($log_res ? "SUCCESS" : "FAILED"));
+                debugLog("LOGGING ATTEMPT: User=$user_id_to_log, Page=$id, Platform=$platform, Status=" . ($log_res ? "SUCCESS" : "FAILED"));
             } catch (Exception $logEx) {
-                debugLog("DB Logging EXCEPTION: " . $logEx->getMessage());
+                debugLog("LOGGING ERROR: " . $logEx->getMessage());
             }
         } else {
             debugLog("Moderation ERROR: No token found for Page/IG $id");
