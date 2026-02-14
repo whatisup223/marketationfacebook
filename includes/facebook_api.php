@@ -2,7 +2,7 @@
 
 class FacebookAPI
 {
-    private $api_version = 'v18.0'; // Updated to v18.0
+    private $api_version = 'v21.0';
     private $base_url = 'https://graph.facebook.com/';
 
     private $app_secret = '';
@@ -528,13 +528,10 @@ class FacebookAPI
      */
     public function likeComment($comment_id, $access_token, $platform = 'facebook', $is_hidden = false)
     {
-        if ($platform === 'instagram') {
-            // Instagram Like: Requires 'user_liked' AND 'hide' as parameters
-            // Failing to provide 'hide' results in error (#100) The parameter hide is required
-            $h_val = $is_hidden ? 'true' : 'false';
-            return $this->makeRequest($comment_id . "?user_liked=true&hide=$h_val", [], $access_token, 'POST');
-        }
+        // For Instagram (v19.0+) and Facebook, the endpoint is now unified
         $endpoint = "$comment_id/likes";
+
+        // Note: For Instagram, we don't need user_liked=true in the body anymore for the /likes endpoint
         return $this->makeRequest($endpoint, [], $access_token, 'POST');
     }
 
