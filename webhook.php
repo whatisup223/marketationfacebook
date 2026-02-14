@@ -640,7 +640,7 @@ function processModeration($pdo, $id, $comment_id, $message_text, $sender_name =
             }
 
             // Log the action
-            $stmt = $pdo->prepare("INSERT INTO fb_moderation_logs (user_id, page_id, comment_id, comment_text, sender_name, reason, action_taken, platform) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt = $pdo->prepare("INSERT INTO fb_moderation_logs (user_id, page_id, comment_id, content, user_name, reason, action_taken, platform) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
             $stmt->execute([$rules['user_id'], $id, $comment_id, $message_text, $sender_name, $reason, $rules['action_type'], $platform]);
         }
         return true; // Handled by moderation

@@ -20,6 +20,19 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
     style="font-family: <?php echo $font; ?>;" x-data="autoReplyApp()">
     <?php include '../includes/user_sidebar.php'; ?>
 
+    <!-- Success Modal -->
+    <div x-show="showSuccessModal" x-cloak x-transition.opacity
+        class="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
+        <div @click.away="showSuccessModal = false"
+            class="bg-[#0b0e14] border border-pink-500/30 rounded-[3rem] p-10 max-w-sm w-full shadow-[0_0_50px_rgba(79,70,229,0.3)] text-center relative overflow-hidden group">
+            <h3 class="text-2xl font-black text-white mb-4 tracking-tight" x-text="successMessage"></h3>
+            <button @click="showSuccessModal = false"
+                class="w-full py-4 bg-gradient-to-r from-pink-600 to-indigo-700 text-white rounded-2xl font-black text-sm transition-all">
+                <?php echo __('continue'); ?>
+            </button>
+        </div>
+    </div>
+
     <main
         class="flex-1 flex flex-col bg-gray-900/50 backdrop-blur-md relative p-4 md:p-6 w-full max-w-full overflow-x-hidden">
 
@@ -67,7 +80,8 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             class="w-full bg-black/40 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500 block p-3.5 pr-10 appearance-none transition-all group-hover:border-white/20">
                             <option value=""><?php echo __('select_page'); ?>...</option>
                             <?php foreach ($pages as $page): ?>
-                                <option value="<?php echo htmlspecialchars($page['ig_business_id'] ?? $page['page_id']); ?>">
+                                <option
+                                    value="<?php echo htmlspecialchars($page['ig_business_id'] ?? $page['page_id']); ?>">
                                     @<?php echo htmlspecialchars($page['ig_username'] ?? $page['page_name']); ?>
                                 </option>
                             <?php endforeach; ?>
@@ -779,22 +793,30 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 </label>
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                                     <template x-for="(btn, idx) in defaultReplyButtons" :key="idx">
-                                        <div class="bg-white/5 border border-white/5 rounded-2xl p-3 flex flex-col gap-2 relative group/btn">
-                                            <input type="text" x-model="btn.title" 
+                                        <div
+                                            class="bg-white/5 border border-white/5 rounded-2xl p-3 flex flex-col gap-2 relative group/btn">
+                                            <input type="text" x-model="btn.title"
                                                 class="bg-transparent border-0 border-b border-white/10 text-xs text-white focus:ring-0 focus:border-pink-500 p-0"
                                                 placeholder="<?php echo __('button_label_placeholder'); ?>">
-                                            <input type="text" x-model="btn.payload" 
+                                            <input type="text" x-model="btn.payload"
                                                 class="bg-transparent border-0 text-[10px] text-gray-500 focus:ring-0 p-0"
                                                 placeholder="<?php echo __('button_payload_placeholder'); ?>">
-                                            <button @click="removeDefaultButton(idx)" 
+                                            <button @click="removeDefaultButton(idx)"
                                                 class="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center scale-0 group-hover/btn:scale-100 transition-transform">
-                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                </svg>
                                             </button>
                                         </div>
                                     </template>
                                     <button x-show="defaultReplyButtons.length < 3" @click="addDefaultButton()"
                                         class="border-2 border-dashed border-white/5 rounded-2xl p-3 flex items-center justify-center text-gray-500 hover:text-pink-400 hover:border-pink-500/30 transition-all text-xs gap-2">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 4v16m8-8H4"></path>
+                                        </svg>
                                         <?php echo __('add_button'); ?>
                                     </button>
                                 </div>
@@ -1979,6 +2001,8 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
             customStartDate: '',
             customEndDate: '',
             statsRule: '',
+            showSuccessModal: false,
+            successMessage: '',
             previewButtons: [],
 
             scrollToPreview() {
@@ -2093,12 +2117,17 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 this.subscribing = true;
                 let formData = new FormData();
                 formData.append('page_id', this.selectedPageId);
-                    formData.append('platform', 'instagram');
+                formData.append('platform', 'instagram');
                 fetch('ajax_auto_reply.php?platform=instagram&action=subscribe_page', { method: 'POST', body: formData })
                     .then(res => res.json())
                     .then(data => {
                         this.subscribing = false;
-                        alert(data.message || data.error);
+                        if (data.status === 'success') {
+                            this.successMessage = data.message;
+                            this.showSuccessModal = true;
+                        } else {
+                            alert(data.message || data.error);
+                        }
                     }).catch(() => { this.subscribing = false; alert('Network Error'); });
             },
 
@@ -2108,12 +2137,17 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 this.stopping = true;
                 let formData = new FormData();
                 formData.append('page_id', this.selectedPageId);
-                    formData.append('platform', 'instagram');
+                formData.append('platform', 'instagram');
                 fetch('ajax_auto_reply.php?platform=instagram&action=unsubscribe_page', { method: 'POST', body: formData })
                     .then(res => res.json())
                     .then(data => {
                         this.stopping = false;
-                        alert(data.message || data.error);
+                        if (data.status === 'success') {
+                            this.successMessage = data.message;
+                            this.showSuccessModal = true;
+                        } else {
+                            alert(data.message || data.error);
+                        }
                     }).catch(() => { this.stopping = false; alert('Network Error'); });
             },
 
@@ -2189,7 +2223,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 if (!confirm('<?php echo __('confirm_mark_all_resolved'); ?>')) return;
                 let formData = new FormData();
                 formData.append('page_id', this.selectedPageId);
-                    formData.append('platform', 'instagram');
+                formData.append('platform', 'instagram');
                 formData.append('source', 'message');
                 fetch('ajax_auto_reply.php?platform=instagram&action=mark_all_as_resolved', { method: 'POST', body: formData })
                     .then(res => res.json())
@@ -2318,7 +2352,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 if (!this.selectedPageId || !this.modalReply) return;
                 let formData = new FormData();
                 formData.append('page_id', this.selectedPageId);
-                    formData.append('platform', 'instagram');
+                formData.append('platform', 'instagram');
                 formData.append('type', 'keyword');
                 formData.append('keywords', this.modalKeywords);
                 formData.append('reply', this.modalReply);
@@ -2416,7 +2450,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 const totalSec = (parseInt(this.cooldownHours) * 3600) + (parseInt(this.cooldownMinutes) * 60) + parseInt(this.cooldownSeconds);
                 let formData = new FormData();
                 formData.append('page_id', this.selectedPageId);
-                    formData.append('platform', 'instagram');
+                formData.append('platform', 'instagram');
                 formData.append('cooldown_seconds', totalSec);
                 formData.append('schedule_enabled', this.schEnabled ? '1' : '0');
                 formData.append('schedule_start', this.schStart);
@@ -2435,7 +2469,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 // Internal use for global save
                 let formData = new FormData();
                 formData.append('page_id', this.selectedPageId);
-                    formData.append('platform', 'instagram');
+                formData.append('platform', 'instagram');
                 formData.append('type', 'default');
                 formData.append('reply', this.defaultReplyText);
                 formData.append('keywords', '*');

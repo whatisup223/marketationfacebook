@@ -96,6 +96,7 @@ $translations = [
         'sync_from_linked_fb' => 'يمكنك جلب حسابات الإنستجرام من حسابات فيسبوك المرتبطة أدناه:',
         'account_owner' => 'صاحب الحساب',
         'ig_auto_reply' => 'الرد الآلي (انستجرام)',
+        'ig_auto_dm' => 'الرد الآلي على الرسائل (IG)',
         'ig_messenger_bot' => 'بوت الرسائل (IG)',
         'ig_moderator' => 'حماية الحساب (IG)',
         'select_ig_account' => 'اختر حساب انستجرام',
