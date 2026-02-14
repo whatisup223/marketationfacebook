@@ -161,8 +161,8 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 
     // 2. Check Conversation State (Handover Protocol)
     if ($customer_id) {
-        $stmt = $pdo->prepare("SELECT * FROM bot_conversation_states WHERE page_id = ? AND user_id = ? AND reply_source = ? LIMIT 1");
-        $stmt->execute([$page_id, $customer_id, $source]);
+        $stmt = $pdo->prepare("SELECT * FROM bot_conversation_states WHERE page_id = ? AND user_id = ? AND reply_source = ? AND platform = ? LIMIT 1");
+        $stmt->execute([$page_id, $customer_id, $source, $platform]);
         $state = $stmt->fetch(PDO::FETCH_ASSOC);
 
         // If state is handover, bot is manually silenced for this user
@@ -216,10 +216,10 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
             $akw = trim($akw);
             if (!empty($akw) && mb_stripos($incoming_text, $akw) !== false) {
                 // Anger detected! Switch to handover
-                $stmt = $pdo->prepare("INSERT INTO bot_conversation_states (page_id, user_id, user_name, last_user_message, last_user_message_at, conversation_state, is_anger_detected, reply_source) 
-                                        VALUES (?, ?, ?, ?, NOW(), 'handover', 1, ?) 
+                $stmt = $pdo->prepare("INSERT INTO bot_conversation_states (page_id, user_id, user_name, last_user_message, last_user_message_at, conversation_state, is_anger_detected, reply_source, platform) 
+                                        VALUES (?, ?, ?, ?, NOW(), 'handover', 1, ?, ?) 
                                         ON DUPLICATE KEY UPDATE user_name = VALUES(user_name), last_user_message = VALUES(last_user_message), last_user_message_at = NOW(), conversation_state = 'handover', is_anger_detected = 1");
-                $stmt->execute([$page_id, $customer_id, $sender_name, $incoming_text, $source]);
+                $stmt->execute([$page_id, $customer_id, $sender_name, $incoming_text, $source, $platform]);
 
                 // Add Internal Notification
                 $notify_title = 'handover_notification_title';
@@ -571,10 +571,10 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 
     if ($customer_id) {
         $repeat_val = ($state && $state['last_bot_reply_text'] === $reply_msg) ? $state['repeat_count'] + 1 : 1;
-        $stmt = $pdo->prepare("INSERT INTO bot_conversation_states (page_id, user_id, user_name, last_user_message, last_user_message_at, conversation_state, last_bot_reply_text, repeat_count, reply_source) 
-                               VALUES (?, ?, ?, ?, NOW(), 'active', ?, 1, ?) 
+        $stmt = $pdo->prepare("INSERT INTO bot_conversation_states (page_id, user_id, user_name, last_user_message, last_user_message_at, conversation_state, last_bot_reply_text, repeat_count, reply_source, platform) 
+                               VALUES (?, ?, ?, ?, NOW(), 'active', ?, 1, ?, ?) 
                                ON DUPLICATE KEY UPDATE user_name = VALUES(user_name), last_user_message = VALUES(last_user_message), last_user_message_at = NOW(), last_bot_reply_text = ?, repeat_count = ?, conversation_state = 'active'");
-        $stmt->execute([$page_id, $customer_id, $sender_name, $incoming_text, $reply_msg, $source, $reply_msg, $repeat_val]);
+        $stmt->execute([$page_id, $customer_id, $sender_name, $incoming_text, $reply_msg, $source, $platform, $reply_msg, $repeat_val]);
     }
 }
 

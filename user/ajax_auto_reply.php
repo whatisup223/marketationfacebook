@@ -15,6 +15,18 @@ if (!$pdo) {
     echo json_encode(['success' => false, 'error' => 'Database connection failed']);
     exit;
 }
+
+// Quick check/migration: Ensure platform column exists in bot_conversation_states for FB/IG separation
+try {
+    $check = $pdo->query("SHOW COLUMNS FROM bot_conversation_states LIKE 'platform'");
+    if (!$check->fetch()) {
+        $pdo->exec("ALTER TABLE bot_conversation_states ADD COLUMN platform ENUM('facebook', 'instagram') DEFAULT 'facebook' AFTER reply_source");
+        $pdo->exec("ALTER TABLE bot_conversation_states DROP INDEX page_user_source");
+        $pdo->exec("ALTER TABLE bot_conversation_states ADD UNIQUE KEY `page_user_source_plt` (page_id, user_id, reply_source, platform)");
+    }
+} catch (Exception $e) {
+    // Silent fail if already exists or other issue
+}
 if ($action === 'get_webhook_info') {
     try {
         $stmt = $pdo->prepare("SELECT webhook_token, verify_token FROM users WHERE id = ?");
@@ -145,6 +157,28 @@ if ($action === 'get_token_debug') {
         'masked_token' => $masked_token,
         'length' => strlen($token)
     ]);
+    exit;
+}
+
+if ($action === 'fetch_handover_conversations') {
+    $page_id = $_GET['page_id'] ?? '';
+    $platform = $_GET['platform'] ?? 'facebook';
+    $source = $_GET['source'] ?? 'comment'; // 'comment' or 'message'
+
+    if (!$page_id) {
+        echo json_encode(['success' => false, 'error' => 'Page ID is required']);
+        exit;
+    }
+
+    try {
+        $stmt = $pdo->prepare("SELECT * FROM bot_conversation_states WHERE page_id = ? AND platform = ? AND reply_source = ? AND conversation_state = 'handover' ORDER BY updated_at DESC");
+        $stmt->execute([$page_id, $platform, $source]);
+        $conversations = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        echo json_encode(['success' => true, 'conversations' => $conversations]);
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
     exit;
 }
 
@@ -371,11 +405,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    if ($action === 'fetch_stats') {
-        $page_id = $_POST['page_id'] ?? '';
-        $range = $_POST['range'] ?? '7d'; // 24h, 7d, 30d, custom
-        $start_date = $_POST['start_date'] ?? null;
-        $end_date = $_POST['end_date'] ?? null;
+    if ($action === 'fetch_page_stats') {
+        $page_id = $_REQUEST['page_id'] ?? '';
+        $platform = $_REQUEST['platform'] ?? 'facebook';
+        $range = $_REQUEST['range'] ?? 'all';
+        $source = $_REQUEST['source'] ?? 'comment';
 
         if (!$page_id) {
             echo json_encode(['success' => false, 'error' => 'Page ID is required']);
@@ -383,16 +417,77 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         try {
-            // Logic to calculate stats based on logs table
-            // This is a placeholder, actual logic depends on how logs are stored
+            // 1. Total Interacted (from bot_conversation_states)
+            $stmt = $pdo->prepare("SELECT COUNT(*) FROM bot_conversation_states WHERE page_id = ? AND platform = ? AND reply_source = ?");
+            $stmt->execute([$page_id, $platform, $source]);
+            $total_interacted = $stmt->fetchColumn();
+
+            // 2. Active Handovers
+            $stmt = $pdo->prepare("SELECT COUNT(*) FROM bot_conversation_states WHERE page_id = ? AND platform = ? AND reply_source = ? AND conversation_state = 'handover'");
+            $stmt->execute([$page_id, $platform, $source]);
+            $active_handovers = $stmt->fetchColumn();
+
+            // 3. Anger Alerts
+            $stmt = $pdo->prepare("SELECT COUNT(*) FROM bot_conversation_states WHERE page_id = ? AND platform = ? AND reply_source = ? AND is_anger_detected = 1");
+            $stmt->execute([$page_id, $platform, $source]);
+            $anger_alerts = $stmt->fetchColumn();
+
+            // AI Success Rate (Resolved / (Resolved + Handover))
+            $stmt = $pdo->prepare("SELECT COUNT(*) FROM bot_conversation_states WHERE page_id = ? AND platform = ? AND reply_source = ? AND conversation_state = 'resolved'");
+            $stmt->execute([$page_id, $platform, $source]);
+            $resolved = $stmt->fetchColumn();
+
+            $success_rate = ($resolved + $active_handovers) > 0 ? round(($resolved / ($resolved + $active_handovers)) * 100) . '%' : '100%';
+
             echo json_encode([
                 'success' => true,
-                'total_replies' => 0,
-                'keyword_matches' => 0,
-                'ai_replies' => 0,
-                'handovers' => 0,
-                'chart_data' => []
+                'stats' => [
+                    'total_interacted' => $total_interacted,
+                    'active_handovers' => $active_handovers,
+                    'anger_alerts' => $anger_alerts,
+                    'ai_success_rate' => $success_rate,
+                    'avg_response_speed' => '0s',
+                    'top_rule' => '--',
+                    'peak_hour' => '--:--',
+                    'system_health' => '100%',
+                    'ai_filtered' => 0
+                ]
             ]);
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+        exit;
+    }
+
+    if ($action === 'mark_as_resolved') {
+        $id = $_POST['id'] ?? '';
+        if (!$id) {
+            echo json_encode(['success' => false, 'error' => 'ID is required']);
+            exit;
+        }
+        try {
+            $stmt = $pdo->prepare("UPDATE bot_conversation_states SET conversation_state = 'resolved', is_anger_detected = 0, repeat_count = 0 WHERE id = ?");
+            $stmt->execute([$id]);
+            echo json_encode(['success' => true]);
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+        exit;
+    }
+
+    if ($action === 'mark_all_as_resolved') {
+        $page_id = $_POST['page_id'] ?? '';
+        $platform = $_POST['platform'] ?? 'facebook';
+        $source = $_POST['source'] ?? 'comment';
+
+        if (!$page_id) {
+            echo json_encode(['success' => false, 'error' => 'Page ID is required']);
+            exit;
+        }
+        try {
+            $stmt = $pdo->prepare("UPDATE bot_conversation_states SET conversation_state = 'resolved', is_anger_detected = 0, repeat_count = 0 WHERE page_id = ? AND platform = ? AND reply_source = ?");
+            $stmt->execute([$page_id, $platform, $source]);
+            echo json_encode(['success' => true]);
         } catch (Exception $e) {
             echo json_encode(['success' => false, 'error' => $e->getMessage()]);
         }
