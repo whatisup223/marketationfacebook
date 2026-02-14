@@ -7,14 +7,17 @@
 $logFile = __DIR__ . '/webhook_log.txt';
 $input = file_get_contents('php://input');
 // For debugging - remove in production
-file_put_contents($logFile, date('Y-m-d H:i:s') . " - Input: " . $input . "\n", FILE_APPEND);
+// file_put_contents($logFile, date('Y-m-d H:i:s') . " - Input: " . $input . "\n", FILE_APPEND);
 
 function debugLog($msg)
 {
+    // Production: Disabled for performance. Use MASTER_DEBUG.log only when needed for debugging.
+    /*
     $logFile = __DIR__ . '/MASTER_DEBUG.log';
     $timestamp = date('Y-m-d H:i:s');
     $content = (is_array($msg) || is_object($msg)) ? json_encode($msg, JSON_UNESCAPED_UNICODE) : $msg;
     file_put_contents($logFile, "[$timestamp] $content\n", FILE_APPEND);
+    */
 }
 
 // 1. Handle Facebook Verification (GET request)

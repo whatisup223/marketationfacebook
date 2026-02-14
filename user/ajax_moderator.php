@@ -14,7 +14,7 @@ $user_id = $_SESSION['user_id'];
 $pdo = getDB();
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
-file_put_contents('../debug_ajax.txt', date('Y-m-d H:i:s') . " - Action: $action, User: $user_id\n", FILE_APPEND);
+// file_put_contents('../debug_ajax.txt', date('Y-m-d H:i:s') . " - Action: $action, User: $user_id\n", FILE_APPEND);
 
 // 0. Webhook Info
 if ($action === 'get_webhook_info') {
