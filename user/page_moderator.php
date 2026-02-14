@@ -723,7 +723,8 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
             async loadLogs() {
                 this.loadingLogs = true;
                 try {
-                    const res = await fetch('ajax_moderator.php?action=get_logs' + (this.selectedPageId ? '&page_id=' + this.selectedPageId : ''));
+                    const url = 'ajax_moderator.php?action=get_logs&platform=facebook' + (this.selectedPageId ? '&page_id=' + this.selectedPageId : '');
+                    const res = await fetch(url);
                     const result = await res.json();
                     if (result.status === 'success') {
                         this.logs = result.data;

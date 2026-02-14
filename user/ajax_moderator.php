@@ -115,13 +115,27 @@ if ($action === 'get_logs') {
     }
 
     try {
-        $stmt = $pdo->prepare("SELECT * FROM fb_moderation_logs WHERE user_id = ? " . ($page_id ? "AND page_id = ?" : "") . " AND platform = ? ORDER BY created_at DESC LIMIT 50");
+        // If we are in the general fb page moderator, let's show all logs for this user matching the platform
+        // or just all logs if no platform is specified
+        $sql = "SELECT * FROM fb_moderation_logs WHERE user_id = ?";
+        $params = [$user_id];
+
         if ($page_id) {
-            $stmt->execute([$user_id, $page_id, $platform]);
-        } else {
-            $stmt->execute([$user_id, $platform]);
+            $sql .= " AND page_id = ?";
+            $params[] = $page_id;
         }
+
+        if ($platform) {
+            $sql .= " AND platform = ?";
+            $params[] = $platform;
+        }
+
+        $sql .= " ORDER BY created_at DESC LIMIT 50";
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
         $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
         echo json_encode(['status' => 'success', 'data' => $logs]);
     } catch (Exception $e) {
         echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
