@@ -16,13 +16,35 @@ if (!$pdo) {
     exit;
 }
 
-// Quick check/migration: Ensure platform column exists in bot_conversation_states for FB/IG separation
+// Quick check/migration: Ensure bot_conversation_states table exists with platform column
 try {
-    // 1. bot_conversation_states
+    // 1. Create table if not exists (with platform column from the start)
+    $pdo->exec("CREATE TABLE IF NOT EXISTS `bot_conversation_states` (
+        `id` INT AUTO_INCREMENT PRIMARY KEY,
+        `page_id` VARCHAR(100) NOT NULL,
+        `user_id` VARCHAR(100) NOT NULL,
+        `user_name` VARCHAR(255) DEFAULT NULL,
+        `reply_source` ENUM('comment', 'message') NOT NULL DEFAULT 'message',
+        `platform` ENUM('facebook', 'instagram') DEFAULT 'facebook',
+        `conversation_state` ENUM('active', 'handover', 'resolved') DEFAULT 'active',
+        `last_user_message` TEXT DEFAULT NULL,
+        `last_bot_reply_text` TEXT DEFAULT NULL,
+        `repeat_count` INT DEFAULT 0,
+        `is_anger_detected` TINYINT(1) DEFAULT 0,
+        `last_user_message_at` DATETIME DEFAULT NULL,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY `page_user_source_plt` (`page_id`, `user_id`, `reply_source`, `platform`),
+        INDEX (`conversation_state`),
+        INDEX (`is_anger_detected`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+    // 2. If table existed before without platform, add it
     $check = $pdo->query("SHOW COLUMNS FROM bot_conversation_states LIKE 'platform'");
     if (!$check->fetch()) {
         $pdo->exec("ALTER TABLE bot_conversation_states ADD COLUMN platform ENUM('facebook', 'instagram') DEFAULT 'facebook' AFTER reply_source");
-        $pdo->exec("ALTER TABLE bot_conversation_states DROP INDEX page_user_source");
+        // Drop old unique key and create new one with platform
+        $pdo->exec("ALTER TABLE bot_conversation_states DROP INDEX IF EXISTS page_user_source");
         $pdo->exec("ALTER TABLE bot_conversation_states ADD UNIQUE KEY `page_user_source_plt` (page_id, user_id, reply_source, platform)");
     }
 
