@@ -156,7 +156,8 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 
     // Use FB Page ID for API calls that require it (like messaging)
     // For Instagram, we must perform actions AS the Page, even if the event came to the IG account
-    $api_actor_id = $page['fb_page_id'];
+    $fb_page_id = $page['fb_page_id'];
+    $api_actor_id = $fb_page_id;
     $access_token = $page['page_access_token'];
     $customer_id = ($source === 'message') ? $target_id : $actual_sender_id;
 
@@ -203,14 +204,14 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
             if (empty($kw))
                 continue;
 
-            // Improved matching: Whole Word Match using Regex
+            // Improved matching: Whole Word Match using Regex + fallback substring
             $pattern = '/(?<![\p{L}\p{N}])' . preg_quote($kw, '/') . '(?![\p{L}\p{N}])/ui';
-            if (preg_match($pattern, $incoming_text)) {
+            if (preg_match($pattern, $incoming_text) || mb_stripos($incoming_text, $kw) !== false) {
                 $matched_rule = $rule;
                 $reply_msg = $rule['reply_message'];
                 $hide_comment = (int) $rule['hide_comment'];
                 $is_keyword_match = true;
-                debugLog("Matched Keyword Rule: $kw for $target_id");
+                debugLog("Matched Keyword Rule: '$kw' for Input: '$incoming_text'");
                 break 2;
             }
         }
@@ -267,7 +268,7 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
                         $priv_msg = str_replace('{name}', $sender_name, $h_msg);
 
                         // Execute All
-                        $fb->likeComment($target_id, $access_token);
+                        $fb->likeComment($target_id, $access_token, $platform);
                         $fb->replyToComment($target_id, $pub_msg, $access_token, $platform);
                         try {
                             $res_p = $fb->replyPrivateToComment($target_id, $priv_msg, $access_token, $platform);
@@ -557,7 +558,7 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 
         // --- NEW: AUTO LIKE COMMENT ---
         if ($auto_like_comment) {
-            $like_res = $fb->likeComment($target_id, $access_token);
+            $like_res = $fb->likeComment($target_id, $access_token, $platform);
             // DEBUG: Log the result of the auto-like
             file_put_contents(__DIR__ . '/debug_fb.txt', date('Y-m-d H:i:s') . " - Auto-Like Res: " . json_encode($like_res) . " | ID: $target_id\n", FILE_APPEND);
         }
@@ -596,17 +597,17 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 
 function processModeration($pdo, $id, $comment_id, $message_text, $sender_name = '', $platform = 'facebook', $post_id = null)
 {
-    // 1. Get Rules - Fix: The ID coming from webhook for IG is the IG Business ID.
-    // We need to find the rule associated with this ID.
-    $stmt = $pdo->prepare("SELECT * FROM fb_moderation_rules WHERE page_id = ? AND platform = ? AND is_active = 1");
+    // 1. Get Rules - Fix: Use trim and robust platform check
+    $id = trim($id);
+    $stmt = $pdo->prepare("SELECT * FROM fb_moderation_rules WHERE page_id = ? AND platform = ?");
     $stmt->execute([$id, $platform]);
     $rules = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if (!$rules) {
-        debugLog("No moderation rules found for Page ID: $id on Platform: $platform");
+    if (!$rules || (isset($rules['is_active']) && !$rules['is_active'])) {
+        debugLog("No active moderation rules found for Page ID: $id on Platform: $platform");
         return false;
     }
-    debugLog("Moderation Rules Found for $id: Phones=" . $rules['hide_phones'] . ", Links=" . $rules['hide_links'] . ", Active=" . $rules['is_active']);
+    debugLog("Moderation Rules Found for $id ($platform): Phones=" . ($rules['hide_phones'] ? 'ON' : 'OFF') . ", Links=" . ($rules['hide_links'] ? 'ON' : 'OFF') . ", Action=" . $rules['action_type']);
 
     $violation = false;
     $reason = "";
@@ -655,12 +656,14 @@ function processModeration($pdo, $id, $comment_id, $message_text, $sender_name =
 
         if ($token) {
             if ($rules['action_type'] === 'hide') {
-                $fb->hideComment($comment_id, $token, true, $platform);
+                $hide_res = $fb->hideComment($comment_id, $token, true, $platform);
+                debugLog("Hide Action Result for $comment_id: " . json_encode($hide_res));
             } else {
-                $fb->makeRequest($comment_id, [], $token, 'DELETE');
+                $del_res = $fb->makeRequest($comment_id, [], $token, 'DELETE');
+                debugLog("Delete Action Result for $comment_id: " . json_encode($del_res));
             }
 
-            // Log the action
+            // Log the action to DB
             $stmt = $pdo->prepare("INSERT INTO fb_moderation_logs (user_id, page_id, post_id, comment_id, content, user_name, reason, action_taken, platform) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
             $stmt->execute([$rules['user_id'], $id, $post_id, $comment_id, $message_text, $sender_name, $reason, $rules['action_type'], $platform]);
         }

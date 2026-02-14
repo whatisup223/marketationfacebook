@@ -476,12 +476,14 @@ class FacebookAPI
     {
         $endpoint = $comment_id;
 
-        // Instagram uses 'hide' param, Facebook uses 'is_hidden'
-        $field_name = ($platform === 'instagram') ? 'hide' : 'is_hidden';
+        if ($platform === 'instagram') {
+            // Instagram requires parameters in query or form-data
+            $val = $status ? 'true' : 'false';
+            $endpoint .= "?hide=$val";
+            return $this->makeRequest($endpoint, ['hide' => $status], $access_token, 'POST');
+        }
 
-        $params = [
-            $field_name => $status
-        ];
+        $params = ['is_hidden' => $status];
         return $this->makeRequest($endpoint, $params, $access_token, 'POST');
     }
 
@@ -491,24 +493,27 @@ class FacebookAPI
     public function replyPrivateToComment($comment_id, $message, $access_token, $platform = 'facebook')
     {
         if ($platform === 'instagram') {
-            // Instagram often requires 'message' in the query string for private_replies
+            // Instagram often requires 'message' in the query string AND/OR body for private_replies
             $endpoint = $comment_id . '/private_replies?message=' . urlencode($message);
-            return $this->makeRequest($endpoint, [], $access_token, 'POST');
+            return $this->makeRequest($endpoint, ['message' => $message], $access_token, 'POST');
         } else {
             $endpoint = 'me/messages';
             $params = [
                 'recipient' => ['comment_id' => $comment_id],
                 'message' => ['text' => $message]
             ];
+            return $this->makeRequest($endpoint, $params, $access_token, 'POST');
         }
-        return $this->makeRequest($endpoint, $params, $access_token, 'POST');
-    }
-
-    /**
+    }/**
      * Like a comment
      */
-    public function likeComment($comment_id, $access_token)
+    public function likeComment($comment_id, $access_token, $platform = 'facebook')
     {
+        if ($platform === 'instagram') {
+            // Instagram Like endpoint: POST /IG-COMMENT-ID?user_liked=true
+            $endpoint = $comment_id . '?user_liked=true';
+            return $this->makeRequest($endpoint, ['user_liked' => true], $access_token, 'POST');
+        }
         $endpoint = "$comment_id/likes";
         return $this->makeRequest($endpoint, [], $access_token, 'POST');
     }
