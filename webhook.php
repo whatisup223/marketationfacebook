@@ -68,15 +68,9 @@ try {
         $pdo->exec("ALTER TABLE fb_moderation_rules ADD COLUMN ig_business_id VARCHAR(100) NULL");
     if (!in_array('platform', $mod_cols))
         $pdo->exec("ALTER TABLE fb_moderation_rules ADD COLUMN platform ENUM('facebook', 'instagram') DEFAULT 'facebook'");
-    // fb_moderation_logs: Add 'silenced' to action_taken enum ONLY IF NEEDED
+    // fb_moderation_logs: Avoid ENUM truncation/failure
     try {
-        $check = $pdo->query("SHOW COLUMNS FROM `fb_moderation_logs` LIKE 'action_taken'")->fetch(PDO::FETCH_ASSOC);
-        if ($check) {
-            $type = $check['Type'];
-            if (mb_stripos($type, 'silenced') === false) {
-                $pdo->exec("ALTER TABLE `fb_moderation_logs` MODIFY COLUMN `action_taken` ENUM('hide', 'delete', 'silenced') DEFAULT 'hide'");
-            }
-        }
+        $pdo->exec("ALTER TABLE `fb_moderation_logs` MODIFY COLUMN `action_taken` VARCHAR(50) DEFAULT 'hide'");
     } catch (Exception $e) {
     }
 } catch (Exception $em) {
