@@ -528,10 +528,10 @@ class FacebookAPI
      */
     public function likeComment($comment_id, $access_token, $platform = 'facebook', $is_hidden = false)
     {
-        // For Instagram (v19.0+) and Facebook, the endpoint is now unified
+        if ($platform === 'instagram') {
+            return ['success' => true, 'not_supported' => true];
+        }
         $endpoint = "$comment_id/likes";
-
-        // Note: For Instagram, we don't need user_liked=true in the body anymore for the /likes endpoint
         return $this->makeRequest($endpoint, [], $access_token, 'POST');
     }
 
