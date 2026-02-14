@@ -68,6 +68,11 @@ try {
         $pdo->exec("ALTER TABLE fb_moderation_rules ADD COLUMN ig_business_id VARCHAR(100) NULL");
     if (!in_array('platform', $mod_cols))
         $pdo->exec("ALTER TABLE fb_moderation_rules ADD COLUMN platform ENUM('facebook', 'instagram') DEFAULT 'facebook'");
+    // fb_moderation_logs: Add 'silenced' to action_taken enum
+    try {
+        $pdo->exec("ALTER TABLE `fb_moderation_logs` MODIFY COLUMN `action_taken` ENUM('hide', 'delete', 'silenced') DEFAULT 'hide'");
+    } catch (Exception $e) {
+    }
 } catch (Exception $em) {
     debugLog("Migration Error: " . $em->getMessage());
 }
@@ -94,18 +99,22 @@ if (isset($data['instance']) && isset($data['event'])) {
 // ----------------------------------------------------------------------
 function handleFacebookEvent($data, $pdo)
 {
-    $platform = ($data['object'] === 'instagram') ? 'instagram' : 'facebook';
+    $object_type = $data['object'] ?? '';
     foreach ($data['entry'] as $entry) {
-        $id = $entry['id'] ?? ''; // This could be Page ID or Instagram Business ID
+        $entry_id = $entry['id'] ?? '';
 
-        // Handle Messaging (Messenger)
+        // Load Page/IG metadata to normalize IDs
+        $stmt = $pdo->prepare("SELECT page_id, ig_business_id, page_name FROM fb_pages WHERE page_id = ? OR ig_business_id = ? LIMIT 1");
+        $stmt->execute([$entry_id, $entry_id]);
+        $page_meta = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        // Handle Messaging (Messenger / Direct Messages)
         if (isset($entry['messaging'])) {
             foreach ($entry['messaging'] as $messaging) {
                 $sender_id = $messaging['sender']['id'] ?? '';
-                if ($sender_id == $id)
-                    continue; // Skip messages sent by the page/account itself
+                if ($sender_id == $entry_id)
+                    continue;
 
-                // Check for Text Message, Quick Reply, or Postback (Button Click)
                 $message_text = '';
                 if (isset($messaging['message']['quick_reply']['payload'])) {
                     $message_text = $messaging['message']['quick_reply']['payload'];
@@ -118,55 +127,62 @@ function handleFacebookEvent($data, $pdo)
                 if (!$message_text)
                     continue;
 
-                processAutoReply($pdo, $id, $sender_id, $message_text, 'message', null, '', $platform);
+                $platform = ($object_type === 'instagram') ? 'instagram' : 'facebook';
+                // For Instagram Messaging, entry_id IS the IG Business ID
+                processAutoReply($pdo, $entry_id, $sender_id, $message_text, 'message', null, '', $platform);
             }
         }
 
-        // Handle Feed/Comments (Comments)
+        // Handle Feed/Comments
         if (isset($entry['changes'])) {
             foreach ($entry['changes'] as $change) {
                 if ($change['field'] === 'feed' || $change['field'] === 'comments') {
                     $val = $change['value'];
-                    // For Instagram, sometimes it's not under 'item'
-                    $item = $val['item'] ?? ($platform === 'instagram' ? 'comment' : '');
+                    $item = $val['item'] ?? ($object_type === 'instagram' ? 'comment' : '');
                     if ($item === 'comment') {
-                        $verb = $val['verb'] ?? ($platform === 'instagram' ? 'add' : '');
-                        // Force 'add' for Instagram if not present, as IG webhook structure differs
-                        if ($platform === 'instagram' && empty($verb)) {
+                        $verb = $val['verb'] ?? ($object_type === 'instagram' ? 'add' : '');
+                        if (empty($verb) && $object_type === 'instagram')
                             $verb = 'add';
-                        }
 
                         if ($verb === 'add' || $verb === 'edited') {
                             $sender_id = $val['from']['id'] ?? '';
-                            if ($sender_id == $id)
+                            if ($sender_id == $entry_id)
                                 continue;
 
                             $comment_id = $val['comment_id'] ?? $val['id'] ?? '';
                             $post_id = $val['post_id'] ?? $val['media_id'] ?? '';
                             $parent_id = $val['parent_id'] ?? null;
-
-                            // Instagram comment text is often just under 'text'
                             $message_text = $val['message'] ?? $val['text'] ?? '';
                             $sender_name = $val['from']['name'] ?? $val['from']['username'] ?? '';
 
-                            debugLog("Processing Comment: ID=$comment_id, Post=$post_id, Parent=$parent_id, Platform=$platform, Verb=$verb");
+                            // PLATFORM DETECTION & ID NORMALIZATION
+                            $platform = 'facebook';
+                            $target_rule_id = $entry_id; // Default to Page ID
 
-                            // 1. Check Moderation (Must check for both additions and edits)
+                            // Detect if it's an Instagram comment (even in 'page' webhook)
+                            $is_ig_comment = ($object_type === 'instagram' || isset($val['from']['username']));
+                            if ($is_ig_comment) {
+                                $platform = 'instagram';
+                                // If we have linked IG ID in DB, use it for rule lookup
+                                if ($page_meta && !empty($page_meta['ig_business_id'])) {
+                                    $target_rule_id = $page_meta['ig_business_id'];
+                                }
+                            }
+
+                            debugLog("Processing Comment: ID=$comment_id, Platform=$platform, TargetRuleID=$target_rule_id");
+
+                            // 1. Check Moderation
                             $is_moderated = false;
                             try {
-                                $is_moderated = processModeration($pdo, $id, $comment_id, $message_text, $sender_name, $platform, $post_id);
+                                $is_moderated = processModeration($pdo, $target_rule_id, $comment_id, $message_text, $sender_name, $platform, $post_id);
                             } catch (Exception $modEx) {
                                 debugLog("Moderation Exception: " . $modEx->getMessage());
                             }
-                            debugLog("Moderation Final Result: " . ($is_moderated ? "MODERATED (Action Taken)" : "PASSED (No Violation)"));
 
-                            // 2. Only Auto-Reply if it's a NEW comment and NOT moderated
-                            if (($verb === 'add' || $verb === 'edited') && !$is_moderated) {
-                                // For edits, we might still want to reply or update? But usually 'add' is fine.
-                                if ($verb === 'add') {
-                                    debugLog("Triggering Auto-Reply flow for $comment_id");
-                                    processAutoReply($pdo, $id, $comment_id, $message_text, 'comment', $sender_id, $sender_name, $platform, $post_id, $parent_id);
-                                }
+                            // 2. Trigger Auto-Reply if not moderated
+                            if ($verb === 'add' && !$is_moderated) {
+                                debugLog("Triggering Auto-Reply flow for $comment_id");
+                                processAutoReply($pdo, $target_rule_id, $comment_id, $message_text, 'comment', $sender_id, $sender_name, $platform, $post_id, $parent_id);
                             }
                         }
                     }
@@ -210,21 +226,27 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 
     if ($mod_rules) {
         $violation = false;
+        $reason = "";
         if ($mod_rules['hide_phones']) {
             $phone_pattern = '/(\+?[\d٠-٩]{1,4}[\s-]?[\d٠-٩]{7,14})|([\d٠-٩]{8,15})/u';
-            if (preg_match($phone_pattern, $incoming_text))
+            if (preg_match($phone_pattern, $incoming_text)) {
                 $violation = true;
+                $reason = "Phone Number Detected";
+            }
         }
         if (!$violation && $mod_rules['hide_links']) {
             $link_pattern = '/(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9-]+\.(com|net|org|me|info|biz|co|app|xyz|site|online|link))/iu';
-            if (preg_match($link_pattern, $incoming_text))
+            if (preg_match($link_pattern, $incoming_text)) {
                 $violation = true;
+                $reason = "Link Detected";
+            }
         }
         if (!$violation && !empty($mod_rules['banned_keywords'])) {
             $keywords = preg_split('/[,،]/u', $mod_rules['banned_keywords']);
             foreach ($keywords as $kw) {
                 if (!empty(trim($kw)) && mb_stripos($incoming_text, trim($kw)) !== false) {
                     $violation = true;
+                    $reason = "Banned Keyword: $kw";
                     break;
                 }
             }
@@ -232,6 +254,13 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 
         if ($violation) {
             debugLog("processAutoReply SILENCED: Incoming message violated moderation rules.");
+            // Log the silencing to DB
+            try {
+                $stmt = $pdo->prepare("INSERT INTO fb_moderation_logs (user_id, page_id, post_id, comment_id, content, user_name, reason, action_taken, platform) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->execute([$mod_rules['user_id'], $page_id, $post_id, null, $incoming_text, $sender_name, $reason, 'silenced', $platform]);
+            } catch (Exception $logEx) {
+                debugLog("processAutoReply: Failed to log silence: " . $logEx->getMessage());
+            }
             return;
         }
     }
