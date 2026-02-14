@@ -856,17 +856,14 @@ function processModeration($pdo, $id, $comment_id, $message_text, $sender_name =
 
             // Log the action to DB
             try {
-                $user_id_to_log = $rules['user_id'] ?? 0;
-                if (!$user_id_to_log) {
-                    // Fallback: try to find user_id from fb_pages if rules didn't have it
-                    $uStmt = $pdo->prepare("SELECT a.user_id FROM fb_pages p JOIN fb_accounts a ON p.account_id = a.id WHERE p.page_id = ? OR p.ig_business_id = ? LIMIT 1");
-                    $uStmt->execute([$id, $id]);
-                    $user_id_to_log = $uStmt->fetchColumn() ?: 0;
-                }
+                // Find the page owner (User ID) to ensure the log is visible to the right person
+                $uStmt = $pdo->prepare("SELECT a.user_id FROM fb_pages p JOIN fb_accounts a ON p.account_id = a.id WHERE p.page_id = ? OR p.ig_business_id = ? LIMIT 1");
+                $uStmt->execute([$id, $id]);
+                $user_id_to_log = $uStmt->fetchColumn() ?: ($rules['user_id'] ?? 0);
 
                 $stmt = $pdo->prepare("INSERT INTO fb_moderation_logs (user_id, page_id, post_id, comment_id, content, user_name, reason, action_taken, platform) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 $log_res = $stmt->execute([
-                    $user_id_to_log,
+                    (int) $user_id_to_log,
                     (string) $id,
                     (string) $post_id,
                     (string) $comment_id,
@@ -876,9 +873,9 @@ function processModeration($pdo, $id, $comment_id, $message_text, $sender_name =
                     (string) $action,
                     (string) $platform
                 ]);
-                debugLog("LOGGING ATTEMPT: User=$user_id_to_log, Page=$id, Platform=$platform, Status=" . ($log_res ? "SUCCESS" : "FAILED"));
+                debugLog("ULTIMATE LOGGING: User=$user_id_to_log, Page=$id, Status=" . ($log_res ? "SUCCESS" : "FAILED"));
             } catch (Exception $logEx) {
-                debugLog("LOGGING ERROR: " . $logEx->getMessage());
+                debugLog("ULTIMATE LOGGING ERROR: " . $logEx->getMessage());
             }
         } else {
             debugLog("Moderation ERROR: No token found for Page/IG $id");
