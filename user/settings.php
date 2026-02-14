@@ -307,6 +307,7 @@ include '../includes/header.php';
                                             'public_profile',
                                             'pages_show_list',
                                             'pages_read_engagement',
+                                            'pages_manage_engagement',
                                             'pages_manage_metadata',
                                             'pages_read_user_content',
                                             'pages_manage_posts',
