@@ -568,6 +568,16 @@ try {
                     ADD KEY `idx_ig_business` (`ig_business_id`)");
     }
 
+    // --- 044: Platform support for Auto Reply & Bot ---
+    if (!columnExists($pdo, 'auto_reply_rules', 'platform')) {
+        $pdo->exec("ALTER TABLE `auto_reply_rules` ADD COLUMN `platform` ENUM('facebook', 'instagram') DEFAULT 'facebook' AFTER `page_id`");
+        $pdo->exec("CREATE INDEX `idx_platform` ON `auto_reply_rules` (`platform`)");
+    }
+
+    if (!columnExists($pdo, 'bot_sent_messages', 'platform')) {
+        $pdo->exec("ALTER TABLE `bot_sent_messages` ADD COLUMN `platform` ENUM('facebook', 'instagram') DEFAULT 'facebook' AFTER `page_id`");
+    }
+
     echo "✅ Master Migration completed successfully!\n";
 
 } catch (Exception $e) {
