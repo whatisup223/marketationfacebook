@@ -123,9 +123,9 @@ $initial_width_class = $sidebar_collapsed ? 'w-20' : 'w-64';
             <div>
                 <button @click="sidebarCollapsed ? (toggleSidebar(), fbOpen = true) : fbOpen = !fbOpen"
                     title="<?php echo __('facebook'); ?>"
-                    class="w-full flex items-center px-3 py-2.5 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition-all group">
-                    <div class="w-6 h-6 flex items-center justify-center shrink-0 transition-all duration-300"
-                        :class="sidebarCollapsed ? 'w-full' : 'w-6'">
+                    class="w-full flex items-center rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition-all group overflow-hidden <?php echo $sidebar_collapsed ? 'justify-center p-0 h-12' : 'px-3 py-2.5'; ?>">
+                    <div
+                        class="flex items-center justify-center shrink-0 transition-all duration-300 <?php echo $sidebar_collapsed ? 'w-full h-full' : 'w-6 h-6'; ?>">
                         <svg class="w-5 h-5 group-hover:text-indigo-400 transition-colors" fill="currentColor"
                             viewBox="0 0 24 24">
                             <path
@@ -133,7 +133,7 @@ $initial_width_class = $sidebar_collapsed ? 'w-20' : 'w-64';
                         </svg>
                     </div>
                     <span
-                        class="ms-3 text-sm font-medium hide-on-collapse transition-all duration-300"><?php echo __('facebook'); ?></span>
+                        class="ms-3 text-sm font-medium hide-on-collapse transition-all duration-300"><?php echo $lang === 'ar' ? 'أدوات فيسبوك' : 'Facebook Tools'; ?></span>
                     <svg class="w-4 h-4 ms-auto transition-transform hide-on-collapse"
                         :class="fbOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -160,9 +160,9 @@ $initial_width_class = $sidebar_collapsed ? 'w-20' : 'w-64';
             <div>
                 <button @click="sidebarCollapsed ? (toggleSidebar(), igOpen = true) : igOpen = !igOpen"
                     title="<?php echo __('instagram'); ?>"
-                    class="w-full flex items-center px-3 py-2.5 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition-all group">
-                    <div class="w-6 h-6 flex items-center justify-center shrink-0 transition-all duration-300"
-                        :class="sidebarCollapsed ? 'w-full' : 'w-6'">
+                    class="w-full flex items-center rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition-all group overflow-hidden <?php echo $sidebar_collapsed ? 'justify-center p-0 h-12' : 'px-3 py-2.5'; ?>">
+                    <div
+                        class="flex items-center justify-center shrink-0 transition-all duration-300 <?php echo $sidebar_collapsed ? 'w-full h-full' : 'w-6 h-6'; ?>">
                         <svg class="w-5 h-5 group-hover:text-pink-500 transition-colors" fill="currentColor"
                             viewBox="0 0 24 24">
                             <path
@@ -170,7 +170,7 @@ $initial_width_class = $sidebar_collapsed ? 'w-20' : 'w-64';
                         </svg>
                     </div>
                     <span
-                        class="ms-3 text-sm font-medium hide-on-collapse transition-all duration-300"><?php echo __('instagram'); ?></span>
+                        class="ms-3 text-sm font-medium hide-on-collapse transition-all duration-300"><?php echo $lang === 'ar' ? 'أدوات انستقرام' : 'Instagram Tools'; ?></span>
                     <svg class="w-4 h-4 ms-auto transition-transform hide-on-collapse"
                         :class="igOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />

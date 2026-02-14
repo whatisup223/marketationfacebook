@@ -169,9 +169,9 @@ $h_sidebar_collapsed = isset($_COOKIE['sidebar_collapsed']) && $_COOKIE['sidebar
                 extend: {
                     fontFamily: {
                         <?php if ($lang === 'ar'): ?>
-                                                                                                                                                                                                                                                                                                        sans: ['IBM Plex Sans Arabic', 'sans-serif'],
+                                                                                                                                                                                                                                                                                                                sans: ['IBM Plex Sans Arabic', 'sans-serif'],
                         <?php else: ?>
-                                                                                                                                                                                                                                                                                                        sans: ['Outfit', 'sans-serif'],
+                                                                                                                                                                                                                                                                                                                sans: ['Outfit', 'sans-serif'],
                         <?php endif; ?>
                     },
                     colors: {
@@ -181,7 +181,7 @@ $h_sidebar_collapsed = isset($_COOKIE['sidebar_collapsed']) && $_COOKIE['sidebar
                     }
                 }
             }
-    }
+        }
     </script>
     <style>
         [x-cloak] {
@@ -399,7 +399,7 @@ $h_sidebar_collapsed = isset($_COOKIE['sidebar_collapsed']) && $_COOKIE['sidebar
                 .finally(() => {
                     window.location.href = url;
                 });
-    }
+        }
     </script>
 
     <style>
@@ -603,68 +603,65 @@ $h_sidebar_collapsed = isset($_COOKIE['sidebar_collapsed']) && $_COOKIE['sidebar
                     <?php endif; ?>
                 </div>
 
-                <div class="flex items-center space-x-3 sm:space-x-5 rtl:space-x-reverse">
-                    <!-- Global Persistent Icons -->
-                    <div class="flex items-center space-x-2 sm:space-x-3 rtl:space-x-reverse">
-                        <!-- Language Switcher -->
-                        <a href="?<?php echo htmlspecialchars(http_build_query(array_merge($_GET, ['lang' => ($lang === 'ar' ? 'en' : 'ar')]))); ?>"
-                            title="<?php echo $lang === 'ar' ? 'English' : 'عربي'; ?>"
-                            class="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-indigo-600 hover:border-indigo-500 transition-all duration-300 flex-shrink-0">
-                            <svg class="w-5 h-5 transition-transform duration-300 group-hover:scale-110" fill="none"
-                                stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129">
-                                </path>
-                            </svg>
-                        </a>
+                <div class="flex items-center justify-end gap-2 sm:gap-4 rtl:space-x-reverse">
+                    <!-- Language Switcher -->
+                    <a href="?<?php echo htmlspecialchars(http_build_query(array_merge($_GET, ['lang' => ($lang === 'ar' ? 'en' : 'ar')]))); ?>"
+                        title="<?php echo $lang === 'ar' ? 'English' : 'عربي'; ?>"
+                        class="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-indigo-600 hover:border-indigo-500 transition-all duration-300 flex-shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129">
+                            </path>
+                        </svg>
+                    </a>
 
-                        <?php if (isLoggedIn() && $prefix !== ''): ?>
-                            <!-- Notifications Dropdown -->
-                            <?php
-                            $notifications_unread_count = getUnreadCount($_SESSION['user_id']);
-                            $notifications_list = getUnreadNotifications($_SESSION['user_id'], 5);
-                            $h_pdo = getDB();
-                            $h_stmt = $h_pdo->prepare("SELECT preferences FROM users WHERE id = ?");
-                            $h_stmt->execute([$_SESSION['user_id']]);
-                            $h_prefs = json_decode($h_stmt->fetchColumn() ?: '{}', true);
-                            $header_is_muted = $h_prefs['notifications_muted'] ?? false;
-                            ?>
-                            <div class="relative" x-data="{ openNotifications: false }">
-                                <button @click="openNotifications = !openNotifications"
-                                    class="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-indigo-600 hover:border-indigo-500 transition-all duration-300 relative">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
-                                        </path>
-                                    </svg>
+                    <?php if (isLoggedIn() && $prefix !== ''): ?>
+                        <!-- Notifications Dropdown -->
+                        <?php
+                        $notifications_unread_count = getUnreadCount($_SESSION['user_id']);
+                        $notifications_list = getUnreadNotifications($_SESSION['user_id'], 5);
+                        $h_pdo = getDB();
+                        $h_stmt = $h_pdo->prepare("SELECT preferences FROM users WHERE id = ?");
+                        $h_stmt->execute([$_SESSION['user_id']]);
+                        $h_prefs = json_decode($h_stmt->fetchColumn() ?: '{}', true);
+                        $header_is_muted = $h_prefs['notifications_muted'] ?? false;
+                        ?>
+                        <div class="relative" x-data="{ openNotifications: false }">
+                            <button @click="openNotifications = !openNotifications"
+                                class="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-indigo-600 hover:border-indigo-500 transition-all duration-300 relative">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
+                                    </path>
+                                </svg>
+                                <?php if ($notifications_unread_count > 0): ?>
+                                    <span
+                                        class="absolute top-1.5 right-1.5 rtl:left-1.5 rtl:right-auto bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full border border-gray-900 leading-none">
+                                        <?php echo $notifications_unread_count > 9 ? '9+' : $notifications_unread_count; ?>
+                                    </span>
+                                <?php endif; ?>
+                            </button>
+
+                            <!-- Dropdown -->
+                            <div x-show="openNotifications" @click.away="openNotifications = false"
+                                x-transition:enter="transition ease-out duration-200"
+                                x-transition:enter-start="opacity-0 translate-y-2"
+                                x-transition:enter-end="opacity-100 translate-y-0"
+                                x-transition:leave="transition ease-in duration-150"
+                                x-transition:leave-start="opacity-100 translate-y-0"
+                                x-transition:leave-end="opacity-0 translate-y-2"
+                                class="absolute right-0 rtl:left-0 rtl:right-auto mt-2 w-80 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl z-50 overflow-hidden"
+                                style="display: none;">
+
+                                <div class="px-4 py-3 border-b border-gray-800 flex justify-between items-center">
+                                    <h3 class="text-sm font-bold text-white"><?php echo __('notifications'); ?></h3>
                                     <?php if ($notifications_unread_count > 0): ?>
-                                        <span
-                                            class="absolute top-1.5 right-1.5 rtl:left-1.5 rtl:right-auto bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full border border-gray-900 leading-none">
-                                            <?php echo $notifications_unread_count > 9 ? '9+' : $notifications_unread_count; ?>
-                                        </span>
-                                    <?php endif; ?>
-                                </button>
-
-                                <!-- Dropdown -->
-                                <div x-show="openNotifications" @click.away="openNotifications = false"
-                                    x-transition:enter="transition ease-out duration-200"
-                                    x-transition:enter-start="opacity-0 translate-y-2"
-                                    x-transition:enter-end="opacity-100 translate-y-0"
-                                    x-transition:leave="transition ease-in duration-150"
-                                    x-transition:leave-start="opacity-100 translate-y-0"
-                                    x-transition:leave-end="opacity-0 translate-y-2"
-                                    class="absolute right-0 rtl:left-0 rtl:right-auto mt-2 w-80 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl z-50 overflow-hidden"
-                                    style="display: none;">
-
-                                    <div class="px-4 py-3 border-b border-gray-800 flex justify-between items-center">
-                                        <h3 class="text-sm font-bold text-white"><?php echo __('notifications'); ?></h3>
-                                        <?php if ($notifications_unread_count > 0): ?>
-                                            <div class="flex items-center gap-3">
-                                                <span
-                                                    class="text-xs text-indigo-400 font-bold bg-indigo-500/10 px-2 py-0.5 rounded-full border border-indigo-500/20">
-                                                    <?php echo $notifications_unread_count > 9 ? '9+' : $notifications_unread_count; ?>
-                                                </span>
-                                                <button @click="fetch('<?php echo $prefix; ?>includes/api/mark_all_notifications_read.php', {method: 'POST'})
+                                        <div class="flex items-center gap-3">
+                                            <span
+                                                class="text-xs text-indigo-400 font-bold bg-indigo-500/10 px-2 py-0.5 rounded-full border border-indigo-500/20">
+                                                <?php echo $notifications_unread_count > 9 ? '9+' : $notifications_unread_count; ?>
+                                            </span>
+                                            <button @click="fetch('<?php echo $prefix; ?>includes/api/mark_all_notifications_read.php', {method: 'POST'})
                                                         .then(res => res.json())
                                                         .then(data => {
                                                             if(!data.success) alert('Error: ' + (data.message || 'Unknown'));
@@ -674,162 +671,159 @@ $h_sidebar_collapsed = isset($_COOKIE['sidebar_collapsed']) && $_COOKIE['sidebar
                                                             console.error(err);
                                                             alert('Network error');
                                                         });" title="<?php echo __('mark_all_read'); ?>"
-                                                    class="text-gray-500 hover:text-white transition-colors">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                            d="M5 13l4 4L19 7M5 13l4 4L19 7"></path>
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        <?php endif; ?>
-
-                                        <!-- Mute Toggle -->
-                                        <button
-                                            @click="fetch('<?php echo $prefix; ?>includes/api/toggle_notifications_mute.php', {method: 'POST'}).finally(() => window.location.reload());"
-                                            title="<?php echo $header_is_muted ? __('unmute_notifications') : __('mute_notifications'); ?>"
-                                            class="<?php echo $header_is_muted ? 'text-red-400 hover:text-red-300' : 'text-gray-500 hover:text-white'; ?> transition-colors ml-2 rtl:mr-2 rtl:ml-0">
-                                            <?php if ($header_is_muted): ?>
-                                                <svg class="w-4 h-4" fill="none" notification-muted stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
-                                                        clip-rule="evenodd" />
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
-                                                </svg>
-                                            <?php else: ?>
+                                                class="text-gray-500 hover:text-white transition-colors">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
-                                                    </path>
+                                                        d="M5 13l4 4L19 7M5 13l4 4L19 7"></path>
                                                 </svg>
-                                            <?php endif; ?>
-                                        </button>
-                                    </div>
+                                            </button>
+                                        </div>
+                                    <?php endif; ?>
 
-                                    <div class="max-h-64 overflow-y-auto">
-                                        <?php if (count($notifications_list) > 0): ?>
-                                            <?php foreach ($notifications_list as $notif): ?>
-                                                <div
-                                                    class="border-b border-gray-800 last:border-0 hover:bg-gray-800 transition-colors relative group">
-                                                    <a href="<?php echo $prefix . $notif['link']; ?>"
-                                                        @click.prevent="markReadAndNavigate(<?php echo $notif['id']; ?>, '<?php echo $prefix . $notif['link']; ?>')"
-                                                        class="block px-4 py-3">
-                                                        <p class="text-xs text-indigo-400 font-bold mb-1">
-                                                            <?php echo htmlspecialchars(__($notif['title'])); ?>
-                                                        </p>
-                                                        <p class="text-sm text-gray-300 line-clamp-2 leading-snug">
-                                                            <?php
-                                                            $msgText = $notif['message'];
-                                                            $decoded = json_decode($msgText, true);
-                                                            if ($decoded && is_array($decoded) && isset($decoded['key'])) {
-                                                                $params = $decoded['params'] ?? [];
-                                                                if (isset($decoded['param_keys']) && is_array($decoded['param_keys'])) {
-                                                                    foreach ($decoded['param_keys'] as $idx) {
-                                                                        if (isset($params[$idx])) {
-                                                                            $params[$idx] = __($params[$idx]);
-                                                                        }
+                                    <!-- Mute Toggle -->
+                                    <button
+                                        @click="fetch('<?php echo $prefix; ?>includes/api/toggle_notifications_mute.php', {method: 'POST'}).finally(() => window.location.reload());"
+                                        title="<?php echo $header_is_muted ? __('unmute_notifications') : __('mute_notifications'); ?>"
+                                        class="<?php echo $header_is_muted ? 'text-red-400 hover:text-red-300' : 'text-gray-500 hover:text-white'; ?> transition-colors ml-2 rtl:mr-2 rtl:ml-0">
+                                        <?php if ($header_is_muted): ?>
+                                            <svg class="w-4 h-4" fill="none" notification-muted stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
+                                                    clip-rule="evenodd" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+                                            </svg>
+                                        <?php else: ?>
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
+                                                </path>
+                                            </svg>
+                                        <?php endif; ?>
+                                    </button>
+                                </div>
+
+                                <div class="max-h-64 overflow-y-auto">
+                                    <?php if (count($notifications_list) > 0): ?>
+                                        <?php foreach ($notifications_list as $notif): ?>
+                                            <div
+                                                class="border-b border-gray-800 last:border-0 hover:bg-gray-800 transition-colors relative group">
+                                                <a href="<?php echo $prefix . $notif['link']; ?>"
+                                                    @click.prevent="markReadAndNavigate(<?php echo $notif['id']; ?>, '<?php echo $prefix . $notif['link']; ?>')"
+                                                    class="block px-4 py-3">
+                                                    <p class="text-xs text-indigo-400 font-bold mb-1">
+                                                        <?php echo htmlspecialchars(__($notif['title'])); ?>
+                                                    </p>
+                                                    <p class="text-sm text-gray-300 line-clamp-2 leading-snug">
+                                                        <?php
+                                                        $msgText = $notif['message'];
+                                                        $decoded = json_decode($msgText, true);
+                                                        if ($decoded && is_array($decoded) && isset($decoded['key'])) {
+                                                            $params = $decoded['params'] ?? [];
+                                                            if (isset($decoded['param_keys']) && is_array($decoded['param_keys'])) {
+                                                                foreach ($decoded['param_keys'] as $idx) {
+                                                                    if (isset($params[$idx])) {
+                                                                        $params[$idx] = __($params[$idx]);
                                                                     }
                                                                 }
-                                                                $msgText = vsprintf(__($decoded['key']), $params);
-                                                            } else {
-                                                                $msgText = __($msgText);
                                                             }
-                                                            echo htmlspecialchars($msgText);
-                                                            ?>
-                                                        </p>
-                                                        <p class="text-[10px] text-gray-500 mt-2">
-                                                            <?php echo date('M d, H:i', strtotime($notif['created_at'])); ?>
-                                                        </p>
-                                                    </a>
-                                                    <button title="<?php echo __('mark_read'); ?>" @click.stop="fetch('<?php echo $prefix; ?>includes/api/mark_notification_read.php', {
+                                                            $msgText = vsprintf(__($decoded['key']), $params);
+                                                        } else {
+                                                            $msgText = __($msgText);
+                                                        }
+                                                        echo htmlspecialchars($msgText);
+                                                        ?>
+                                                    </p>
+                                                    <p class="text-[10px] text-gray-500 mt-2">
+                                                        <?php echo date('M d, H:i', strtotime($notif['created_at'])); ?>
+                                                    </p>
+                                                </a>
+                                                <button title="<?php echo __('mark_read'); ?>" @click.stop="fetch('<?php echo $prefix; ?>includes/api/mark_notification_read.php', {
                                                             method: 'POST',
                                                             headers: {'Content-Type': 'application/json'},
                                                             body: JSON.stringify({id: <?php echo $notif['id']; ?>})
                                                         }).then(() => $el.closest('div').remove());"
-                                                        class="absolute top-3 right-3 rtl:left-3 rtl:right-auto text-gray-600 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity p-1">
-                                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                                d="M5 13l4 4L19 7"></path>
-                                                        </svg>
-                                                    </button>
-                                                </div>
-                                            <?php endforeach; ?>
-                                        <?php else: ?>
-                                            <div class="px-4 py-8 text-center text-gray-500 text-sm">
-                                                <?php echo __('no_notifications'); ?>
+                                                    class="absolute top-3 right-3 rtl:left-3 rtl:right-auto text-gray-600 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity p-1">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                            d="M5 13l4 4L19 7"></path>
+                                                    </svg>
+                                                </button>
                                             </div>
-                                        <?php endif; ?>
-                                    </div>
-                                    <div class="bg-gray-800/50 p-2 text-center border-t border-gray-800">
-                                        <a href="<?php echo isAdmin() ? $prefix . 'admin/notifications.php' : $prefix . 'user/notifications.php'; ?>"
-                                            class="block text-center text-xs text-indigo-400 hover:text-indigo-300 font-bold py-1 transition-colors">
-                                            <?php echo __('view_all_notifications'); ?>
-                                        </a>
-                                    </div>
-                                </div>
-
-                                <!-- Profile Icon (Always Visible) -->
-                                <a href="<?php echo isAdmin() ? $prefix . 'admin/profile.php' : $prefix . 'user/profile.php'; ?>"
-                                    class="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-indigo-600 hover:border-indigo-500 transition-all duration-300 overflow-hidden group"
-                                    title="<?php echo __('profile'); ?>">
-                                    <?php if (isset($current_user) && $current_user['avatar']): ?>
-                                        <img src="<?php echo $prefix . $current_user['avatar']; ?>"
-                                            class="w-full h-full object-cover transition-transform group-hover:scale-110">
+                                        <?php endforeach; ?>
                                     <?php else: ?>
-                                        <svg class="w-5 h-5 transition-transform group-hover:scale-110" fill="none"
-                                            stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                                        </svg>
+                                        <div class="px-4 py-8 text-center text-gray-500 text-sm">
+                                            <?php echo __('no_notifications'); ?>
+                                        </div>
                                     <?php endif; ?>
-                                </a>
-
-                            <?php endif; ?>
+                                </div>
+                                <div class="bg-gray-800/50 p-2 text-center border-t border-gray-800">
+                                    <a href="<?php echo isAdmin() ? $prefix . 'admin/notifications.php' : $prefix . 'user/notifications.php'; ?>"
+                                        class="block text-center text-xs text-indigo-400 hover:text-indigo-300 font-bold py-1 transition-colors">
+                                        <?php echo __('view_all_notifications'); ?>
+                                    </a>
+                                </div>
+                            </div>
                         </div>
+                    <?php endif; ?>
 
-                        <!-- Desktop Only Text Links -->
-                        <div class="hidden lg:flex items-center space-x-4 rtl:space-x-reverse">
-                            <?php if (isLoggedIn()): ?>
-                                <a href="<?php echo isAdmin() ? $prefix . 'admin/dashboard.php' : $prefix . 'user/dashboard.php'; ?>"
-                                    class="bg-gradient-to-r from-indigo-600/20 to-purple-600/20 hover:from-indigo-600/40 hover:to-purple-600/40 text-indigo-300 hover:text-white border border-indigo-500/30 px-5 py-2.5 rounded-xl transition-all duration-300 shadow-xl shadow-indigo-500/10 text-sm font-bold whitespace-nowrap flex items-center gap-2 group">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 group-hover:animate-pulse"></span>
-                                    <?php echo isAdmin() ? ($lang === 'ar' ? 'لوحة الإدارة' : 'Admin Panel') : ($lang === 'ar' ? 'لوحة التحكم' : 'Dashboard'); ?>
-                                </a>
-                                <a href="<?php echo $prefix; ?>logout.php"
-                                    class="bg-white/10 text-white hover:bg-white/20 px-4 py-2 rounded-lg transition-all border border-white/10 text-sm font-bold flex-shrink-0">
-                                    <?php echo __('logout'); ?>
-                                </a>
-                            <?php else: ?>
-                                <a href="<?php echo $prefix; ?>login.php"
-                                    class="text-sm font-bold text-white bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg transition-all shadow-md whitespace-nowrap flex-shrink-0">
-                                    <?php echo __('login'); ?>
-                                </a>
-                                <a href="<?php echo $prefix; ?>register.php"
-                                    class="text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg shadow-lg shadow-indigo-500/30 transition-all whitespace-nowrap flex-shrink-0">
-                                    <?php echo __('register'); ?>
-                                </a>
-                            <?php endif; ?>
-                        </div>
+                    <!-- Profile Icon -->
+                    <a href="<?php echo isAdmin() ? $prefix . 'admin/profile.php' : $prefix . 'user/profile.php'; ?>"
+                        class="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-indigo-600 hover:border-indigo-500 transition-all duration-300 overflow-hidden shrink-0 group"
+                        title="<?php echo __('profile'); ?>">
+                        <?php if (isset($current_user) && $current_user['avatar']): ?>
+                            <img src="<?php echo $prefix . $current_user['avatar']; ?>"
+                                class="w-full h-full object-cover transition-transform group-hover:scale-110">
+                        <?php else: ?>
+                            <svg class="w-5 h-5 transition-transform group-hover:scale-110" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            </svg>
+                        <?php endif; ?>
+                    </a>
 
-                        <!-- Mobile Sidebar Trigger -->
-                        <div class="flex lg:hidden items-center">
-                            <button @click="mobileMenu = !mobileMenu" type="button"
-                                class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700/50 focus:outline-none transition-colors border border-white/5 bg-white/5">
-                                <span class="sr-only">Open main menu</span>
-                                <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                                    <path :class="{'hidden': mobileMenu, 'inline-flex': !mobileMenu }"
-                                        class="inline-flex" stroke-linecap="round" stroke-linejoin="round"
-                                        stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                                    <path :class="{'hidden': !mobileMenu, 'inline-flex': mobileMenu }" class="hidden"
-                                        stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                        </div>
+                    <!-- Desktop Only Text Links -->
+                    <div class="hidden lg:flex items-center space-x-4 rtl:space-x-reverse">
+                        <?php if (isLoggedIn()): ?>
+                            <a href="<?php echo isAdmin() ? $prefix . 'admin/dashboard.php' : $prefix . 'user/dashboard.php'; ?>"
+                                class="bg-gradient-to-r from-indigo-600/20 to-purple-600/20 hover:from-indigo-600/40 hover:to-purple-600/40 text-indigo-300 hover:text-white border border-indigo-500/30 px-5 py-2.5 rounded-xl transition-all duration-300 shadow-xl shadow-indigo-500/10 text-sm font-bold whitespace-nowrap flex items-center gap-2 group">
+                                <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 group-hover:animate-pulse"></span>
+                                <?php echo isAdmin() ? ($lang === 'ar' ? 'لوحة الإدارة' : 'Admin Panel') : ($lang === 'ar' ? 'لوحة التحكم' : 'Dashboard'); ?>
+                            </a>
+                            <a href="<?php echo $prefix; ?>logout.php"
+                                class="bg-white/10 text-white hover:bg-white/20 px-4 py-2 rounded-lg transition-all border border-white/10 text-sm font-bold flex-shrink-0">
+                                <?php echo __('logout'); ?>
+                            </a>
+                        <?php else: ?>
+                            <a href="<?php echo $prefix; ?>login.php"
+                                class="text-sm font-bold text-white bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg transition-all shadow-md whitespace-nowrap flex-shrink-0">
+                                <?php echo __('login'); ?>
+                            </a>
+                            <a href="<?php echo $prefix; ?>register.php"
+                                class="text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg shadow-lg shadow-indigo-500/30 transition-all whitespace-nowrap flex-shrink-0">
+                                <?php echo __('register'); ?>
+                            </a>
+                        <?php endif; ?>
                     </div>
+
+                    <!-- Mobile Sidebar Trigger -->
+                    <button @click="mobileMenu = !mobileMenu" type="button"
+                        class="lg:hidden flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-indigo-600 hover:border-indigo-500 transition-all duration-300 shrink-0">
+                        <span class="sr-only">Open main menu</span>
+                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                            <path :class="{'hidden': mobileMenu, 'inline-flex': !mobileMenu }" class="inline-flex"
+                                stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 6h16M4 12h16M4 18h16" />
+                            <path :class="{'hidden': !mobileMenu, 'inline-flex': mobileMenu }" class="hidden"
+                                stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
                 </div>
             </div>
+        </div>
 
 
     </nav>
@@ -1145,7 +1139,8 @@ $h_sidebar_collapsed = isset($_COOKIE['sidebar_collapsed']) && $_COOKIE['sidebar
                                                     <path
                                                         d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                                                 </svg>
-                                                <span><?php echo __('facebook'); ?></span>
+                                                <span
+                                                    class="ms-3 text-base font-semibold transition-all duration-300"><?php echo $lang === 'ar' ? 'أدوات فيسبوك' : 'Facebook Tools'; ?></span>
                                             </div>
                                             <svg class="w-4 h-4 transition-transform duration-200"
                                                 :class="mFbOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor"
@@ -1183,7 +1178,8 @@ $h_sidebar_collapsed = isset($_COOKIE['sidebar_collapsed']) && $_COOKIE['sidebar
                                                     <path
                                                         d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
                                                 </svg>
-                                                <span><?php echo __('instagram'); ?></span>
+                                                <span
+                                                    class="ms-3 text-base font-semibold transition-all duration-300"><?php echo $lang === 'ar' ? 'أدوات انستقرام' : 'Instagram Tools'; ?></span>
                                             </div>
                                             <svg class="w-4 h-4 transition-transform duration-200"
                                                 :class="mIgOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor"
