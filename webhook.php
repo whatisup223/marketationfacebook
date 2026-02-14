@@ -395,9 +395,21 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
     // 4. Advanced SaaS Logic (Repeat Detection only)
     $is_ai_safe = (int) ($matched_rule['is_ai_safe'] ?? 1);
 
-    if ($page['bot_ai_sentiment_enabled'] && $is_ai_safe && $customer_id) {
-        // Anger Detection moved to top (Global Check)
+    // For Default Replies, we are more lenient with AI safety unless explicitly strict
+    if ($matched_rule['trigger_type'] === 'default') {
+        $is_ai_safe = 0;
+    }
 
+    if ($page['bot_ai_sentiment_enabled'] && $is_ai_safe && $customer_id) {
+        // 4.2 Repetition Threshold Check
+        // If user sends the same thing too many times, we silence to avoid ban
+        if ($page['bot_repetition_threshold'] > 0 && $state && $state['last_user_message'] === $incoming_text) {
+            $reps = (int) ($state['repetition_count'] ?? 0);
+            if ($reps >= $page['bot_repetition_threshold']) {
+                debugLog("SILENCE: Repetition threshold reached ($reps) for $customer_id. Message: $incoming_text");
+                return;
+            }
+        }
         // B. Repeat Detection (Configurable Threshold)
         if ($state && $state['last_bot_reply_text'] === $reply_msg) {
             $threshold = (int) ($page['bot_repetition_threshold'] ?? 3);
