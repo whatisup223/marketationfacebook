@@ -165,8 +165,8 @@ function handleFacebookEvent($data, $pdo)
 function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $actual_sender_id = null, $sender_name = '', $platform = 'facebook', $post_id = null, $parent_id = null)
 {
     // 1. Fetch Page Settings (Token, Schedule, Cooldown, AI Intelligence)
-    // Try primary lookup by whichever ID Meta sent
-    $stmt = $pdo->prepare("SELECT p.page_id as fb_page_id, p.page_access_token, p.page_name, p.bot_cooldown_seconds, p.bot_schedule_enabled, p.bot_schedule_start, p.bot_schedule_end, p.bot_exclude_keywords, p.bot_ai_sentiment_enabled, p.bot_anger_keywords, p.bot_repetition_threshold, p.bot_handover_reply, a.user_id 
+    // Try primary lookup by whichever ID Meta sent. IMPORTANT: SELECT p.ig_business_id too!
+    $stmt = $pdo->prepare("SELECT p.page_id as fb_page_id, p.ig_business_id, p.page_access_token, p.page_name, p.bot_cooldown_seconds, p.bot_schedule_enabled, p.bot_schedule_start, p.bot_schedule_end, p.bot_exclude_keywords, p.bot_ai_sentiment_enabled, p.bot_anger_keywords, p.bot_repetition_threshold, p.bot_handover_reply, a.user_id 
                            FROM fb_pages p 
                            JOIN fb_accounts a ON p.account_id = a.id 
                            WHERE p.page_id = ? OR p.ig_business_id = ?");
@@ -640,9 +640,17 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 function processModeration($pdo, $id, $comment_id, $message_text, $sender_name = '', $platform = 'facebook', $post_id = null)
 {
     // Get Moderation Settings
-    $stmt = $pdo->prepare("SELECT * FROM fb_moderation_rules WHERE page_id = ? AND platform = ? LIMIT 1");
-    $stmt->execute([$id, $platform]);
+    // Search by both IDs to be safe
+    $stmt = $pdo->prepare("SELECT * FROM fb_moderation_rules WHERE (page_id = ? OR ig_business_id = ?) AND platform = ? LIMIT 1");
+    $stmt->execute([$id, $id, $platform]);
     $rules = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    // Fallback if ig_business_id lookup failed due to column missing
+    if (!$rules) {
+        $stmt = $pdo->prepare("SELECT * FROM fb_moderation_rules WHERE page_id = ? AND platform = ? LIMIT 1");
+        $stmt->execute([$id, $platform]);
+        $rules = $stmt->fetch(PDO::FETCH_ASSOC);
+    }
 
     if (!$rules || (isset($rules['is_active']) && !$rules['is_active'])) {
         debugLog("No active moderation rules found for Page ID: $id on Platform: $platform");
