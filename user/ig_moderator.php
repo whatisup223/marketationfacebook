@@ -110,7 +110,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <div class="flex flex-col sm:flex-row gap-4 items-stretch">
                     <div class="relative group flex-1">
                         <select x-model="selectedPageId"
-                            @change="updatePageName($event); loadRules(); fetchTokenDebug();"
+                            @change="updatePageName($event); loadRules(); loadLogs(); fetchTokenDebug();"
                             class="w-full bg-black/40 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500 block p-3.5 pr-10 appearance-none transition-all group-hover:border-white/20">
                             <option value=""><?php echo __('select_page'); ?>...</option>
                             <?php foreach ($pages as $page): ?>
@@ -562,6 +562,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             init() {
                 this.fetchWebhookInfo();
+                this.loadLogs();
                 this.$watch('testComment', () => this.updateModerationResult());
                 this.$watch('rules', () => this.updateModerationResult(), { deep: true });
             },

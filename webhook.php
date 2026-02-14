@@ -152,14 +152,21 @@ function handleFacebookEvent($data, $pdo)
                             debugLog("Processing Comment: ID=$comment_id, Post=$post_id, Parent=$parent_id, Platform=$platform, Verb=$verb");
 
                             // 1. Check Moderation (Must check for both additions and edits)
-                            $is_moderated = processModeration($pdo, $id, $comment_id, $message_text, $sender_name, $platform, $post_id);
+                            $is_moderated = false;
+                            try {
+                                $is_moderated = processModeration($pdo, $id, $comment_id, $message_text, $sender_name, $platform, $post_id);
+                            } catch (Exception $modEx) {
+                                debugLog("Moderation Exception: " . $modEx->getMessage());
+                            }
                             debugLog("Moderation Final Result: " . ($is_moderated ? "MODERATED (Action Taken)" : "PASSED (No Violation)"));
 
                             // 2. Only Auto-Reply if it's a NEW comment and NOT moderated
-                            if ($verb === 'add' && !$is_moderated) {
-                                debugLog("Triggering Auto-Reply flow for $comment_id");
-                                // We pass parent_id to skip private replies on nested comments for IG later
-                                processAutoReply($pdo, $id, $comment_id, $message_text, 'comment', $sender_id, $sender_name, $platform, $post_id, $parent_id);
+                            if (($verb === 'add' || $verb === 'edited') && !$is_moderated) {
+                                // For edits, we might still want to reply or update? But usually 'add' is fine.
+                                if ($verb === 'add') {
+                                    debugLog("Triggering Auto-Reply flow for $comment_id");
+                                    processAutoReply($pdo, $id, $comment_id, $message_text, 'comment', $sender_id, $sender_name, $platform, $post_id, $parent_id);
+                                }
                             }
                         }
                     }
@@ -194,6 +201,41 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
     }
 
     debugLog("processAutoReply: Page found: {$page['page_name']} (User ID: {$page['user_id']})");
+
+    // 1.1 Check Moderation Rules before anything else
+    // If it's a DM, we don't 'hide' but we might want to SILENCE the bot if it's spam/phone/link
+    $stmt = $pdo->prepare("SELECT * FROM fb_moderation_rules WHERE page_id = ? AND platform = ? AND is_active = 1 LIMIT 1");
+    $stmt->execute([$page_id, $platform]);
+    $mod_rules = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($mod_rules) {
+        $violation = false;
+        if ($mod_rules['hide_phones']) {
+            $phone_pattern = '/(\+?[\d٠-٩]{1,4}[\s-]?[\d٠-٩]{7,14})|([\d٠-٩]{8,15})/u';
+            if (preg_match($phone_pattern, $incoming_text))
+                $violation = true;
+        }
+        if (!$violation && $mod_rules['hide_links']) {
+            $link_pattern = '/(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9-]+\.(com|net|org|me|info|biz|co|app|xyz|site|online|link))/iu';
+            if (preg_match($link_pattern, $incoming_text))
+                $violation = true;
+        }
+        if (!$violation && !empty($mod_rules['banned_keywords'])) {
+            $keywords = preg_split('/[,،]/u', $mod_rules['banned_keywords']);
+            foreach ($keywords as $kw) {
+                if (!empty(trim($kw)) && mb_stripos($incoming_text, trim($kw)) !== false) {
+                    $violation = true;
+                    break;
+                }
+            }
+        }
+
+        if ($violation) {
+            debugLog("processAutoReply SILENCED: Incoming message violated moderation rules.");
+            return;
+        }
+    }
+
 
     // Match Rule ID: Dashboard usually saves by the ID provided in the dropdown
     // For Instagram it's Business ID, for Facebook it's Page ID
@@ -710,29 +752,26 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 
 function processModeration($pdo, $id, $comment_id, $message_text, $sender_name = '', $platform = 'facebook', $post_id = null)
 {
+    debugLog("processModeration START: Page=$id, Comment=$comment_id, Platform=$platform");
+
     // Get Moderation Settings
-    // Search by both IDs to be safe
-    $stmt = $pdo->prepare("SELECT * FROM fb_moderation_rules WHERE (page_id = ? OR ig_business_id = ?) AND platform = ? LIMIT 1");
-    $stmt->execute([$id, $id, $platform]);
+    // For Instagram, $id is the IG Business ID. Rules are saved under page_id column with platform='instagram'.
+    // We remove ig_business_id from the query to avoid "column not found" errors
+    $stmt = $pdo->prepare("SELECT * FROM fb_moderation_rules WHERE page_id = ? AND platform = ? AND is_active = 1 LIMIT 1");
+    $stmt->execute([$id, $platform]);
     $rules = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    // Fallback if ig_business_id lookup failed due to column missing
     if (!$rules) {
-        $stmt = $pdo->prepare("SELECT * FROM fb_moderation_rules WHERE page_id = ? AND platform = ? LIMIT 1");
-        $stmt->execute([$id, $platform]);
-        $rules = $stmt->fetch(PDO::FETCH_ASSOC);
-    }
-
-    if (!$rules || (isset($rules['is_active']) && !$rules['is_active'])) {
-        debugLog("No active moderation rules found for Page ID: $id on Platform: $platform");
+        debugLog("No active moderation rules found for ID: $id on Platform: $platform");
         return false;
     }
-    debugLog("Moderation Rules Found for $id ($platform): Phones=" . ($rules['hide_phones'] ? 'ON' : 'OFF') . ", Links=" . ($rules['hide_links'] ? 'ON' : 'OFF') . ", Action=" . $rules['action_type']);
+
+    debugLog("Moderation Rules Found: Phones=" . ($rules['hide_phones'] ? 'ON' : 'OFF') . ", Links=" . ($rules['hide_links'] ? 'ON' : 'OFF') . ", Action=" . $rules['action_type']);
 
     $violation = false;
     $reason = "";
 
-    // A. Check Phone Numbers - Improved Regex for International and Local formats + Arabic digits
+    // A. Check Phone Numbers
     if ($rules['hide_phones']) {
         // Matches typical numbers 8+ digits, supports Arabic digits ٠-٩
         $phone_pattern = '/(\+?[\d٠-٩]{1,4}[\s-]?[\d٠-٩]{7,14})|([\d٠-٩]{8,15})/u';
@@ -742,9 +781,8 @@ function processModeration($pdo, $id, $comment_id, $message_text, $sender_name =
         }
     }
 
-    // B. Check Links/URLs - Improved Regex + /u flag
+    // B. Check Links/URLs
     if (!$violation && $rules['hide_links']) {
-        // Matches http, www, and common TLDs to catch sneaky links
         $link_pattern = '/(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9-]+\.(com|net|org|me|info|biz|co|app|xyz|site|online|link))/iu';
         if (preg_match($link_pattern, $message_text)) {
             $violation = true;
@@ -765,35 +803,47 @@ function processModeration($pdo, $id, $comment_id, $message_text, $sender_name =
         }
     }
 
-    debugLog("Violation Check: " . ($violation ? "YES - $reason" : "NO") . " for message: $message_text");
-
     if ($violation) {
+        debugLog("Moderation VIOLATION Found: $reason");
         $fb = new FacebookAPI();
-        $stmt = $pdo->prepare("SELECT page_access_token FROM fb_pages WHERE page_id = ? OR ig_business_id = ?");
+
+        // Find Token
+        $stmt = $pdo->prepare("SELECT page_access_token FROM fb_pages WHERE page_id = ? OR ig_business_id = ? LIMIT 1");
         $stmt->execute([$id, $id]);
         $token = $stmt->fetchColumn();
 
-        // Fallback for token if ig_business_id column failed
-        if (!$token) {
-            $stmt = $pdo->prepare("SELECT page_access_token FROM fb_pages WHERE page_id = ?");
-            $stmt->execute([$id]);
-            $token = $stmt->fetchColumn();
-        }
-
         if ($token) {
-            if ($rules['action_type'] === 'hide') {
-                $hide_res = $fb->hideComment($comment_id, $token, true, $platform);
-                debugLog("Hide Action Result for $comment_id: " . json_encode($hide_res));
+            $action = $rules['action_type'] ?? 'hide';
+            if ($action === 'hide') {
+                $res = $fb->hideComment($comment_id, $token, true, $platform);
+                debugLog("Action HIDE result: " . json_encode($res));
             } else {
-                $del_res = $fb->makeRequest($comment_id, [], $token, 'DELETE');
-                debugLog("Delete Action Result for $comment_id: " . json_encode($del_res));
+                $res = $fb->makeRequest($comment_id, [], $token, 'DELETE');
+                debugLog("Action DELETE result: " . json_encode($res));
             }
 
             // Log the action to DB
-            $stmt = $pdo->prepare("INSERT INTO fb_moderation_logs (user_id, page_id, post_id, comment_id, content, user_name, reason, action_taken, platform) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$rules['user_id'], $id, $post_id, $comment_id, $message_text, $sender_name, $reason, $rules['action_type'], $platform]);
+            try {
+                $stmt = $pdo->prepare("INSERT INTO fb_moderation_logs (user_id, page_id, post_id, comment_id, content, user_name, reason, action_taken, platform) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $log_res = $stmt->execute([
+                    $rules['user_id'],
+                    $id,
+                    $post_id,
+                    $comment_id,
+                    $message_text,
+                    $sender_name,
+                    $reason,
+                    $action,
+                    $platform
+                ]);
+                debugLog("DB Logging result: " . ($log_res ? "SUCCESS" : "FAILED"));
+            } catch (Exception $logEx) {
+                debugLog("DB Logging EXCEPTION: " . $logEx->getMessage());
+            }
+        } else {
+            debugLog("Moderation ERROR: No token found for Page/IG $id");
         }
-        return true; // Handled by moderation
+        return true;
     }
 
     return false;
