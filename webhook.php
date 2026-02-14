@@ -205,12 +205,28 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
     $access_token = $page['page_access_token'];
     $customer_id = ($source === 'message') ? $target_id : $actual_sender_id;
 
-    // Fetch user name for Messenger if empty
+    // Fetch user name for Messenger if empty (Handle errors gracefully)
     if ($source === 'message' && empty($sender_name) && $customer_id) {
-        $fb = new FacebookAPI();
-        $res = $fb->makeRequest($customer_id, ['fields' => 'name'], $access_token);
-        if (isset($res['name']))
-            $sender_name = $res['name'];
+        try {
+            $fb = new FacebookAPI();
+            // Try name, for Instagram it might be username
+            $fields = ($platform === 'instagram') ? 'username,name' : 'name';
+            $res = $fb->makeRequest($customer_id, ['fields' => $fields], $access_token);
+            if (isset($res['name'])) {
+                $sender_name = $res['name'];
+            } elseif (isset($res['username'])) {
+                $sender_name = $res['username'];
+            }
+        } catch (Exception $e) {
+            // If fetching name fails (permissions/unsupported), we use a placeholder instead of erroring out
+            debugLog("Could not fetch sender name for $customer_id: " . $e->getMessage());
+            $sender_name = ($platform === 'instagram') ? 'User' : 'Customer';
+        }
+    }
+
+    // Ensure we have at least a default name if it's still empty
+    if (empty($sender_name)) {
+        $sender_name = ($platform === 'instagram') ? 'User' : 'Customer';
     }
 
     // 2. Fetch Conversation State & Rules
