@@ -176,35 +176,52 @@ if ($action === 'get_token_debug') {
         exit;
     }
 
-    $fb = new FacebookAPI();
-    $app_id = getSetting('fb_app_id');
-    $app_secret = getSetting('fb_app_secret');
-    $app_access_token = "$app_id|$app_secret";
-    $debug = $fb->debugToken($token, $app_access_token);
+    try {
+        $stmt = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = ?");
+        $stmt->execute(['fb_app_id']);
+        $app_id = $stmt->fetchColumn();
+        $stmt->execute(['fb_app_secret']);
+        $app_secret = $stmt->fetchColumn();
 
-    // Also check webhook subscription
-    $is_subscribed = false;
-    // For Instagram, we need to check if the app is subscribed to the PAGE, as Instagram events come through the page's webhook
-    // but the actual events we listen for are 'comments' and 'messages' which are page-level for FB and through the page for linked IG.
-    $subs = $fb->makeRequest("$page_id/subscribed_apps", [], $token, 'GET');
-    if (isset($subs['data'])) {
-        foreach ($subs['data'] as $app) {
-            // Check if app is subscribed
-            if (isset($app['id']) && $app['id'] == $app_id) {
-                $is_subscribed = true;
-                break;
-            }
+        if (!$app_id || !$app_secret) {
+            echo json_encode(['status' => 'error', 'message' => 'App ID or Secret missing']);
+            exit;
         }
-    }
 
-    echo json_encode([
-        'status' => 'success',
-        'data' => [
-            'valid' => !empty($debug),
-            'subscribed' => $is_subscribed,
-            'masked_token' => substrmask($token)
-        ]
-    ]);
+        $fb = new FacebookAPI();
+        $app_access_token = "$app_id|$app_secret";
+
+        // Debug Token
+        $debug = $fb->debugToken($token, $app_access_token);
+        $isValid = isset($debug['data']['is_valid']) && $debug['data']['is_valid'];
+
+        // Check Webhook Subscription
+        $is_subscribed = false;
+        try {
+            $subs = $fb->makeRequest("$page_id/subscribed_apps", [], $token, 'GET');
+            if (isset($subs['data'])) {
+                foreach ($subs['data'] as $app) {
+                    if (isset($app['id']) && $app['id'] == $app_id) {
+                        $is_subscribed = true;
+                        break;
+                    }
+                }
+            }
+        } catch (Exception $e) {
+            // Ignore subscription check error
+        }
+
+        echo json_encode([
+            'status' => 'success',
+            'data' => [
+                'valid' => $isValid,
+                'subscribed' => $is_subscribed,
+                'masked_token' => substrmask($token)
+            ]
+        ]);
+    } catch (Exception $e) {
+        echo json_encode(['status' => 'error', 'message' => 'Debug failed: ' . $e->getMessage()]);
+    }
     exit;
 }
 
