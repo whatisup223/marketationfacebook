@@ -907,6 +907,78 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         </div>
                     </div>
 
+                    <!-- Advanced Settings Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                        <!-- AI Safe -->
+                        <div class="p-4 bg-white/5 rounded-2xl border border-white/5 flex flex-col justify-between hover:bg-white/10 transition-all cursor-pointer"
+                            @click="defaultAiSafe = !defaultAiSafe">
+                            <div class="flex justify-between items-start mb-2">
+                                <div class="p-2 bg-emerald-500/10 rounded-lg text-emerald-400">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                    </svg>
+                                </div>
+                                <div class="relative w-10 h-6 transition-all duration-200 ease-in-out rounded-full"
+                                    :class="defaultAiSafe ? 'bg-emerald-600' : 'bg-gray-700'">
+                                    <div class="absolute w-4 h-4 transition-all duration-200 ease-in-out bg-white rounded-full top-1"
+                                        :class="defaultAiSafe ? 'left-5' : 'left-1'"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white text-sm"><?php echo __('ai_safe_rule'); ?></h4>
+                                <p class="text-[10px] text-gray-500 mt-1">
+                                    <?php echo __('ai_safe_hint') ?? 'تجنب الرد المتكرر أو الخاطئ'; ?></p>
+                            </div>
+                        </div>
+
+                        <!-- Bypass Schedule -->
+                        <div class="p-4 bg-white/5 rounded-2xl border border-white/5 flex flex-col justify-between hover:bg-white/10 transition-all cursor-pointer"
+                            @click="defaultBypassSchedule = !defaultBypassSchedule">
+                            <div class="flex justify-between items-start mb-2">
+                                <div class="p-2 bg-purple-500/10 rounded-lg text-purple-400">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div class="relative w-10 h-6 transition-all duration-200 ease-in-out rounded-full"
+                                    :class="defaultBypassSchedule ? 'bg-indigo-600' : 'bg-gray-700'">
+                                    <div class="absolute w-4 h-4 transition-all duration-200 ease-in-out bg-white rounded-full top-1"
+                                        :class="defaultBypassSchedule ? 'left-5' : 'left-1'"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white text-sm"><?php echo __('bypass_schedule_rule'); ?></h4>
+                                <p class="text-[10px] text-gray-500 mt-1">
+                                    <?php echo __('bypass_schedule_hint') ?? 'تجاهل جدول المواعيد'; ?></p>
+                            </div>
+                        </div>
+
+                        <!-- Bypass Cooldown -->
+                        <div class="p-4 bg-white/5 rounded-2xl border border-white/5 flex flex-col justify-between hover:bg-white/10 transition-all cursor-pointer"
+                            @click="defaultBypassCooldown = !defaultBypassCooldown">
+                            <div class="flex justify-between items-start mb-2">
+                                <div class="p-2 bg-orange-500/10 rounded-lg text-orange-400">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                    </svg>
+                                </div>
+                                <div class="relative w-10 h-6 transition-all duration-200 ease-in-out rounded-full"
+                                    :class="defaultBypassCooldown ? 'bg-indigo-600' : 'bg-gray-700'">
+                                    <div class="absolute w-4 h-4 transition-all duration-200 ease-in-out bg-white rounded-full top-1"
+                                        :class="defaultBypassCooldown ? 'left-5' : 'left-1'"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white text-sm"><?php echo __('bypass_cooldown_rule'); ?></h4>
+                                <p class="text-[10px] text-gray-500 mt-1">
+                                    <?php echo __('bypass_cooldown_hint') ?? 'تجاهل نشاط المسؤولين'; ?></p>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Private Reply Text (Conditional) -->
                     <div x-show="defaultPrivateReplyEnabled" x-transition.opacity
                         class="mt-4 pt-4 border-t border-white/5">
@@ -1342,155 +1414,226 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </main>
 
     <!-- Modal -->
-<div x-show="showModal" style="display: none;"
-    class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
-    x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0"
-    x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200"
-    x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+    <div x-show="showModal" style="display: none;"
+        class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+        x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
 
-    <div class="bg-gray-900 border border-white/10 rounded-[2.5rem] w-full max-w-lg shadow-2xl relative flex flex-col max-h-[90vh] overflow-hidden"
-        @click.away="closeModal()">
-        
-        <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-600/10 blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
+        <div class="bg-gray-900 border border-white/10 rounded-[2.5rem] w-full max-w-lg shadow-2xl relative flex flex-col max-h-[90vh] overflow-hidden"
+            @click.away="closeModal()">
 
-        <div class="p-8 relative z-10 overflow-y-auto messenger-scrollbar">
-            
-            <div class="flex justify-between items-center mb-8">
-                 <h3 class="text-2xl font-bold text-white flex items-center gap-3">
-                    <div class="p-2 bg-indigo-600/20 rounded-xl">
-                        <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                        </svg>
-                    </div>
-                    <span x-text="editMode ? '<?php echo __('edit_rule'); ?>' : '<?php echo __('add_new_rule'); ?>'"></span>
-                </h3>
-                <button @click="closeModal()" class="text-gray-500 hover:text-white transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
+            <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-600/10 blur-3xl -mr-10 -mt-10 pointer-events-none">
             </div>
 
-            <div class="space-y-6">
-                
-                <!-- Trigger Keyword -->
-                <div>
-                     <label class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-3"><?php echo __('trigger_keyword'); ?></label>
-                     <input type="text" x-model="modalKeywords" placeholder="<?php echo __('keyword_placeholder'); ?>" class="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-sm">
-                </div>
+            <div class="p-8 relative z-10 overflow-y-auto messenger-scrollbar">
 
-                 <!-- Reply Message -->
-                 <div>
-                     <label class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-3"><?php echo __('reply_message'); ?></label>
-                     <textarea x-model="modalReply" rows="5" placeholder="<?php echo __('reply_placeholder'); ?>" class="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all resize-none text-sm leading-relaxed"></textarea>
-                     <p class="text-[10px] text-gray-500 mt-2 italic"><?php echo __('spintax_hint'); ?></p>
-                </div>
-
-                <!-- Private Reply Card -->
-                <div class="flex flex-col gap-3 p-4 bg-white/5 rounded-2xl border border-white/5">
-                    <div class="flex items-center justify-between cursor-pointer" @click="modalPrivateReplyEnabled = !modalPrivateReplyEnabled">
-                         <div class="flex items-center gap-3">
-                             <div class="p-2.5 bg-blue-500/10 rounded-xl text-blue-400">
-                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                             </div>
-                             <span class="text-[11px] font-black text-white uppercase tracking-wider"><?php echo __('send_private_reply'); ?></span>
-                         </div>
-                         <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
-                            <input type="checkbox" x-model="modalPrivateReplyEnabled" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300"/>
-                             <label class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-700 cursor-pointer" :class="modalPrivateReplyEnabled ? 'bg-indigo-600' : 'bg-gray-700'"></label>
+                <div class="flex justify-between items-center mb-8">
+                    <h3 class="text-2xl font-bold text-white flex items-center gap-3">
+                        <div class="p-2 bg-indigo-600/20 rounded-xl">
+                            <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 4v16m8-8H4" />
+                            </svg>
                         </div>
-                    </div>
-                    <div x-show="modalPrivateReplyEnabled" x-transition class="pt-2">
-                        <textarea x-model="modalPrivateReplyText" rows="3" class="w-full bg-black/40 border border-white/10 rounded-2xl px-4 py-3 text-white text-xs focus:ring-2 focus:ring-indigo-500/50" placeholder="<?php echo __('private_reply_placeholder'); ?>"></textarea>
-                    </div>
+                        <span
+                            x-text="editMode ? '<?php echo __('edit_rule'); ?>' : '<?php echo __('add_new_rule'); ?>'"></span>
+                    </h3>
+                    <button @click="closeModal()" class="text-gray-500 hover:text-white transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
                 </div>
 
-                <!-- Toggles Grid 1: Hide & Like -->
-                <div class="grid grid-cols-2 gap-3">
-                    <!-- Hide Comment -->
+                <div class="space-y-6">
+
+                    <!-- Trigger Keyword -->
+                    <div>
+                        <label
+                            class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-3"><?php echo __('trigger_keyword'); ?></label>
+                        <input type="text" x-model="modalKeywords"
+                            placeholder="<?php echo __('keyword_placeholder'); ?>"
+                            class="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-sm">
+                    </div>
+
+                    <!-- Reply Message -->
+                    <div>
+                        <label
+                            class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-3"><?php echo __('reply_message'); ?></label>
+                        <textarea x-model="modalReply" rows="5" placeholder="<?php echo __('reply_placeholder'); ?>"
+                            class="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all resize-none text-sm leading-relaxed"></textarea>
+                        <p class="text-[10px] text-gray-500 mt-2 italic"><?php echo __('spintax_hint'); ?></p>
+                    </div>
+
+                    <!-- Private Reply Card -->
                     <div class="flex flex-col gap-3 p-4 bg-white/5 rounded-2xl border border-white/5">
-                        <div class="flex items-center justify-between">
-                            <div class="p-2.5 bg-gray-500/10 rounded-xl text-gray-400">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path></svg>
+                        <div class="flex items-center justify-between cursor-pointer"
+                            @click="modalPrivateReplyEnabled = !modalPrivateReplyEnabled">
+                            <div class="flex items-center gap-3">
+                                <div class="p-2.5 bg-blue-500/10 rounded-xl text-blue-400">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
+                                        </path>
+                                    </svg>
+                                </div>
+                                <span
+                                    class="text-[11px] font-black text-white uppercase tracking-wider"><?php echo __('send_private_reply'); ?></span>
                             </div>
-                            <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
-                                <input type="checkbox" x-model="modalHideComment" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300"/>
-                                <label class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-700 cursor-pointer" :class="modalHideComment ? 'bg-indigo-600' : 'bg-gray-700'"></label>
+                            <div
+                                class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                                <input type="checkbox" x-model="modalPrivateReplyEnabled"
+                                    class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
+                                <label
+                                    class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-700 cursor-pointer"
+                                    :class="modalPrivateReplyEnabled ? 'bg-indigo-600' : 'bg-gray-700'"></label>
                             </div>
                         </div>
-                        <span class="text-[9px] font-black text-white uppercase tracking-wider"><?php echo __('hide_comment'); ?></span>
-                    </div>
-                    
-                    <!-- Auto Like -->
-                    <div class="flex flex-col gap-3 p-4 bg-white/5 rounded-2xl border border-white/5">
-                        <div class="flex items-center justify-between">
-                            <div class="p-2.5 bg-pink-500/10 rounded-xl text-pink-400">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"></path></svg>
-                            </div>
-                            <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
-                                <input type="checkbox" x-model="modalAutoLike" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300"/>
-                                <label class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-700 cursor-pointer" :class="modalAutoLike ? 'bg-indigo-600' : 'bg-gray-700'"></label>
-                            </div>
+                        <div x-show="modalPrivateReplyEnabled" x-transition class="pt-2">
+                            <textarea x-model="modalPrivateReplyText" rows="3"
+                                class="w-full bg-black/40 border border-white/10 rounded-2xl px-4 py-3 text-white text-xs focus:ring-2 focus:ring-indigo-500/50"
+                                placeholder="<?php echo __('private_reply_placeholder'); ?>"></textarea>
                         </div>
-                        <span class="text-[9px] font-black text-white uppercase tracking-wider"><?php echo __('auto_like'); ?></span>
                     </div>
-                </div>
 
-                 <div class="grid grid-cols-3 gap-3">
-                      <div class="flex flex-col gap-3 p-4 bg-white/5 rounded-2xl border border-white/5">
-                           <div class="flex items-center justify-between">
+                    <!-- Toggles Grid 1: Hide & Like -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <!-- Hide Comment -->
+                        <div class="flex flex-col gap-3 p-4 bg-white/5 rounded-2xl border border-white/5">
+                            <div class="flex items-center justify-between">
+                                <div class="p-2.5 bg-gray-500/10 rounded-xl text-gray-400">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21">
+                                        </path>
+                                    </svg>
+                                </div>
+                                <div
+                                    class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                                    <input type="checkbox" x-model="modalHideComment"
+                                        class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
+                                    <label
+                                        class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-700 cursor-pointer"
+                                        :class="modalHideComment ? 'bg-indigo-600' : 'bg-gray-700'"></label>
+                                </div>
+                            </div>
+                            <span
+                                class="text-[9px] font-black text-white uppercase tracking-wider"><?php echo __('hide_comment'); ?></span>
+                        </div>
+
+                        <!-- Auto Like -->
+                        <div class="flex flex-col gap-3 p-4 bg-white/5 rounded-2xl border border-white/5">
+                            <div class="flex items-center justify-between">
+                                <div class="p-2.5 bg-pink-500/10 rounded-xl text-pink-400">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5">
+                                        </path>
+                                    </svg>
+                                </div>
+                                <div
+                                    class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                                    <input type="checkbox" x-model="modalAutoLike"
+                                        class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
+                                    <label
+                                        class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-700 cursor-pointer"
+                                        :class="modalAutoLike ? 'bg-indigo-600' : 'bg-gray-700'"></label>
+                                </div>
+                            </div>
+                            <span
+                                class="text-[9px] font-black text-white uppercase tracking-wider"><?php echo __('auto_like'); ?></span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="flex flex-col gap-3 p-4 bg-white/5 rounded-2xl border border-white/5">
+                            <div class="flex items-center justify-between">
                                 <div class="p-2.5 bg-indigo-500/10 rounded-xl text-indigo-400">
-                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z">
+                                        </path>
+                                    </svg>
                                 </div>
-                                <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
-                                     <input type="checkbox" x-model="modalAiSafe" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300"/>
-                                     <label class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-700 cursor-pointer" :class="modalAiSafe ? 'bg-indigo-600' : 'bg-gray-700'"></label>
+                                <div
+                                    class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                                    <input type="checkbox" x-model="modalAiSafe"
+                                        class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
+                                    <label
+                                        class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-700 cursor-pointer"
+                                        :class="modalAiSafe ? 'bg-indigo-600' : 'bg-gray-700'"></label>
                                 </div>
-                           </div>
-                           <span class="text-[9px] font-black text-white uppercase tracking-wider"><?php echo __('ai_safe_rule'); ?></span>
-                      </div>
-                      <div class="flex flex-col gap-3 p-4 bg-white/5 rounded-2xl border border-white/5">
-                           <div class="flex items-center justify-between">
+                            </div>
+                            <span
+                                class="text-[9px] font-black text-white uppercase tracking-wider"><?php echo __('ai_safe_rule'); ?></span>
+                        </div>
+                        <div class="flex flex-col gap-3 p-4 bg-white/5 rounded-2xl border border-white/5">
+                            <div class="flex items-center justify-between">
                                 <div class="p-2.5 bg-orange-500/10 rounded-xl text-orange-400">
-                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
                                 </div>
-                                <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
-                                     <input type="checkbox" x-model="modalBypassSchedule" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300"/>
-                                     <label class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-700 cursor-pointer" :class="modalBypassSchedule ? 'bg-indigo-600' : 'bg-gray-700'"></label>
+                                <div
+                                    class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                                    <input type="checkbox" x-model="modalBypassSchedule"
+                                        class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
+                                    <label
+                                        class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-700 cursor-pointer"
+                                        :class="modalBypassSchedule ? 'bg-indigo-600' : 'bg-gray-700'"></label>
                                 </div>
-                           </div>
-                           <span class="text-[9px] font-black text-white uppercase tracking-wider"><?php echo __('bypass_schedule_rule'); ?></span>
-                      </div>
-                      <div class="flex flex-col gap-3 p-4 bg-white/5 rounded-2xl border border-white/5">
-                           <div class="flex items-center justify-between">
+                            </div>
+                            <span
+                                class="text-[9px] font-black text-white uppercase tracking-wider"><?php echo __('bypass_schedule_rule'); ?></span>
+                        </div>
+                        <div class="flex flex-col gap-3 p-4 bg-white/5 rounded-2xl border border-white/5">
+                            <div class="flex items-center justify-between">
                                 <div class="p-2.5 bg-green-500/10 rounded-xl text-green-400">
-                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z">
+                                        </path>
+                                    </svg>
                                 </div>
-                                <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
-                                     <input type="checkbox" x-model="modalBypassCooldown" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300"/>
-                                     <label class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-700 cursor-pointer" :class="modalBypassCooldown ? 'bg-indigo-600' : 'bg-gray-700'"></label>
+                                <div
+                                    class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                                    <input type="checkbox" x-model="modalBypassCooldown"
+                                        class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
+                                    <label
+                                        class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-700 cursor-pointer"
+                                        :class="modalBypassCooldown ? 'bg-indigo-600' : 'bg-gray-700'"></label>
                                 </div>
-                           </div>
-                           <span class="text-[9px] font-black text-white uppercase tracking-wider"><?php echo __('bypass_cooldown_rule'); ?></span>
-                      </div>
-                 </div>
+                            </div>
+                            <span
+                                class="text-[9px] font-black text-white uppercase tracking-wider"><?php echo __('bypass_cooldown_rule'); ?></span>
+                        </div>
+                    </div>
 
-                 <button @click="saveRule()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-2xl shadow-xl shadow-indigo-600/20 transition-all transform active:scale-95 text-lg">
-                    <?php echo __('save_changes'); ?>
-                 </button>
+                    <button @click="saveRule()"
+                        class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-2xl shadow-xl shadow-indigo-600/20 transition-all transform active:scale-95 text-lg">
+                        <?php echo __('save_changes'); ?>
+                    </button>
 
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<style>
-    .toggle-checkbox:checked { right: 0; }
-    .toggle-checkbox { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-</style>
+    <style>
+        .toggle-checkbox:checked {
+            right: 0;
+        }
+
+        .toggle-checkbox {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
 
 
-<!-- Custom Range Modal -->
+    <!-- Custom Range Modal -->
     <div x-show="showCustomRangeModal" class="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6"
         style="display: none;" x-transition:enter="transition ease-out duration-300"
         x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
@@ -1641,7 +1784,10 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
             modalHideComment: false,
             modalPrivateReplyEnabled: false,
             modalPrivateReplyText: '',
-            modalAutoLike: false, // Added missing variable
+            modalAutoLike: false,
+            defaultAiSafe: true,
+            defaultBypassSchedule: false,
+            defaultBypassCooldown: false,
             subscribing: false,
             stopping: false,
             modalAiSafe: true,
@@ -1771,6 +1917,10 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 this.$watch('defaultPrivateReplyEnabled', () => { this.saveDefaultSettings(); });
                 this.$watch('defaultPrivateReplyText', () => { this.saveDefaultSettings(); });
 
+                this.$watch('defaultAiSafe', () => { this.saveDefaultSettings(); });
+                this.$watch('defaultBypassSchedule', () => { this.saveDefaultSettings(); });
+                this.$watch('defaultBypassCooldown', () => { this.saveDefaultSettings(); });
+
                 setInterval(() => {
                     this.fetchHandover();
                     this.fetchStats();
@@ -1890,10 +2040,14 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 formData.append('type', 'default');
                 formData.append('reply', this.defaultReplyText);
                 formData.append('keywords', '*');
+                formData.append('source', 'comment');
                 formData.append('hide_comment', this.defaultHideComment ? '1' : '0');
                 formData.append('private_reply_enabled', this.defaultPrivateReplyEnabled ? '1' : '0');
                 formData.append('private_reply_text', this.defaultPrivateReplyText);
                 formData.append('auto_like_comment', this.defaultAutoLike ? '1' : '0');
+                formData.append('is_ai_safe', this.defaultAiSafe ? '1' : '0');
+                formData.append('bypass_schedule', this.defaultBypassSchedule ? '1' : '0');
+                formData.append('bypass_cooldown', this.defaultBypassCooldown ? '1' : '0');
                 return fetch('ajax_auto_reply.php?action=save_rule', { method: 'POST', body: formData })
                     .then(res => res.json());
             },
@@ -1927,7 +2081,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 this.rules = [];
                 this.defaultReplyText = '';
                 this.fetchPageSettings();
-                fetch(`ajax_auto_reply.php?action=fetch_rules&page_id=${this.selectedPageId}`)
+                fetch(`ajax_auto_reply.php?action=fetch_rules&page_id=${this.selectedPageId}&source=comment`)
                     .then(res => res.json())
                     .then(data => {
                         if (data.success) {
@@ -1939,6 +2093,9 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 this.defaultPrivateReplyEnabled = (defRule.private_reply_enabled == 1);
                                 this.defaultPrivateReplyText = defRule.private_reply_text || '';
                                 this.defaultAutoLike = (defRule.auto_like_comment == 1);
+                                this.defaultAiSafe = (defRule.is_ai_safe == 1);
+                                this.defaultBypassSchedule = (defRule.bypass_schedule == 1);
+                                this.defaultBypassCooldown = (defRule.bypass_cooldown == 1);
                             }
                         }
                     });
@@ -2063,11 +2220,15 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 let formData = new FormData();
                 formData.append('page_id', this.selectedPageId);
                 formData.append('type', 'default');
+                formData.append('source', 'comment');
                 formData.append('reply', this.defaultReplyText);
                 formData.append('hide_comment', this.defaultHideComment ? '1' : '0');
                 formData.append('private_reply_enabled', this.defaultPrivateReplyEnabled ? '1' : '0');
                 formData.append('private_reply_text', this.defaultPrivateReplyText);
                 formData.append('auto_like_comment', this.defaultAutoLike ? '1' : '0');
+                formData.append('is_ai_safe', this.defaultAiSafe ? '1' : '0');
+                formData.append('bypass_schedule', this.defaultBypassSchedule ? '1' : '0');
+                formData.append('bypass_cooldown', this.defaultBypassCooldown ? '1' : '0');
                 fetch('ajax_auto_reply.php?action=save_rule', { method: 'POST', body: formData })
                     .then(res => res.json())
                     .then(data => {
@@ -2080,12 +2241,13 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 let formData = new FormData();
                 formData.append('page_id', this.selectedPageId);
                 formData.append('type', 'keyword');
+                formData.append('source', 'comment');
                 formData.append('keywords', this.modalKeywords);
                 formData.append('reply', this.modalReply);
                 formData.append('hide_comment', this.modalHideComment ? '1' : '0');
                 formData.append('private_reply_enabled', this.modalPrivateReplyEnabled ? '1' : '0');
                 formData.append('private_reply_text', this.modalPrivateReplyText);
-                formData.append('auto_like_comment', this.modalAutoLike ? '1' : '0'); // Save
+                formData.append('auto_like_comment', this.modalAutoLike ? '1' : '0');
                 formData.append('is_ai_safe', this.modalAiSafe ? '1' : '0');
                 formData.append('bypass_schedule', this.modalBypassSchedule ? '1' : '0');
                 formData.append('bypass_cooldown', this.modalBypassCooldown ? '1' : '0');

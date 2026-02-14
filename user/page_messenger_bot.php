@@ -772,6 +772,96 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 class="w-full bg-black/40 border border-white/10 rounded-2xl p-5 text-white placeholder-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all mb-6 text-base leading-relaxed"
                                 placeholder="<?php echo __('reply_placeholder'); ?>"></textarea>
 
+                            <!-- Advanced Features for Default Reply -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                <!-- AI safe -->
+                                <div class="flex flex-col gap-3 p-4 bg-white/5 rounded-2xl border border-white/5 transition-all hover:bg-white/10 group/item"
+                                    :class="defaultAiSafe ? 'border-indigo-500/30' : ''">
+                                    <div class="flex items-center justify-between">
+                                        <div
+                                            class="p-2.5 bg-indigo-500/10 rounded-xl text-indigo-400 group-hover/item:scale-110 transition-transform">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z">
+                                                </path>
+                                            </svg>
+                                        </div>
+                                        <div class="relative inline-block w-10 align-middle select-none">
+                                            <input type="checkbox" x-model="defaultAiSafe" id="defaultAiSafeToggle"
+                                                class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-2 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
+                                            <label for="defaultAiSafeToggle"
+                                                class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-700 cursor-pointer"
+                                                :class="defaultAiSafe ? 'bg-indigo-600' : 'bg-gray-700'"></label>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-[10px] font-black text-white uppercase tracking-widest mb-1">
+                                            <?php echo __('ai_safe_mode'); ?></h4>
+                                        <p class="text-[9px] text-gray-500 leading-tight">
+                                            <?php echo __('ai_safe_desc') ?? 'Bot follows AI tone & handover rules.'; ?>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Bypass Schedule -->
+                                <div class="flex flex-col gap-3 p-4 bg-white/5 rounded-2xl border border-white/5 transition-all hover:bg-white/10 group/item"
+                                    :class="defaultBypassSchedule ? 'border-amber-500/30' : ''">
+                                    <div class="flex items-center justify-between">
+                                        <div
+                                            class="p-2.5 bg-amber-500/10 rounded-xl text-amber-500 group-hover/item:scale-110 transition-transform">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                        </div>
+                                        <div class="relative inline-block w-10 align-middle select-none">
+                                            <input type="checkbox" x-model="defaultBypassSchedule"
+                                                id="defaultBypassSchToggle"
+                                                class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-2 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
+                                            <label for="defaultBypassSchToggle"
+                                                class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-700 cursor-pointer"
+                                                :class="defaultBypassSchedule ? 'bg-amber-600' : 'bg-gray-700'"></label>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-[10px] font-black text-white uppercase tracking-widest mb-1">
+                                            <?php echo __('bypass_schedule'); ?></h4>
+                                        <p class="text-[9px] text-gray-500 leading-tight">
+                                            <?php echo __('bypass_sch_desc') ?? 'Reply even when bot is scheduled to be off.'; ?>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Bypass Cooldown -->
+                                <div class="flex flex-col gap-3 p-4 bg-white/5 rounded-2xl border border-white/5 transition-all hover:bg-white/10 group/item"
+                                    :class="defaultBypassCooldown ? 'border-emerald-500/30' : ''">
+                                    <div class="flex items-center justify-between">
+                                        <div
+                                            class="p-2.5 bg-emerald-500/10 rounded-xl text-emerald-500 group-hover/item:scale-110 transition-transform">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                            </svg>
+                                        </div>
+                                        <div class="relative inline-block w-10 align-middle select-none">
+                                            <input type="checkbox" x-model="defaultBypassCooldown"
+                                                id="defaultBypassCoolToggle"
+                                                class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-2 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
+                                            <label for="defaultBypassCoolToggle"
+                                                class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-700 cursor-pointer"
+                                                :class="defaultBypassCooldown ? 'bg-emerald-600' : 'bg-gray-700'"></label>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-[10px] font-black text-white uppercase tracking-widest mb-1">
+                                            <?php echo __('bypass_cooldown'); ?></h4>
+                                        <p class="text-[9px] text-gray-500 leading-tight">
+                                            <?php echo __('bypass_cool_desc') ?? 'Reply even if a human recently intervened.'; ?>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
 
                         <!-- Keyword Rules Section -->
@@ -1798,6 +1888,9 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
             defaultReplyText: '',
             defaultReplyButtons: [],
             defaultHideComment: false,
+            defaultAiSafe: true,
+            defaultBypassSchedule: false,
+            defaultBypassCooldown: false,
             savingDefault: false,
             showModal: false,
             editMode: false,
@@ -1931,6 +2024,10 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     this.previewButtons = [...this.defaultReplyButtons];
                 });
 
+                this.$watch('defaultAiSafe', () => { this.saveDefaultReply(); });
+                this.$watch('defaultBypassSchedule', () => { this.saveDefaultReply(); });
+                this.$watch('defaultBypassCooldown', () => { this.saveDefaultReply(); });
+
                 // Auto-refresh Handover Alerts every 30 seconds
                 setInterval(() => {
                     this.fetchHandover();
@@ -2017,6 +2114,9 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             const defRule = data.rules.find(r => r.trigger_type === 'default');
                             if (defRule) {
                                 this.defaultReplyText = defRule.reply_message;
+                                this.defaultAiSafe = (defRule.is_ai_safe == 1);
+                                this.defaultBypassSchedule = (defRule.bypass_schedule == 1);
+                                this.defaultBypassCooldown = (defRule.bypass_cooldown == 1);
                                 try {
                                     this.defaultReplyButtons = defRule.reply_buttons ? JSON.parse(defRule.reply_buttons) : [];
                                 } catch (e) {
@@ -2304,6 +2404,10 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 formData.append('keywords', '*');
                 formData.append('source', 'message');
                 formData.append('hide_comment', '0');
+                formData.append('is_ai_safe', this.defaultAiSafe ? '1' : '0');
+                formData.append('bypass_schedule', this.defaultBypassSchedule ? '1' : '0');
+                formData.append('bypass_cooldown', this.defaultBypassCooldown ? '1' : '0');
+                formData.append('reply_buttons', JSON.stringify(this.defaultReplyButtons));
                 return fetch('ajax_auto_reply.php?action=save_rule', { method: 'POST', body: formData })
                     .then(res => res.json());
             },

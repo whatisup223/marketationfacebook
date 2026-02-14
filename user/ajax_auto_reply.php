@@ -244,11 +244,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $check->execute([$page_id, $source]);
                     if ($check->fetch()) {
                         if ($hasImageColumn) {
-                            $stmt = $pdo->prepare("UPDATE auto_reply_rules SET reply_message = ?, `reply_buttons` = ?, reply_image_url = ?, hide_comment = ?, private_reply_enabled = ?, private_reply_text = ?, auto_like_comment = ? WHERE page_id = ? AND trigger_type = 'default' AND reply_source = ?");
-                            $stmt->execute([$reply, $reply_buttons, $reply_image_url, $hide_comment, $private_reply_enabled, $private_reply_text, $auto_like_comment, $page_id, $source]);
+                            $stmt = $pdo->prepare("UPDATE auto_reply_rules SET reply_message = ?, `reply_buttons` = ?, reply_image_url = ?, hide_comment = ?, private_reply_enabled = ?, private_reply_text = ?, auto_like_comment = ?, is_ai_safe = ?, bypass_schedule = ?, bypass_cooldown = ? WHERE page_id = ? AND trigger_type = 'default' AND reply_source = ?");
+                            $stmt->execute([$reply, $reply_buttons, $reply_image_url, $hide_comment, $private_reply_enabled, $private_reply_text, $auto_like_comment, $is_ai_safe, $bypass_schedule, $bypass_cooldown, $page_id, $source]);
                         } else {
-                            $stmt = $pdo->prepare("UPDATE auto_reply_rules SET reply_message = ?, `reply_buttons` = ?, hide_comment = ?, private_reply_enabled = ?, private_reply_text = ?, auto_like_comment = ? WHERE page_id = ? AND trigger_type = 'default' AND reply_source = ?");
-                            $stmt->execute([$reply, $reply_buttons, $hide_comment, $private_reply_enabled, $private_reply_text, $auto_like_comment, $page_id, $source]);
+                            $stmt = $pdo->prepare("UPDATE auto_reply_rules SET reply_message = ?, `reply_buttons` = ?, hide_comment = ?, private_reply_enabled = ?, private_reply_text = ?, auto_like_comment = ?, is_ai_safe = ?, bypass_schedule = ?, bypass_cooldown = ? WHERE page_id = ? AND trigger_type = 'default' AND reply_source = ?");
+                            $stmt->execute([$reply, $reply_buttons, $hide_comment, $private_reply_enabled, $private_reply_text, $auto_like_comment, $is_ai_safe, $bypass_schedule, $bypass_cooldown, $page_id, $source]);
                         }
                         echo json_encode(['success' => true, 'message' => __('rule_saved')]);
                         exit;
