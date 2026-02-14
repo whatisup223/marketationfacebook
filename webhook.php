@@ -223,9 +223,8 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
     debugLog("processAutoReply: Page found: {$page['page_name']} (User ID: {$page['user_id']})");
 
     // 1.1 Check Moderation Rules before anything else
-    // If it's a DM, we don't 'hide' but we might want to SILENCE the bot if it's spam/phone/link
-    $stmt = $pdo->prepare("SELECT * FROM fb_moderation_rules WHERE page_id = ? AND platform = ? AND is_active = 1 LIMIT 1");
-    $stmt->execute([$page_id, $platform]);
+    $stmt = $pdo->prepare("SELECT * FROM fb_moderation_rules WHERE (page_id = ? OR ig_business_id = ?) AND platform = ? AND is_active = 1 LIMIT 1");
+    $stmt->execute([$page_id, $page_id, $platform]);
     $mod_rules = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($mod_rules) {
