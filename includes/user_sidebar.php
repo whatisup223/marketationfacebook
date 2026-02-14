@@ -20,7 +20,7 @@ $initial_width_class = $sidebar_collapsed ? 'w-20' : 'w-64';
             window.dispatchEvent(new CustomEvent('sidebar-toggled', { detail: this.sidebarCollapsed }));
         }
     }" :class="sidebarCollapsed ? 'w-20' : 'w-64'"
-    class="<?php echo $initial_width_class; ?> hidden lg:flex flex-col bg-gray-900/50 backdrop-blur-xl border-r border-gray-800 ml-4 rounded-3xl mb-4 self-start sticky top-24 max-h-[calc(100vh-8rem)] transition-all duration-500 ease-in-out group z-40overflow-hidden">
+    class="<?php echo $initial_width_class; ?> hidden lg:flex flex-col bg-gray-900/50 backdrop-blur-xl border-r border-gray-800 ml-4 rounded-3xl mb-4 self-start sticky top-24 max-h-[calc(100vh-8rem)] transition-all duration-500 ease-in-out group z-40 overflow-hidden">
 
     <!-- Header / Toggle Area -->
     <div class="h-16 flex items-center px-4 border-b border-white/5 shrink-0 relative overflow-hidden">
@@ -122,6 +122,7 @@ $initial_width_class = $sidebar_collapsed ? 'w-20' : 'w-64';
             <!-- Facebook Menu -->
             <div>
                 <button @click="sidebarCollapsed ? (toggleSidebar(), fbOpen = true) : fbOpen = !fbOpen"
+                    title="<?php echo __('facebook'); ?>"
                     class="w-full flex items-center px-3 py-2.5 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition-all group">
                     <div class="w-6 h-6 flex items-center justify-center shrink-0 transition-all duration-300"
                         :class="sidebarCollapsed ? 'w-full' : 'w-6'">
@@ -158,6 +159,7 @@ $initial_width_class = $sidebar_collapsed ? 'w-20' : 'w-64';
             <!-- Instagram Menu -->
             <div>
                 <button @click="sidebarCollapsed ? (toggleSidebar(), igOpen = true) : igOpen = !igOpen"
+                    title="<?php echo __('instagram'); ?>"
                     class="w-full flex items-center px-3 py-2.5 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition-all group">
                     <div class="w-6 h-6 flex items-center justify-center shrink-0 transition-all duration-300"
                         :class="sidebarCollapsed ? 'w-full' : 'w-6'">

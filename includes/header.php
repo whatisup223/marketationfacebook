@@ -169,9 +169,9 @@ $h_sidebar_collapsed = isset($_COOKIE['sidebar_collapsed']) && $_COOKIE['sidebar
                 extend: {
                     fontFamily: {
                         <?php if ($lang === 'ar'): ?>
-                                                                                                                                                                                                                                                                                                sans: ['IBM Plex Sans Arabic', 'sans-serif'],
+                                                                                                                                                                                                                                                                                                    sans: ['IBM Plex Sans Arabic', 'sans-serif'],
                         <?php else: ?>
-                                                                                                                                                                                                                                                                                                sans: ['Outfit', 'sans-serif'],
+                                                                                                                                                                                                                                                                                                    sans: ['Outfit', 'sans-serif'],
                         <?php endif; ?>
                     },
                     colors: {
@@ -769,97 +769,66 @@ $h_sidebar_collapsed = isset($_COOKIE['sidebar_collapsed']) && $_COOKIE['sidebar
                                     </div>
                                 </div>
 
-                                <!-- Instagram Dropdown -->
-                                <div
-                                    x-data="{ mIgOpen: <?php echo in_array(basename($_SERVER['PHP_SELF']), ['ig_accounts.php', 'ig_auto_reply.php', 'ig_messenger_bot.php', 'ig_moderator.php']) ? 'true' : 'false'; ?> }">
-                                    <button @click="mIgOpen = !mIgOpen"
-                                        class="-mx-3 w-full flex items-center justify-between rounded-xl px-4 py-3 text-base font-semibold leading-7 text-gray-300 hover:bg-gray-800 transition-colors group">
-                                        <div class="flex items-center gap-3">
-                                            <svg class="w-5 h-5 text-gray-500 group-hover:text-pink-500 transition-colors"
-                                                fill="currentColor" viewBox="0 0 24 24">
-                                                <path
-                                                    d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
-                                            </svg>
-                                            <span><?php echo __('instagram'); ?></span>
-                                        </div>
-                                        <svg class="w-4 h-4 transition-transform duration-200"
-                                            :class="mIgOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
+                                <!-- Profile Icon (Always Visible) -->
+                                <a href="<?php echo isAdmin() ? $prefix . 'admin/profile.php' : $prefix . 'user/profile.php'; ?>"
+                                    class="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-indigo-600 hover:border-indigo-500 transition-all duration-300 overflow-hidden group"
+                                    title="<?php echo __('profile'); ?>">
+                                    <?php if (isset($current_user) && $current_user['avatar']): ?>
+                                        <img src="<?php echo $prefix . $current_user['avatar']; ?>"
+                                            class="w-full h-full object-cover transition-transform group-hover:scale-110">
+                                    <?php else: ?>
+                                        <svg class="w-5 h-5 transition-transform group-hover:scale-110" fill="none"
+                                            stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M19 9l-7 7-7-7" />
+                                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                                         </svg>
-                                    </button>
-                                    <div x-show="mIgOpen" x-transition class="pl-4 rtl:pr-4 space-y-1 mt-1">
-                                        <a href="<?php echo $prefix; ?>user/ig_accounts.php"
-                                            class="block rounded-lg px-4 py-2.5 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'ig_accounts.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> transition-colors"><?php echo __('ig_accounts'); ?></a>
-                                        <a href="<?php echo $prefix; ?>user/ig_auto_reply.php"
-                                            class="block rounded-lg px-4 py-2.5 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'ig_auto_reply.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> transition-colors"><?php echo __('auto_reply'); ?></a>
-                                        <a href="<?php echo $prefix; ?>user/ig_messenger_bot.php"
-                                            class="block rounded-lg px-4 py-2.5 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'ig_messenger_bot.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> transition-colors"><?php echo __('auto_reply_messages'); ?></a>
-                                        <a href="<?php echo $prefix; ?>user/ig_moderator.php"
-                                            class="block rounded-lg px-4 py-2.5 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'ig_moderator.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> transition-colors"><?php echo __('auto_moderator'); ?></a>
-                            </div>
+                                    <?php endif; ?>
+                                </a>
 
-                            <!-- Profile Icon (Always Visible) -->
-                            <a href="<?php echo isAdmin() ? $prefix . 'admin/profile.php' : $prefix . 'user/profile.php'; ?>"
-                                class="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-indigo-600 hover:border-indigo-500 transition-all duration-300 overflow-hidden group"
-                                title="<?php echo __('profile'); ?>">
-                                <?php if (isset($current_user) && $current_user['avatar']): ?>
-                                    <img src="<?php echo $prefix . $current_user['avatar']; ?>"
-                                        class="w-full h-full object-cover transition-transform group-hover:scale-110">
-                                <?php else: ?>
-                                    <svg class="w-5 h-5 transition-transform group-hover:scale-110" fill="none"
-                                        stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                                    </svg>
-                                <?php endif; ?>
-                            </a>
+                            <?php endif; ?>
+                        </div>
 
-                        <?php endif; ?>
-                    </div>
+                        <!-- Desktop Only Text Links -->
+                        <div class="hidden lg:flex items-center space-x-4 rtl:space-x-reverse">
+                            <?php if (isLoggedIn()): ?>
+                                <a href="<?php echo isAdmin() ? $prefix . 'admin/dashboard.php' : $prefix . 'user/dashboard.php'; ?>"
+                                    class="bg-gradient-to-r from-indigo-600/20 to-purple-600/20 hover:from-indigo-600/40 hover:to-purple-600/40 text-indigo-300 hover:text-white border border-indigo-500/30 px-5 py-2.5 rounded-xl transition-all duration-300 shadow-xl shadow-indigo-500/10 text-sm font-bold whitespace-nowrap flex items-center gap-2 group">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 group-hover:animate-pulse"></span>
+                                    <?php echo isAdmin() ? ($lang === 'ar' ? 'لوحة الإدارة' : 'Admin Panel') : ($lang === 'ar' ? 'لوحة التحكم' : 'Dashboard'); ?>
+                                </a>
+                                <a href="<?php echo $prefix; ?>logout.php"
+                                    class="bg-white/10 text-white hover:bg-white/20 px-4 py-2 rounded-lg transition-all border border-white/10 text-sm font-bold flex-shrink-0">
+                                    <?php echo __('logout'); ?>
+                                </a>
+                            <?php else: ?>
+                                <a href="<?php echo $prefix; ?>login.php"
+                                    class="text-sm font-bold text-white bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg transition-all shadow-md whitespace-nowrap flex-shrink-0">
+                                    <?php echo __('login'); ?>
+                                </a>
+                                <a href="<?php echo $prefix; ?>register.php"
+                                    class="text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg shadow-lg shadow-indigo-500/30 transition-all whitespace-nowrap flex-shrink-0">
+                                    <?php echo __('register'); ?>
+                                </a>
+                            <?php endif; ?>
+                        </div>
 
-                    <!-- Desktop Only Text Links -->
-                    <div class="hidden lg:flex items-center space-x-4 rtl:space-x-reverse">
-                        <?php if (isLoggedIn()): ?>
-                            <a href="<?php echo isAdmin() ? $prefix . 'admin/dashboard.php' : $prefix . 'user/dashboard.php'; ?>"
-                                class="bg-gradient-to-r from-indigo-600/20 to-purple-600/20 hover:from-indigo-600/40 hover:to-purple-600/40 text-indigo-300 hover:text-white border border-indigo-500/30 px-5 py-2.5 rounded-xl transition-all duration-300 shadow-xl shadow-indigo-500/10 text-sm font-bold whitespace-nowrap flex items-center gap-2 group">
-                                <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 group-hover:animate-pulse"></span>
-                                <?php echo isAdmin() ? ($lang === 'ar' ? 'لوحة الإدارة' : 'Admin Panel') : ($lang === 'ar' ? 'لوحة التحكم' : 'Dashboard'); ?>
-                            </a>
-                            <a href="<?php echo $prefix; ?>logout.php"
-                                class="bg-white/10 text-white hover:bg-white/20 px-4 py-2 rounded-lg transition-all border border-white/10 text-sm font-bold flex-shrink-0">
-                                <?php echo __('logout'); ?>
-                            </a>
-                        <?php else: ?>
-                            <a href="<?php echo $prefix; ?>login.php"
-                                class="text-sm font-bold text-white bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg transition-all shadow-md whitespace-nowrap flex-shrink-0">
-                                <?php echo __('login'); ?>
-                            </a>
-                            <a href="<?php echo $prefix; ?>register.php"
-                                class="text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg shadow-lg shadow-indigo-500/30 transition-all whitespace-nowrap flex-shrink-0">
-                                <?php echo __('register'); ?>
-                            </a>
-                        <?php endif; ?>
-                    </div>
-
-                    <!-- Mobile Sidebar Trigger -->
-                    <div class="flex lg:hidden items-center">
-                        <button @click="mobileMenu = !mobileMenu" type="button"
-                            class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700/50 focus:outline-none transition-colors border border-white/5 bg-white/5">
-                            <span class="sr-only">Open main menu</span>
-                            <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                                <path :class="{'hidden': mobileMenu, 'inline-flex': !mobileMenu }" class="inline-flex"
-                                    stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M4 6h16M4 12h16M4 18h16" />
-                                <path :class="{'hidden': !mobileMenu, 'inline-flex': mobileMenu }" class="hidden"
-                                    stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
+                        <!-- Mobile Sidebar Trigger -->
+                        <div class="flex lg:hidden items-center">
+                            <button @click="mobileMenu = !mobileMenu" type="button"
+                                class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700/50 focus:outline-none transition-colors border border-white/5 bg-white/5">
+                                <span class="sr-only">Open main menu</span>
+                                <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                                    <path :class="{'hidden': mobileMenu, 'inline-flex': !mobileMenu }"
+                                        class="inline-flex" stroke-linecap="round" stroke-linejoin="round"
+                                        stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                                    <path :class="{'hidden': !mobileMenu, 'inline-flex': mobileMenu }" class="hidden"
+                                        stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
 
 
     </nav>
@@ -1199,6 +1168,38 @@ $h_sidebar_collapsed = isset($_COOKIE['sidebar_collapsed']) && $_COOKIE['sidebar
                                                 class="block rounded-lg px-4 py-2.5 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'fb_scheduler.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> transition-colors"><?php echo __('post_scheduler'); ?></a>
                                             <a href="<?php echo $prefix; ?>user/page_moderator.php"
                                                 class="block rounded-lg px-4 py-2.5 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'page_moderator.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> transition-colors"><?php echo __('auto_moderator'); ?></a>
+                                        </div>
+                                    </div>
+
+                                    <!-- Instagram Dropdown -->
+                                    <div
+                                        x-data="{ mIgOpen: <?php echo in_array(basename($_SERVER['PHP_SELF']), ['ig_accounts.php', 'ig_auto_reply.php', 'ig_messenger_bot.php', 'ig_moderator.php']) ? 'true' : 'false'; ?> }">
+                                        <button @click="mIgOpen = !mIgOpen"
+                                            class="-mx-3 w-full flex items-center justify-between rounded-xl px-4 py-3 text-base font-semibold leading-7 text-gray-300 hover:bg-gray-800 transition-colors group">
+                                            <div class="flex items-center gap-3">
+                                                <svg class="w-5 h-5 text-gray-500 group-hover:text-pink-500 transition-colors"
+                                                    fill="currentColor" viewBox="0 0 24 24">
+                                                    <path
+                                                        d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+                                                </svg>
+                                                <span><?php echo __('instagram'); ?></span>
+                                            </div>
+                                            <svg class="w-4 h-4 transition-transform duration-200"
+                                                :class="mIgOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </button>
+                                        <div x-show="mIgOpen" x-transition class="pl-4 rtl:pr-4 space-y-1 mt-1">
+                                            <a href="<?php echo $prefix; ?>user/ig_accounts.php"
+                                                class="block rounded-lg px-4 py-2.5 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'ig_accounts.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> transition-colors"><?php echo __('ig_accounts'); ?></a>
+                                            <a href="<?php echo $prefix; ?>user/ig_auto_reply.php"
+                                                class="block rounded-lg px-4 py-2.5 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'ig_auto_reply.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> transition-colors"><?php echo __('auto_reply'); ?></a>
+                                            <a href="<?php echo $prefix; ?>user/ig_messenger_bot.php"
+                                                class="block rounded-lg px-4 py-2.5 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'ig_messenger_bot.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> transition-colors"><?php echo __('auto_reply_messages'); ?></a>
+                                            <a href="<?php echo $prefix; ?>user/ig_moderator.php"
+                                                class="block rounded-lg px-4 py-2.5 text-sm font-semibold <?php echo basename($_SERVER['PHP_SELF']) == 'ig_moderator.php' ? 'text-indigo-400 bg-indigo-500/5' : 'text-gray-500 hover:text-gray-300'; ?> transition-colors"><?php echo __('auto_moderator'); ?></a>
                                         </div>
                                     </div>
 

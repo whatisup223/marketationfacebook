@@ -17,7 +17,8 @@ $stmt->execute([$user_id]);
 $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
-<div id="main-user-container" class="main-user-container flex min-h-screen bg-gray-900 font-sans" x-data="autoModerator()">
+<div id="main-user-container" class="main-user-container flex min-h-screen bg-gray-900 font-sans"
+    x-data="autoModerator()">
     <?php include '../includes/user_sidebar.php'; ?>
 
     <!-- Modals moved outside main to fix containing block issues (backdrop-filter) -->
@@ -113,7 +114,8 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             class="w-full bg-black/40 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500 block p-3.5 pr-10 appearance-none transition-all group-hover:border-white/20">
                             <option value=""><?php echo __('select_page'); ?>...</option>
                             <?php foreach ($pages as $page): ?>
-                                <option value="<?php echo htmlspecialchars($page['ig_business_id'] ?? $page['page_id']); ?>">
+                                <option
+                                    value="<?php echo htmlspecialchars($page['ig_business_id'] ?? $page['page_id']); ?>">
                                     @<?php echo htmlspecialchars($page['ig_username'] ?? $page['page_name']); ?>
                                 </option>
                             <?php endforeach; ?>
@@ -310,8 +312,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 </div>
 
                                 <!-- Summary Hint -->
-                                <div
-                                    class="bg-pink-600/5 rounded-2xl border border-pink-500/10 p-4 text-center mt-4">
+                                <div class="bg-pink-600/5 rounded-2xl border border-pink-500/10 p-4 text-center mt-4">
                                     <p class="text-[10px] font-bold text-indigo-300">
                                         <?php echo __('simulation_hint'); ?>
                                     </p>
@@ -456,21 +457,18 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                         <span class="px-2 py-0.5 rounded-full text-[8px] font-black uppercase"
                                             :class="log.action_taken === 'hide' ? 'bg-pink-500/20 text-pink-400' : 'bg-red-500/20 text-red-500'"
                                             x-text="log.action_taken === 'hide' ? '<?php echo __('bot_action_hide'); ?>' : '<?php echo __('bot_action_delete'); ?>'"></span>
-                                    </div>
-                                    <p class="text-xs text-gray-500 italic mt-1 line-clamp-1" x-text="log.comment_text">
-                                    </p>
+                                    <p class="text-xs text-gray-500 italic mt-1 line-clamp-1" x-text="log.comment_text"></p>
                                 </div>
                             </div>
                             <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                                <!-- Open on Facebook -->
+                                <!-- Open on Instagram -->
                                 <template x-if="log.comment_id">
-                                    <a :href="'https://facebook.com/' + (log.comment_id.includes('_') ? log.comment_id : log.page_id + '_' + log.comment_id)"
+                                    <a :href="'https://instagram.com/'"
                                         target="_blank"
                                         class="p-2 text-gray-400 hover:text-pink-400 transition-colors"
-                                        title="<?php echo __('view_on_facebook'); ?>">
+                                        title="<?php echo __('view_on_instagram'); ?>">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                         </svg>
                                     </a>
                                 </template>
@@ -480,8 +478,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     class="p-2 text-gray-400 hover:text-red-500 transition-colors"
                                     title="<?php echo __('delete'); ?>">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                     </svg>
                                 </button>
                             </div>

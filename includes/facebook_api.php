@@ -919,11 +919,17 @@ class FacebookAPI
 
 
 
-    public function subscribeApp($page_id, $access_token)
+    public function subscribeApp($id, $access_token, $platform = 'facebook')
     {
-        // Expanded fields for Instagram comments and messaging
-        // Note: 'comments' is not a valid field for subscribed_apps edge. It is covered by 'feed' or specific webhooks.
-        return $this->makeRequest("$page_id/subscribed_apps", [
+        if ($platform === 'instagram') {
+            // Instagram specific fields
+            return $this->makeRequest("$id/subscribed_apps", [
+                'subscribed_fields' => 'comments,live_comments'
+            ], $access_token, 'POST');
+        }
+
+        // Facebook Page fields
+        return $this->makeRequest("$id/subscribed_apps", [
             'subscribed_fields' => ['feed', 'messages', 'messaging_postbacks', 'messaging_optins', 'message_deliveries', 'message_reads']
         ], $access_token, 'POST');
     }

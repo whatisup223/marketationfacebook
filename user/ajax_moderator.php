@@ -161,21 +161,21 @@ if ($action === 'delete_log' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // 5. Token Debug/Webhook Check
 if ($action === 'get_token_debug') {
-    $page_id = $_GET['page_id'] ?? ''; // This is the Facebook Page ID
-    $ig_id = $_GET['ig_id'] ?? ''; // This is the Instagram Business ID if checking IG
-    if (!$page_id) {
-        echo json_encode(['status' => 'error', 'message' => 'Page ID required']);
-        exit;
-    }
+    $platform = $_GET['platform'] ?? 'facebook';
+    $id_column = ($platform === 'instagram') ? 'ig_business_id' : 'page_id';
 
-    $stmt = $pdo->prepare("SELECT page_access_token FROM fb_pages WHERE page_id = ?");
+    $stmt = $pdo->prepare("SELECT page_access_token, page_id FROM fb_pages WHERE $id_column = ?");
     $stmt->execute([$page_id]);
-    $token = $stmt->fetchColumn();
+    $page = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if (!$token) {
+    if (!$page || !$page['page_access_token']) {
         echo json_encode(['status' => 'error', 'message' => 'Page token not found']);
         exit;
     }
+
+    $token = $page['page_access_token'];
+    $target_page_id = $page['page_id']; // For subscription check on FB
+
 
     try {
         $stmt = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = ?");
@@ -199,7 +199,7 @@ if ($action === 'get_token_debug') {
         // Check Webhook Subscription
         $is_subscribed = false;
         try {
-            $subs = $fb->makeRequest("$page_id/subscribed_apps", [], $token, 'GET');
+            $subs = $fb->makeRequest("$target_page_id/subscribed_apps", [], $token, 'GET');
             if (isset($subs['data'])) {
                 foreach ($subs['data'] as $app) {
                     if (isset($app['id']) && $app['id'] == $app_id) {
@@ -250,12 +250,12 @@ if ($action === 'subscribe_page' && $_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
 
-        // Always subscribe via the underlying Facebook Page ID
-        $target_subscribe_id = $page['page_id'];
+        // Use platform-specific ID for subscription
+        $target_subscribe_id = ($platform === 'instagram') ? $page_id : $page['page_id'];
 
         $fb = new FacebookAPI();
-        // Subscribe the app to the page
-        $res = $fb->subscribeApp($target_subscribe_id, $page['page_access_token']);
+        // Subscribe the app
+        $res = $fb->subscribeApp($target_subscribe_id, $page['page_access_token'], $platform);
 
         if (isset($res['success']) && $res['success']) {
             echo json_encode(['status' => 'success', 'message' => __('page_protected_success')]);
@@ -289,7 +289,7 @@ if ($action === 'unsubscribe_page' && $_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
 
-        $target_unsubscribe_id = $page['page_id'];
+        $target_unsubscribe_id = ($platform === 'instagram') ? $page_id : $page['page_id'];
         $fb = new FacebookAPI();
         // Unsubscribe
         $res = $fb->makeRequest("$target_unsubscribe_id/subscribed_apps", [], $page['page_access_token'], 'DELETE');
