@@ -96,15 +96,20 @@ function handleFacebookEvent($data, $pdo)
                     $item = $val['item'] ?? ($platform === 'instagram' ? 'comment' : '');
                     if ($item === 'comment') {
                         $verb = $val['verb'] ?? ($platform === 'instagram' ? 'add' : '');
+                        // Force 'add' for Instagram if not present, as IG webhook structure differs
+                        if ($platform === 'instagram' && empty($verb)) {
+                            $verb = 'add';
+                        }
+
                         if ($verb === 'add' || $verb === 'edited') {
                             $sender_id = $val['from']['id'] ?? '';
                             if ($sender_id == $id)
                                 continue;
 
                             $comment_id = $val['comment_id'] ?? $val['id'] ?? '';
+                            // Instagram comment text is often just under 'text'
                             $message_text = $val['message'] ?? $val['text'] ?? '';
                             $sender_name = $val['from']['name'] ?? $val['from']['username'] ?? '';
-                            $sender_id = $val['from']['id'] ?? '';
 
                             // 1. Check Moderation (Must check for both additions and edits)
                             $is_moderated = processModeration($pdo, $id, $comment_id, $message_text, $sender_name, $platform);
@@ -125,7 +130,8 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 {
     // 1. Fetch Page Settings (Token, Schedule, Cooldown, AI Intelligence)
     $id_column = ($platform === 'instagram') ? 'ig_business_id' : 'page_id';
-    $stmt = $pdo->prepare("SELECT p.page_access_token, p.page_name, p.bot_cooldown_seconds, p.bot_schedule_enabled, p.bot_schedule_start, p.bot_schedule_end, p.bot_exclude_keywords, p.bot_ai_sentiment_enabled, p.bot_anger_keywords, p.bot_repetition_threshold, p.bot_handover_reply, a.user_id 
+    // Fetch p.page_id (FB ID) explicitly
+    $stmt = $pdo->prepare("SELECT p.page_id as fb_page_id, p.page_access_token, p.page_name, p.bot_cooldown_seconds, p.bot_schedule_enabled, p.bot_schedule_start, p.bot_schedule_end, p.bot_exclude_keywords, p.bot_ai_sentiment_enabled, p.bot_anger_keywords, p.bot_repetition_threshold, p.bot_handover_reply, a.user_id 
                            FROM fb_pages p 
                            JOIN fb_accounts a ON p.account_id = a.id 
                            WHERE p.$id_column = ?");
@@ -134,6 +140,9 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
     if (!$page || !$page['page_access_token'])
         return;
 
+    // Use FB Page ID for API calls that require it (like messaging)
+    // For Instagram, we must perform actions AS the Page, even if the event came to the IG account
+    $api_actor_id = $page['fb_page_id'];
     $access_token = $page['page_access_token'];
     $customer_id = ($source === 'message') ? $target_id : $actual_sender_id;
 
@@ -237,7 +246,7 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
                     if ($source === 'message') {
                         // Messenger: Link Name
                         $p_msg = str_replace('{name}', $sender_name, $h_msg);
-                        $fb->sendMessage($page_id, $access_token, $customer_id, $p_msg);
+                        $fb->sendMessage($api_actor_id, $access_token, $customer_id, $p_msg);
                     } else {
                         // Comments: Blue Mention for Public, Name for Private
                         $pub_msg = str_replace('{name}', '@[' . $customer_id . ']', $h_msg);
@@ -363,7 +372,7 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 
                     if ($source === 'message') {
                         $p_msg = str_replace('{name}', $sender_name, $h_msg);
-                        $fb->sendMessage($page_id, $access_token, $customer_id, $p_msg);
+                        $fb->sendMessage($api_actor_id, $access_token, $customer_id, $p_msg);
                     } else {
                         $pub_msg = str_replace('{name}', '@[' . $customer_id . ']', $h_msg);
                         $priv_msg = str_replace('{name}', $sender_name, $h_msg);
@@ -413,7 +422,7 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 
         // A. Check Messenger Conversation for Admin activity
         if ($thread_user_id) {
-            $convs = $fb->makeRequest("{$page_id}/conversations", [
+            $convs = $fb->makeRequest("{$api_actor_id}/conversations", [
                 'fields' => 'messages.limit(5){id,from,created_time}'
             ], $access_token);
 
@@ -422,7 +431,7 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
                     $msg_sender_id = $msg['from']['id'] ?? '';
                     $fb_msg_id = $msg['id'] ?? '';
 
-                    if ($msg_sender_id == $page_id) {
+                    if ($msg_sender_id == $api_actor_id) {
                         // Check if this ID is in our bot_sent_messages table
                         $chk = $pdo->prepare("SELECT id FROM bot_sent_messages WHERE message_id = ? OR ? LIKE CONCAT('%', message_id, '%') OR message_id LIKE CONCAT('%', ?, '%') LIMIT 1");
                         $chk->execute([$fb_msg_id, $fb_msg_id, $fb_msg_id]);
@@ -453,7 +462,7 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
                     $reply_sender_id = $reply['from']['id'] ?? '';
                     $fb_reply_id = $reply['id'] ?? '';
 
-                    if ($reply_sender_id == $page_id) {
+                    if ($reply_sender_id == $api_actor_id) {
                         // Robust check for comment IDs
                         $chk = $pdo->prepare("SELECT id FROM bot_sent_messages WHERE message_id = ? OR ? LIKE CONCAT('%', message_id, '%') OR message_id LIKE CONCAT('%', ?, '%') LIMIT 1");
                         $chk->execute([$fb_reply_id, $fb_reply_id, $fb_reply_id]);
@@ -496,14 +505,14 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
     if ($source === 'message') {
         // Send image first if exists
         if (!empty($image_url)) {
-            $fb->sendImageMessage($page_id, $access_token, $target_id, $image_url);
+            $fb->sendImageMessage($api_actor_id, $access_token, $target_id, $image_url);
         }
 
         // Then send text with buttons
         if ($buttons && is_array($buttons) && count($buttons) > 0) {
-            $res = $fb->sendButtonMessage($page_id, $access_token, $target_id, $reply_msg, $buttons);
+            $res = $fb->sendButtonMessage($api_actor_id, $access_token, $target_id, $reply_msg, $buttons);
         } else {
-            $res = $fb->sendMessage($page_id, $access_token, $target_id, $reply_msg);
+            $res = $fb->sendMessage($api_actor_id, $access_token, $target_id, $reply_msg);
         }
 
         error_log("WEBHOOK DEBUG: Messenger Send Res: " . json_encode($res));
