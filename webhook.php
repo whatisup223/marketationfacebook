@@ -361,7 +361,7 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
     debugLog("Rule Settings for $target_id: Like=" . ($auto_like_comment ? "YES" : "NO") . ", Private=" . ($private_reply_enabled ? "YES" : "NO") . ", Platform=" . $platform);
 
     // --- QUICK WINS IMPLEMENTATION ---
-    // 1. Random Variations (Spintax): explode by | and pick random
+    debugLog("STEP: Processing Spintax and Mentions...");
     if (strpos($reply_msg, '|') !== false) {
         $options = explode('|', $reply_msg);
         $reply_msg = trim($options[array_rand($options)]);
@@ -479,6 +479,7 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
     }
 
     // 5. Decision Logic: Schedule & Cooldown
+    debugLog("STEP: Decision Logic (Schedule & Cooldown)...");
     $bypass_schedule = (int) ($matched_rule['bypass_schedule'] ?? 0);
     $bypass_cooldown = (int) ($matched_rule['bypass_cooldown'] ?? 0);
 
@@ -581,23 +582,25 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
     }
 
     // 5. Execute Reply
+    debugLog("STEP: Initializing Compliance Engine for $customer_id...");
     // COMPLIANCE CHECK: Init Engine
     $compliance = new ComplianceEngine($pdo, $page_id, $access_token);
 
     // A. Track this user interaction (opens window)
+    debugLog("STEP: Refreshing interaction time...");
     $compliance->refreshLastInteraction($customer_id, $source);
 
     // B. Check if we CAN send (Rate Limit + Protocol)
+    debugLog("STEP: Checking Compliance Policy...");
     $msg_type = ($source === 'comment') ? 'COMMENT' : 'RESPONSE';
     $policy = $compliance->canSendMessage($customer_id, $msg_type);
     if (!$policy['allowed']) {
-        // Log this rejection for debugging
         $reason = $policy['reason'] ?? 'Unknown Policy';
         debugLog("SILENCE: Compliance Engine blocked message to $customer_id. Reason: $reason");
-        file_put_contents(__DIR__ . '/debug_compliance.txt', date('Y-m-d H:i:s') . " - BLOCKED: " . $reason . "\n", FILE_APPEND);
         return;
     }
 
+    debugLog("STEP: Compliance PASSED. Preparing to send via Facebook API...");
     $fb = new FacebookAPI();
     $res = null;
     $buttons = isset($matched_rule['reply_buttons']) ? json_decode($matched_rule['reply_buttons'], true) : null;
