@@ -480,13 +480,18 @@ class FacebookAPI
     /**
      * Send Private Reply to Comment
      */
-    public function replyPrivateToComment($comment_id, $message, $access_token)
+    public function replyPrivateToComment($comment_id, $message, $access_token, $platform = 'facebook')
     {
-        $endpoint = 'me/messages';
-        $params = [
-            'recipient' => ['comment_id' => $comment_id],
-            'message' => ['text' => $message]
-        ];
+        if ($platform === 'instagram') {
+            $endpoint = $comment_id . '/private_replies';
+            $params = ['message' => $message];
+        } else {
+            $endpoint = 'me/messages';
+            $params = [
+                'recipient' => ['comment_id' => $comment_id],
+                'message' => ['text' => $message]
+            ];
+        }
         return $this->makeRequest($endpoint, $params, $access_token, 'POST');
     }
 

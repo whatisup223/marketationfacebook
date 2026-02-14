@@ -232,9 +232,12 @@ try {
         `private_reply_enabled` tinyint(1) DEFAULT 0,
         `private_reply_text` text DEFAULT NULL,
         `auto_like_comment` tinyint(1) DEFAULT 0,
+        `usage_count` int(11) DEFAULT 0,
+        `platform` enum('facebook','instagram') DEFAULT 'facebook',
         `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
         PRIMARY KEY (`id`),
-        KEY `page_id` (`page_id`)
+        KEY `page_id` (`page_id`),
+        KEY `idx_platform` (`page_id`, `platform`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
 
     if (!columnExists($pdo, 'users', 'webhook_token')) {
@@ -282,13 +285,31 @@ try {
         `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
         `user_id` int(11) UNSIGNED NOT NULL,
         `page_id` varchar(100) NOT NULL,
+        `platform` enum('facebook','instagram') DEFAULT 'facebook',
         `is_active` tinyint(1) DEFAULT 1,
         `hide_phones` tinyint(1) DEFAULT 0,
         `hide_links` tinyint(1) DEFAULT 0,
         `banned_keywords` text DEFAULT NULL,
         `action_type` enum('hide','delete') DEFAULT 'hide',
         PRIMARY KEY (`id`),
-        UNIQUE KEY `page_id` (`page_id`)
+        UNIQUE KEY `idx_page_platform` (`page_id`, `platform`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+    $pdo->exec("CREATE TABLE IF NOT EXISTS `fb_moderation_logs` (
+        `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+        `user_id` int(11) UNSIGNED NOT NULL,
+        `page_id` varchar(100) NOT NULL,
+        `post_id` varchar(100) DEFAULT NULL,
+        `comment_id` varchar(100) DEFAULT NULL,
+        `content` text DEFAULT NULL,
+        `user_name` varchar(255) DEFAULT NULL,
+        `reason` varchar(255) DEFAULT NULL,
+        `action_taken` enum('hide','delete') DEFAULT 'hide',
+        `platform` enum('facebook','instagram') DEFAULT 'facebook',
+        `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+        PRIMARY KEY (`id`),
+        KEY `user_id` (`user_id`),
+        KEY `idx_page_platform` (`page_id`, `platform`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
 
     // --- 027-029: FB Pages Intelligence & SaaS Settings ---
@@ -532,6 +553,18 @@ try {
         $pdo->exec("ALTER TABLE auto_reply_rules ADD COLUMN auto_like_comment TINYINT(1) DEFAULT 0");
     }
 
+    if (!columnExists($pdo, 'auto_reply_rules', 'is_ai_safe')) {
+        $pdo->exec("ALTER TABLE auto_reply_rules ADD COLUMN is_ai_safe TINYINT(1) DEFAULT 1");
+    }
+
+    if (!columnExists($pdo, 'auto_reply_rules', 'bypass_schedule')) {
+        $pdo->exec("ALTER TABLE auto_reply_rules ADD COLUMN bypass_schedule TINYINT(1) DEFAULT 0");
+    }
+
+    if (!columnExists($pdo, 'auto_reply_rules', 'bypass_cooldown')) {
+        $pdo->exec("ALTER TABLE auto_reply_rules ADD COLUMN bypass_cooldown TINYINT(1) DEFAULT 0");
+    }
+
     // Ensure Unique Index for Granular Lead Tracking (Page + User + Source + Post)
     if (!indexExists($pdo, 'fb_leads', 'idx_lead_source_post')) {
         // Drop older restrictive unique indexes if they exist to avoid conflicts
@@ -568,14 +601,33 @@ try {
                     ADD KEY `idx_ig_business` (`ig_business_id`)");
     }
 
-    // --- 044: Platform support for Auto Reply & Bot ---
+    // --- 044: Platform support & Advanced Fields ---
     if (!columnExists($pdo, 'auto_reply_rules', 'platform')) {
-        $pdo->exec("ALTER TABLE `auto_reply_rules` ADD COLUMN `platform` ENUM('facebook', 'instagram') DEFAULT 'facebook' AFTER `page_id`");
+        $pdo->exec("ALTER TABLE `auto_reply_rules` ADD COLUMN `platform` ENUM('facebook', 'instagram') DEFAULT 'facebook' AFTER `page_id` ");
         $pdo->exec("CREATE INDEX `idx_platform` ON `auto_reply_rules` (`platform`)");
     }
 
+    if (!columnExists($pdo, 'auto_reply_rules', 'usage_count')) {
+        $pdo->exec("ALTER TABLE `auto_reply_rules` ADD COLUMN `usage_count` int(11) DEFAULT 0");
+    }
+
+    if (!columnExists($pdo, 'fb_moderation_rules', 'platform')) {
+        $pdo->exec("ALTER TABLE `fb_moderation_rules` ADD COLUMN `platform` ENUM('facebook', 'instagram') DEFAULT 'facebook' AFTER `page_id` ");
+        // If the old unique key exists on page_id, drop and recreate it to include platform
+        if (indexExists($pdo, 'fb_moderation_rules', 'page_id')) {
+            $pdo->exec("ALTER TABLE fb_moderation_rules DROP INDEX page_id");
+        }
+        if (!indexExists($pdo, 'fb_moderation_rules', 'idx_page_platform')) {
+            $pdo->exec("ALTER TABLE fb_moderation_rules ADD UNIQUE KEY `idx_page_platform` (page_id, platform)");
+        }
+    }
+
+    if (!columnExists($pdo, 'fb_moderation_logs', 'post_id')) {
+        $pdo->exec("ALTER TABLE `fb_moderation_logs` ADD COLUMN `post_id` varchar(100) DEFAULT NULL AFTER `page_id` ");
+    }
+
     if (!columnExists($pdo, 'bot_sent_messages', 'platform')) {
-        $pdo->exec("ALTER TABLE `bot_sent_messages` ADD COLUMN `platform` ENUM('facebook', 'instagram') DEFAULT 'facebook' AFTER `page_id`");
+        $pdo->exec("ALTER TABLE `bot_sent_messages` ADD COLUMN `platform` ENUM('facebook', 'instagram') DEFAULT 'facebook' AFTER `page_id` ");
     }
 
     echo "✅ Master Migration completed successfully!\n";

@@ -112,12 +112,13 @@ function handleFacebookEvent($data, $pdo)
                                 continue;
 
                             $comment_id = $val['comment_id'] ?? $val['id'] ?? '';
+                            $post_id = $val['post_id'] ?? $val['media_id'] ?? '';
                             // Instagram comment text is often just under 'text'
                             $message_text = $val['message'] ?? $val['text'] ?? '';
                             $sender_name = $val['from']['name'] ?? $val['from']['username'] ?? '';
 
                             // 1. Check Moderation (Must check for both additions and edits)
-                            $is_moderated = processModeration($pdo, $id, $comment_id, $message_text, $sender_name, $platform);
+                            $is_moderated = processModeration($pdo, $id, $comment_id, $message_text, $sender_name, $platform, $post_id);
 
                             // 2. Only Auto-Reply if it's a NEW comment and NOT moderated
                             if ($verb === 'add' && !$is_moderated) {
@@ -384,7 +385,7 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 
                         $fb->likeComment($target_id, $access_token);
                         $fb->replyToComment($target_id, $pub_msg, $access_token, $platform);
-                        $fb->replyPrivateToComment($target_id, $priv_msg, $access_token);
+                        $fb->replyPrivateToComment($target_id, $priv_msg, $access_token, $platform);
                     }
                 }
 
@@ -536,7 +537,7 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
             // Facebook allows sending a private message to the person who commented
             // We use the specific endpoint for this: /{comment_id}/private_replies
             // Note: This only works if the comment is less than 7 days old (usually instant)
-            $fb->replyPrivateToComment($target_id, $private_reply_text, $access_token);
+            $fb->replyPrivateToComment($target_id, $private_reply_text, $access_token, $platform);
         }
 
         // --- NEW: AUTO LIKE COMMENT ---
@@ -578,7 +579,7 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
     }
 }
 
-function processModeration($pdo, $id, $comment_id, $message_text, $sender_name = '', $platform = 'facebook')
+function processModeration($pdo, $id, $comment_id, $message_text, $sender_name = '', $platform = 'facebook', $post_id = null)
 {
     // 1. Get Rules - Fix: The ID coming from webhook for IG is the IG Business ID.
     // We need to find the rule associated with this ID.
@@ -640,8 +641,8 @@ function processModeration($pdo, $id, $comment_id, $message_text, $sender_name =
             }
 
             // Log the action
-            $stmt = $pdo->prepare("INSERT INTO fb_moderation_logs (user_id, page_id, comment_id, content, user_name, reason, action_taken, platform) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$rules['user_id'], $id, $comment_id, $message_text, $sender_name, $reason, $rules['action_type'], $platform]);
+            $stmt = $pdo->prepare("INSERT INTO fb_moderation_logs (user_id, page_id, post_id, comment_id, content, user_name, reason, action_taken, platform) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$rules['user_id'], $id, $post_id, $comment_id, $message_text, $sender_name, $reason, $rules['action_type'], $platform]);
         }
         return true; // Handled by moderation
     }
