@@ -245,8 +245,10 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 
                         // Execute All
                         $fb->likeComment($target_id, $access_token);
-                        $fb->replyToComment($target_id, $pub_msg, $access_token);
-                        $fb->replyPrivateToComment($target_id, $priv_msg, $access_token);
+                        $fb->replyToComment($target_id, $pub_msg, $access_token, $platform);
+                        if ($platform !== 'instagram') {
+                            $fb->replyPrivateToComment($target_id, $priv_msg, $access_token);
+                        }
                     }
                 }
 
@@ -369,8 +371,10 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
                         $priv_msg = str_replace('{name}', $sender_name, $h_msg);
 
                         $fb->likeComment($target_id, $access_token);
-                        $fb->replyToComment($target_id, $pub_msg, $access_token);
-                        $fb->replyPrivateToComment($target_id, $priv_msg, $access_token);
+                        $fb->replyToComment($target_id, $pub_msg, $access_token, $platform);
+                        if ($platform !== 'instagram') {
+                            $fb->replyPrivateToComment($target_id, $priv_msg, $access_token);
+                        }
                     }
                 }
 
@@ -508,17 +512,17 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 
         error_log("WEBHOOK DEBUG: Messenger Send Res: " . json_encode($res));
     } else {
-        $res = $fb->replyToComment($target_id, $reply_msg, $access_token);
+        $res = $fb->replyToComment($target_id, $reply_msg, $access_token, $platform);
 
         // DEBUG: Log the result of the comment reply
         file_put_contents(__DIR__ . '/debug_fb.txt', date('Y-m-d H:i:s') . " - Comment Reply Res: " . json_encode($res) . " | ID: $target_id | Msg: $reply_msg\n", FILE_APPEND);
 
         if ($hide_comment) {
-            $fb->hideComment($target_id, $access_token, true);
+            $fb->hideComment($target_id, $access_token, true, $platform);
         }
 
         // --- NEW: PRIVATE REPLY TO COMMENT ---
-        if ($private_reply_enabled && !empty($private_reply_text)) {
+        if ($private_reply_enabled && !empty($private_reply_text) && $platform !== 'instagram') {
             // Facebook allows sending a private message to the person who commented
             // We use the specific endpoint for this: /{comment_id}/private_replies
             // Note: This only works if the comment is less than 7 days old (usually instant)
@@ -616,7 +620,7 @@ function processModeration($pdo, $page_id, $comment_id, $message_text, $sender_n
 
         if ($token) {
             if ($rules['action_type'] === 'hide') {
-                $fb->hideComment($comment_id, $token, ($platform === 'instagram'));
+                $fb->hideComment($comment_id, $token, true, $platform);
             } else {
                 $fb->makeRequest($comment_id, [], $token, 'DELETE');
             }

@@ -417,9 +417,11 @@ class FacebookAPI
     /**
      * Reply to a specific comment
      */
-    public function replyToComment($comment_id, $message, $access_token)
+    public function replyToComment($comment_id, $message, $access_token, $platform = 'facebook')
     {
-        $endpoint = $comment_id . '/comments';
+        // Instagram uses /replies, Facebook uses /comments (mostly interchangeable now but explicit is safer)
+        $edge = ($platform === 'instagram') ? 'replies' : 'comments';
+        $endpoint = $comment_id . '/' . $edge;
         $params = [
             'message' => $message
         ];
@@ -429,11 +431,15 @@ class FacebookAPI
     /**
      * Hide or Unhide a comment
      */
-    public function hideComment($comment_id, $access_token, $status = true)
+    public function hideComment($comment_id, $access_token, $status = true, $platform = 'facebook')
     {
         $endpoint = $comment_id;
+
+        // Instagram uses 'hide' param, Facebook uses 'is_hidden'
+        $field_name = ($platform === 'instagram') ? 'hide' : 'is_hidden';
+
         $params = [
-            'is_hidden' => $status
+            $field_name => $status
         ];
         return $this->makeRequest($endpoint, $params, $access_token, 'POST');
     }
