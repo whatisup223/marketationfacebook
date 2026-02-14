@@ -14,6 +14,8 @@ $user_id = $_SESSION['user_id'];
 $pdo = getDB();
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
+file_put_contents('../debug_ajax.txt', date('Y-m-d H:i:s') . " - Action: $action, User: $user_id\n", FILE_APPEND);
+
 // 0. Webhook Info
 if ($action === 'get_webhook_info') {
     try {
@@ -107,15 +109,23 @@ if ($action === 'save_rules' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 if ($action === 'get_logs') {
     $page_id = $_GET['page_id'] ?? '';
     $platform = $_GET['platform'] ?? 'facebook';
-    $stmt = $pdo->prepare("SELECT * FROM fb_moderation_logs WHERE user_id = ? " . ($page_id ? "AND page_id = ?" : "") . " AND platform = ? ORDER BY created_at DESC LIMIT 50");
-    if ($page_id) {
-        $stmt->execute([$user_id, $page_id, $platform]);
-    } else {
-        $stmt->execute([$user_id, $platform]);
+    if (!$pdo) {
+        echo json_encode(['status' => 'error', 'message' => 'Database connection failed']);
+        exit;
     }
-    $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    echo json_encode(['status' => 'success', 'data' => $logs]);
+    try {
+        $stmt = $pdo->prepare("SELECT * FROM fb_moderation_logs WHERE user_id = ? " . ($page_id ? "AND page_id = ?" : "") . " AND platform = ? ORDER BY created_at DESC LIMIT 50");
+        if ($page_id) {
+            $stmt->execute([$user_id, $page_id, $platform]);
+        } else {
+            $stmt->execute([$user_id, $platform]);
+        }
+        $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        echo json_encode(['status' => 'success', 'data' => $logs]);
+    } catch (Exception $e) {
+        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+    }
     exit;
 }
 

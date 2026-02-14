@@ -49,7 +49,7 @@ if (!isset($_SESSION['lang'])) {
     if (isset($_COOKIE['lang'])) {
         $_SESSION['lang'] = $_COOKIE['lang'];
     } else {
-        $_SESSION['lang'] = getSetting('default_site_lang', 'ar');
+        $_SESSION['lang'] = 'ar'; // Default to ar if getSetting fails or not yet reached
     }
 }
 
@@ -158,8 +158,7 @@ $translations = [
         'settings_saved_success' => 'تم حفظ الإعدادات بنجاح',
         'confirm_delete_rule' => 'تأكيد حذف هذه القاعدة؟',
         'dm_reply_rules' => 'قواعد الرد على الرسائل الخاصة',
-        'bot_action_hide' => 'تم الإخفاء',
-        'bot_action_delete' => 'تم الحذف',
+        'dm_reply_rules' => 'قواعد الرد على الرسائل الخاصة',
         'silenced' => 'تجاهل الرد',
         'add_smart_reply' => 'إضافة رد ذكي',
         'via_dm' => 'عبر الرسائل (DM)',
@@ -1745,6 +1744,7 @@ $translations = [
         'page_protection_stopped' => 'Page protection stopped!',
         'bot_action_hide' => 'HIDDEN BY BOT',
         'bot_action_delete' => 'PERMANENTLY DELETED',
+        'silenced' => 'Silenced',
         'view_on_facebook' => 'View on Facebook',
         'delete_log_hint' => 'Are you sure you want to delete this log? This action cannot be undone.',
         'test_your_comment' => 'Test your comment here (Simulated)',
