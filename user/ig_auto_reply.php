@@ -1067,8 +1067,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                                     class="flex items-center gap-1" title="إخفاء التعليق">👁️‍🗨️
                                                     إخفاء</span></template>
                                             <template x-if="rule.auto_like_comment == 1">
-                                                <span
-                                                    class="flex items-center gap-1 text-pink-400 group/like relative cursor-help"
+                                                <span class="flex items-center gap-1 text-pink-400 relative cursor-help"
                                                     title="<?php echo __('auto_like_ig_desc'); ?>">
                                                     ❤️ إعجاب
                                                     <span
@@ -1077,9 +1076,10 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                                     </span>
                                                 </span>
                                             </template>
-                                            <template x-if="rule.private_reply_enabled == 1"><span
-                                                    class="flex items-center gap-1 text-blue-400" title="رد خاص">✉️
-                                                    خاص</span></template>
+                                            <template x-if="rule.private_reply_enabled == 1">
+                                                <span class="flex items-center gap-1 text-blue-400" title="رد خاص">✉️
+                                                    خاص</span>
+                                            </template>
                                         </div>
                                     </div>
 
@@ -1159,17 +1159,19 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                             x-text="(rule.usage_count||0) + ' استخدام'"></span>
                                         <template x-if="rule.hide_comment == 1"><span
                                                 class="flex items-center gap-1">👁️‍🗨️</span></template>
-                                        <template x-if="rule.auto_like_comment == 1"><span
-                                                class="flex items-center gap-1 text-pink-400group/like relative cursor-help"
-                                                  title="<?php echo __('auto_like_ig_desc'); ?>">
+                                        <template x-if="rule.auto_like_comment == 1">
+                                            <span class="flex items-center gap-1 text-pink-400 relative cursor-help"
+                                                title="<?php echo __('auto_like_ig_desc'); ?>">
                                                 ❤️
-                                                <span class="text-[7px] bg-pink-500/20 px-0.5 rounded border border-pink-500/30">
+                                                <span
+                                                    class="text-[7px] bg-pink-500/20 px-0.5 rounded border border-pink-500/30">
                                                     <?php echo __('auto_like_ig_status'); ?>
                                                 </span>
                                             </span>
                                         </template>
-                                        <template x-if="rule.private_reply_enabled == 1"><span
-                                                class="flex items-center gap-1 text-blue-400">✉️</span></template>
+                                        <template x-if="rule.private_reply_enabled == 1">
+                                            <span class="flex items-center gap-1 text-blue-400">✉️</span>
+                                        </template>
                                     </div>
                                 </div>
 
@@ -1983,7 +1985,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 if (!this.selectedPageId) return;
                 this.subscribing = true;
                 let formData = new FormData();
-                formData.append('page_id', this.selectedPa                   geId);
+                formData.append('page_id', this.selectedPageId);
                 formData.append('platform', 'instagram');
                 fetch('ajax_auto_reply.php?platform=instagram&action=subscribe_page', { method: 'POST', body: formData })
                     .then(res => res.json())
