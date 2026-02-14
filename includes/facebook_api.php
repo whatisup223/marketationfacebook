@@ -921,16 +921,10 @@ class FacebookAPI
 
     public function subscribeApp($id, $access_token, $platform = 'facebook')
     {
-        if ($platform === 'instagram') {
-            // Instagram Business Account fields
-            return $this->makeRequest("$id/subscribed_apps", [
-                'subscribed_fields' => 'comments,mentions'
-            ], $access_token, 'POST');
-        }
+        // For compatibility and to avoid "Capability" errors, we pass fields in the URL string
+        $fields = ($platform === 'instagram') ? 'comments,mentions' : 'feed,messages,messaging_postbacks,messaging_optins,message_deliveries,message_reads';
 
-        // Facebook Page fields
-        return $this->makeRequest("$id/subscribed_apps", [
-            'subscribed_fields' => 'feed,messages,messaging_postbacks,messaging_optins,message_deliveries,message_reads'
-        ], $access_token, 'POST');
+        // We call the POST method but with parameters in the URL, and an empty body
+        return $this->makeRequest("$id/subscribed_apps?subscribed_fields=" . urlencode($fields), [], $access_token, 'POST');
     }
 }
