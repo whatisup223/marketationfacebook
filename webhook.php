@@ -509,70 +509,73 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 
     if ($should_check_cooldown) {
         debugLog("Checking Cooldown ($cooldown_seconds s) for user $customer_id...");
-        // Cooldown check is only relevant for Messenger or identification-based sources
-        // For comments, we check the user thread via target_id (sender_id)
         $thread_user_id = ($source === 'message') ? $target_id : $actual_sender_id;
         $fb = new FacebookAPI();
 
-        // A. Check Messenger Conversation for Admin activity
+        // A. Check Messenger Conversation (Safety: try-catch + correct account)
         if ($thread_user_id) {
-            $convs = $fb->makeRequest("{$api_actor_id}/conversations", [
-                'fields' => 'messages.limit(5){id,from,created_time}'
-            ], $access_token);
+            try {
+                // Instagram uses 'me/conversations' (via token), FB can use ID
+                $conv_actor = ($platform === 'instagram') ? 'me' : $api_actor_id;
+                $convs = $fb->makeRequest("{$conv_actor}/conversations", [
+                    'fields' => 'messages.limit(5){id,from,created_time}'
+                ], $access_token);
 
-            if (isset($convs['data'][0]['messages']['data'])) {
-                foreach ($convs['data'][0]['messages']['data'] as $msg) {
-                    $msg_sender_id = $msg['from']['id'] ?? '';
-                    $fb_msg_id = $msg['id'] ?? '';
+                if (isset($convs['data'][0]['messages']['data'])) {
+                    foreach ($convs['data'][0]['messages']['data'] as $msg) {
+                        $msg_sender_id = $msg['from']['id'] ?? '';
+                        $fb_msg_id = $msg['id'] ?? '';
 
-                    if ($msg_sender_id == $api_actor_id || $msg_sender_id == $page_id) {
-                        // Check if this ID is in our bot_sent_messages table
-                        $chk = $pdo->prepare("SELECT id FROM bot_sent_messages WHERE message_id = ? OR ? LIKE CONCAT('%', message_id, '%') OR message_id LIKE CONCAT('%', ?, '%') LIMIT 1");
-                        $chk->execute([$fb_msg_id, $fb_msg_id, $fb_msg_id]);
+                        if ($msg_sender_id == $api_actor_id || $msg_sender_id == $page_id) {
+                            $chk = $pdo->prepare("SELECT id FROM bot_sent_messages WHERE message_id = ? OR ? LIKE CONCAT('%', message_id, '%') LIMIT 1");
+                            $chk->execute([$fb_msg_id, $fb_msg_id]);
 
-                        if (!$chk->fetch()) {
-                            // Message from Page, NOT in Bot database -> It's a Human Admin
-                            $created_time = strtotime($msg['created_time']);
-                            if ((time() - $created_time) < $cooldown_seconds) {
-                                debugLog("SILENCE: Human admin activity detected within cooldown period for $customer_id");
-                                return; // SILENCE
+                            if (!$chk->fetch()) {
+                                $created_time = strtotime($msg['created_time']);
+                                if ((time() - $created_time) < $cooldown_seconds) {
+                                    debugLog("SILENCE: Human admin activity detected for $customer_id");
+                                    return;
+                                }
+                                break;
                             }
-                            break;
                         }
-                        // If it's the bot, we continue to check older messages
                     }
                 }
+            } catch (Exception $e) {
+                debugLog("Cooldown Check Issue: " . $e->getMessage());
             }
         }
 
-        // B. Check Comment Replies if source is comment
+        // B. Check Comment Replies
         if ($source === 'comment') {
-            $replies = $fb->makeRequest("{$target_id}/comments", [
-                'fields' => 'id,from,created_time',
-                'limit' => 5
-            ], $access_token);
+            try {
+                $replies = $fb->makeRequest("{$target_id}/comments", [
+                    'fields' => 'id,from,created_time',
+                    'limit' => 5
+                ], $access_token);
 
-            if (isset($replies['data'])) {
-                foreach ($replies['data'] as $reply) {
-                    $reply_sender_id = $reply['from']['id'] ?? '';
-                    $fb_reply_id = $reply['id'] ?? '';
+                if (isset($replies['data'])) {
+                    foreach ($replies['data'] as $reply) {
+                        $reply_sender_id = $reply['from']['id'] ?? '';
+                        $fb_reply_id = $reply['id'] ?? '';
 
-                    if ($reply_sender_id == $api_actor_id || $reply_sender_id == $page_id) {
-                        // Robust check for comment IDs
-                        $chk = $pdo->prepare("SELECT id FROM bot_sent_messages WHERE message_id = ? OR ? LIKE CONCAT('%', message_id, '%') OR message_id LIKE CONCAT('%', ?, '%') LIMIT 1");
-                        $chk->execute([$fb_reply_id, $fb_reply_id, $fb_reply_id]);
+                        if ($reply_sender_id == $api_actor_id || $reply_sender_id == $page_id) {
+                            $chk = $pdo->prepare("SELECT id FROM bot_sent_messages WHERE message_id = ? OR ? LIKE CONCAT('%', message_id, '%') LIMIT 1");
+                            $chk->execute([$fb_reply_id, $fb_reply_id]);
 
-                        if (!$chk->fetch()) {
-                            // Reply from Page, NOT in Bot database -> It's a Human Admin
-                            $created_time = strtotime($reply['created_time']);
-                            if ((time() - $created_time) < $cooldown_seconds) {
-                                debugLog("SILENCE: Human admin reply found on comment within cooldown for $customer_id");
-                                return; // SILENCE
+                            if (!$chk->fetch()) {
+                                $created_time = strtotime($reply['created_time']);
+                                if ((time() - $created_time) < $cooldown_seconds) {
+                                    debugLog("SILENCE: Admin reply found on comment for $customer_id");
+                                    return;
+                                }
+                                break;
                             }
-                            break;
                         }
                     }
                 }
+            } catch (Exception $e) {
+                debugLog("Comment Cooldown Issue: " . $e->getMessage());
             }
         }
     }
