@@ -163,13 +163,17 @@ function handleFacebookEvent($data, $pdo)
 
                             // PLATFORM DETECTION & ID NORMALIZATION
                             $platform = 'facebook';
-                            $target_rule_id = $entry_id; // Default to Page ID
+                            $target_rule_id = $entry_id; // Default to the ID in the entry (Page ID or IG ID)
 
                             // Detect if it's an Instagram comment (even in 'page' webhook)
+                            // A. Check if object type is instagram
+                            // B. Check if it's a page webhook but contains 'username' instead of 'name' (IG style)
                             $is_ig_comment = ($object_type === 'instagram' || isset($val['from']['username']));
+
                             if ($is_ig_comment) {
                                 $platform = 'instagram';
-                                // If we have linked IG ID in DB, use it for rule lookup
+                                // CRITICAL: If we are in a 'page' webhook, $entry_id is the Facebook Page ID.
+                                // We MUST find the linked 'ig_business_id' for moderation rules to work.
                                 if ($page_meta && !empty($page_meta['ig_business_id'])) {
                                     $target_rule_id = $page_meta['ig_business_id'];
                                 }
@@ -177,7 +181,7 @@ function handleFacebookEvent($data, $pdo)
 
                             debugLog("Processing Comment: ID=$comment_id, Platform=$platform, TargetRuleID=$target_rule_id");
 
-                            // 1. Check Moderation
+                            // 1. Check Moderation with normalized data
                             $is_moderated = false;
                             try {
                                 $is_moderated = processModeration($pdo, $target_rule_id, $comment_id, $message_text, $sender_name, $platform, $post_id);
