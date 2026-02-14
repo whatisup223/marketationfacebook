@@ -61,6 +61,13 @@ try {
         $pdo->exec("ALTER TABLE auto_reply_rules ADD COLUMN auto_like_comment TINYINT(1) DEFAULT 0");
     if (!in_array('private_reply_enabled', $rules_cols))
         $pdo->exec("ALTER TABLE auto_reply_rules ADD COLUMN private_reply_enabled TINYINT(1) DEFAULT 0");
+
+    // fb_moderation_rules
+    $mod_cols = $pdo->query("SHOW COLUMNS FROM fb_moderation_rules")->fetchAll(PDO::FETCH_COLUMN);
+    if (!in_array('ig_business_id', $mod_cols))
+        $pdo->exec("ALTER TABLE fb_moderation_rules ADD COLUMN ig_business_id VARCHAR(100) NULL");
+    if (!in_array('platform', $mod_cols))
+        $pdo->exec("ALTER TABLE fb_moderation_rules ADD COLUMN platform ENUM('facebook', 'instagram') DEFAULT 'facebook'");
 } catch (Exception $em) {
     debugLog("Migration Error: " . $em->getMessage());
 }
@@ -180,9 +187,9 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
     // For Instagram it's Business ID, for Facebook it's Page ID
     $db_page_id = $page_id;
 
-    // Use FB Page ID for API actor
+    // Use FB Page ID for API actor by default, but switch to IG ID for Instagram
     $fb_page_id = $page['fb_page_id'];
-    $api_actor_id = $fb_page_id;
+    $api_actor_id = ($platform === 'instagram' && !empty($page['ig_business_id'])) ? $page['ig_business_id'] : $fb_page_id;
     $access_token = $page['page_access_token'];
     $customer_id = ($source === 'message') ? $target_id : $actual_sender_id;
 
