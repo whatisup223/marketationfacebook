@@ -231,20 +231,20 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
         if ($rule['trigger_type'] !== 'keyword')
             continue;
 
-        $keywords = preg_split('/[,،]/u', $rule['keywords']);
+        $keywords = preg_split('/[,،\n]/u', $rule['keywords']); // Support commas and newlines
         foreach ($keywords as $kw) {
             $kw = trim($kw);
             if (empty($kw))
                 continue;
 
-            // Improved matching: Whole Word Match using Regex + fallback substring
-            $pattern = '/(?<![\p{L}\p{N}])' . preg_quote($kw, '/') . '(?![\p{L}\p{N}])/ui';
-            if (preg_match($pattern, $incoming_text) || mb_stripos($incoming_text, $kw) !== false) {
+            // Simplified Matching: Use mb_stripos for partial match (Better for Arabic)
+            // Example: keyword 'سعر' matches 'السعر', 'سعرك', etc.
+            if (mb_stripos($incoming_text, $kw) !== false) {
                 $matched_rule = $rule;
-                $reply_msg = $rule['reply_message'];
+                $reply_msg = $rule['reply_message']; // Public Reply
                 $hide_comment = (int) $rule['hide_comment'];
                 $is_keyword_match = true;
-                debugLog("Matched Keyword Rule: '$kw' for Input: '$incoming_text'");
+                debugLog("Matched Keyword Rule: '$kw' (Rule ID: {$rule['id']})");
                 break 2;
             }
         }
