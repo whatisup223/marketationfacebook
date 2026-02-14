@@ -148,19 +148,21 @@ function handleFacebookEvent($data, $pdo)
 function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $actual_sender_id = null, $sender_name = '', $platform = 'facebook', $post_id = null, $parent_id = null)
 {
     // 1. Fetch Page Settings (Token, Schedule, Cooldown, AI Intelligence)
-    $id_column = ($platform === 'instagram') ? 'ig_business_id' : 'page_id';
-    // Fetch p.page_id (FB ID) explicitly
-    $stmt = $pdo->prepare("SELECT p.page_id as fb_page_id, p.page_access_token, p.page_name, p.bot_cooldown_seconds, p.bot_schedule_enabled, p.bot_schedule_start, p.bot_schedule_end, p.bot_exclude_keywords, p.bot_ai_sentiment_enabled, p.bot_anger_keywords, p.bot_repetition_threshold, p.bot_handover_reply, a.user_id 
+    // Robust lookup: Search in both page_id and ig_business_id to handle platform cross-talk
+    $stmt = $pdo->prepare("SELECT p.page_id as fb_page_id, p.ig_business_id, p.page_access_token, p.page_name, p.bot_cooldown_seconds, p.bot_schedule_enabled, p.bot_schedule_start, p.bot_schedule_end, p.bot_exclude_keywords, p.bot_ai_sentiment_enabled, p.bot_anger_keywords, p.bot_repetition_threshold, p.bot_handover_reply, a.user_id 
                            FROM fb_pages p 
                            JOIN fb_accounts a ON p.account_id = a.id 
-                           WHERE p.$id_column = ?");
-    $stmt->execute([$page_id]);
+                           WHERE p.page_id = ? OR p.ig_business_id = ?");
+    $stmt->execute([$page_id, $page_id]);
     $page = $stmt->fetch(PDO::FETCH_ASSOC);
     if (!$page || !$page['page_access_token'])
         return;
 
-    // Use FB Page ID for API calls that require it (like messaging)
-    // For Instagram, we must perform actions AS the Page, even if the event came to the IG account
+    // Match Rule ID: Determine which ID the dashboard used to save rules
+    // Dashboard uses ig_business_id for Instagram and page_id for Facebook
+    $db_page_id = ($platform === 'instagram') ? ($page['ig_business_id'] ?? $page_id) : ($page['fb_page_id'] ?? $page_id);
+
+    // Use FB Page ID for API actor (most actions are performed in Page context)
     $fb_page_id = $page['fb_page_id'];
     $api_actor_id = $fb_page_id;
     $access_token = $page['page_access_token'];
@@ -176,8 +178,8 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 
     // 2. Check Conversation State (Handover Protocol)
     if ($customer_id) {
-        $stmt = $pdo->prepare("SELECT * FROM bot_conversation_states WHERE page_id = ? AND user_id = ? AND reply_source = ? AND platform = ? LIMIT 1");
-        $stmt->execute([$page_id, $customer_id, $source, $platform]);
+        $stmt = $pdo->prepare("SELECT * FROM bot_conversation_states WHERE (page_id = ? OR page_id = ?) AND user_id = ? AND reply_source = ? AND platform = ? LIMIT 1");
+        $stmt->execute([$page['fb_page_id'], $page['ig_business_id'], $customer_id, $source, $platform]);
         $state = $stmt->fetch(PDO::FETCH_ASSOC);
 
         // If state is handover, bot is manually silenced for this user
@@ -189,8 +191,9 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 
     // 2. Find Rule Match
     // Fetch ALL active rules for this page, platform and source
+    // Search using the discovered database ID
     $stmt = $pdo->prepare("SELECT * FROM auto_reply_rules WHERE page_id = ? AND reply_source = ? AND platform = ? AND is_active = 1 ORDER BY trigger_type DESC, id DESC");
-    $stmt->execute([$page_id, $source, $platform]);
+    $stmt->execute([$db_page_id, $source, $platform]);
     $all_rules = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     $matched_rule = null;
@@ -611,10 +614,10 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 
 function processModeration($pdo, $id, $comment_id, $message_text, $sender_name = '', $platform = 'facebook', $post_id = null)
 {
-    // 1. Get Rules - Fix: Use trim and robust platform check
+    // Get Moderation Settings (by Page or IG ID)
     $id = trim($id);
-    $stmt = $pdo->prepare("SELECT * FROM fb_moderation_rules WHERE page_id = ? AND platform = ?");
-    $stmt->execute([$id, $platform]);
+    $stmt = $pdo->prepare("SELECT * FROM fb_moderation_rules WHERE (page_id = ? OR ig_business_id = ?) AND platform = ? LIMIT 1");
+    $stmt->execute([$id, $id, $platform]);
     $rules = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$rules || (isset($rules['is_active']) && !$rules['is_active'])) {
@@ -663,9 +666,8 @@ function processModeration($pdo, $id, $comment_id, $message_text, $sender_name =
 
     if ($violation) {
         $fb = new FacebookAPI();
-        $id_column = ($platform === 'instagram') ? 'ig_business_id' : 'page_id';
-        $stmt = $pdo->prepare("SELECT page_access_token FROM fb_pages WHERE $id_column = ?");
-        $stmt->execute([$id]);
+        $stmt = $pdo->prepare("SELECT page_access_token FROM fb_pages WHERE page_id = ? OR ig_business_id = ?");
+        $stmt->execute([$id, $id]);
         $token = $stmt->fetchColumn();
 
         if ($token) {

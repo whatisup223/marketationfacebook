@@ -18,14 +18,47 @@ if (!$pdo) {
 
 // Quick check/migration: Ensure platform column exists in bot_conversation_states for FB/IG separation
 try {
+    // 1. bot_conversation_states
     $check = $pdo->query("SHOW COLUMNS FROM bot_conversation_states LIKE 'platform'");
     if (!$check->fetch()) {
         $pdo->exec("ALTER TABLE bot_conversation_states ADD COLUMN platform ENUM('facebook', 'instagram') DEFAULT 'facebook' AFTER reply_source");
         $pdo->exec("ALTER TABLE bot_conversation_states DROP INDEX page_user_source");
         $pdo->exec("ALTER TABLE bot_conversation_states ADD UNIQUE KEY `page_user_source_plt` (page_id, user_id, reply_source, platform)");
     }
+
+    // 2. auto_reply_rules (Common columns for IG)
+    $cols = $pdo->query("SHOW COLUMNS FROM auto_reply_rules")->fetchAll(PDO::FETCH_COLUMN);
+    if (!in_array('platform', $cols))
+        $pdo->exec("ALTER TABLE auto_reply_rules ADD COLUMN platform ENUM('facebook', 'instagram') DEFAULT 'facebook'");
+    if (!in_array('is_active', $cols))
+        $pdo->exec("ALTER TABLE auto_reply_rules ADD COLUMN is_active TINYINT(1) DEFAULT 1");
+    if (!in_array('usage_count', $cols))
+        $pdo->exec("ALTER TABLE auto_reply_rules ADD COLUMN usage_count INT DEFAULT 0");
+    if (!in_array('auto_like_comment', $cols))
+        $pdo->exec("ALTER TABLE auto_reply_rules ADD COLUMN auto_like_comment TINYINT(1) DEFAULT 0");
+    if (!in_array('private_reply_enabled', $cols))
+        $pdo->exec("ALTER TABLE auto_reply_rules ADD COLUMN private_reply_enabled TINYINT(1) DEFAULT 0");
+    if (!in_array('private_reply_text', $cols))
+        $pdo->exec("ALTER TABLE auto_reply_rules ADD COLUMN private_reply_text TEXT NULL");
+    if (!in_array('is_ai_safe', $cols))
+        $pdo->exec("ALTER TABLE auto_reply_rules ADD COLUMN is_ai_safe TINYINT(1) DEFAULT 1");
+    if (!in_array('bypass_schedule', $cols))
+        $pdo->exec("ALTER TABLE auto_reply_rules ADD COLUMN bypass_schedule TINYINT(1) DEFAULT 0");
+    if (!in_array('bypass_cooldown', $cols))
+        $pdo->exec("ALTER TABLE auto_reply_rules ADD COLUMN bypass_cooldown TINYINT(1) DEFAULT 0");
+
+    // 3. fb_pages (IG Support)
+    $pg_cols = $pdo->query("SHOW COLUMNS FROM fb_pages")->fetchAll(PDO::FETCH_COLUMN);
+    if (!in_array('ig_business_id', $pg_cols))
+        $pdo->exec("ALTER TABLE fb_pages ADD COLUMN ig_business_id VARCHAR(100) NULL");
+    if (!in_array('ig_username', $pg_cols))
+        $pdo->exec("ALTER TABLE fb_pages ADD COLUMN ig_username VARCHAR(100) NULL");
+    if (!in_array('bot_cooldown_seconds', $pg_cols))
+        $pdo->exec("ALTER TABLE fb_pages ADD COLUMN bot_cooldown_seconds INT DEFAULT 0");
+    if (!in_array('bot_ai_sentiment_enabled', $pg_cols))
+        $pdo->exec("ALTER TABLE fb_pages ADD COLUMN bot_ai_sentiment_enabled TINYINT(1) DEFAULT 1");
 } catch (Exception $e) {
-    // Silent fail if already exists or other issue
+    // Silent fail
 }
 if ($action === 'get_webhook_info') {
     try {
