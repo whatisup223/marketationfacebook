@@ -87,6 +87,17 @@ class FacebookAPI
 
         $response = curl_exec($ch);
         $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+        // LOGGING START
+        $logFile = __DIR__ . '/../debug_api.txt';
+        if (curl_errno($ch)) {
+            file_put_contents($logFile, date('Y-m-d H:i:s') . " - cURL Error: " . curl_error($ch) . "\n", FILE_APPEND);
+        } else {
+            $respSnippet = (strlen($response) > 500) ? substr($response, 0, 500) . "..." : $response;
+            file_put_contents($logFile, date('Y-m-d H:i:s') . " - Resp ($http_code): " . $respSnippet . "\n", FILE_APPEND);
+        }
+        // LOGGING END
+
         curl_close($ch);
 
         return json_decode($response, true);
