@@ -337,7 +337,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $res = $fb->subscribeApp($target_subscribe_id, $page['page_access_token']);
 
             if (isset($res['success']) && $res['success']) {
-                echo json_encode(['success' => true]);
+                echo json_encode(['success' => true, 'message' => __('page_protected_success')]);
             } else {
                 echo json_encode(['success' => false, 'error' => $res['error']['message'] ?? 'Unknown error']);
             }

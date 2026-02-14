@@ -49,6 +49,7 @@ if ($action === 'get_rules') {
         exit;
     }
 
+    // Now we can safely query by platform
     $stmt = $pdo->prepare("SELECT * FROM fb_moderation_rules WHERE page_id = ? AND user_id = ? AND platform = ?");
     $stmt->execute([$page_id, $user_id, $platform]);
     $rules = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -61,7 +62,8 @@ if ($action === 'get_rules') {
             'hide_phones' => 0,
             'hide_links' => 0,
             'action_type' => 'hide',
-            'is_active' => 0
+            'is_active' => 0,
+            'platform' => $platform
         ];
     }
 
@@ -214,20 +216,29 @@ function substrmask($token)
 // 6. Subscribe Page
 if ($action === 'subscribe_page' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $page_id = $_POST['page_id'] ?? '';
+    $platform = $_POST['platform'] ?? 'facebook';
     if (!$page_id) {
         echo json_encode(['status' => 'error', 'message' => 'Page ID is required']);
         exit;
     }
     try {
-        $stmt = $pdo->prepare("SELECT page_access_token FROM fb_pages WHERE page_id = ?");
+        $id_column = ($platform === 'instagram') ? 'ig_business_id' : 'page_id';
+        $stmt = $pdo->prepare("SELECT page_access_token, page_id FROM fb_pages WHERE $id_column = ?");
         $stmt->execute([$page_id]);
         $page = $stmt->fetch(PDO::FETCH_ASSOC);
+
         if (!$page) {
             echo json_encode(['status' => 'error', 'message' => 'Page not found']);
             exit;
         }
+
+        // Always subscribe via the underlying Facebook Page ID
+        $target_subscribe_id = $page['page_id'];
+
         $fb = new FacebookAPI();
-        $res = $fb->subscribeApp($page_id, $page['page_access_token']);
+        // Subscribe the app to the page
+        $res = $fb->subscribeApp($target_subscribe_id, $page['page_access_token']);
+
         if (isset($res['success']) && $res['success']) {
             echo json_encode(['status' => 'success', 'message' => __('page_protected_success')]);
         } else {
@@ -243,20 +254,28 @@ if ($action === 'subscribe_page' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 // 7. Unsubscribe Page
 if ($action === 'unsubscribe_page' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $page_id = $_POST['page_id'] ?? '';
+    $platform = $_POST['platform'] ?? 'facebook';
+
     if (!$page_id) {
         echo json_encode(['status' => 'error', 'message' => 'Page ID is required']);
         exit;
     }
     try {
-        $stmt = $pdo->prepare("SELECT page_access_token FROM fb_pages WHERE page_id = ?");
+        $id_column = ($platform === 'instagram') ? 'ig_business_id' : 'page_id';
+        $stmt = $pdo->prepare("SELECT page_access_token, page_id FROM fb_pages WHERE $id_column = ?");
         $stmt->execute([$page_id]);
         $page = $stmt->fetch(PDO::FETCH_ASSOC);
+
         if (!$page) {
             echo json_encode(['status' => 'error', 'message' => 'Page not found']);
             exit;
         }
+
+        $target_unsubscribe_id = $page['page_id'];
         $fb = new FacebookAPI();
-        $res = $fb->makeRequest("$page_id/subscribed_apps", [], $page['page_access_token'], 'DELETE');
+        // Unsubscribe
+        $res = $fb->makeRequest("$target_unsubscribe_id/subscribed_apps", [], $page['page_access_token'], 'DELETE');
+
         if (isset($res['success']) && $res['success']) {
             echo json_encode(['status' => 'success', 'message' => __('page_protection_stopped')]);
         } else {
