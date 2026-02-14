@@ -144,9 +144,9 @@ class ComplianceEngine
     private function getBlockedKeywords()
     {
         // Fetch from Page Settings
-        // We can cache this, but for now query directly
-        $stmt = $this->pdo->prepare("SELECT bot_exclude_keywords FROM fb_pages WHERE page_id = ?");
-        $stmt->execute([$this->page_id]);
+        // Support both Facebook Page ID and Instagram Business ID
+        $stmt = $this->pdo->prepare("SELECT bot_exclude_keywords FROM fb_pages WHERE page_id = ? OR ig_business_id = ?");
+        $stmt->execute([$this->page_id, $this->page_id]);
         $kws = $stmt->fetchColumn();
 
         if (!$kws)

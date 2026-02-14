@@ -268,8 +268,9 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
                         $p_msg = str_replace('{name}', $sender_name, $h_msg);
                         $fb->sendMessage($api_actor_id, $access_token, $customer_id, $p_msg);
                     } else {
-                        // Comments: Blue Mention for Public, Name for Private
-                        $pub_msg = str_replace('{name}', '@[' . $customer_id . ']', $h_msg);
+                        // Comments: Smart Mention for Public, Name for Private
+                        $mention = ($platform === 'instagram') ? '@' . $sender_name : '@[' . $customer_id . ']';
+                        $pub_msg = str_replace('{name}', $mention, $h_msg);
                         $priv_msg = str_replace('{name}', $sender_name, $h_msg);
 
                         // Execute All
@@ -330,7 +331,7 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
     if ($source === 'comment') {
         // Public Reply (The actual comment)
         if (!empty($customer_id)) {
-            $mention = '@[' . $customer_id . ']';
+            $mention = ($platform === 'instagram') ? '@' . $sender_name : '@[' . $customer_id . ']';
             $reply_msg = str_replace('{name}', $mention, $reply_msg);
         }
         // Private Reply (The inbox message sent after comment)
@@ -394,10 +395,10 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
                         $p_msg = str_replace('{name}', $sender_name, $h_msg);
                         $fb->sendMessage($api_actor_id, $access_token, $customer_id, $p_msg);
                     } else {
-                        $pub_msg = str_replace('{name}', '@[' . $customer_id . ']', $h_msg);
+                        $pub_msg = str_replace('{name}', $mention, $h_msg);
                         $priv_msg = str_replace('{name}', $sender_name, $h_msg);
 
-                        $fb->likeComment($target_id, $access_token);
+                        $fb->likeComment($target_id, $access_token, $platform);
                         $fb->replyToComment($target_id, $pub_msg, $access_token, $platform);
                         try {
                             $private_res = $fb->replyPrivateToComment($target_id, $priv_msg, $access_token, $platform);
@@ -456,7 +457,7 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
                     $msg_sender_id = $msg['from']['id'] ?? '';
                     $fb_msg_id = $msg['id'] ?? '';
 
-                    if ($msg_sender_id == $api_actor_id) {
+                    if ($msg_sender_id == $api_actor_id || $msg_sender_id == $page_id) {
                         // Check if this ID is in our bot_sent_messages table
                         $chk = $pdo->prepare("SELECT id FROM bot_sent_messages WHERE message_id = ? OR ? LIKE CONCAT('%', message_id, '%') OR message_id LIKE CONCAT('%', ?, '%') LIMIT 1");
                         $chk->execute([$fb_msg_id, $fb_msg_id, $fb_msg_id]);
@@ -487,7 +488,7 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
                     $reply_sender_id = $reply['from']['id'] ?? '';
                     $fb_reply_id = $reply['id'] ?? '';
 
-                    if ($reply_sender_id == $api_actor_id) {
+                    if ($reply_sender_id == $api_actor_id || $reply_sender_id == $page_id) {
                         // Robust check for comment IDs
                         $chk = $pdo->prepare("SELECT id FROM bot_sent_messages WHERE message_id = ? OR ? LIKE CONCAT('%', message_id, '%') OR message_id LIKE CONCAT('%', ?, '%') LIMIT 1");
                         $chk->execute([$fb_reply_id, $fb_reply_id, $fb_reply_id]);

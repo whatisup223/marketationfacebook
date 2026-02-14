@@ -313,14 +313,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'save_page_settings') {
         $page_id = $_POST['page_id'] ?? '';
-        $cooldown = (int) ($_POST['cooldown'] ?? 0);
+        $cooldown = (int) ($_POST['cooldown_seconds'] ?? $_POST['cooldown'] ?? 0);
         $schedule_enabled = (int) ($_POST['schedule_enabled'] ?? 0);
         $schedule_start = $_POST['schedule_start'] ?? '00:00';
         $schedule_end = $_POST['schedule_end'] ?? '23:59';
         $exclude_keywords = (int) ($_POST['exclude_keywords'] ?? 0);
-        $ai_sentiment = (int) ($_POST['ai_sentiment'] ?? 1);
+        $ai_sentiment = (int) ($_POST['ai_sentiment_enabled'] ?? $_POST['ai_sentiment'] ?? 1);
         $anger_keywords = $_POST['anger_keywords'] ?? '';
-        $repetition_threshold = (int) ($_POST['repetition_threshold'] ?? 3);
+        $repetition_threshold = (int) ($_POST['repetition_count'] ?? $_POST['repetition_threshold'] ?? 3);
         $handover_reply = $_POST['handover_reply'] ?? '';
         $platform = $_POST['platform'] ?? 'facebook';
 
@@ -386,8 +386,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
-            // Pass correct page_id and fresh token to subscribe
-            $res = $fb->subscribeApp($target_subscribe_id, $page_token);
+            // Pass correct page_id, fresh token and platform to subscribe
+            $res = $fb->subscribeApp($target_subscribe_id, $page_token, $platform);
 
             if (isset($res['success']) && $res['success']) {
                 echo json_encode(['status' => 'success', 'message' => __('page_protected_success')]);
