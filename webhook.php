@@ -9,6 +9,12 @@ $input = file_get_contents('php://input');
 // For debugging - remove in production
 file_put_contents($logFile, date('Y-m-d H:i:s') . " - Input: " . $input . "\n", FILE_APPEND);
 
+function debugLog($msg)
+{
+    $logFile = __DIR__ . '/debug_webhook.txt';
+    file_put_contents($logFile, date('Y-m-d H:i:s') . " - " . (is_array($msg) ? json_encode($msg) : $msg) . "\n", FILE_APPEND);
+}
+
 // 1. Handle Facebook Verification (GET request)
 if (isset($_GET['hub_mode']) && $_GET['hub_mode'] === 'subscribe') {
     $uid = $_GET['uid'] ?? '';
@@ -119,9 +125,11 @@ function handleFacebookEvent($data, $pdo)
 
                             // 1. Check Moderation (Must check for both additions and edits)
                             $is_moderated = processModeration($pdo, $id, $comment_id, $message_text, $sender_name, $platform, $post_id);
+                            debugLog("Moderation Result for $comment_id: " . ($is_moderated ? "MODERATED" : "PASSED"));
 
                             // 2. Only Auto-Reply if it's a NEW comment and NOT moderated
                             if ($verb === 'add' && !$is_moderated) {
+                                debugLog("Triggering Auto-Reply for $comment_id");
                                 processAutoReply($pdo, $id, $comment_id, $message_text, 'comment', $sender_id, $sender_name, $platform);
                             }
                         }
@@ -174,35 +182,35 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
     }
 
     // 2. Find Rule Match
-    // 2.1 Try Keywords First
-    $stmt = $pdo->prepare("SELECT * FROM auto_reply_rules WHERE page_id = ? AND reply_source = ? AND platform = ? AND trigger_type = 'keyword' ORDER BY created_at DESC");
+    // Fetch ALL active rules for this page, platform and source
+    $stmt = $pdo->prepare("SELECT * FROM auto_reply_rules WHERE page_id = ? AND reply_source = ? AND platform = ? AND is_active = 1 ORDER BY trigger_type DESC, id DESC");
     $stmt->execute([$page_id, $source, $platform]);
-    $rules = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $all_rules = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    $matched_rule = null;
     $reply_msg = '';
     $hide_comment = 0;
     $is_keyword_match = false;
 
-    foreach ($rules as $rule) {
-        // Safe check for active status
-        if (isset($rule['is_active']) && $rule['is_active'] == 0) {
+    // 2.1 Keyword matching loop
+    foreach ($all_rules as $rule) {
+        if ($rule['trigger_type'] !== 'keyword')
             continue;
-        }
 
-        $keywords = explode(',', $rule['keywords']);
+        $keywords = preg_split('/[,،]/u', $rule['keywords']);
         foreach ($keywords as $kw) {
             $kw = trim($kw);
             if (empty($kw))
                 continue;
 
-            // Improved matching: Whole Word Match using Regex (supports Arabic/UTF-8)
+            // Improved matching: Whole Word Match using Regex
             $pattern = '/(?<![\p{L}\p{N}])' . preg_quote($kw, '/') . '(?![\p{L}\p{N}])/ui';
-
             if (preg_match($pattern, $incoming_text)) {
-                $reply_msg = $rule['reply_message'];
-                $hide_comment = $rule['hide_comment'];
-                $is_keyword_match = true;
                 $matched_rule = $rule;
+                $reply_msg = $rule['reply_message'];
+                $hide_comment = (int) $rule['hide_comment'];
+                $is_keyword_match = true;
+                debugLog("Matched Keyword Rule: $kw for $target_id");
                 break 2;
             }
         }
@@ -261,7 +269,12 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
                         // Execute All
                         $fb->likeComment($target_id, $access_token);
                         $fb->replyToComment($target_id, $pub_msg, $access_token, $platform);
-                        $fb->replyPrivateToComment($target_id, $priv_msg, $access_token);
+                        try {
+                            $res_p = $fb->replyPrivateToComment($target_id, $priv_msg, $access_token, $platform);
+                            debugLog("Handover Private Reply Result: " . json_encode($res_p));
+                        } catch (Exception $ext) {
+                            debugLog("Handover Private Reply ERROR: " . $ext->getMessage());
+                        }
                     }
                 }
 
@@ -271,27 +284,22 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
     }
 
     // 2.3 If no keyword match AND no anger silence, try Default Rule
-    if (!$reply_msg) {
-        $stmt = $pdo->prepare("SELECT * FROM auto_reply_rules WHERE page_id = ? AND reply_source = ? AND platform = ? AND trigger_type = 'default' LIMIT 1");
-        $stmt->execute([$page_id, $source, $platform]);
-        $def = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        // DEBUG
-        if (!$def) {
-            error_log("WEBHOOK DEBUG: No default rule found for page $page_id and source $source");
-        } else {
-            error_log("WEBHOOK DEBUG: Found default rule for page $page_id. Msg: " . substr($def['reply_message'], 0, 20));
-        }
-
-        if ($def) {
-            $reply_msg = $def['reply_message'];
-            $hide_comment = $def['hide_comment'];
-            $matched_rule = $def;
+    if (!$matched_rule) {
+        foreach ($all_rules as $rule) {
+            if ($rule['trigger_type'] === 'default') {
+                $matched_rule = $rule;
+                $reply_msg = $rule['reply_message'];
+                $hide_comment = (int) $rule['hide_comment'];
+                debugLog("Matched Default Rule for $target_id");
+                break;
+            }
         }
     }
 
-    if (!$reply_msg)
+    if (!$matched_rule) {
+        debugLog("No rule matched (keywords or default) for $target_id");
         return;
+    }
 
     // Capture Private Reply Settings from the matched rule
     $private_reply_enabled = (int) ($matched_rule['private_reply_enabled'] ?? 0);
@@ -385,7 +393,12 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 
                         $fb->likeComment($target_id, $access_token);
                         $fb->replyToComment($target_id, $pub_msg, $access_token, $platform);
-                        $fb->replyPrivateToComment($target_id, $priv_msg, $access_token, $platform);
+                        try {
+                            $private_res = $fb->replyPrivateToComment($target_id, $priv_msg, $access_token, $platform);
+                            debugLog("Private Reply Res for $target_id: " . json_encode($private_res));
+                        } catch (Exception $e) {
+                            debugLog("Private Reply ERROR for $target_id: " . $e->getMessage());
+                        }
                     }
                 }
 
@@ -534,10 +547,12 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 
         // --- NEW: PRIVATE REPLY TO COMMENT ---
         if ($private_reply_enabled && !empty($private_reply_text)) {
-            // Facebook allows sending a private message to the person who commented
-            // We use the specific endpoint for this: /{comment_id}/private_replies
-            // Note: This only works if the comment is less than 7 days old (usually instant)
-            $fb->replyPrivateToComment($target_id, $private_reply_text, $access_token, $platform);
+            try {
+                $p_res = $fb->replyPrivateToComment($target_id, $private_reply_text, $access_token, $platform);
+                debugLog("Auto-Reply Private Result for $target_id: " . json_encode($p_res));
+            } catch (Exception $ep) {
+                debugLog("Auto-Reply Private ERROR for $target_id: " . $ep->getMessage());
+            }
         }
 
         // --- NEW: AUTO LIKE COMMENT ---
@@ -587,26 +602,29 @@ function processModeration($pdo, $id, $comment_id, $message_text, $sender_name =
     $stmt->execute([$id, $platform]);
     $rules = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if (!$rules)
+    if (!$rules) {
+        debugLog("No moderation rules found for Page ID: $id on Platform: $platform");
         return false;
+    }
+    debugLog("Moderation Rules Found for $id: Phones=" . $rules['hide_phones'] . ", Links=" . $rules['hide_links'] . ", Active=" . $rules['is_active']);
 
     $violation = false;
     $reason = "";
 
-    // A. Check Phone Numbers - Improved Regex for International and Local formats
+    // A. Check Phone Numbers - Improved Regex for International and Local formats + Arabic digits
     if ($rules['hide_phones']) {
-        // Matches typical numbers 8+ digits, with space/dash and optional +
-        $phone_pattern = '/(\+?\d{1,4}[\s-]?\d{7,14})|(\d{8,15})/';
+        // Matches typical numbers 8+ digits, supports Arabic digits ٠-٩
+        $phone_pattern = '/(\+?[\d٠-٩]{1,4}[\s-]?[\d٠-٩]{7,14})|([\d٠-٩]{8,15})/u';
         if (preg_match($phone_pattern, $message_text)) {
             $violation = true;
             $reason = "Phone Number Detected";
         }
     }
 
-    // B. Check Links/URLs - Improved Regex
+    // B. Check Links/URLs - Improved Regex + /u flag
     if (!$violation && $rules['hide_links']) {
         // Matches http, www, and common TLDs to catch sneaky links
-        $link_pattern = '/(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9-]+\.(com|net|org|me|info|biz|co|app|xyz|site|online|link))/i';
+        $link_pattern = '/(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9-]+\.(com|net|org|me|info|biz|co|app|xyz|site|online|link))/iu';
         if (preg_match($link_pattern, $message_text)) {
             $violation = true;
             $reason = "Link Detected";
@@ -615,7 +633,7 @@ function processModeration($pdo, $id, $comment_id, $message_text, $sender_name =
 
     // C. Check Banned Keywords
     if (!$violation && !empty($rules['banned_keywords'])) {
-        $keywords = explode(',', $rules['banned_keywords']);
+        $keywords = preg_split('/[,،]/u', $rules['banned_keywords']);
         foreach ($keywords as $kw) {
             $kw = trim($kw);
             if (!empty($kw) && mb_stripos($message_text, $kw) !== false) {
@@ -625,6 +643,8 @@ function processModeration($pdo, $id, $comment_id, $message_text, $sender_name =
             }
         }
     }
+
+    debugLog("Violation Check: " . ($violation ? "YES - $reason" : "NO") . " for message: $message_text");
 
     if ($violation) {
         $fb = new FacebookAPI();

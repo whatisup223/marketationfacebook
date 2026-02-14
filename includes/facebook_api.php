@@ -88,11 +88,19 @@ class FacebookAPI
         $response = curl_exec($ch);
         $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-        // LOGGING START
-        $logFile = __DIR__ . '/../debug_api.txt';
+        // Debug logging
+        $debug_log = __DIR__ . '/../debug_api_log.txt';
+        $log_entry = date('Y-m-d H:i:s') . " - Endpoint: $endpoint - Code: $http_code - Method: $method\n";
+        if ($method === 'POST')
+            $log_entry .= " - Params: " . json_encode($params) . "\n";
+        $log_entry .= " - Response: " . $response . "\n\n";
+        file_put_contents($debug_log, $log_entry, FILE_APPEND);
+
         if (curl_errno($ch)) {
+            $logFile = __DIR__ . '/../debug_api.txt';
             file_put_contents($logFile, date('Y-m-d H:i:s') . " - cURL Error: " . curl_error($ch) . "\n", FILE_APPEND);
         } else {
+            $logFile = __DIR__ . '/../debug_api.txt';
             $respSnippet = (strlen($response) > 500) ? substr($response, 0, 500) . "..." : $response;
             file_put_contents($logFile, date('Y-m-d H:i:s') . " - Resp ($http_code): " . $respSnippet . "\n", FILE_APPEND);
         }
@@ -483,8 +491,9 @@ class FacebookAPI
     public function replyPrivateToComment($comment_id, $message, $access_token, $platform = 'facebook')
     {
         if ($platform === 'instagram') {
-            $endpoint = $comment_id . '/private_replies';
-            $params = ['message' => $message];
+            // Instagram often requires 'message' in the query string for private_replies
+            $endpoint = $comment_id . '/private_replies?message=' . urlencode($message);
+            return $this->makeRequest($endpoint, [], $access_token, 'POST');
         } else {
             $endpoint = 'me/messages';
             $params = [
