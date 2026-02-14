@@ -147,6 +147,8 @@ $initial_width_class = $sidebar_collapsed ? 'w-20' : 'w-64';
                         class="block py-1.5 text-xs <?php echo $current_page == 'page_auto_reply.php' ? 'text-indigo-400 font-bold' : 'text-gray-500 hover:text-gray-300'; ?>"><?php echo __('auto_reply'); ?></a>
                     <a href="page_messenger_bot.php" title="<?php echo __('auto_reply_messages'); ?>"
                         class="block py-1.5 text-xs <?php echo $current_page == 'page_messenger_bot.php' ? 'text-indigo-400 font-bold' : 'text-gray-500 hover:text-gray-300'; ?>"><?php echo __('auto_reply_messages'); ?></a>
+                    <a href="page_moderator.php" title="<?php echo __('auto_moderator'); ?>"
+                        class="block py-1.5 text-xs <?php echo $current_page == 'page_moderator.php' ? 'text-indigo-400 font-bold' : 'text-gray-500 hover:text-gray-300'; ?>"><?php echo __('auto_moderator'); ?></a>
                 </div>
             </div>
 

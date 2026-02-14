@@ -96,11 +96,11 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </template>
         </div>
 
-        <!-- Top Row: Selector & Webhook -->
-        <div class="flex-none grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <!-- Top Row: Selector -->
+        <div class="flex-none mb-8">
             <!-- Page Selector -->
             <div
-                class="glass-panel p-6 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl hover:border-indigo-500/20 transition-all shadow-xl">
+                class="glass-panel p-6 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl hover:border-indigo-500/20 transition-all shadow-xl max-w-2xl">
                 <label class="block text-sm font-bold text-white mb-4 flex items-center gap-2">
                     <div class="p-2 bg-indigo-500/20 rounded-lg">
                         <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -165,61 +165,6 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             </button>
                         </div>
                     </template>
-                </div>
-            </div>
-
-            <!-- Webhook Settings -->
-            <div
-                class="glass-panel p-6 rounded-3xl border border-indigo-500/20 bg-indigo-500/5 backdrop-blur-xl relative overflow-hidden shadow-xl">
-                <div
-                    class="absolute top-0 right-0 w-32 h-32 bg-indigo-600/10 blur-3xl -mr-16 -mt-16 pointer-events-none">
-                </div>
-
-                <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2 relative z-10">
-                    <div class="p-2 bg-indigo-500/20 rounded-lg">
-                        <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                        </svg>
-                    </div>
-                    <?php echo __('webhook_configuration'); ?>
-                </h3>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 relative z-10">
-                    <!-- Callback URL -->
-                    <div class="min-w-0">
-                        <label
-                            class="block text-[10px] font-bold text-indigo-300/70 uppercase tracking-widest mb-2"><?php echo __('callback_url'); ?></label>
-                        <div class="flex gap-2">
-                            <input type="text" readonly :value="webhookUrl"
-                                class="flex-1 min-w-0 bg-black/30 border border-white/10 rounded-xl text-[11px] text-gray-300 p-2.5 font-mono truncate focus:outline-none">
-                            <button @click="copyToClipboard(webhookUrl)"
-                                class="p-2.5 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-white transition-all shadow-lg shrink-0">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3">
-                                    </path>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                    <!-- Verify Token -->
-                    <div class="min-w-0">
-                        <label
-                            class="block text-[10px] font-bold text-indigo-300/70 uppercase tracking-widest mb-2"><?php echo __('verify_token'); ?></label>
-                        <div class="flex gap-2">
-                            <input type="text" readonly :value="verifyToken"
-                                class="flex-1 min-w-0 bg-black/30 border border-white/10 rounded-xl text-[11px] text-gray-300 p-2.5 font-mono truncate focus:outline-none">
-                            <button @click="copyToClipboard(verifyToken)"
-                                class="p-2.5 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-white transition-all shadow-lg shrink-0">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3">
-                                    </path>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
