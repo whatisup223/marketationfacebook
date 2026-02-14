@@ -169,9 +169,9 @@ $h_sidebar_collapsed = isset($_COOKIE['sidebar_collapsed']) && $_COOKIE['sidebar
                 extend: {
                     fontFamily: {
                         <?php if ($lang === 'ar'): ?>
-                                                                                                                                                                                                                                                                                                    sans: ['IBM Plex Sans Arabic', 'sans-serif'],
+                                                                                                                                                                                                                                                                                                        sans: ['IBM Plex Sans Arabic', 'sans-serif'],
                         <?php else: ?>
-                                                                                                                                                                                                                                                                                                    sans: ['Outfit', 'sans-serif'],
+                                                                                                                                                                                                                                                                                                        sans: ['Outfit', 'sans-serif'],
                         <?php endif; ?>
                     },
                     colors: {
@@ -181,7 +181,7 @@ $h_sidebar_collapsed = isset($_COOKIE['sidebar_collapsed']) && $_COOKIE['sidebar
                     }
                 }
             }
-        }
+    }
     </script>
     <style>
         [x-cloak] {
@@ -399,7 +399,7 @@ $h_sidebar_collapsed = isset($_COOKIE['sidebar_collapsed']) && $_COOKIE['sidebar
                 .finally(() => {
                     window.location.href = url;
                 });
-        }
+    }
     </script>
 
     <style>
@@ -603,9 +603,9 @@ $h_sidebar_collapsed = isset($_COOKIE['sidebar_collapsed']) && $_COOKIE['sidebar
                     <?php endif; ?>
                 </div>
 
-                <div class="flex items-center space-x-2 sm:space-x-4 rtl:space-x-reverse">
+                <div class="flex items-center space-x-3 sm:space-x-5 rtl:space-x-reverse">
                     <!-- Global Persistent Icons -->
-                    <div class="flex items-center space-x-1.5 sm:space-x-2 rtl:space-x-reverse">
+                    <div class="flex items-center space-x-2 sm:space-x-3 rtl:space-x-reverse">
                         <!-- Language Switcher -->
                         <a href="?<?php echo htmlspecialchars(http_build_query(array_merge($_GET, ['lang' => ($lang === 'ar' ? 'en' : 'ar')]))); ?>"
                             title="<?php echo $lang === 'ar' ? 'English' : 'عربي'; ?>"
@@ -829,6 +829,7 @@ $h_sidebar_collapsed = isset($_COOKIE['sidebar_collapsed']) && $_COOKIE['sidebar
                         </div>
                     </div>
                 </div>
+            </div>
 
 
     </nav>
