@@ -1,5 +1,7 @@
-<?php
+﻿<?php
 require_once '../includes/functions.php';
+header('Content-Type: text/html; charset=utf-8');
+require_once '../includes/header.php';
 
 // Check login
 if (!isset($_SESSION['user_id'])) {
@@ -7,37 +9,27 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
-require_once '../includes/header.php';
-
-// Get User Instagram Accounts via Account Join
+// Get User Pages via Account Join - Robust query
 $pdo = getDB();
-$stmt = $pdo->prepare("SELECT * FROM fb_pages WHERE id IN (
-    SELECT MIN(p.id) 
-    FROM fb_pages p 
-    JOIN fb_accounts a ON p.account_id = a.id 
-    WHERE a.user_id = ? AND p.ig_business_id IS NOT NULL
-    GROUP BY p.ig_business_id
-) ORDER BY ig_username ASC");
+$stmt = $pdo->prepare("SELECT p.id, p.ig_business_id as page_id, p.ig_username as page_name FROM fb_pages p JOIN fb_accounts a ON p.account_id = a.id WHERE a.user_id = ? AND p.ig_business_id IS NOT NULL GROUP BY p.ig_business_id ORDER BY p.ig_username ASC");
 $stmt->execute([$_SESSION['user_id']]);
 $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-$preselected_id = $_GET['ig_id'] ?? '';
 ?>
 
 <div id="main-user-container" class="main-user-container flex min-h-screen bg-gray-900 font-sans"
-    style="font-family: <?php echo $font; ?>;" x-data="messengerBotApp()">
+    style="font-family: <?php echo $font; ?>;" x-data="autoReplyApp()">
     <?php include '../includes/user_sidebar.php'; ?>
 
-    <main class="flex-1 flex flex-col bg-gray-900/50 backdrop-blur-md relative p-6 overflow-x-hidden">
+    <main
+        class="flex-1 flex flex-col bg-gray-900/50 backdrop-blur-md relative p-4 md:p-6 w-full max-w-full overflow-x-hidden">
 
         <!-- Header -->
         <div class="flex-none flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <div>
-                <h1
-                    class="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-purple-500 to-orange-500">
-                    <?php echo __('ig_messenger_bot'); ?>
+                <h1 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+                    <?php echo __('ig_auto_dm'); ?>
                 </h1>
-                <p class="text-gray-400 mt-2"><?php echo __('ig_messenger_bot_desc'); ?></p>
+                <p class="text-gray-400 mt-2"><?php echo __('auto_reply_desc'); ?></p>
             </div>
 
             <template x-if="selectedPageId">
@@ -52,244 +44,2453 @@ $preselected_id = $_GET['ig_id'] ?? '';
             </template>
         </div>
 
-        <!-- Selection -->
-        <div class="flex-none mb-8">
+        <!-- Top Row: Selector -->
+        <div class="flex-none grid grid-cols-1 gap-8 mb-8">
+            <!-- Page Selector -->
             <div
-                class="glass-panel p-6 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl hover:border-pink-500/20 transition-all shadow-xl max-w-2xl">
+                class="glass-panel p-6 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl hover:border-pink-500/20 transition-all shadow-xl">
                 <label class="block text-sm font-bold text-white mb-4 flex items-center gap-2">
                     <div class="p-2 bg-pink-500/20 rounded-lg">
                         <svg class="w-5 h-5 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z">
+                                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
                             </path>
                         </svg>
                     </div>
-                    <?php echo __('select_ig_account'); ?>
+                    <?php echo __('select_page'); ?>
                 </label>
 
-                <div class="relative group">
-                    <select x-model="selectedPageId"
-                        @change="localStorage.setItem('ar_last_ig_bot_page', selectedPageId); fetchRules(); fetchTokenDebug();"
-                        class="w-full bg-black/40 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500 block p-3.5 pr-10 appearance-none transition-all group-hover:border-white/20">
-                        <option value=""><?php echo __('select_ig_account'); ?>...</option>
-                        <?php foreach ($pages as $page): ?>
-                            <option value="<?php echo htmlspecialchars($page['ig_business_id']); ?>">
-                                @<?php echo htmlspecialchars($page['ig_username']); ?>
-                                (<?php echo htmlspecialchars($page['page_name']); ?>)
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
-                            </path>
+                <div class="flex flex-col sm:flex-row gap-4 items-stretch">
+                    <div class="relative group flex-1">
+                        <select x-model="selectedPageId"
+                            @change="localStorage.setItem('ar_last_ig_page_msg', selectedPageId); fetchRules(); fetchTokenDebug(); fetchPageSettings(); fetchStats(); fetchHandover();"
+                            class="w-full bg-black/40 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500 block p-3.5 pr-10 appearance-none transition-all group-hover:border-white/20">
+                            <option value=""><?php echo __('select_page'); ?>...</option>
+                            <?php foreach ($pages as $page): ?>
+                                <option value="<?php echo htmlspecialchars($page['ig_business_id'] ?? $page['page_id']); ?>">
+                                    @<?php echo htmlspecialchars($page['ig_username'] ?? $page['page_name']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <div
+                            class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <template x-if="selectedPageId">
+                        <div class="flex gap-2">
+                            <button @click="subscribePage()"
+                                class="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 bg-pink-600 hover:bg-pink-500 text-white rounded-xl transition-all shadow-lg shadow-pink-600/20 font-bold text-sm"
+                                :class="subscribing ? 'opacity-50 cursor-not-allowed' : ''" :disabled="subscribing">
+                                <svg x-show="!subscribing" class="w-4 h-4" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <svg x-show="subscribing" class="animate-spin h-4 w-4 text-white" fill="none"
+                                    viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                        stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                    </path>
+                                </svg>
+                                <span x-text="subscribing ? '...' : '<?php echo __('activate_auto_reply'); ?>'"></span>
+                            </button>
+
+                            <button @click="stopAutoReply()"
+                                class="flex items-center justify-center gap-2 px-4 py-3.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/10 rounded-xl transition-all font-bold"
+                                title="<?php echo __('stop_auto_reply_desc'); ?>">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </template>
+                </div>
+
+
+            </div>
+        </div>
+
+
+        <!-- NEW: Tabs Navigation -->
+        <div class="space-y-8">
+            <div class="w-full relative overflow-hidden">
+                <div class="flex overflow-x-auto pb-4 custom-horizontal-scrollbar touch-pan-x -mx-4 px-4 md:mx-0 md:px-0"
+                    style="scroll-behavior: smooth; -webkit-overflow-scrolling: touch;">
+                    <div class="flex gap-2 whitespace-nowrap min-w-max">
+                        <!-- Dashboard Tab -->
+                        <button @click="activeTab = 'dashboard'"
+                            :class="activeTab === 'dashboard' ? 'bg-pink-600/20 text-pink-400 border-pink-500/30' : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border-white/5'"
+                            class="px-5 py-2.5 rounded-xl text-sm font-bold transition-all border flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z">
+                                </path>
+                            </svg>
+                            <?php echo __('insight_control_center'); ?>
+                        </button>
+                        <!-- Auto Replies Tab -->
+                        <button @click="activeTab = 'replies'"
+                            :class="activeTab === 'replies' ? 'bg-pink-600/20 text-pink-400 border-pink-500/30' : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border-white/5'"
+                            class="px-5 py-2.5 rounded-xl text-sm font-bold transition-all border flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z">
+                                </path>
+                            </svg>
+                            <?php echo __('auto_replies'); ?>
+                        </button>
+                        <!-- AI Tab -->
+                        <button @click="activeTab = 'ai'"
+                            :class="activeTab === 'ai' ? 'bg-pink-600/20 text-pink-400 border-pink-500/30' : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border-white/5'"
+                            class="px-5 py-2.5 rounded-xl text-sm font-bold transition-all border flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z">
+                                </path>
+                            </svg>
+                            <?php echo __('artificial_intelligence'); ?>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div x-show="activeTab === 'dashboard'">
+                <!-- NEW: Insight & Control Center Section -->
+                <template x-if="selectedPageId">
+                    <div x-transition.opacity class="mt-12 space-y-12 pb-24 border-t border-white/5 pt-12 relative">
+
+                        <!-- Background Glow -->
+                        <div
+                            class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-96 bg-pink-600/5 blur-[120px] pointer-events-none -z-10">
+                        </div>
+
+                        <!-- Section Header -->
+                        <div
+                            class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 relative z-30">
+                            <div class="w-full md:w-auto">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <span class="w-8 h-[2px] bg-pink-500 rounded-full"></span>
+                                    <span
+                                        class="text-[10px] font-black text-pink-400 uppercase tracking-[0.3em]"><?php echo __('overview'); ?></span>
+                                </div>
+                                <h2 class="text-3xl font-black text-white leading-tightrtl:text-right">
+                                    <?php echo __('insight_control_center'); ?>
+                                </h2>
+                            </div>
+
+                            <!-- Range Filter -->
+                            <div class="relative group w-full md:w-auto">
+                                <select x-model="statsRange"
+                                    @change="if(statsRange === 'custom') { openCustomRangeModal() } else { fetchStats() }"
+                                    class="bg-white/5 border border-white/10 text-white text-[10px] font-black uppercase rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500 block w-full md:w-48 pl-4 pr-10 py-2.5 appearance-none cursor-pointer hover:bg-white/10 transition-all shadow-lg">
+                                    <option value="today" class="bg-gray-900 text-gray-300"><?php echo __('today'); ?>
+                                    </option>
+                                    <option value="week" class="bg-gray-900 text-gray-300">
+                                        <?php echo __('last_7_days'); ?>
+                                    </option>
+                                    <option value="month" class="bg-gray-900 text-gray-300">
+                                        <?php echo __('last_30_days'); ?>
+                                    </option>
+                                    <option value="all" class="bg-gray-900 text-gray-300"><?php echo __('all_time'); ?>
+                                    </option>
+                                    <option value="custom" class="bg-gray-900 text-pink-400">
+                                        <?php echo __('custom_period') ?? 'Custom Range'; ?>
+                                    </option>
+                                </select>
+                                <div
+                                    class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
+                                    <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </div>
+                            </div>
+
+                            <!-- Additional Filters -->
+                            <div
+                                class="flex items-center gap-3 bg-white/5 p-1 rounded-2xl border border-white/10 backdrop-blur-md w-full md:w-auto">
+                                <select x-model="statsRule" @change="fetchStats()"
+                                    class="bg-transparent text-gray-400 text-[10px] font-black uppercase px-4 py-2 border-none focus:ring-0 cursor-pointer hover:text-white transition-colors w-full md:w-48">
+                                    <option value="" class="bg-gray-900"><?php echo __('all_rules') ?? 'All Rules'; ?>
+                                    </option>
+                                    <option value="0" class="bg-gray-900"><?php echo __('default_reply'); ?></option>
+                                    <template x-for="rule in rules" :key="rule.id">
+                                        <option :value="rule.id" class="bg-gray-900"
+                                            x-text="rule.keywords.split(',')[0]">
+                                        </option>
+                                    </template>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Statistics Grid -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <!-- Total Interacted -->
+                            <div
+                                class="glass-panel p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all group overflow-hidden relative">
+                                <div class="relative z-10 flex justify-between items-start">
+                                    <div>
+                                        <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
+                                            <?php echo __('total_interacted'); ?>
+                                        </p>
+                                        <h4 class="text-3xl font-black text-white group-hover:scale-110 transition-transform origin-left"
+                                            x-text="stats.total_interacted"></h4>
+                                    </div>
+                                    <div
+                                        class="p-3 bg-pink-500/10 rounded-2xl text-pink-400 group-hover:rotate-12 transition-all">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+                                            </path>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="mt-4 flex items-center gap-2">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-pink-500 animate-pulse"></span>
+                                    <span
+                                        class="text-[9px] text-gray-500 font-bold uppercase tracking-tighter"><?php echo __('live_database_feed'); ?></span>
+                                </div>
+                            </div>
+
+                            <!-- AI Success Rate -->
+                            <div
+                                class="glass-panel p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all group overflow-hidden relative">
+                                <div class="relative z-10 flex justify-between items-start">
+                                    <div>
+                                        <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
+                                            <?php echo __('ai_success_rate'); ?>
+                                        </p>
+                                        <h4 class="text-3xl font-black text-white group-hover:scale-110 transition-transform origin-left"
+                                            x-text="stats.ai_success_rate"></h4>
+                                    </div>
+                                    <div
+                                        class="p-3 bg-green-500/10 rounded-2xl text-green-400 group-hover:rotate-12 transition-all">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="mt-4 flex items-center gap-2">
+                                    <div class="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
+                                        <div class="h-full bg-green-500" :style="'width: ' + stats.ai_success_rate">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Active Handovers -->
+                            <div class="glass-panel p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all group overflow-hidden relative"
+                                :class="handoverConversations.length > 0 ? 'border-red-500/20' : ''">
+                                <div class="relative z-10 flex justify-between items-start">
+                                    <div>
+                                        <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
+                                            <?php echo __('active_handovers'); ?>
+                                        </p>
+                                        <h4 class="text-3xl font-black text-white group-hover:scale-110 transition-transform origin-left"
+                                            x-text="stats.active_handovers"></h4>
+                                    </div>
+                                    <div class="p-3 bg-red-500/10 rounded-2xl text-red-500 group-hover:rotate-12 transition-all"
+                                        :class="handoverConversations.length > 0 ? 'animate-pulse' : ''">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                                            </path>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="mt-4 flex items-center gap-2">
+                                    <div class="w-2 h-2 rounded-full"
+                                        :class="handoverConversations.length > 0 ? 'bg-red-500 animate-ping' : 'bg-green-500'">
+                                    </div>
+                                    <span class="text-[10px] text-gray-600 uppercase font-bold tracking-tighter"
+                                        x-text="handoverConversations.length > 0 ? '<?php echo __('human_intervention_needed'); ?>' : '<?php echo __('system_healthy'); ?>'"></span>
+                                </div>
+                            </div>
+
+                            <!-- Response Speed -->
+                            <div
+                                class="glass-panel p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all group overflow-hidden relative">
+                                <div class="relative z-10 flex justify-between items-start">
+                                    <div>
+                                        <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
+                                            <?php echo __('avg_response_speed'); ?>
+                                        </p>
+                                        <h4 class="text-3xl font-black text-white group-hover:scale-110 transition-transform origin-left"
+                                            x-text="stats.avg_response_speed"></h4>
+                                    </div>
+                                    <div
+                                        class="p-3 bg-pink-500/10 rounded-2xl text-pink-400 group-hover:rotate-12 transition-all">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="mt-4 flex items-center gap-2">
+                                    <span
+                                        class="text-[10px] text-pink-400 uppercase font-black tracking-tighter"><?php echo __('instant_replies'); ?></span>
+                                </div>
+                            </div>
+
+                            <!-- Most Active Rule -->
+                            <div
+                                class="glass-panel p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all group overflow-hidden relative">
+                                <div class="relative z-10 flex justify-between items-start">
+                                    <div class="min-w-0">
+                                        <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
+                                            <?php echo __('most_active_rule'); ?>
+                                        </p>
+                                        <h4 class="text-xl font-black text-white truncate" x-text="stats.top_rule"></h4>
+                                    </div>
+                                    <div
+                                        class="p-3 bg-fuchsia-500/10 rounded-2xl text-fuchsia-400 group-hover:rotate-12 transition-all">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="mt-4 flex items-center gap-2">
+                                    <span
+                                        class="text-[9px] text-gray-500 font-bold uppercase tracking-tighter"><?php echo __('top_performing_logic'); ?></span>
+                                </div>
+                            </div>
+
+                            <!-- Peak Hour -->
+                            <div
+                                class="glass-panel p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all group overflow-hidden relative">
+                                <div class="relative z-10 flex justify-between items-start">
+                                    <div>
+                                        <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
+                                            <?php echo __('peak_hour'); ?>
+                                        </p>
+                                        <h4 class="text-3xl font-black text-white" x-text="stats.peak_hour"></h4>
+                                    </div>
+                                    <div
+                                        class="p-3 bg-amber-500/10 rounded-2xl text-amber-500 group-hover:rotate-12 transition-all">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="mt-4 flex items-center gap-2">
+                                    <span
+                                        class="text-[9px] text-gray-500 font-bold uppercase tracking-tighter"><?php echo __('highest_traffic_period'); ?></span>
+                                </div>
+                            </div>
+
+                            <!-- System Health -->
+                            <div
+                                class="glass-panel p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all group overflow-hidden relative">
+                                <div class="relative z-10 flex justify-between items-start">
+                                    <div>
+                                        <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
+                                            <?php echo __('system_health'); ?>
+                                        </p>
+                                        <h4 class="text-3xl font-black text-green-400" x-text="stats.system_health">
+                                        </h4>
+                                    </div>
+                                    <div
+                                        class="p-3 bg-cyan-500/10 rounded-2xl text-cyan-400 group-hover:scale-110 transition-all">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
+                                            </path>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="mt-4 flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                                    <span
+                                        class="text-[9px] text-gray-500 font-bold uppercase tracking-tighter"><?php echo __('api_status_operational'); ?></span>
+                                </div>
+                            </div>
+
+                            <!-- Safety Alerts (The 4th card in 2nd row) -->
+                            <div
+                                class="glass-panel p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all group overflow-hidden relative">
+                                <div class="relative z-10 flex justify-between items-start">
+                                    <div>
+                                        <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
+                                            <?php echo __('safety_alerts'); ?>
+                                        </p>
+                                        <h4 class="text-3xl font-black text-rose-400" x-text="stats.anger_alerts"></h4>
+                                    </div>
+                                    <div
+                                        class="p-3 bg-rose-500/10 rounded-2xl text-rose-400 group-hover:scale-110 transition-all">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                                            </path>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="mt-4 flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full"
+                                        :class="stats.anger_alerts > 0 ? 'bg-rose-500 animate-pulse' : 'bg-green-500'"></span>
+                                    <span
+                                        class="text-[9px] text-gray-500 font-bold uppercase tracking-tighter"><?php echo __('ai_protection'); ?></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Live Alerts Center (The Moved Handover Logic) -->
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                            <div class="lg:col-span-12">
+                                <div
+                                    class="glass-panel p-8 rounded-[2.5rem] border border-white/5 bg-black/40 backdrop-blur-3xl relative overflow-hidden group">
+                                    <div class="flex items-center justify-between mb-8">
+                                        <div class="flex items-center gap-4">
+                                            <div class="p-3 bg-white/5 rounded-2xl border border-white/10">
+                                                <svg class="w-6 h-6 text-pink-400" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
+                                                    </path>
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <h3 class="text-xl font-bold text-white">
+                                                    <?php echo __('live_alerts_center'); ?>
+                                                </h3>
+                                                <p class="text-xs text-gray-500 font-bold tracking-wide">
+                                                    <?php echo __('monitor_alerts_desc'); ?>
+                                                </p>
+
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <button @click="fetchRules(); fetchHandover(); fetchStats();"
+                                                class="flex items-center gap-2 px-4 py-2 bg-pink-600/10 hover:bg-pink-600 text-pink-400 hover:text-white rounded-xl transition-all border border-pink-500/20 text-[10px] font-black uppercase tracking-widest"
+                                                :class="fetchingHandover ? 'animate-pulse' : ''">
+                                                <svg class="w-4 h-4" :class="fetchingHandover ? 'animate-spin' : ''"
+                                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                                </svg>
+                                                <span><?php echo __('sync'); ?></span>
+                                            </button>
+
+                                            <button @click="markAllAsResolved()"
+                                                class="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-white rounded-xl transition-all border border-emerald-500/20 text-[10px] font-black uppercase tracking-widest">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2" d="M5 13l4 4L19 7" />
+                                                </svg>
+                                                <span><?php echo __('mark_all_resolved'); ?></span>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div class="space-y-4">
+                                        <template x-if="handoverConversations.length > 0">
+                                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                                <template x-for="conv in handoverConversations" :key="conv.id">
+                                                    <div
+                                                        class="bg-white/[0.03] border border-white/5 p-5 rounded-3xl hover:border-red-500/30 transition-all group/item relative overflow-hidden">
+                                                        <div
+                                                            class="absolute top-0 right-0 p-4 opacity-10 group-hover/item:opacity-20 transition-opacity">
+                                                            <svg class="w-12 h-12 text-red-500" fill="none"
+                                                                stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2"
+                                                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                                                                </path>
+                                                            </svg>
+                                                        </div>
+                                                        <div class="relative z-10">
+                                                            <div class="flex items-center gap-3 mb-4">
+                                                                <div class="w-10 h-10 rounded-2xl bg-pink-500/20 flex items-center justify-center text-pink-400 font-black border border-pink-500/20"
+                                                                    x-text="conv.user_id.substring(0,2)"></div>
+                                                                <div class="min-w-0">
+                                                                    <p
+                                                                        class="text-[10px] font-black text-pink-400 uppercase tracking-widest mb-0.5">
+                                                                        <?php echo __('human_intervention_needed'); ?>
+                                                                    </p>
+                                                                    <p class="text-xs font-bold text-white truncate"
+                                                                        x-text="conv.user_name || 'ID: ' + conv.user_id">
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                            <div class="mb-4" x-show="conv.last_user_message">
+                                                                <p
+                                                                    class="text-[10px] text-red-400 font-bold mb-1 uppercase tracking-tighter">
+                                                                    <?php echo __('last_message'); ?>:
+                                                                </p>
+                                                                <p class="text-xs text-gray-300 line-clamp-2 italic"
+                                                                    x-text="'&quot;' + conv.last_user_message + '&quot;'">
+                                                                </p>
+                                                            </div>
+                                                            <div class="mb-4">
+                                                                <p
+                                                                    class="text-[9px] text-gray-500 uppercase tracking-tighter mb-1">
+                                                                    <?php echo __('last_interaction'); ?>:
+                                                                </p>
+                                                                <p class="text-[10px] text-gray-400 truncate italic"
+                                                                    x-text="conv.last_bot_reply_text || '<?php echo __('waiting_response'); ?>'">
+                                                                </p>
+                                                            </div>
+                                                            <div class="flex flex-wrap gap-2 mb-4">
+                                                                <template x-if="conv.is_anger_detected == 1">
+                                                                    <span
+                                                                        class="px-2 py-1 bg-red-500/20 text-red-400 text-[8px] font-black rounded-lg border border-red-500/20 uppercase"><?php echo __('danger_alert'); ?></span>
+                                                                </template>
+                                                                <template x-if="conv.repeat_count >= 3">
+                                                                    <span
+                                                                        class="px-2 py-1 bg-orange-500/20 text-orange-400 text-[8px] font-black rounded-lg border border-orange-500/20 uppercase"><?php echo __('repetition_alert'); ?></span>
+                                                                </template>
+                                                            </div>
+                                                            <button @click="resolveHandover(conv.id)"
+                                                                class="w-full py-2.5 bg-pink-600 hover:bg-pink-500 text-white text-[10px] font-black rounded-xl transition-all shadow-lg shadow-pink-600/20 uppercase tracking-widest flex items-center justify-center gap-2">
+                                                                <svg class="w-3 h-3" fill="none" stroke="currentColor"
+                                                                    viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                                        stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                                                </svg>
+                                                                <?php echo __('mark_as_resolved'); ?>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </template>
+
+                                        <template x-if="handoverConversations.length === 0">
+                                            <div class="flex flex-col items-center justify-center py-12 text-center">
+                                                <div
+                                                    class="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mb-4 border border-green-500/20">
+                                                    <svg class="w-8 h-8 text-green-500" fill="none"
+                                                        stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                    </svg>
+                                                </div>
+                                                <h4 class="text-white font-bold mb-1">
+                                                    <?php echo __('no_active_alerts'); ?>
+                                                </h4>
+                                            </div>
+                                        </template>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+            </template>
+        </div>
+        <div x-show="activeTab === 'replies'">
+            <!-- Main Body: Preview (Left) & Rules (Right) -->
+            <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 pb-20">
+
+                <!-- Left Side: Preview Card -->
+                <div id="messenger-preview-section" class="lg:col-span-4 order-last lg:order-1">
+                    <div class="sticky top-24 space-y-6">
+                        <div
+                            class="glass-card rounded-[32px] border border-white/10 shadow-2xl overflow-hidden bg-[#18191a]">
+                            <!-- Title Bar -->
+                            <div
+                                class="bg-[#242526] border-b border-white/5 px-6 py-4 flex items-center justify-between">
+                                <h3 class="text-xs font-bold text-gray-300 uppercase tracking-wider">
+                                    <?php echo __('message_preview'); ?>
+                                </h3>
+                                <div class="flex gap-1">
+                                    <div class="w-2 h-2 rounded-full bg-gray-600"></div>
+                                    <div class="w-2 h-2 rounded-full bg-gray-600"></div>
+                                </div>
+                            </div>
+
+                            <div class="p-4 bg-[#18191a] h-[480px] flex flex-col font-sans">
+                                <!-- Helper Text -->
+                                <div class="text-center mb-6 mt-4">
+                                    <div
+                                        class="w-16 h-16 rounded-full bg-[#0084ff] flex items-center justify-center mx-auto mb-2 text-white text-3xl font-bold shadow-lg overflow-hidden">
+                                        <template x-if="getPageName()">
+                                            <span x-text="getPageName().charAt(0).toUpperCase()"></span>
+                                        </template>
+                                        <template x-if="!getPageName()">
+                                            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                                                <path
+                                                    d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                                            </svg>
+                                        </template>
+                                    </div>
+                                    <h4 class="font-bold text-white text-lg"
+                                        x-text="getPageName() || 'Marketation - ماركتيشن'">
+                                    </h4>
+                                    <p class="text-xs text-gray-500">Messenger • Very Responsive</p>
+                                </div>
+
+                                <div class="flex-1 overflow-y-auto px-2 messenger-scrollbar space-y-6 pb-4">
+                                    <!-- User Message (Left) -->
+                                    <div class="flex items-end gap-2">
+                                        <div
+                                            class="w-6 h-6 rounded-full bg-gray-600 flex-shrink-0 flex items-center justify-center border border-white/5">
+                                            <svg class="w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 24 24">
+                                                <path
+                                                    d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                                            </svg>
+                                        </div>
+                                        <div
+                                            class="bg-[#303030] text-gray-200 rounded-2xl rounded-bl-none px-3 py-2 max-w-[80%] text-[13px] shadow-sm">
+                                            <div class="font-bold text-[10px] text-gray-400 mb-0.5">
+                                                <?php echo __('customer_name_sample'); ?>
+                                            </div>
+                                            <div class="break-words"
+                                                x-text="previewMode === 'rule' ? previewCustomerMsg : '<?php echo __('customer_msg_sample'); ?>'">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Page Reply (Right) -->
+                                    <div class="flex items-end gap-2 justify-end">
+                                        <div
+                                            class="bg-[#0084ff] text-white rounded-2xl rounded-br-none px-3 py-2 max-w-[80%] text-[13px] shadow-lg">
+                                            <div class="whitespace-pre-wrap leading-snug break-words"
+                                                x-text="previewMode === 'rule' ? previewReplyMsg : (defaultReplyText ? defaultReplyText : '<?php echo __('preview_empty_msg'); ?>')">
+                                            </div>
+                                        </div>
+                                        <div
+                                            class="w-6 h-6 rounded-full bg-[#0084ff] flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-white overflow-hidden shadow-md">
+                                            <template x-if="getPageName()">
+                                                <span x-text="getPageName().charAt(0).toUpperCase()"></span>
+                                            </template>
+                                            <template x-if="!getPageName()">
+                                                <svg class="w-3.5 h-3.5 text-white" fill="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path
+                                                        d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                                                </svg>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Input Area & Quick Replies Footer -->
+                                <div class="px-3 pb-4 pt-1 border-t border-white/5 bg-[#18191a]">
+                                    <!-- Quick Replies -->
+                                    <div class="flex flex-wrap gap-2 justify-center mb-3"
+                                        x-show="getCurrentPreviewButtons().length > 0">
+                                        <template x-for="btn in getCurrentPreviewButtons()">
+                                            <div class="px-4 py-1.5 rounded-full border border-[#0084ff] text-[#0084ff] text-[11px] font-bold bg-[#0084ff]/5 hover:bg-[#0084ff]/10 cursor-pointer transition-all"
+                                                x-text="btn.title || 'Button'"></div>
+                                        </template>
+                                    </div>
+
+                                    <!-- Mock Chat Input -->
+                                    <div
+                                        class="flex items-center gap-2 bg-[#242526] rounded-full px-4 py-2 border border-white/5">
+                                        <div class="text-[#0084ff]">
+                                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                                <path
+                                                    d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z" />
+                                            </svg>
+                                        </div>
+                                        <div class="flex-1 text-gray-500 text-xs italic">Aa</div>
+                                        <div class="flex gap-2 text-[#0084ff]">
+                                            <svg class="w-5 h-5 opacity-60" fill="currentColor" viewBox="0 0 24 24">
+                                                <path
+                                                    d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z" />
+                                            </svg>
+                                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                                <path
+                                                    d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Side: Rules Area -->
+                <div class="lg:col-span-8 space-y-8 order-first lg:order-2">
+
+                    <template x-if="!selectedPageId">
+                        <div
+                            class="glass-panel p-20 rounded-[3rem] border border-white/5 border-dashed flex flex-col items-center justify-center text-center group transition-all hover:bg-white/5">
+                            <div
+                                class="w-24 h-24 rounded-[2.5rem] bg-gray-800/50 flex items-center justify-center mb-8 border border-white/5 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
+                                <svg class="w-12 h-12 text-gray-600 group-hover:text-pink-500 transition-colors"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z">
+                                    </path>
+                                </svg>
+                            </div>
+                            <h2 class="text-2xl font-bold text-white mb-3"><?php echo __('select_page_to_configure'); ?>
+                            </h2>
+                            <p class="text-gray-500 max-w-sm"><?php echo __('unselected_page_hint'); ?></p>
+                        </div>
+                    </template>
+
+                    <div x-show="selectedPageId" x-transition.opacity class="space-y-8" style="display: none;">
+
+
+
+                        <!-- Default Reply Card -->
+                        <div
+                            class="glass-panel p-8 rounded-[2rem] border border-white/10 bg-gray-800/40 backdrop-blur-2xl hover:border-pink-500/30 transition-all shadow-2xl relative overflow-hidden group">
+                            <div class="absolute top-0 left-0 w-1 h-full bg-pink-600 opacity-50"></div>
+
+                            <div class="flex justify-between items-start mb-6">
+                                <div>
+                                    <h3 class="text-2xl font-bold text-white mb-2"><?php echo __('default_reply'); ?>
+                                    </h3>
+                                    <p class="text-gray-400 text-sm max-w-md"><?php echo __('default_reply_hint'); ?>
+                                    </p>
+                                </div>
+                                <button @click="scrollToPreview()"
+                                    class="p-3 bg-pink-600/10 hover:bg-pink-600 text-pink-400 hover:text-white rounded-2xl transition-all border border-pink-500/20 group/eye"
+                                    title="<?php echo __('message_preview'); ?>">
+                                    <svg class="w-6 h-6 group-hover/eye:scale-110 transition-transform" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                        </path>
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <textarea x-model="defaultReplyText" rows="4"
+                                class="w-full bg-black/40 border border-white/10 rounded-2xl p-5 text-white placeholder-gray-600 focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all mb-4 text-base leading-relaxed"
+                                placeholder="<?php echo __('reply_placeholder'); ?>"></textarea>
+
+                            <!-- Default Reply Buttons (For Messenger) -->
+                            <div class="mb-6 space-y-3">
+                                <label class="text-[10px] font-black text-gray-500 uppercase tracking-widest pl-1">
+                                    <?php echo __('reply_buttons'); ?> (Max 3)
+                                </label>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                    <template x-for="(btn, idx) in defaultReplyButtons" :key="idx">
+                                        <div class="bg-white/5 border border-white/5 rounded-2xl p-3 flex flex-col gap-2 relative group/btn">
+                                            <input type="text" x-model="btn.title" 
+                                                class="bg-transparent border-0 border-b border-white/10 text-xs text-white focus:ring-0 focus:border-pink-500 p-0"
+                                                placeholder="<?php echo __('button_label_placeholder'); ?>">
+                                            <input type="text" x-model="btn.payload" 
+                                                class="bg-transparent border-0 text-[10px] text-gray-500 focus:ring-0 p-0"
+                                                placeholder="<?php echo __('button_payload_placeholder'); ?>">
+                                            <button @click="removeDefaultButton(idx)" 
+                                                class="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center scale-0 group-hover/btn:scale-100 transition-transform">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                            </button>
+                                        </div>
+                                    </template>
+                                    <button x-show="defaultReplyButtons.length < 3" @click="addDefaultButton()"
+                                        class="border-2 border-dashed border-white/5 rounded-2xl p-3 flex items-center justify-center text-gray-500 hover:text-pink-400 hover:border-pink-500/30 transition-all text-xs gap-2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                        <?php echo __('add_button'); ?>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Advanced Features for Default Reply -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                <!-- AI safe -->
+                                <div class="flex flex-col gap-3 p-4 bg-white/5 rounded-2xl border border-white/5 transition-all hover:bg-white/10 group/item"
+                                    :class="defaultAiSafe ? 'border-pink-500/30' : ''">
+                                    <div class="flex items-center justify-between">
+                                        <div
+                                            class="p-2.5 bg-pink-500/10 rounded-xl text-pink-400 group-hover/item:scale-110 transition-transform">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z">
+                                                </path>
+                                            </svg>
+                                        </div>
+                                        <div class="relative inline-block w-10 align-middle select-none">
+                                            <input type="checkbox" x-model="defaultAiSafe" id="defaultAiSafeToggle"
+                                                class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-2 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
+                                            <label for="defaultAiSafeToggle"
+                                                class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-700 cursor-pointer"
+                                                :class="defaultAiSafe ? 'bg-pink-600' : 'bg-gray-700'"></label>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-[10px] font-black text-white uppercase tracking-widest mb-1">
+                                            <?php echo __('ai_safe_mode'); ?>
+                                        </h4>
+                                        <p class="text-[9px] text-gray-500 leading-tight">
+                                            <?php echo __('ai_safe_desc') ?? 'Bot follows AI tone & handover rules.'; ?>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Bypass Schedule -->
+                                <div class="flex flex-col gap-3 p-4 bg-white/5 rounded-2xl border border-white/5 transition-all hover:bg-white/10 group/item"
+                                    :class="defaultBypassSchedule ? 'border-amber-500/30' : ''">
+                                    <div class="flex items-center justify-between">
+                                        <div
+                                            class="p-2.5 bg-amber-500/10 rounded-xl text-amber-500 group-hover/item:scale-110 transition-transform">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                        </div>
+                                        <div class="relative inline-block w-10 align-middle select-none">
+                                            <input type="checkbox" x-model="defaultBypassSchedule"
+                                                id="defaultBypassSchToggle"
+                                                class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-2 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
+                                            <label for="defaultBypassSchToggle"
+                                                class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-700 cursor-pointer"
+                                                :class="defaultBypassSchedule ? 'bg-amber-600' : 'bg-gray-700'"></label>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-[10px] font-black text-white uppercase tracking-widest mb-1">
+                                            <?php echo __('bypass_schedule'); ?>
+                                        </h4>
+                                        <p class="text-[9px] text-gray-500 leading-tight">
+                                            <?php echo __('bypass_sch_desc') ?? 'Reply even when bot is scheduled to be off.'; ?>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Bypass Cooldown -->
+                                <div class="flex flex-col gap-3 p-4 bg-white/5 rounded-2xl border border-white/5 transition-all hover:bg-white/10 group/item"
+                                    :class="defaultBypassCooldown ? 'border-emerald-500/30' : ''">
+                                    <div class="flex items-center justify-between">
+                                        <div
+                                            class="p-2.5 bg-emerald-500/10 rounded-xl text-emerald-500 group-hover/item:scale-110 transition-transform">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                            </svg>
+                                        </div>
+                                        <div class="relative inline-block w-10 align-middle select-none">
+                                            <input type="checkbox" x-model="defaultBypassCooldown"
+                                                id="defaultBypassCoolToggle"
+                                                class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-2 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
+                                            <label for="defaultBypassCoolToggle"
+                                                class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-700 cursor-pointer"
+                                                :class="defaultBypassCooldown ? 'bg-emerald-600' : 'bg-gray-700'"></label>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-[10px] font-black text-white uppercase tracking-widest mb-1">
+                                            <?php echo __('bypass_cooldown'); ?>
+                                        </h4>
+                                        <p class="text-[9px] text-gray-500 leading-tight">
+                                            <?php echo __('bypass_cool_desc') ?? 'Reply even if a human recently intervened.'; ?>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- Keyword Rules Section -->
+                        <div class="space-y-6">
+                            <div class="flex justify-between items-center">
+                                <h3 class="text-2xl font-bold text-white"><?php echo __('keyword_rules'); ?></h3>
+                                <button @click="openAddModal()"
+                                    class="bg-pink-600/10 hover:bg-pink-600 text-pink-400 hover:text-white px-5 py-2.5 rounded-xl transition-all border border-pink-500/20 flex items-center gap-2 font-bold text-sm">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 4v16m8-8H4">
+                                        </path>
+                                    </svg>
+                                    <?php echo __('add_new_rule'); ?>
+                                </button>
+                            </div>
+
+                            <div class="grid grid-cols-1 gap-4 max-h-[600px] overflow-y-auto pr-2 messenger-scrollbar">
+                                <template x-for="rule in rules" :key="rule.id">
+                                    <div
+                                        class="glass-panel p-4 md:p-6 rounded-2xl border border-white/5 bg-gray-800/20 hover:bg-gray-800/40 hover:border-pink-500/30 transition-all group shrink-0">
+                                        <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+                                            <!-- Content Section -->
+                                            <div class="flex items-center gap-4 min-w-0 flex-1">
+                                                <div
+                                                    class="p-3 bg-pink-500/10 rounded-2xl text-pink-400 relative group-hover:scale-110 transition-transform flex-shrink-0">
+                                                    <svg class="w-6 h-6" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
+                                                        </path>
+                                                    </svg>
+                                                    <!-- Dynamic Label Badge -->
+                                                    <div class="absolute -top-3 -left-3 flex flex-col gap-1">
+                                                        <template x-if="getRuleType(rule) === 'entry'">
+                                                            <span
+                                                                class="px-2 py-0.5 bg-green-500/20 text-green-400 text-[9px] font-black rounded-lg border border-green-500/20 shadow-sm whitespace-nowrap uppercase tracking-tighter">
+                                                                <?php echo __('entry_point'); ?>
+                                                            </span>
+                                                        </template>
+                                                        <template x-if="getRuleType(rule) === 'button'">
+                                                            <span
+                                                                class="px-2 py-0.5 bg-blue-500/20 text-blue-400 text-[9px] font-black rounded-lg border border-blue-500/20 shadow-sm whitespace-nowrap uppercase tracking-tighter">
+                                                                <?php echo __('button_target'); ?>
+                                                            </span>
+                                                        </template>
+                                                    </div>
+                                                </div>
+                                                <div class="min-w-0 flex-1">
+                                                    <p class="text-xs font-black text-pink-400 uppercase tracking-widest mb-1 truncate"
+                                                        x-text="'<?php echo __('keywords_label'); ?>: ' + rule.keywords">
+                                                    </p>
+                                                    <p class="text-sm text-white font-medium line-clamp-2 md:line-clamp-1"
+                                                        x-text="rule.reply_message">
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <!-- Action Buttons -->
+                                            <div
+                                                class="flex items-center gap-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex-shrink-0">
+                                                <button @click="previewRule(rule); scrollToPreview()"
+                                                    class="p-2.5 bg-pink-600/10 hover:bg-pink-600 rounded-xl text-pink-400 hover:text-white transition-all border border-pink-500/10"
+                                                    title="<?php echo __('message_preview'); ?>">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z">
+                                                        </path>
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                                        </path>
+                                                    </svg>
+                                                </button>
+                                                <button @click="editRule(rule)"
+                                                    class="p-2.5 bg-white/5 hover:bg-white/10 rounded-xl text-gray-400 hover:text-white transition-all border border-white/5">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                                                        </path>
+                                                    </svg>
+                                                </button>
+                                                <button @click="deleteRule(rule.id)"
+                                                    class="p-2.5 bg-red-500/10 hover:bg-red-500/20 rounded-xl text-red-500 transition-all border border-red-500/10">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                                        </path>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <template x-if="rules.length === 0">
+                                    <div class="p-12 border-2 border-white/5 border-dashed rounded-[2rem] text-center">
+                                        <p class="text-gray-500 text-sm italic font-medium">
+                                            <?php echo __('no_keyword_rules'); ?>
+                                        </p>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+
+                        <!-- Global Save Bar (Auto Replies) -->
+                        <div x-transition:enter="transition ease-out duration-300"
+                            x-transition:enter-start="opacity-0 transform translate-y-4"
+                            x-transition:enter-end="opacity-100 transform translate-y-0"
+                            class="mt-8 flex justify-center">
+                            <div
+                                class="glass-panel p-3 rounded-[2rem] border border-white/10 bg-black/40 backdrop-blur-3xl flex flex-col md:flex-row items-center justify-between gap-6 w-full max-w-4xl shadow-2xl">
+                                <div class="flex items-center gap-4 px-6 text-center md:text-left">
+                                    <div class="relative">
+                                        <div
+                                            class="w-12 h-12 bg-pink-600/20 rounded-2xl flex items-center justify-center">
+                                            <svg class="w-6 h-6 text-pink-400" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                            </svg>
+                                        </div>
+                                        <div
+                                            class="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-gray-900 animate-pulse">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-bold text-white uppercase tracking-tight">
+                                            <?php echo __('wa_settings_ready') ?? 'Settings Ready to Save'; ?>
+                                        </p>
+                                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em]">
+                                            <?php echo __('unsaved_changes_hint'); ?>
+                                        </p>
+                                    </div>
+                                </div>
+                                <button @click="saveAllSettings()" :disabled="isGlobalSaving"
+                                    class="px-12 py-4 bg-pink-600 hover:bg-pink-500 text-white font-black rounded-[1.5rem] shadow-xl shadow-pink-600/30 transition-all transform active:scale-95 flex items-center gap-3 group">
+                                    <template x-if="!isGlobalSaving">
+                                        <svg class="w-5 h-5 group-hover:translate-y-[-2px] transition-transform"
+                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                                d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4">
+                                            </path>
+                                        </svg>
+                                    </template>
+                                    <template x-if="isGlobalSaving">
+                                        <svg class="animate-spin w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg"
+                                            fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                                stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor"
+                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                            </path>
+                                        </svg>
+                                    </template>
+                                    <span class="uppercase tracking-widest text-xs"
+                                        x-text="isGlobalSaving ? '<?php echo __('saving'); ?>...' : '<?php echo __('save_changes'); ?>'"></span>
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div x-show="activeTab === 'ai'">
+            <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 pb-20">
+                <!-- Left Side: Preview Card -->
+                <div id="messenger-preview-section-ai" class="lg:col-span-4 order-last lg:order-1">
+                    <div class="sticky top-24 space-y-6">
+                        <div
+                            class="glass-card rounded-[32px] border border-white/10 shadow-2xl overflow-hidden bg-[#18191a]">
+                            <!-- Title Bar -->
+                            <div
+                                class="bg-[#242526] border-b border-white/5 px-6 py-4 flex items-center justify-between">
+                                <h3 class="text-xs font-bold text-gray-300 uppercase tracking-wider">
+                                    <?php echo __('message_preview'); ?>
+                                </h3>
+                                <div class="flex gap-1">
+                                    <div class="w-2 h-2 rounded-full bg-gray-600"></div>
+                                    <div class="w-2 h-2 rounded-full bg-gray-600"></div>
+                                </div>
+                            </div>
+
+                            <div class="p-4 bg-[#18191a] h-[480px] flex flex-col font-sans">
+                                <!-- Helper Text -->
+                                <div class="text-center mb-6 mt-4">
+                                    <div
+                                        class="w-16 h-16 rounded-full bg-[#0084ff] flex items-center justify-center mx-auto mb-2 text-white text-3xl font-bold shadow-lg overflow-hidden">
+                                        <template x-if="getPageName()">
+                                            <span x-text="getPageName().charAt(0).toUpperCase()"></span>
+                                        </template>
+                                        <template x-if="!getPageName()">
+                                            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                                                <path
+                                                    d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                                            </svg>
+                                        </template>
+                                    </div>
+                                    <h4 class="font-bold text-white text-lg"
+                                        x-text="getPageName() || 'Marketation - ماركتيشن'">
+                                    </h4>
+                                    <p class="text-xs text-gray-500">Messenger • Very Responsive</p>
+                                </div>
+
+                                <div class="flex-1 overflow-y-auto px-2 messenger-scrollbar space-y-6 pb-4">
+                                    <!-- User Message (Left) -->
+                                    <div class="flex items-end gap-2">
+                                        <div
+                                            class="w-6 h-6 rounded-full bg-gray-600 flex-shrink-0 flex items-center justify-center border border-white/5">
+                                            <svg class="w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 24 24">
+                                                <path
+                                                    d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                                            </svg>
+                                        </div>
+                                        <div
+                                            class="bg-[#303030] text-gray-200 rounded-2xl rounded-bl-none px-3 py-2 max-w-[80%] text-[13px] shadow-sm">
+                                            <div class="font-bold text-[10px] text-gray-400 mb-0.5">
+                                                <?php echo __('customer_name_sample'); ?>
+                                            </div>
+                                            <div class="break-words"
+                                                x-text="previewMode === 'rule' ? previewCustomerMsg : '<?php echo __('customer_msg_sample'); ?>'">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Page Reply (Right) -->
+                                    <div class="flex items-end gap-2 justify-end">
+                                        <div
+                                            class="bg-[#0084ff] text-white rounded-2xl rounded-br-none px-3 py-2 max-w-[80%] text-[13px] shadow-lg">
+                                            <div class="whitespace-pre-wrap leading-snug break-words"
+                                                x-text="previewMode === 'rule' ? previewReplyMsg : (defaultReplyText ? defaultReplyText : '<?php echo __('preview_empty_msg'); ?>')">
+                                            </div>
+                                        </div>
+                                        <div
+                                            class="w-6 h-6 rounded-full bg-[#0084ff] flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-white overflow-hidden shadow-md">
+                                            <template x-if="getPageName()">
+                                                <span x-text="getPageName().charAt(0).toUpperCase()"></span>
+                                            </template>
+                                            <template x-if="!getPageName()">
+                                                <svg class="w-3.5 h-3.5 text-white" fill="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path
+                                                        d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                                                </svg>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Input Area & Quick Replies Footer -->
+                                <div class="px-3 pb-4 pt-1 border-t border-white/5 bg-[#18191a]">
+                                    <!-- Quick Replies -->
+                                    <div class="flex flex-wrap gap-2 justify-center mb-3"
+                                        x-show="getCurrentPreviewButtons().length > 0">
+                                        <template x-for="btn in getCurrentPreviewButtons()">
+                                            <div class="px-4 py-1.5 rounded-full border border-[#0084ff] text-[#0084ff] text-[11px] font-bold bg-[#0084ff]/5 hover:bg-[#0084ff]/10 cursor-pointer transition-all"
+                                                x-text="btn.title || 'Button'"></div>
+                                        </template>
+                                    </div>
+
+                                    <!-- Mock Chat Input -->
+                                    <div
+                                        class="flex items-center gap-2 bg-[#242526] rounded-full px-4 py-2 border border-white/5">
+                                        <div class="text-[#0084ff]">
+                                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                                <path
+                                                    d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z" />
+                                            </svg>
+                                        </div>
+                                        <div class="flex-1 text-gray-500 text-xs italic">Aa</div>
+                                        <div class="flex gap-2 text-[#0084ff]">
+                                            <svg class="w-5 h-5 opacity-60" fill="currentColor" viewBox="0 0 24 24">
+                                                <path
+                                                    d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z" />
+                                            </svg>
+                                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                                <path
+                                                    d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="lg:col-span-8 space-y-8 order-first lg:order-2">
+                    <template x-if="!selectedPageId">
+                        <div
+                            class="glass-panel p-20 rounded-[3rem] border border-white/5 border-dashed flex flex-col items-center justify-center text-center group transition-all hover:bg-white/5">
+                            <div
+                                class="w-24 h-24 rounded-[2.5rem] bg-gray-800/50 flex items-center justify-center mb-8 border border-white/5 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
+                                <svg class="w-12 h-12 text-gray-600 group-hover:text-pink-500 transition-colors"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z">
+                                    </path>
+                                </svg>
+                            </div>
+                            <h2 class="text-2xl font-bold text-white mb-3"><?php echo __('select_page_to_configure'); ?>
+                            </h2>
+                            <p class="text-gray-500 max-w-sm"><?php echo __('unselected_page_hint'); ?></p>
+                        </div>
+                    </template>
+                    <div x-show="selectedPageId" class="space-y-8">
+                        <!-- Advanced Intelligence & Scheduling -->
+                        <div
+                            class="glass-panel p-8 rounded-[2rem] border border-white/10 bg-pink-500/10 backdrop-blur-2xl hover:border-pink-400/30 transition-all shadow-2xl relative overflow-hidden group">
+                            <div class="absolute top-0 left-0 w-1 h-full bg-pink-500"></div>
+
+                            <div class="flex justify-between items-start mb-6">
+                                <div>
+                                    <h3 class="text-2xl font-bold text-white mb-2 rtl:text-right">
+                                        <?php echo __('bot_intelligence_settings'); ?>
+                                    </h3>
+                                    <p class="text-gray-400 text-sm max-w-md rtl:text-right">
+                                        <?php echo __('human_takeover_hint'); ?>
+                                    </p>
+                                </div>
+
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <!-- Cooldown Section -->
+                                <div class="space-y-4">
+                                    <label
+                                        class="block text-sm font-bold text-white"><?php echo __('bot_cooldown'); ?></label>
+                                    <div class="flex gap-4">
+                                        <div class="flex-1">
+                                            <input type="number" x-model="cooldownHours" min="0"
+                                                class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-center focus:ring-2 focus:ring-pink-500">
+                                            <span
+                                                class="block text-[10px] text-gray-500 text-center mt-1 uppercase"><?php echo __('hours'); ?></span>
+                                        </div>
+                                        <div class="flex-1">
+                                            <input type="number" x-model="cooldownMinutes" min="0" max="59"
+                                                class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-center focus:ring-2 focus:ring-pink-500">
+                                            <span
+                                                class="block text-[10px] text-gray-500 text-center mt-1 uppercase"><?php echo __('minutes'); ?></span>
+                                        </div>
+                                        <div class="flex-1">
+                                            <input type="number" x-model="cooldownSeconds" min="0" max="59"
+                                                class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-center focus:ring-2 focus:ring-pink-500">
+                                            <span
+                                                class="block text-[10px] text-gray-500 text-center mt-1 uppercase"><?php echo __('seconds'); ?></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Schedule & Keywords Section -->
+                                <div class="space-y-4">
+                                    <div class="flex items-center justify-between">
+                                        <label
+                                            class="block text-sm font-bold text-white"><?php echo __('bot_schedule'); ?></label>
+                                        <div
+                                            class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                                            <input type="checkbox" x-model="schEnabled" id="toggleSchedule"
+                                                class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
+                                            <label for="toggleSchedule"
+                                                :class="schEnabled ? 'bg-pink-600' : 'bg-gray-700'"
+                                                class="toggle-label block overflow-hidden h-5 rounded-full cursor-pointer transition-colors"></label>
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4 mb-4"
+                                        :class="!schEnabled ? 'opacity-40 pointer-events-none' : ''">
+                                        <div>
+                                            <input type="time" x-model="schStart"
+                                                class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:ring-2 focus:ring-pink-500">
+                                            <span
+                                                class="block text-[10px] text-gray-500 mt-1 uppercase"><?php echo __('start_time'); ?></span>
+                                        </div>
+                                        <div>
+                                            <input type="time" x-model="schEnd"
+                                                class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:ring-2 focus:ring-pink-500">
+                                            <span
+                                                class="block text-[10px] text-gray-500 mt-1 uppercase"><?php echo __('end_time'); ?></span>
+                                        </div>
+                                    </div>
+
+
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- AI Protection Card -->
+                        <div
+                            class="glass-panel p-8 rounded-[2rem] border border-white/10 bg-white/5 backdrop-blur-2xl hover:border-pink-500/20 transition-all shadow-2xl relative overflow-hidden group">
+                            <!-- Decorative Background -->
+                            <div
+                                class="absolute top-0 right-0 w-32 h-32 bg-pink-600/10 blur-3xl -mr-16 -mt-16 pointer-events-none">
+                            </div>
+
+                            <div class="flex flex-col md:flex-row gap-8">
+                                <!-- Left Side: Toggle & Info -->
+                                <div class="flex-shrink-0 w-full md:w-64">
+                                    <div class="flex items-center gap-3 mb-4">
+                                        <div class="p-3 bg-pink-500/20 rounded-xl">
+                                            <svg class="w-6 h-6 text-pink-400" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                            </svg>
+                                        </div>
+                                        <h3 class="text-xl font-bold text-white"><?php echo __('ai_protection'); ?></h3>
+                                    </div>
+
+                                    <div class="bg-black/20 p-5 rounded-2xl border border-white/5 space-y-4">
+                                        <div class="flex items-center justify-between">
+                                            <span
+                                                class="text-xs font-bold text-gray-400 uppercase tracking-wider"><?php echo __('status'); ?></span>
+                                            <div
+                                                class="relative inline-block w-11 align-middle select-none transition duration-200 ease-in">
+                                                <input type="checkbox" x-model="aiSentimentEnabled"
+                                                    id="toggleAiSentimentCard"
+                                                    class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
+                                                <label for="toggleAiSentimentCard"
+                                                    :class="aiSentimentEnabled ? 'bg-pink-600' : 'bg-gray-700'"
+                                                    class="toggle-label block overflow-hidden h-6 rounded-full cursor-pointer transition-colors"></label>
+                                            </div>
+                                        </div>
+                                        <p class="text-xs text-gray-500 leading-relaxed">
+                                            <?php echo __('human_takeover_hint'); ?>
+                                        </p>
+                                    </div>
+
+                                    <!-- Compact Exclude Toggle -->
+                                    <div
+                                        class="mt-4 flex items-center justify-between gap-3 p-3 rounded-xl border border-white/5 bg-white/5 hover:border-pink-500/30 transition-all group">
+                                        <div class="flex items-center gap-2.5 min-w-0">
+                                            <div
+                                                class="w-1.5 h-1.5 rounded-full bg-pink-500/50 group-hover:bg-pink-400 group-hover:scale-125 transition-all flex-shrink-0">
+                                            </div>
+                                            <span
+                                                class="text-[11px] font-bold text-gray-400 uppercase tracking-widest truncate group-hover:text-gray-200 transition-colors">
+                                                <?php echo __('exclude_keyword_rules'); ?>
+                                            </span>
+                                        </div>
+
+                                        <div
+                                            class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in flex-shrink-0">
+                                            <input type="checkbox" x-model="botExcludeKeywords"
+                                                id="toggleGlobalExclCard"
+                                                class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-2 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
+                                            <label for="toggleGlobalExclCard"
+                                                :class="botExcludeKeywords ? 'bg-pink-600' : 'bg-gray-700'"
+                                                class="toggle-label block overflow-hidden h-5 rounded-full cursor-pointer transition-colors"></label>
+                                        </div>
+                                    </div>
+
+                                    <!-- Repetition Threshold (Left Column) -->
+                                    <div class="mt-4">
+                                        <label
+                                            class="block text-xs font-bold text-gray-300 uppercase tracking-widest mb-2"><?php echo __('repetition_threshold'); ?></label>
+                                        <div class="flex items-center gap-3">
+                                            <input type="number" x-model="repetitionThreshold" min="1" max="10"
+                                                class="w-20 bg-black/40 border border-white/10 rounded-xl p-3 text-white text-center font-bold focus:ring-2 focus:ring-pink-500 transition-all">
+                                            <p class="text-[10px] text-gray-500">
+                                                <?php echo __('repetition_threshold_hint') ?? 'Times a user can repeat the same message before handover.'; ?>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Right Side: Keywords & Settings -->
+                                <div class="flex-1" x-show="aiSentimentEnabled" x-transition.opacity>
+                                    <div class="space-y-4">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center gap-2">
+                                                <div class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+                                                <label
+                                                    class="text-xs font-bold text-gray-300 uppercase tracking-widest"><?php echo __('bot_anger_keywords'); ?></label>
+                                            </div>
+                                            <span
+                                                class="text-[10px] text-pink-400 font-mono"><?php echo __('comma_separated'); ?></span>
+                                        </div>
+
+                                        <div class="relative group">
+                                            <textarea x-model="angerKeywords" rows="5"
+                                                placeholder="<?php echo __('anger_keywords_placeholder'); ?>"
+                                                class="w-full bg-black/40 border border-white/10 rounded-2xl p-5 text-white text-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all resize-none font-medium leading-relaxed group-hover:border-white/20"></textarea>
+                                        </div>
+
+                                        <div
+                                            class="flex items-start gap-3 text-xs text-gray-500 bg-white/5 p-4 rounded-xl border border-white/5">
+                                            <svg class="w-4 h-4 text-pink-400 flex-shrink-0 mt-0.5" fill="none"
+                                                stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+                                                </path>
+                                            </svg>
+                                            <span><?php echo __('bot_anger_keywords_help'); ?></span>
+                                        </div>
+
+                                        <!-- Handover Reply (Right Column) -->
+                                        <div class="mt-4">
+                                            <label
+                                                class="block text-xs font-bold text-gray-300 uppercase tracking-widest mb-2"><?php echo __('handover_reply_msg'); ?></label>
+                                            <textarea x-model="handoverReply" rows="3"
+                                                placeholder="<?php echo __('handover_reply_placeholder') ?? 'Message to send before handing over...'; ?>"
+                                                class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-sm focus:ring-2 focus:ring-pink-500 transition-all resize-none"></textarea>
+                                            <p class="text-[10px] text-gray-500 mt-2">
+                                                <?php echo __('handover_reply_help') ?? 'Optional: Bot will send this message once before silencing itself.'; ?>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Disabled State -->
+                                <div class="flex-1 flex flex-col items-center justify-center p-8 border-2 border-white/5 border-dashed rounded-2xl bg-black/10 min-h-[200px]"
+                                    x-show="!aiSentimentEnabled" x-transition.opacity>
+                                    <div class="p-4 bg-gray-800/50 rounded-full mb-4 text-gray-600">
+                                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636">
+                                            </path>
+                                        </svg>
+                                    </div>
+                                    <p class="text-sm text-gray-500 font-medium"><?php echo __('ai_system_disabled'); ?>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Global Save Bar (Moved here) -->
+                        <div x-show="selectedPageId" x-transition:enter="transition ease-out duration-300"
+                            x-transition:enter-start="opacity-0 transform translate-y-4"
+                            x-transition:enter-end="opacity-100 transform translate-y-0"
+                            class="mt-12 mb-12 flex justify-center">
+                            <div
+                                class="glass-panel p-3 rounded-[2rem] border border-white/10 bg-black/40 backdrop-blur-3xl flex flex-col md:flex-row items-center justify-between gap-6 w-full max-w-4xl shadow-2xl">
+                                <div class="flex items-center gap-4 px-6 text-center md:text-left">
+                                    <div class="relative">
+                                        <div
+                                            class="w-12 h-12 bg-pink-600/20 rounded-2xl flex items-center justify-center">
+                                            <svg class="w-6 h-6 text-pink-400" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                            </svg>
+                                        </div>
+                                        <div
+                                            class="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-gray-900 animate-pulse">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-bold text-white uppercase tracking-tight">
+                                            <?php echo __('wa_settings_ready') ?? 'Settings Ready to Save'; ?>
+                                        </p>
+                                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em]">
+                                            <?php echo __('unsaved_changes_hint'); ?>
+                                        </p>
+                                    </div>
+                                </div>
+                                <button @click="saveAllSettings()" :disabled="isGlobalSaving"
+                                    class="px-12 py-4 bg-pink-600 hover:bg-pink-500 text-white font-black rounded-[1.5rem] shadow-xl shadow-pink-600/30 transition-all transform active:scale-95 flex items-center gap-3 group">
+                                    <template x-if="!isGlobalSaving">
+                                        <svg class="w-5 h-5 group-hover:translate-y-[-2px] transition-transform"
+                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                                d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4">
+                                            </path>
+                                        </svg>
+                                    </template>
+                                    <template x-if="isGlobalSaving">
+                                        <svg class="animate-spin w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg"
+                                            fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                                stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor"
+                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                            </path>
+                                        </svg>
+                                    </template>
+                                    <span class="uppercase tracking-widest text-xs"
+                                        x-text="isGlobalSaving ? '<?php echo __('saving'); ?>...' : '<?php echo __('save_changes'); ?>'"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+</div>
+
+
+
+</main>
+
+<!-- Modal -->
+<div x-show="showModal" style="display: none;"
+    class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+    x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0"
+    x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200"
+    x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+
+    <div class="bg-gray-900 border border-white/10 rounded-[2.5rem] w-full max-w-lg shadow-2xl relative flex flex-col max-h-[90vh] overflow-hidden"
+        @click.away="closeModal()">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-pink-600/10 blur-3xl -mr-10 -mt-10 pointer-events-none">
+        </div>
+
+        <div class="p-8 relative z-10 overflow-y-auto messenger-scrollbar">
+            <div class="flex justify-between items-center mb-8">
+                <h3 class="text-2xl font-bold text-white flex items-center gap-3">
+                    <div class="p-2 bg-pink-600/20 rounded-xl">
+                        <svg class="w-6 h-6 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                         </svg>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="flex-none p-12 text-center" x-show="!selectedPageId">
-            <div class="w-20 h-20 bg-pink-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg class="w-10 h-10 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z">
-                    </path>
-                </svg>
-            </div>
-            <h3 class="text-xl font-bold text-white mb-2"><?php echo __('select_ig_account_to_start'); ?></h3>
-            <p class="text-gray-400 max-w-sm mx-auto">
-                <?php echo __('ig_messenger_bot_desc') ?: 'اختر حساب انستجرام للبدء في ضبط ردود الرسائل المباشرة.'; ?>
-            </p>
-        </div>
-
-        <div x-show="selectedPageId" class="space-y-8" x-cloak>
-            <div class="flex justify-between items-center mb-8">
-                <div>
-                    <h3 class="text-2xl font-black text-white"><?php echo __('dm_reply_rules'); ?></h3>
-                    <p class="text-gray-400 text-sm"><?php echo __('manage_auto_replies'); ?></p>
-                </div>
-                <button @click="openAddModal()"
-                    class="bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white px-6 py-3 rounded-2xl font-bold shadow-lg shadow-pink-600/20 transition-all flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                    </svg>
-                    <span><?php echo __('add_smart_reply'); ?></span>
-                </button>
-            </div>
-
-            <div class="grid grid-cols-1 gap-4">
-                <template x-for="rule in rules" :key="rule.id">
-                    <div>
-                        <div
-                            class="glass-panel p-6 rounded-3xl bg-white/5 border border-white/10 hover:border-pink-500/30 transition-all flex justify-between items-center">
-                            <div>
-                                <p class="text-xs text-pink-400 font-bold uppercase tracking-widest mb-1">
-                                    <?php echo __('via_dm'); ?></p>
-                                <h4 class="text-white font-bold text-lg" x-text="rule.keywords"></h4>
-                            </div>
-                            <div class="flex gap-2">
-                                <button @click="openEditModal(rule)"
-                                    class="p-2 text-gray-400 hover:text-white transition-colors">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
-                                        </path>
-                                    </svg>
-                                </button>
-                                <button @click="deleteRule(rule.id)"
-                                    class="p-2 text-gray-400 hover:text-red-400 transition-colors">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                                        </path>
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="mt-4 p-4 bg-black/20 rounded-2xl border border-white/5">
-                            <p class="text-gray-300 text-sm leading-relaxed" x-text="rule.reply_message"></p>
-                        </div>
-                    </div>
-                </template>
-
-                <!-- Empty State -->
-                <div x-show="rules.length === 0"
-                    class="text-center py-20 bg-white/5 rounded-[2.5rem] border border-dashed border-white/10">
-                    <p class="text-gray-500"><?php echo __('no_dm_rules_hint'); ?></p>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <!-- Modal -->
-    <div x-show="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
-        x-cloak>
-        <div class="glass-panel w-full max-w-lg bg-gray-900 rounded-[2.5rem] border border-white/10 p-8 shadow-2xl">
-            <div class="flex justify-between items-center mb-8">
-                <h3 class="text-2xl font-black text-white"
-                    x-text="editMode ? '<?php echo __('edit_dm_reply'); ?>' : '<?php echo __('add_dm_reply'); ?>'"></h3>
-                <button @click="showModal = false" class="text-gray-500 hover:text-white"><svg class="w-6 h-6"
-                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <span
+                        x-text="editMode ? '<?php echo __('edit_rule'); ?>' : '<?php echo __('add_new_rule'); ?>'"></span>
+                </h3>
+                <button @click="closeModal()" class="text-gray-500 hover:text-white transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
                         </path>
-                    </svg></button>
+                    </svg>
+                </button>
             </div>
 
             <div class="space-y-6">
                 <div>
                     <label
-                        class="block text-xs font-black text-gray-500 uppercase tracking-[0.2em] mb-3"><?php echo __('keywords'); ?></label>
-                    <input type="text" x-model="modalKeywords" placeholder="<?php echo __('keywords_placeholder'); ?>"
-                        class="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-white focus:ring-2 focus:ring-pink-500 outline-none transition-all">
+                        class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-3"><?php echo __('trigger_keyword'); ?></label>
+
+                    <!-- Smart Input with Dropdown -->
+                    <div class="relative" @click.away="showPayloadSuggestions = false">
+                        <input type="text" x-model="modalKeywords" @input="onKeywordInput()" @focus="showAllPayloads()"
+                            placeholder="<?php echo __('keyword_placeholder'); ?>"
+                            class="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50 transition-all text-sm">
+
+                        <!-- Payload Icon Indicator -->
+                        <template x-if="availablePayloads.length > 0">
+                            <button type="button" @click="showAllPayloads()"
+                                class="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-pink-500/10 hover:bg-pink-500/20 rounded-lg transition-colors group">
+                                <svg class="w-4 h-4 text-pink-400 group-hover:text-indigo-300" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+                        </template>
+
+                        <!-- Dropdown Suggestions -->
+                        <div x-show="showPayloadSuggestions" x-transition:enter="transition ease-out duration-200"
+                            x-transition:enter-start="opacity-0 transform scale-95"
+                            x-transition:enter-end="opacity-100 transform scale-100"
+                            class="absolute z-50 w-full mt-2 bg-gray-800 border border-white/10 rounded-2xl shadow-2xl max-h-60 overflow-y-auto messenger-scrollbar">
+
+                            <template x-if="filteredPayloads.length === 0">
+                                <div class="p-4 text-center text-gray-500 text-sm">
+                                    <?php echo __('no_payloads_found'); ?>
+                                </div>
+                            </template>
+
+                            <template x-for="payload in filteredPayloads" :key="payload">
+                                <button type="button" @click="selectPayload(payload)"
+                                    class="w-full px-5 py-3 text-left hover:bg-pink-500/10 transition-colors flex items-center gap-3 group border-b border-white/5 last:border-0">
+                                    <div
+                                        class="p-2 bg-pink-500/10 rounded-lg group-hover:bg-pink-500/20 transition-colors">
+                                        <svg class="w-4 h-4 text-pink-400" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
+                                            </path>
+                                        </svg>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="text-white font-mono text-sm truncate" x-text="payload"></div>
+                                        <div class="text-[10px] text-pink-400 font-bold uppercase tracking-wider">
+                                            <?php echo __('button_payload'); ?>
+                                        </div>
+                                    </div>
+                                    <svg class="w-4 h-4 text-gray-600 group-hover:text-pink-400 transition-colors"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 5l7 7-7 7"></path>
+                                    </svg>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+
+                    <p class="text-[10px] text-gray-500 mt-2 italic"><?php echo __('keywords_hint'); ?></p>
+
+                    <!-- Payload Count Badge -->
+                    <template x-if="availablePayloads.length > 0">
+                        <div class="mt-2 flex items-center gap-2">
+                            <div
+                                class="px-3 py-1.5 bg-pink-500/10 border border-pink-500/20 rounded-lg flex items-center gap-2">
+                                <div class="w-1.5 h-1.5 rounded-full bg-pink-500 animate-pulse"></div>
+                                <span class="text-[10px] font-bold text-pink-400 uppercase tracking-wider">
+                                    <span x-text="availablePayloads.length"></span>
+                                    <?php echo __('available_payloads'); ?>
+                                </span>
+                            </div>
+                        </div>
+                    </template>
                 </div>
                 <div>
                     <label
-                        class="block text-xs font-black text-gray-500 uppercase tracking-[0.2em] mb-3"><?php echo __('bot_message'); ?></label>
+                        class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-3"><?php echo __('reply_message'); ?></label>
                     <textarea x-model="modalReply" rows="5" placeholder="<?php echo __('reply_placeholder'); ?>"
-                        class="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-white focus:ring-2 focus:ring-pink-500 outline-none transition-all"></textarea>
+                        class="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50 transition-all resize-none text-sm leading-relaxed"></textarea>
                 </div>
+
+                <!-- Image Attachment Section -->
+                <div>
+                    <label class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-3">
+                        <?php echo __('attach_image'); ?> <span
+                            class="text-[10px] opacity-50 ml-1">(<?php echo __('optional'); ?>)</span>
+                    </label>
+
+                    <div class="space-y-3">
+                        <!-- Image URL Input -->
+                        <div class="relative">
+                            <input type="url" x-model="modalImageUrl"
+                                placeholder="<?php echo __('image_url_placeholder'); ?>"
+                                class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white text-xs focus:ring-1 focus:ring-pink-500 pr-24">
+                            <button type="button" @click="clearImage()" x-show="modalImageUrl"
+                                class="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] bg-red-500/10 hover:bg-red-500/20 text-red-400 px-2 py-1 rounded-lg border border-red-500/10 transition-colors uppercase font-black">
+                                <?php echo __('clear'); ?>
+                            </button>
+                        </div>
+
+                        <!-- Image Preview -->
+                        <template x-if="modalImageUrl">
+                            <div class="relative group">
+                                <img :src="modalImageUrl"
+                                    class="w-full h-40 object-cover rounded-xl border border-white/10"
+                                    @error="imageLoadError = true">
+                                <div x-show="imageLoadError"
+                                    class="absolute inset-0 flex items-center justify-center bg-red-500/10 rounded-xl border border-red-500/20">
+                                    <p class="text-xs text-red-400 font-bold"><?php echo __('invalid_image_url'); ?></p>
+                                </div>
+                            </div>
+                        </template>
+
+                        <p class="text-[10px] text-gray-500 italic"><?php echo __('image_hint'); ?></p>
+                    </div>
+                </div>
+
+                <!-- Buttons Section -->
+                <div>
+                    <label class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-3">
+                        <?php echo __('reply_buttons'); ?> <span class="text-[10px] opacity-50 ml-1">(Max 3)</span>
+                    </label>
+                    <div class="space-y-3 mb-3">
+                        <template x-for="(btn, index) in modalButtons" :key="index">
+                            <div class="flex gap-2 items-center">
+                                <div class="flex-1 space-y-1">
+                                    <input type="text" x-model="btn.title"
+                                        placeholder="<?php echo __('button_label_placeholder'); ?>"
+                                        class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white text-xs focus:ring-1 focus:ring-pink-500">
+                                </div>
+                                <div class="flex-1 space-y-1">
+                                    <div class="flex justify-between items-center px-1">
+                                        <label
+                                            class="text-[9px] font-bold text-gray-500 uppercase"><?php echo __('button_payload_placeholder'); ?></label>
+                                        <template x-if="isRuleExisting(btn.payload)">
+                                            <span
+                                                class="text-[8px] font-black text-green-500 uppercase flex items-center gap-1">
+                                                <div class="w-1 h-1 rounded-full bg-green-500"></div>
+                                                <?php echo __('linked_rule'); ?>
+                                            </span>
+                                        </template>
+                                        <template x-if="!isRuleExisting(btn.payload) && btn.payload">
+                                            <span
+                                                class="text-[8px] font-black text-orange-400 uppercase flex items-center gap-1">
+                                                <div class="w-1 h-1 rounded-full bg-orange-500 animate-pulse"></div>
+                                                <?php echo __('missing_rule'); ?>
+                                            </span>
+                                        </template>
+                                    </div>
+                                    <div class="relative">
+                                        <input type="text" x-model="btn.payload"
+                                            placeholder="<?php echo __('button_payload_placeholder'); ?>"
+                                            class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white text-xs focus:ring-1 focus:ring-pink-500 font-mono text-indigo-300 pr-16 leading-none">
+                                        <button @click="suggestPayload(index)" type="button"
+                                            class="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] bg-pink-500/10 hover:bg-pink-500/20 text-pink-400 px-2 py-1 rounded-lg border border-pink-500/10 transition-colors uppercase font-black">
+                                            <?php echo __('suggest_payload'); ?>
+                                        </button>
+                                    </div>
+                                </div>
+                                <button @click="removeButton(index)"
+                                    class="p-3 bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500/20 transition-colors border border-red-500/10">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </template>
+                    </div>
+                    <button type="button" @click="addButton()" x-show="modalButtons.length < 3"
+                        class="w-full py-3 border border-dashed border-white/10 rounded-xl text-xs font-bold text-gray-400 hover:text-white hover:border-white/30 hover:bg-white/5 transition-all flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4">
+                            </path>
+                        </svg>
+                        <?php echo __('add_button'); ?>
+                    </button>
+                    <p class="text-[10px] text-gray-500 mt-2 italic"><?php echo __('buttons_hint'); ?></p>
+                </div>
+
+
+
+                <!-- Advanced Feature Flags -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div class="flex flex-col gap-3 p-4 bg-white/5 rounded-2xl border border-white/5">
+                        <div class="flex items-center justify-between">
+                            <div class="p-2.5 bg-pink-500/10 rounded-xl text-pink-400">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z">
+                                    </path>
+                                </svg>
+                            </div>
+                            <div
+                                class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                                <input type="checkbox" x-model="modalAiSafe" id="toggleAiSafeMod"
+                                    class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
+                                <label for="toggleAiSafeMod" :class="modalAiSafe ? 'bg-pink-600' : 'bg-gray-700'"
+                                    class="toggle-label block overflow-hidden h-5 rounded-full cursor-pointer transition-colors"></label>
+                            </div>
+                        </div>
+                        <span
+                            class="text-[9px] font-black text-white uppercase tracking-wider"><?php echo __('ai_safe_rule'); ?></span>
+                    </div>
+
+                    <div class="flex flex-col gap-3 p-4 bg-white/5 rounded-2xl border border-white/5">
+                        <div class="flex items-center justify-between">
+                            <div class="p-2.5 bg-orange-500/10 rounded-xl text-orange-400">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <div
+                                class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                                <input type="checkbox" x-model="modalBypassSchedule" id="toggleBypassSchMod"
+                                    class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
+                                <label for="toggleBypassSchMod"
+                                    :class="modalBypassSchedule ? 'bg-pink-600' : 'bg-gray-700'"
+                                    class="toggle-label block overflow-hidden h-5 rounded-full cursor-pointer transition-colors"></label>
+                            </div>
+                        </div>
+                        <span
+                            class="text-[9px] font-black text-white uppercase tracking-wider"><?php echo __('bypass_schedule_rule'); ?></span>
+                    </div>
+
+                    <div class="flex flex-col gap-3 p-4 bg-white/5 rounded-2xl border border-white/5">
+                        <div class="flex items-center justify-between">
+                            <div class="p-2.5 bg-green-500/10 rounded-xl text-green-400">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z">
+                                    </path>
+                                </svg>
+                            </div>
+                            <div
+                                class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in flex-shrink-0">
+                                <input type="checkbox" x-model="modalBypassCooldown" id="toggleBypassCoolMod"
+                                    class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
+                                <label for="toggleBypassCoolMod"
+                                    :class="modalBypassCooldown ? 'bg-pink-600' : 'bg-gray-700'"
+                                    class="toggle-label block overflow-hidden h-5 rounded-full cursor-pointer transition-colors"></label>
+                            </div>
+                        </div>
+                        <span
+                            class="text-[9px] font-black text-white uppercase tracking-wider"><?php echo __('bypass_cooldown_rule'); ?></span>
+                    </div>
+                </div>
+
+
+
                 <button @click="saveRule()"
-                    class="w-full bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-bold py-4 rounded-2xl shadow-lg shadow-pink-600/20 transition-all"><?php echo __('save_reply'); ?></button>
+                    class="w-full bg-pink-600 hover:bg-pink-500 text-white font-bold py-4 rounded-2xl shadow-xl shadow-pink-600/20 transition-all transform active:scale-95 text-lg">
+                    <?php echo __('save_rule'); ?>
+                </button>
             </div>
         </div>
     </div>
-
-    <script>
-        function messengerBotApp() {
-            return {
-                selectedPageId: '<?php echo $preselected_id; ?>',
-                rules: [],
-                debugInfo: null,
-                pages: <?php echo json_encode($pages); ?>,
-                showModal: false,
-                editMode: false,
-                currentRuleId: null,
-                modalKeywords: '',
-                modalReply: '',
-
-                init() {
-                    const lastPage = localStorage.getItem('ar_last_ig_bot_page');
-                    if (lastPage) {
-                        this.selectedPageId = lastPage;
-                        this.fetchRules();
-                        this.fetchTokenDebug();
-                    }
-                },
-
-                getPageName() {
-                    const page = this.pages.find(p => p.ig_business_id == this.selectedPageId);
-                    return page ? '@' + page.ig_username : '';
-                },
-
-                fetchRules() {
-                    if (!this.selectedPageId) return;
-                    fetch(`ajax_auto_reply.php?action=fetch_rules&page_id=${this.selectedPageId}&source=message&platform=instagram`)
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.success) this.rules = data.rules;
-                        });
-                },
-
-                fetchTokenDebug() {
-                    const page = this.pages.find(p => p.ig_business_id == this.selectedPageId);
-                    if (!page) return;
-                    fetch(`ajax_auto_reply.php?action=get_token_debug&page_id=${page.page_id}`)
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.success) this.debugInfo = data;
-                        });
-                },
-
-                openAddModal() {
-                    this.editMode = false;
-                    this.modalKeywords = '';
-                    this.modalReply = '';
-                    this.showModal = true;
-                },
-
-                editRule(rule) {
-                    this.editMode = true;
-                    this.currentRuleId = rule.id;
-                    this.modalKeywords = rule.keywords;
-                    this.modalReply = rule.reply_message;
-                    this.showModal = true;
-                },
-
-                saveRule() {
-                    let formData = new FormData();
-                    formData.append('page_id', this.selectedPageId);
-                    formData.append('keywords', this.modalKeywords);
-                    formData.append('reply', this.modalReply);
-                    formData.append('source', 'message');
-                    formData.append('platform', 'instagram');
-                    if (this.editMode) formData.append('rule_id', this.currentRuleId);
-
-                    fetch('ajax_auto_reply.php?action=save_rule', { method: 'POST', body: formData })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.success) {
-                                this.showModal = false;
-                                this.fetchRules();
-                            } else {
-                                alert(data.error);
-                            }
-                        });
-                },
-
-                deleteRule(id) {
-                    if (!confirm('<?php echo __('confirm_delete_rule'); ?>')) return;
-                    let formData = new FormData();
-                    formData.append('rule_id', id);
-                    formData.append('page_id', this.selectedPageId);
-                    fetch('ajax_auto_reply.php?action=delete_rule', { method: 'POST', body: formData })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.success) this.fetchRules();
-                        });
-                }
-            }
-        }
-    </script>
 </div>
+
+<!-- Custom Range Modal -->
+<div x-show="showCustomRangeModal" class="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6"
+    style="display: none;" x-transition:enter="transition ease-out duration-300"
+    x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+    x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 scale-100"
+    x-transition:leave-end="opacity-0 scale-95">
+    <div class="fixed inset-0 bg-black/80 backdrop-blur-xl" @click="closeCustomRangeModal()"></div>
+
+    <div
+        class="glass-panel p-6 sm:p-10 rounded-[3rem] border border-white/10 bg-gray-900 w-full max-w-2xl relative z-10 shadow-[0_32px_120px_-15px_rgba(0,0,0,0.8)] max-h-[90vh] overflow-y-auto messenger-scrollbar">
+        <div class="flex items-center justify-between mb-10">
+            <div class="flex items-center gap-4">
+                <div class="p-3 bg-pink-500/10 rounded-2xl text-pink-400">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002-2z">
+                        </path>
+                    </svg>
+                </div>
+                <h3 class="text-3xl font-black text-white leading-none"><?php echo __('custom_period'); ?></h3>
+            </div>
+            <button @click="closeCustomRangeModal()"
+                class="p-3 bg-white/5 hover:bg-white/10 rounded-2xl text-gray-500 hover:text-white transition-all">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                </svg>
+            </button>
+        </div>
+
+        <div class="space-y-12">
+            <!-- Start Date & Time -->
+            <div class="space-y-6">
+                <div class="flex items-center gap-3">
+                    <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                    <span
+                        class="text-sm font-black text-gray-400 uppercase tracking-widest"><?php echo __('start_date'); ?></span>
+                </div>
+                <div class="relative group">
+                    <input type="datetime-local" x-model="customStartDate"
+                        class="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50 transition-all text-sm">
+                </div>
+            </div>
+
+            <!-- End Date & Time -->
+            <div class="space-y-6">
+                <div class="flex items-center gap-3">
+                    <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                    <span
+                        class="text-sm font-black text-gray-400 uppercase tracking-widest"><?php echo __('end_date'); ?></span>
+                </div>
+                <div class="relative group">
+                    <input type="datetime-local" x-model="customEndDate"
+                        class="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50 transition-all text-sm">
+                </div>
+            </div>
+
+            <button @click="applyCustomRange()"
+                class="w-full py-6 bg-pink-600 hover:bg-pink-500 text-white font-black rounded-[2rem] shadow-2xl shadow-pink-600/40 transition-all transform active:scale-[0.98] uppercase tracking-[0.2em] text-sm flex items-center justify-center gap-3">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7">
+                    </path>
+                </svg>
+                <?php echo __('apply_filter'); ?>
+            </button>
+        </div>
+    </div>
+</div>
+</div>
+
+<style>
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .no-scrollbar {
+        -ms-overflow-style: none;
+        /* IE and Edge */
+        scrollbar-width: none;
+        /* Firefox */
+    }
+
+    .messenger-scrollbar::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .messenger-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .messenger-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(99, 102, 241, 0.2);
+        border-radius: 20px;
+    }
+
+    .messenger-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgba(99, 102, 241, 0.5);
+    }
+
+    .custom-horizontal-scrollbar::-webkit-scrollbar {
+        height: 4px;
+    }
+
+    .custom-horizontal-scrollbar::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 4px;
+    }
+
+    .custom-horizontal-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(99, 102, 241, 0.3);
+        border-radius: 4px;
+    }
+
+    .custom-horizontal-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgba(99, 102, 241, 0.6);
+    }
+
+    .toggle-checkbox:checked {
+        right: 0;
+    }
+
+    .toggle-checkbox {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+</style>
+
+<script>
+    function autoReplyApp() {
+        return {
+            activeTab: localStorage.getItem('ar_active_tab_msg') || 'dashboard',
+            selectedPageId: '',
+            rules: [],
+            defaultReplyText: '',
+            defaultReplyButtons: [],
+            defaultHideComment: false,
+            defaultAiSafe: true,
+            defaultBypassSchedule: false,
+            defaultBypassCooldown: false,
+            savingDefault: false,
+            showModal: false,
+            editMode: false,
+            currentRuleId: null,
+            modalKeywords: '',
+            modalReply: '',
+            modalButtons: [],
+            modalHideComment: false,
+            modalAiSafe: true,
+            modalBypassSchedule: false,
+            modalBypassCooldown: false,
+            modalImageUrl: '',
+            imageLoadError: false,
+            subscribing: false,
+            stopping: false,
+            debugInfo: null,
+            webhookUrl: 'Loading...',
+            verifyToken: 'Loading...',
+            pages: <?php echo json_encode($pages, JSON_UNESCAPED_UNICODE); ?>,
+
+            // Payload Suggestions
+            availablePayloads: [],
+            showPayloadSuggestions: false,
+            filteredPayloads: [],
+
+            // Bot Intelligence Settings
+            cooldownHours: 0,
+            cooldownMinutes: 0,
+            cooldownSeconds: 0,
+            schEnabled: false,
+            schStart: '00:00',
+            schEnd: '23:59',
+            botExcludeKeywords: false,
+            aiSentimentEnabled: true,
+            angerKeywords: '',
+            repetitionThreshold: 3,
+            handoverReply: '',
+            handoverConversations: [],
+            fetchingHandover: false,
+            savingPageSettings: false,
+            isGlobalSaving: false,
+            statsRange: 'all',
+            stats: {
+                total_interacted: 0,
+                active_handovers: 0,
+                ai_success_rate: '0%',
+                avg_response_speed: '0s',
+                top_rule: '--',
+                peak_hour: '--:--',
+                system_health: '100%',
+                anger_alerts: 0,
+                ai_filtered: 0
+            },
+            showCustomRangeModal: false,
+            customStartDate: '',
+            customEndDate: '',
+            statsRule: '',
+            previewButtons: [],
+
+            scrollToPreview() {
+                const element = document.getElementById('messenger-preview-section');
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            },
+
+            // Preview State
+            previewMode: 'default', // 'default' or 'rule'
+            previewCustomerMsg: '',
+            previewReplyMsg: '',
+            getCurrentPreviewButtons() {
+                return this.previewMode === 'rule' ? this.previewButtons : this.defaultReplyButtons;
+            },
+
+            // Linking Helpers
+            suggestPayload(index) {
+                const title = this.modalButtons[index].title;
+                if (!title) return;
+                // Generate slug-like payload
+                const payload = title.trim().toLowerCase().replace(/\s+/g, '_').substring(0, 30);
+                this.modalButtons[index].payload = payload;
+            },
+
+            isRuleExisting(payload) {
+                if (!payload) return false;
+                // Check in all current rules if keywords match exactly
+                return this.fullRules.some(r => {
+                    const kws = r.keywords.split(',').map(k => k.trim());
+                    return kws.includes(payload.trim());
+                });
+            },
+
+            getRuleType(rule) {
+                // If it has children (other rules linking to its keywords) or if it starts from a common greeting
+                // simplified: if its keywords are found in any other rule's buttons
+                const isTarget = this.fullRules.some(r => {
+                    try {
+                        const btns = r.reply_buttons ? JSON.parse(r.reply_buttons) : [];
+                        return btns.some(b => b.payload.trim() === rule.keywords.trim());
+                    } catch (e) { return false; }
+                });
+                return isTarget ? 'button' : 'entry';
+            },
+
+            fullRules: [],
+
+            getPageName() {
+                const page = this.pages.find(p => p.page_id == this.selectedPageId);
+                return page ? page.page_name : '';
+            },
+
+            init() {
+                this.$watch('activeTab', value => localStorage.setItem('ar_active_tab_msg', value));
+                this.fetchWebhookInfo();
+                const lastPage = localStorage.getItem('ar_last_ig_page_msg');
+                if (lastPage) {
+                    this.selectedPageId = lastPage;
+                    this.fetchRules();
+                    this.fetchTokenDebug();
+                    this.fetchPageSettings();
+                    this.fetchHandover();
+                    this.fetchStats();
+                    const urlParams = new URLSearchParams(window.location.search);
+                    if (urlParams.has('preview')) {
+                        setTimeout(() => this.scrollToPreview(), 1000);
+                    }
+                }
+
+                this.$watch('defaultReplyText', () => {
+                    this.previewMode = 'default';
+                    this.previewButtons = [...this.defaultReplyButtons];
+                });
+
+                this.$watch('defaultAiSafe', () => { this.saveDefaultReply(); });
+                this.$watch('defaultBypassSchedule', () => { this.saveDefaultReply(); });
+                this.$watch('defaultBypassCooldown', () => { this.saveDefaultReply(); });
+
+                // Auto-refresh Handover Alerts every 30 seconds
+                setInterval(() => {
+                    this.fetchHandover();
+                    this.fetchStats();
+                }, 30000);
+            },
+
+            previewRule(rule) {
+                this.previewMode = 'rule';
+                this.previewCustomerMsg = rule.keywords.split(',')[0].trim();
+                this.previewReplyMsg = rule.reply_message;
+                try {
+                    this.previewButtons = rule.reply_buttons ? JSON.parse(rule.reply_buttons) : [];
+                } catch (e) {
+                    this.previewButtons = [];
+                }
+            },
+
+            fetchTokenDebug() {
+                if (!this.selectedPageId) return;
+                fetch(`ajax_auto_reply.php?platform=instagram&action=debug_token_info&page_id=${this.selectedPageId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            this.debugInfo = data;
+                        }
+                    });
+            },
+
+            subscribePage() {
+                if (!this.selectedPageId) return;
+                this.subscribing = true;
+                let formData = new FormData();
+                formData.append('page_id', this.selectedPageId);
+                    formData.append('platform', 'instagram');
+                fetch('ajax_auto_reply.php?platform=instagram&action=subscribe_page', { method: 'POST', body: formData })
+                    .then(res => res.json())
+                    .then(data => {
+                        this.subscribing = false;
+                        alert(data.message || data.error);
+                    }).catch(() => { this.subscribing = false; alert('Network Error'); });
+            },
+
+            stopAutoReply() {
+                if (!this.selectedPageId) return;
+                if (!confirm('<?php echo __('confirm_stop_auto_reply'); ?>')) return;
+                this.stopping = true;
+                let formData = new FormData();
+                formData.append('page_id', this.selectedPageId);
+                    formData.append('platform', 'instagram');
+                fetch('ajax_auto_reply.php?platform=instagram&action=unsubscribe_page', { method: 'POST', body: formData })
+                    .then(res => res.json())
+                    .then(data => {
+                        this.stopping = false;
+                        alert(data.message || data.error);
+                    }).catch(() => { this.stopping = false; alert('Network Error'); });
+            },
+
+            fetchWebhookInfo() {
+                fetch('ajax_auto_reply.php?platform=instagram&action=get_webhook_info')
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            this.webhookUrl = data.webhook_url;
+                            this.verifyToken = data.verify_token;
+                        }
+                    });
+            },
+
+            copyToClipboard(text) {
+                navigator.clipboard.writeText(text).then(() => { alert('<?php echo __('copied'); ?>'); });
+            },
+
+            fetchRules() {
+                if (!this.selectedPageId) return;
+                localStorage.setItem('ar_last_ig_page_msg', this.selectedPageId);
+                this.rules = [];
+                this.defaultReplyText = '';
+                this.fetchPageSettings();
+                fetch(`ajax_auto_reply.php?platform=instagram&action=fetch_rules&page_id=${this.selectedPageId}&source=message`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            this.fullRules = data.rules;
+                            this.rules = data.rules.filter(r => r.trigger_type === 'keyword');
+                            const defRule = data.rules.find(r => r.trigger_type === 'default');
+                            if (defRule) {
+                                this.defaultReplyText = defRule.reply_message;
+                                this.defaultAiSafe = (defRule.is_ai_safe == 1);
+                                this.defaultBypassSchedule = (defRule.bypass_schedule == 1);
+                                this.defaultBypassCooldown = (defRule.bypass_cooldown == 1);
+                                try {
+                                    this.defaultReplyButtons = defRule.reply_buttons ? JSON.parse(defRule.reply_buttons) : [];
+                                } catch (e) {
+                                    this.defaultReplyButtons = [];
+                                }
+                            }
+                        }
+                    });
+                this.fetchHandover();
+            },
+
+            fetchHandover() {
+                if (!this.selectedPageId) return;
+                this.fetchingHandover = true;
+                fetch(`ajax_auto_reply.php?platform=instagram&action=fetch_handover_conversations&page_id=${this.selectedPageId}&source=message&t=${new Date().getTime()}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        this.fetchingHandover = false;
+                        if (data.success) {
+                            this.handoverConversations = data.conversations;
+                        }
+                    }).catch(() => { this.fetchingHandover = false; });
+            },
+
+            resolveHandover(id) {
+                let formData = new FormData();
+                formData.append('id', id);
+                fetch('ajax_auto_reply.php?platform=instagram&action=mark_as_resolved', { method: 'POST', body: formData })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) this.fetchHandover();
+                    });
+            },
+
+            markAllAsResolved() {
+                if (!this.selectedPageId || this.handoverConversations.length === 0) return;
+                if (!confirm('<?php echo __('confirm_mark_all_resolved'); ?>')) return;
+                let formData = new FormData();
+                formData.append('page_id', this.selectedPageId);
+                    formData.append('platform', 'instagram');
+                formData.append('source', 'message');
+                fetch('ajax_auto_reply.php?platform=instagram&action=mark_all_as_resolved', { method: 'POST', body: formData })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            this.fetchHandover();
+                            this.fetchStats();
+                        }
+                    });
+            },
+
+
+
+
+
+            openAddModal() {
+                if (!this.selectedPageId) { alert('Please select a page first'); return; }
+                this.editMode = false;
+                this.currentRuleId = null;
+                this.modalKeywords = '';
+                this.modalReply = '';
+                this.modalButtons = [];
+                this.modalHideComment = false;
+                this.modalAiSafe = true;
+                this.modalBypassSchedule = false;
+                this.modalBypassCooldown = false;
+                this.modalImageUrl = '';
+                this.imageLoadError = false;
+                this.showModal = true;
+                this.fetchPayloads();
+            },
+
+            clearImage() {
+                this.modalImageUrl = '';
+                this.imageLoadError = false;
+            },
+
+            fetchPayloads() {
+                if (!this.selectedPageId) return;
+                fetch(`ajax_auto_reply.php?platform=instagram&action=fetch_payloads&page_id=${this.selectedPageId}&source=message`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            this.availablePayloads = data.payloads || [];
+                            this.updateFilteredPayloads();
+                        }
+                    })
+                    .catch(() => {
+                        this.availablePayloads = [];
+                    });
+            },
+
+            getSelectedKeywords() {
+                // Get already selected keywords as array
+                return this.modalKeywords
+                    .split(',')
+                    .map(k => k.trim())
+                    .filter(k => k.length > 0);
+            },
+
+            updateFilteredPayloads() {
+                const selected = this.getSelectedKeywords();
+                const input = this.modalKeywords.split(',').pop().trim().toLowerCase();
+
+                // Filter out already selected payloads
+                let available = this.availablePayloads.filter(p => !selected.includes(p));
+
+                // Further filter by current input
+                if (input.length > 0) {
+                    available = available.filter(p => p.toLowerCase().includes(input));
+                }
+
+                this.filteredPayloads = available;
+            },
+
+            onKeywordInput() {
+                this.updateFilteredPayloads();
+                this.showPayloadSuggestions = this.filteredPayloads.length > 0;
+            },
+
+            selectPayload(payload) {
+                const selected = this.getSelectedKeywords();
+
+                // Add the new payload
+                selected.push(payload);
+
+                // Update the input with comma-separated values
+                this.modalKeywords = selected.join(', ');
+
+                // Update filtered list (removes selected payload)
+                this.updateFilteredPayloads();
+
+                // Keep dropdown open if there are more options
+                this.showPayloadSuggestions = this.filteredPayloads.length > 0;
+            },
+
+            showAllPayloads() {
+                this.updateFilteredPayloads();
+                this.showPayloadSuggestions = this.filteredPayloads.length > 0;
+            },
+
+
+
+            editRule(rule) {
+                this.editMode = true;
+                this.currentRuleId = rule.id;
+                this.modalKeywords = rule.keywords;
+                this.modalReply = rule.reply_message;
+                try {
+                    this.modalButtons = rule.reply_buttons ? JSON.parse(rule.reply_buttons) : [];
+                } catch (e) {
+                    this.modalButtons = [];
+                }
+                this.modalHideComment = false;
+                this.modalAiSafe = (rule.is_ai_safe == 1);
+                this.modalBypassSchedule = (rule.bypass_schedule == 1);
+                this.modalBypassCooldown = (rule.bypass_cooldown == 1);
+                this.modalImageUrl = rule.reply_image_url || '';
+                this.imageLoadError = false;
+                this.showModal = true;
+            },
+
+            closeModal() { this.showModal = false; },
+
+            saveRule() {
+                if (!this.selectedPageId || !this.modalReply) return;
+                let formData = new FormData();
+                formData.append('page_id', this.selectedPageId);
+                    formData.append('platform', 'instagram');
+                formData.append('type', 'keyword');
+                formData.append('keywords', this.modalKeywords);
+                formData.append('reply', this.modalReply);
+                formData.append('reply_buttons', JSON.stringify(this.modalButtons));
+                formData.append('reply_image_url', this.modalImageUrl || '');
+                formData.append('source', 'message');
+                formData.append('hide_comment', '0');
+                formData.append('is_ai_safe', this.modalAiSafe ? '1' : '0');
+                formData.append('bypass_schedule', this.modalBypassSchedule ? '1' : '0');
+                formData.append('bypass_cooldown', this.modalBypassCooldown ? '1' : '0');
+                if (this.editMode) formData.append('rule_id', this.currentRuleId);
+                fetch('ajax_auto_reply.php?platform=instagram&action=save_rule', { method: 'POST', body: formData })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) { this.closeModal(); this.fetchRules(); }
+                        else alert(data.error);
+                    });
+            },
+
+            fetchStats(customStart = '', customEnd = '') {
+                if (!this.selectedPageId) return;
+                let url = `ajax_auto_reply.php?platform=instagram&action=fetch_page_stats&page_id=${this.selectedPageId}&range=${this.statsRange}&source=message`;
+                if (this.statsRange === 'custom') {
+                    url += `&start=${customStart}&end=${customEnd}`;
+                }
+                if (this.statsRule !== '') {
+                    url += `&rule_id=${this.statsRule}`;
+                }
+                fetch(url)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            this.stats = data.stats;
+                        }
+                    });
+            },
+
+            openCustomRangeModal() {
+                const now = new Date();
+                const pad = (n) => n.toString().padStart(2, '0');
+                const formatDate = (date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+                this.customStartDate = formatDate(new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0));
+                this.customEndDate = formatDate(new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59));
+                this.showCustomRangeModal = true;
+            },
+
+            closeCustomRangeModal() {
+                this.showCustomRangeModal = false;
+            },
+
+            applyCustomRange() {
+                if (!this.customStartDate || !this.customEndDate) return;
+                const startStr = this.customStartDate.replace('T', ' ') + ':00';
+                const endStr = this.customEndDate.replace('T', ' ') + ':59';
+
+                this.statsRange = 'custom';
+                this.fetchStats(startStr, endStr);
+                this.closeCustomRangeModal();
+            },
+
+            deleteRule(id) {
+                if (!confirm('<?php echo __('confirm_delete_rule'); ?>')) return;
+                let formData = new FormData();
+                formData.append('id', id);
+                fetch('ajax_auto_reply.php?platform=instagram&action=delete_rule', { method: 'POST', body: formData })
+                    .then(res => res.json())
+                    .then(data => { if (data.success) this.fetchRules(); });
+            },
+
+            fetchPageSettings() {
+                if (!this.selectedPageId) return;
+                fetch(`ajax_auto_reply.php?platform=instagram&action=fetch_page_settings&page_id=${this.selectedPageId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            const s = data.settings;
+                            const totalSec = parseInt(s.bot_cooldown_seconds || 0);
+                            this.cooldownHours = Math.floor(totalSec / 3600);
+                            this.cooldownMinutes = Math.floor((totalSec % 3600) / 60);
+                            this.cooldownSeconds = totalSec % 60;
+                            this.schEnabled = (s.bot_schedule_enabled == 1);
+                            this.schStart = s.bot_schedule_start ? s.bot_schedule_start.substring(0, 5) : '00:00';
+                            this.schEnd = s.bot_schedule_end ? s.bot_schedule_end.substring(0, 5) : '23:59';
+                            this.botExcludeKeywords = (s.bot_exclude_keywords == 1);
+                            this.aiSentimentEnabled = (s.bot_ai_sentiment_enabled == 1);
+                            this.angerKeywords = s.bot_anger_keywords || '';
+                            this.repetitionThreshold = parseInt(s.bot_repetition_threshold || 3);
+                            this.handoverReply = s.bot_handover_reply || '';
+                        }
+                    });
+            },
+
+            savePageSettings() {
+                // Internal use for global save
+                const totalSec = (parseInt(this.cooldownHours) * 3600) + (parseInt(this.cooldownMinutes) * 60) + parseInt(this.cooldownSeconds);
+                let formData = new FormData();
+                formData.append('page_id', this.selectedPageId);
+                    formData.append('platform', 'instagram');
+                formData.append('cooldown_seconds', totalSec);
+                formData.append('schedule_enabled', this.schEnabled ? '1' : '0');
+                formData.append('schedule_start', this.schStart);
+                formData.append('schedule_end', this.schEnd);
+                formData.append('exclude_keywords', this.botExcludeKeywords ? '1' : '0');
+                formData.append('ai_sentiment_enabled', this.aiSentimentEnabled ? '1' : '0');
+                formData.append('anger_keywords', this.angerKeywords);
+                formData.append('repetition_count', this.repetitionThreshold);
+                formData.append('handover_reply', this.handoverReply);
+
+                return fetch('ajax_auto_reply.php?platform=instagram&action=save_page_settings', { method: 'POST', body: formData })
+                    .then(res => res.json());
+            },
+
+            saveDefaultReply() {
+                // Internal use for global save
+                let formData = new FormData();
+                formData.append('page_id', this.selectedPageId);
+                    formData.append('platform', 'instagram');
+                formData.append('type', 'default');
+                formData.append('reply', this.defaultReplyText);
+                formData.append('keywords', '*');
+                formData.append('source', 'message');
+                formData.append('hide_comment', '0');
+                formData.append('is_ai_safe', this.defaultAiSafe ? '1' : '0');
+                formData.append('bypass_schedule', this.defaultBypassSchedule ? '1' : '0');
+                formData.append('bypass_cooldown', this.defaultBypassCooldown ? '1' : '0');
+                formData.append('reply_buttons', JSON.stringify(this.defaultReplyButtons));
+                return fetch('ajax_auto_reply.php?platform=instagram&action=save_rule', { method: 'POST', body: formData })
+                    .then(res => res.json());
+            },
+
+            saveAllSettings() {
+                if (!this.selectedPageId) return;
+                this.isGlobalSaving = true;
+
+                Promise.all([this.savePageSettings(), this.saveDefaultReply()])
+                    .then(([res1, res2]) => {
+                        this.isGlobalSaving = false;
+                        if (res1.success && res2.success) {
+                            alert('<?php echo __('wa_settings_saved'); ?>');
+                        } else {
+                            alert(res1.error || res2.error || 'Error saving settings');
+                        }
+                    })
+                    .catch(() => {
+                        this.isGlobalSaving = false;
+                        alert('Network Error');
+                    });
+            }
+            ,
+            addDefaultButton() {
+                if (this.defaultReplyButtons.length < 3) {
+                    this.defaultReplyButtons.push({ title: '', payload: '', type: 'postback' });
+                }
+            },
+            removeDefaultButton(index) {
+                this.defaultReplyButtons.splice(index, 1);
+            },
+            addButton() {
+                if (this.modalButtons.length < 3) {
+                    this.modalButtons.push({
+                        title: '',
+                        payload: '',
+                        type: 'postback'
+                    });
+                }
+            },
+
+            removeButton(index) {
+                this.modalButtons.splice(index, 1);
+            },
+        }
+    }
+</script>
+
 <?php require_once '../includes/footer.php'; ?>
