@@ -449,11 +449,11 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             class="p-4 bg-black/40 rounded-2xl border border-white/5 flex items-center justify-between group">
                             <div class="flex items-center gap-4">
                                 <div class="w-10 h-10 rounded-xl bg-pink-500/10 flex items-center justify-center font-bold text-pink-400"
-                                    x-text="(log.user_name || 'A').charAt(0).toUpperCase()"></div>
+                                    x-text="(log.user_name || 'C').charAt(0).toUpperCase()"></div>
                                 <div>
                                     <div class="flex items-center gap-2">
                                         <span class="font-bold text-white text-sm"
-                                            x-text="log.user_name || 'Anonymous'"></span>
+                                            x-text="log.user_name || '<?php echo $user_lang === 'ar' ? 'عميل إنستجرام' : 'Instagram Client'; ?>'"></span>
                                         <span class="px-2 py-0.5 rounded-full text-[8px] font-black uppercase"
                                             :class="log.action_taken === 'hide' ? 'bg-pink-500/20 text-pink-400' : (log.action_taken === 'delete' ? 'bg-red-500/20 text-red-500' : 'bg-gray-500/20 text-gray-400')"
                                             x-text="log.action_taken === 'hide' ? '<?php echo __('bot_action_hide'); ?>' : (log.action_taken === 'delete' ? '<?php echo __('bot_action_delete'); ?>' : '<?php echo __('silenced'); ?>')"></span>
@@ -468,10 +468,10 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             </div>
                             <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
                                 <!-- Open on Instagram -->
-                                <template x-if="log.post_id">
-                                    <a :href="'https://instagram.com/p/' + log.post_id + '/'" target="_blank"
+                                <template x-if="log.comment_id">
+                                    <a :href="'https://www.instagram.com/direct/inbox/'" target="_blank"
                                         class="p-2 text-gray-400 hover:text-pink-400 transition-colors"
-                                        title="<?php echo __('view_on_instagram'); ?>">
+                                        title="<?php echo __('view_on_instagram') ?: 'View on Instagram'; ?>">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />

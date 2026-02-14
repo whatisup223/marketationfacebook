@@ -455,11 +455,11 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             class="p-4 bg-black/40 rounded-2xl border border-white/5 flex items-center justify-between group">
                             <div class="flex items-center gap-4">
                                 <div class="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center font-bold text-indigo-400"
-                                    x-text="(log.user_name || 'A').charAt(0).toUpperCase()"></div>
+                                    x-text="(log.user_name || 'C').charAt(0).toUpperCase()"></div>
                                 <div>
                                     <div class="flex items-center gap-2">
                                         <span class="font-bold text-white text-sm"
-                                            x-text="log.user_name || 'Anonymous'"></span>
+                                            x-text="log.user_name || '<?php echo $user_lang === 'ar' ? 'عميل فيسبوك' : 'Facebook Client'; ?>'"></span>
                                         <span class="px-2 py-0.5 rounded-full text-[8px] font-black uppercase"
                                             :class="log.action_taken === 'hide' ? 'bg-indigo-500/20 text-indigo-400' : (log.action_taken === 'delete' ? 'bg-red-500/20 text-red-500' : 'bg-gray-500/20 text-gray-400')"
                                             x-text="log.action_taken === 'hide' ? '<?php echo __('bot_action_hide'); ?>' : (log.action_taken === 'delete' ? '<?php echo __('bot_action_delete'); ?>' : '<?php echo __('silenced'); ?>')"></span>
