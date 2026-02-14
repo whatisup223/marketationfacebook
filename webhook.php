@@ -512,7 +512,7 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
         return;
     }
 
-    // 4. Advanced SaaS Logic (Repeat Detection only)
+    // 4. Advanced SaaS Logic (Repeat Detection)
     $is_ai_safe = (int) ($matched_rule['is_ai_safe'] ?? 1);
 
     // For Default Replies, we are more lenient with AI safety unless explicitly strict
@@ -520,18 +520,10 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
         $is_ai_safe = 0;
     }
 
-    if ($page['bot_ai_sentiment_enabled'] && $is_ai_safe && $customer_id) {
-        // 4.2 Repetition Threshold Check
-        // If user sends the same thing too many times, we silence to avoid ban
-        if ($page['bot_repetition_threshold'] > 0 && $state && $state['last_user_message'] === $incoming_text) {
-            $reps = (int) ($state['repetition_count'] ?? 0);
-            if ($reps >= $page['bot_repetition_threshold']) {
-                debugLog("SILENCE: Repetition threshold reached ($reps) for $customer_id. Message: $incoming_text");
-                return;
-            }
-        }
+    // 4.1 Repeat Detection (ALWAYS runs if AI sentiment enabled, regardless of is_ai_safe)
+    if ($page['bot_ai_sentiment_enabled'] && $customer_id && $state) {
         // B. Repeat Detection (Configurable Threshold)
-        if ($state && $state['last_bot_reply_text'] === $reply_msg) {
+        if ($state['last_bot_reply_text'] === $reply_msg) {
             $threshold = (int) ($page['bot_repetition_threshold'] ?? 3);
             if ($threshold < 1)
                 $threshold = 3;
@@ -587,7 +579,20 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
                     }
                 }
 
+                debugLog("HANDOVER: Repeat threshold reached ($new_count >= $threshold) for $customer_id");
                 return; // SILENCE
+            }
+        }
+    }
+
+    // 4.2 User Repetition Threshold Check (Only for AI-safe rules)
+    if ($page['bot_ai_sentiment_enabled'] && $is_ai_safe && $customer_id) {
+        // If user sends the same thing too many times, we silence to avoid ban
+        if ($page['bot_repetition_threshold'] > 0 && $state && $state['last_user_message'] === $incoming_text) {
+            $reps = (int) ($state['repetition_count'] ?? 0);
+            if ($reps >= $page['bot_repetition_threshold']) {
+                debugLog("SILENCE: Repetition threshold reached ($reps) for $customer_id. Message: $incoming_text");
+                return;
             }
         }
     }
