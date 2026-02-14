@@ -315,7 +315,8 @@ include '../includes/header.php';
                                             'instagram_basic',
                                             'instagram_manage_comments',
                                             'instagram_manage_messages',
-                                            'instagram_content_publish'
+                                            'instagram_content_publish',
+                                            'business_management'
                                         ];
                                         $login_url = "https://www.facebook.com/v18.0/dialog/oauth?client_id={$fb_app_id}&redirect_uri=" . urlencode($redirect_uri) . "&state={$_SESSION['fb_oauth_state']}&scope=" . implode(',', $permissions);
                                         ?>
