@@ -14,7 +14,7 @@ class FacebookAPI
             try {
                 $pdo = getDB();
                 $stmt = $pdo->query("SELECT setting_value FROM settings WHERE setting_key = 'fb_app_secret'");
-                $this->app_secret = $stmt->fetchColumn();
+                $this->app_secret = trim($stmt->fetchColumn());
             } catch (Exception $e) {
                 // Silent fail if DB not accessible
             }
@@ -24,7 +24,12 @@ class FacebookAPI
     public function makeRequest($endpoint, $params = [], $access_token = '', $method = 'GET')
     {
         @set_time_limit(0);
+        $access_token = trim($access_token);
         $url = $this->base_url . $this->api_version . '/' . ltrim($endpoint, '/');
+
+        // Log Request
+        $logMsg = date('Y-m-d H:i:s') . " - Req: $method $endpoint - Token Prefix: " . substr($access_token, 0, 5) . "\n";
+        file_put_contents(__DIR__ . '/../debug_api.txt', $logMsg, FILE_APPEND);
 
         // Add App Secret Proof if secret is available and token is present
         if (!empty($this->app_secret) && !empty($access_token)) {
