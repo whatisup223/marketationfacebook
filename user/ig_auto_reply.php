@@ -854,8 +854,8 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         </div>
 
                         <!-- Option 2: Auto Like -->
-                        <div class="p-4 bg-white/5 rounded-2xl border border-white/5 flex flex-col justify-between hover:bg-white/10 transition-all cursor-pointer"
-                            @click="defaultAutoLike = !defaultAutoLike">
+                        <div class="p-4 bg-white/5 rounded-2xl border border-white/5 flex flex-col justify-between hover:bg-white/10 transition-all cursor-not-allowed opacity-80"
+                            title="<?php echo __('auto_like_ig_desc'); ?>">
                             <div class="flex justify-between items-start mb-2">
                                 <div class="p-2 bg-pink-500/10 rounded-lg text-pink-400">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -863,16 +863,23 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                             d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                                     </svg>
                                 </div>
-                                <div class="relative w-10 h-6 transition-all duration-200 ease-in-out rounded-full"
-                                    :class="defaultAutoLike ? 'bg-pink-600' : 'bg-gray-700'">
-                                    <div class="absolute w-4 h-4 transition-all duration-200 ease-in-out bg-white rounded-full top-1"
-                                        :class="defaultAutoLike ? 'left-5' : 'left-1'"></div>
+                                <div class="flex flex-col items-end gap-2">
+                                    <span
+                                        class="px-2 py-0.5 bg-pink-500/20 text-pink-400 text-[8px] font-bold rounded-full uppercase border border-pink-500/30">
+                                        <?php echo __('auto_like_ig_status'); ?>
+                                    </span>
+                                    <div
+                                        class="relative w-10 h-6 transition-all duration-200 ease-in-out rounded-full bg-gray-700/50 grayscale opacity-50">
+                                        <div
+                                            class="absolute w-4 h-4 transition-all duration-200 ease-in-out bg-white rounded-full top-1 left-1">
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div>
                                 <h4 class="font-bold text-white text-sm"><?php echo __('auto_like'); ?></h4>
-                                <p class="text-[10px] text-gray-500 mt-1">
-                                    <?php echo __('auto_like_help') ?? 'الإعجاب بتعليق العميل تلقائياً'; ?>
+                                <p class="text-[9px] text-pink-400/70 mt-1 font-medium italic">
+                                    <?php echo __('auto_like_ig_desc'); ?>
                                 </p>
                             </div>
                         </div>
@@ -1059,9 +1066,17 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                             <template x-if="rule.hide_comment == 1"><span
                                                     class="flex items-center gap-1" title="إخفاء التعليق">👁️‍🗨️
                                                     إخفاء</span></template>
-                                            <template x-if="rule.auto_like_comment == 1"><span
-                                                    class="flex items-center gap-1 text-pink-400"
-                                                    title="إعجاب تلقائي">❤️ إعجاب</span></template>
+                                            <template x-if="rule.auto_like_comment == 1">
+                                                <span
+                                                    class="flex items-center gap-1 text-pink-400 group/like relative cursor-help"
+                                                    title="<?php echo __('auto_like_ig_desc'); ?>">
+                                                    ❤️ إعجاب
+                                                    <span
+                                                        class="text-[7px] bg-pink-500/20 px-1 rounded border border-pink-500/30">
+                                                        <?php echo __('auto_like_ig_status'); ?>
+                                                    </span>
+                                                </span>
+                                            </template>
                                             <template x-if="rule.private_reply_enabled == 1"><span
                                                     class="flex items-center gap-1 text-blue-400" title="رد خاص">✉️
                                                     خاص</span></template>
@@ -1145,7 +1160,14 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                         <template x-if="rule.hide_comment == 1"><span
                                                 class="flex items-center gap-1">👁️‍🗨️</span></template>
                                         <template x-if="rule.auto_like_comment == 1"><span
-                                                class="flex items-center gap-1 text-pink-400">❤️</span></template>
+                                                class="flex items-center gap-1 text-pink-400group/like relative cursor-help"
+                                                  title="<?php echo __('auto_like_ig_desc'); ?>">
+                                                ❤️
+                                                <span class="text-[7px] bg-pink-500/20 px-0.5 rounded border border-pink-500/30">
+                                                    <?php echo __('auto_like_ig_status'); ?>
+                                                </span>
+                                            </span>
+                                        </template>
                                         <template x-if="rule.private_reply_enabled == 1"><span
                                                 class="flex items-center gap-1 text-blue-400">✉️</span></template>
                                     </div>
@@ -1522,7 +1544,8 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         </div>
 
                         <!-- Auto Like -->
-                        <div class="flex flex-col gap-3 p-4 bg-white/5 rounded-2xl border border-white/5">
+                        <div class="flex flex-col gap-3 p-4 bg-white/5 rounded-2xl border border-white/5 opacity-80 cursor-not-allowed"
+                            title="<?php echo __('auto_like_ig_desc'); ?>">
                             <div class="flex items-center justify-between">
                                 <div class="p-2.5 bg-pink-500/10 rounded-xl text-pink-400">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1531,13 +1554,18 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                         </path>
                                     </svg>
                                 </div>
-                                <div
-                                    class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
-                                    <input type="checkbox" x-model="modalAutoLike"
-                                        class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
-                                    <label
-                                        class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-700 cursor-pointer"
-                                        :class="modalAutoLike ? 'bg-pink-600' : 'bg-gray-700'"></label>
+                                <div class="flex flex-col items-end gap-1">
+                                    <span
+                                        class="px-1.5 py-0.5 bg-pink-500/20 text-pink-400 text-[7px] font-bold rounded-full uppercase border border-pink-500/30">
+                                        <?php echo __('auto_like_ig_status'); ?>
+                                    </span>
+                                    <div
+                                        class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in grayscale opacity-50">
+                                        <input type="checkbox" disabled
+                                            class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-not-allowed right-5 transition-all duration-300" />
+                                        <label
+                                            class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-700 cursor-not-allowed"></label>
+                                    </div>
                                 </div>
                             </div>
                             <span
@@ -1955,7 +1983,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 if (!this.selectedPageId) return;
                 this.subscribing = true;
                 let formData = new FormData();
-                formData.append('page_id', this.selectedPageId);
+                formData.append('page_id', this.selectedPa                   geId);
                 formData.append('platform', 'instagram');
                 fetch('ajax_auto_reply.php?platform=instagram&action=subscribe_page', { method: 'POST', body: formData })
                     .then(res => res.json())
