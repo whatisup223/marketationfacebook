@@ -578,11 +578,12 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
     }
 }
 
-function processModeration($pdo, $page_id, $comment_id, $message_text, $sender_name = '', $platform = 'facebook')
+function processModeration($pdo, $id, $comment_id, $message_text, $sender_name = '', $platform = 'facebook')
 {
-    // 1. Get Rules
+    // 1. Get Rules - Fix: The ID coming from webhook for IG is the IG Business ID.
+    // We need to find the rule associated with this ID.
     $stmt = $pdo->prepare("SELECT * FROM fb_moderation_rules WHERE page_id = ? AND platform = ? AND is_active = 1");
-    $stmt->execute([$page_id, $platform]);
+    $stmt->execute([$id, $platform]);
     $rules = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$rules)
@@ -591,18 +592,21 @@ function processModeration($pdo, $page_id, $comment_id, $message_text, $sender_n
     $violation = false;
     $reason = "";
 
-    // A. Check Phone Numbers
+    // A. Check Phone Numbers - Improved Regex for International and Local formats
     if ($rules['hide_phones']) {
-        // Pattern for mobile numbers
-        if (preg_match('/(\d{8,15})|(\+?\d{1,4}[\s-]?\d{3,4}[\s-]?\d{4})/', $message_text)) {
+        // Matches typical numbers 8+ digits, with space/dash and optional +
+        $phone_pattern = '/(\+?\d{1,4}[\s-]?\d{7,14})|(\d{8,15})/';
+        if (preg_match($phone_pattern, $message_text)) {
             $violation = true;
             $reason = "Phone Number Detected";
         }
     }
 
-    // B. Check Links/URLs
+    // B. Check Links/URLs - Improved Regex
     if (!$violation && $rules['hide_links']) {
-        if (preg_match('/(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9-]+\.(com|net|org|me|info|biz|co|app|xyz))/i', $message_text)) {
+        // Matches http, www, and common TLDs to catch sneaky links
+        $link_pattern = '/(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9-]+\.(com|net|org|me|info|biz|co|app|xyz|site|online|link))/i';
+        if (preg_match($link_pattern, $message_text)) {
             $violation = true;
             $reason = "Link Detected";
         }
@@ -625,7 +629,7 @@ function processModeration($pdo, $page_id, $comment_id, $message_text, $sender_n
         $fb = new FacebookAPI();
         $id_column = ($platform === 'instagram') ? 'ig_business_id' : 'page_id';
         $stmt = $pdo->prepare("SELECT page_access_token FROM fb_pages WHERE $id_column = ?");
-        $stmt->execute([$page_id]);
+        $stmt->execute([$id]);
         $token = $stmt->fetchColumn();
 
         if ($token) {
@@ -637,7 +641,7 @@ function processModeration($pdo, $page_id, $comment_id, $message_text, $sender_n
 
             // Log the action
             $stmt = $pdo->prepare("INSERT INTO fb_moderation_logs (user_id, page_id, comment_id, comment_text, sender_name, reason, action_taken, platform) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$rules['user_id'], $page_id, $comment_id, $message_text, $sender_name, $reason, $rules['action_type'], $platform]);
+            $stmt->execute([$rules['user_id'], $id, $comment_id, $message_text, $sender_name, $reason, $rules['action_type'], $platform]);
         }
         return true; // Handled by moderation
     }
