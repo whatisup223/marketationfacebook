@@ -5,14 +5,31 @@ class FacebookAPI
     private $api_version = 'v18.0'; // Updated to v18.0
     private $base_url = 'https://graph.facebook.com/';
 
+    private $app_secret = '';
+
     public function __construct()
     {
+        // Try to fetch App Secret from DB for App Secret Proof
+        if (function_exists('getDB')) {
+            try {
+                $pdo = getDB();
+                $stmt = $pdo->query("SELECT setting_value FROM settings WHERE setting_key = 'fb_app_secret'");
+                $this->app_secret = $stmt->fetchColumn();
+            } catch (Exception $e) {
+                // Silent fail if DB not accessible
+            }
+        }
     }
 
     public function makeRequest($endpoint, $params = [], $access_token = '', $method = 'GET')
     {
         @set_time_limit(0);
         $url = $this->base_url . $this->api_version . '/' . ltrim($endpoint, '/');
+
+        // Add App Secret Proof if secret is available and token is present
+        if (!empty($this->app_secret) && !empty($access_token)) {
+            $params['appsecret_proof'] = hash_hmac('sha256', $access_token, $this->app_secret);
+        }
 
         $ch = curl_init();
         $headers = ['Accept: application/json'];
