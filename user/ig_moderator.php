@@ -453,22 +453,28 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <div>
                                     <div class="flex items-center gap-2">
                                         <span class="font-bold text-white text-sm"
-                                            x-text="log.sender_name || 'Anonymous'"></span>
+                                            x-text="log.user_name || 'Anonymous'"></span>
                                         <span class="px-2 py-0.5 rounded-full text-[8px] font-black uppercase"
                                             :class="log.action_taken === 'hide' ? 'bg-pink-500/20 text-pink-400' : 'bg-red-500/20 text-red-500'"
                                             x-text="log.action_taken === 'hide' ? '<?php echo __('bot_action_hide'); ?>' : '<?php echo __('bot_action_delete'); ?>'"></span>
-                                    <p class="text-xs text-gray-500 italic mt-1 line-clamp-1" x-text="log.comment_text"></p>
+                                        <template x-if="log.reason">
+                                            <span
+                                                class="px-2 py-0.5 rounded-full text-[8px] font-bold bg-white/5 text-gray-400 border border-white/5"
+                                                x-text="log.reason"></span>
+                                        </template>
+                                    </div>
+                                    <p class="text-xs text-gray-500 italic mt-1 line-clamp-1" x-text="log.content"></p>
                                 </div>
                             </div>
                             <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
                                 <!-- Open on Instagram -->
-                                <template x-if="log.comment_id">
-                                    <a :href="'https://instagram.com/'"
-                                        target="_blank"
+                                <template x-if="log.post_id">
+                                    <a :href="'https://instagram.com/p/' + log.post_id + '/'" target="_blank"
                                         class="p-2 text-gray-400 hover:text-pink-400 transition-colors"
                                         title="<?php echo __('view_on_instagram'); ?>">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                         </svg>
                                     </a>
                                 </template>
@@ -478,7 +484,8 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     class="p-2 text-gray-400 hover:text-red-500 transition-colors"
                                     title="<?php echo __('delete'); ?>">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                     </svg>
                                 </button>
                             </div>

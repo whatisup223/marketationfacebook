@@ -23,7 +23,8 @@ $stmt->execute([$user_id]);
 $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
-<div id="main-user-container" class="main-user-container flex min-h-screen bg-gray-900 font-sans" x-data="autoModerator()">
+<div id="main-user-container" class="main-user-container flex min-h-screen bg-gray-900 font-sans"
+    x-data="autoModerator()">
     <?php include '../includes/user_sidebar.php'; ?>
 
     <!-- Modals moved outside main to fix containing block issues (backdrop-filter) -->
@@ -458,12 +459,17 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <div>
                                     <div class="flex items-center gap-2">
                                         <span class="font-bold text-white text-sm"
-                                            x-text="log.sender_name || 'Anonymous'"></span>
+                                            x-text="log.user_name || 'Anonymous'"></span>
                                         <span class="px-2 py-0.5 rounded-full text-[8px] font-black uppercase"
                                             :class="log.action_taken === 'hide' ? 'bg-indigo-500/20 text-indigo-400' : 'bg-red-500/20 text-red-500'"
                                             x-text="log.action_taken === 'hide' ? '<?php echo __('bot_action_hide'); ?>' : '<?php echo __('bot_action_delete'); ?>'"></span>
+                                        <template x-if="log.reason">
+                                            <span
+                                                class="px-2 py-0.5 rounded-full text-[8px] font-bold bg-white/5 text-gray-400 border border-white/5"
+                                                x-text="log.reason"></span>
+                                        </template>
                                     </div>
-                                    <p class="text-xs text-gray-500 italic mt-1 line-clamp-1" x-text="log.comment_text">
+                                    <p class="text-xs text-gray-500 italic mt-1 line-clamp-1" x-text="log.content">
                                     </p>
                                 </div>
                             </div>
