@@ -209,9 +209,9 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 
     // 2. Find Rule Match
     // Fetch ALL active rules for this page, platform and source
-    // Search using the discovered database ID
-    $stmt = $pdo->prepare("SELECT * FROM auto_reply_rules WHERE page_id = ? AND reply_source = ? AND platform = ? AND is_active = 1 ORDER BY trigger_type DESC, id DESC");
-    $stmt->execute([$db_page_id, $source, $platform]);
+    // Search using both possible IDs (Page ID and IG Business ID) for maximum robustness
+    $stmt = $pdo->prepare("SELECT * FROM auto_reply_rules WHERE (page_id = ? OR page_id = ?) AND reply_source = ? AND platform = ? AND is_active = 1 ORDER BY trigger_type DESC, id DESC");
+    $stmt->execute([$page['fb_page_id'], $page['ig_business_id'], $source, $platform]);
     $all_rules = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     $matched_rule = null;
@@ -334,6 +334,8 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
     $private_reply_text = $matched_rule['private_reply_text'] ?? '';
     // Capture Auto Like Settings (Support aliases for safety)
     $auto_like_comment = (int) ($matched_rule['auto_like_comment'] ?? $matched_rule['auto_like'] ?? 0);
+
+    debugLog("Rule Settings for $target_id: Like=" . ($auto_like_comment ? "YES" : "NO") . ", Private=" . ($private_reply_enabled ? "YES" : "NO") . ", Platform=" . $platform);
 
     // --- QUICK WINS IMPLEMENTATION ---
     // 1. Random Variations (Spintax): explode by | and pick random
@@ -580,11 +582,12 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 
         if ($private_reply_enabled && !empty($private_reply_text)) {
             if ($is_ig_reply) {
-                debugLog("Skipping IG Private Reply: Nested comments not supported by API.");
+                debugLog("Skipping IG Private Reply: Nested comments not supported by API ($target_id)");
             } else {
                 try {
                     $p_res = $fb->replyPrivateToComment($target_id, $private_reply_text, $access_token, $platform);
                     debugLog("Auto-Reply Private Result for $target_id: " . json_encode($p_res));
+                    file_put_contents(__DIR__ . '/debug_fb.txt', date('Y-m-d H:i:s') . " - Private Reply Res: " . json_encode($p_res) . " | ID: $target_id\n", FILE_APPEND);
                 } catch (Exception $ep) {
                     debugLog("Auto-Reply Private ERROR for $target_id: " . $ep->getMessage());
                 }
@@ -593,9 +596,13 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 
         // --- NEW: AUTO LIKE COMMENT ---
         if ($auto_like_comment) {
-            $like_res = $fb->likeComment($target_id, $access_token, $platform);
-            // DEBUG: Log the result of the auto-like
-            file_put_contents(__DIR__ . '/debug_fb.txt', date('Y-m-d H:i:s') . " - Auto-Like Res: " . json_encode($like_res) . " | ID: $target_id\n", FILE_APPEND);
+            try {
+                $like_res = $fb->likeComment($target_id, $access_token, $platform);
+                debugLog("Auto-Like Result for $target_id: " . json_encode($like_res));
+                file_put_contents(__DIR__ . '/debug_fb.txt', date('Y-m-d H:i:s') . " - Auto-Like Res: " . json_encode($like_res) . " | ID: $target_id\n", FILE_APPEND);
+            } catch (Exception $el) {
+                debugLog("Auto-Like ERROR for $target_id: " . $el->getMessage());
+            }
         }
     }
 

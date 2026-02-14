@@ -489,9 +489,10 @@ class FacebookAPI
     public function replyPrivateToComment($comment_id, $message, $access_token, $platform = 'facebook')
     {
         if ($platform === 'instagram') {
-            // Instagram Private Reply: message MUST be in URL
-            $endpoint = $comment_id . '/private_replies?message=' . urlencode($message);
-            return $this->makeRequest($endpoint, [], $access_token, 'POST');
+            // Instagram Private Reply
+            $endpoint = $comment_id . '/private_replies';
+            $params = ['message' => $message];
+            return $this->makeRequest($endpoint, $params, $access_token, 'POST');
         } else {
             $endpoint = 'me/messages';
             $params = [
@@ -506,8 +507,8 @@ class FacebookAPI
     public function likeComment($comment_id, $access_token, $platform = 'facebook')
     {
         if ($platform === 'instagram') {
-            // Instagram Like: must be in URL
-            return $this->makeRequest($comment_id . '?user_liked=true', [], $access_token, 'POST');
+            // Instagram Like
+            return $this->makeRequest($comment_id, ['user_liked' => 'true'], $access_token, 'POST');
         }
         $endpoint = "$comment_id/likes";
         return $this->makeRequest($endpoint, [], $access_token, 'POST');
