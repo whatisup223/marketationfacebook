@@ -392,6 +392,12 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
         }
     }
 
+    // If no action at all
+    if (empty($reply_msg) && empty($image_url) && !$auto_like_comment && !$hide_comment && !$private_reply_enabled) {
+        debugLog("SILENCE: No reply content or action defined for matched rule ID: " . ($matched_rule['id'] ?? 'NONE'));
+        return;
+    }
+
     // 4. Advanced SaaS Logic (Repeat Detection only)
     $is_ai_safe = (int) ($matched_rule['is_ai_safe'] ?? 1);
 
@@ -477,9 +483,10 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
     $bypass_cooldown = (int) ($matched_rule['bypass_cooldown'] ?? 0);
 
     // Compatibility: If it's a keyword match and old global exclude is ON, force bypass
-    if ($is_keyword_match && (int) $page['bot_exclude_keywords'] === 1) {
+    if ($is_keyword_match && (int) ($page['bot_exclude_keywords'] ?? 0) === 1) {
         $bypass_schedule = 1;
         $bypass_cooldown = 1;
+        debugLog("Applying Keyword Bypass for Schedule/Cooldown (Global Setting)");
     }
 
     // 5.1 Schedule Check
@@ -527,6 +534,7 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
                             // Message from Page, NOT in Bot database -> It's a Human Admin
                             $created_time = strtotime($msg['created_time']);
                             if ((time() - $created_time) < $cooldown_seconds) {
+                                debugLog("SILENCE: Human admin activity detected within cooldown period for $customer_id");
                                 return; // SILENCE
                             }
                             break;
@@ -558,6 +566,7 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
                             // Reply from Page, NOT in Bot database -> It's a Human Admin
                             $created_time = strtotime($reply['created_time']);
                             if ((time() - $created_time) < $cooldown_seconds) {
+                                debugLog("SILENCE: Human admin reply found on comment within cooldown for $customer_id");
                                 return; // SILENCE
                             }
                             break;
@@ -580,7 +589,9 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
     $policy = $compliance->canSendMessage($customer_id, $msg_type);
     if (!$policy['allowed']) {
         // Log this rejection for debugging
-        file_put_contents(__DIR__ . '/debug_compliance.txt', date('Y-m-d H:i:s') . " - BLOCKED: " . $policy['reason'] . "\n", FILE_APPEND);
+        $reason = $policy['reason'] ?? 'Unknown Policy';
+        debugLog("SILENCE: Compliance Engine blocked message to $customer_id. Reason: $reason");
+        file_put_contents(__DIR__ . '/debug_compliance.txt', date('Y-m-d H:i:s') . " - BLOCKED: " . $reason . "\n", FILE_APPEND);
         return;
     }
 
