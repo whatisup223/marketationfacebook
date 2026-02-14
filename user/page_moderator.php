@@ -476,7 +476,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
                                 <!-- Open on Platform -->
                                 <template x-if="log.comment_id">
-                                    <a :href="log.platform === 'instagram' ? 'https://www.instagram.com/direct/inbox/' : 'https://facebook.com/' + (log.comment_id.includes('_') ? log.comment_id : log.page_id + '_' + log.comment_id)"
+                                    <a :href="log.platform === 'instagram' ? 'https://business.facebook.com/latest/inbox/all?selected_item_id=' + log.comment_id : 'https://facebook.com/' + (log.comment_id.includes('_') ? log.comment_id : log.page_id + '_' + log.comment_id)"
                                         target="_blank"
                                         class="p-2 text-gray-400 hover:text-indigo-400 transition-colors"
                                         :title="log.platform === 'instagram' ? '<?php echo __('view_on_instagram') ?: 'View on Instagram'; ?>' : '<?php echo __('view_on_facebook'); ?>'">

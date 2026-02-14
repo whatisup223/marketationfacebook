@@ -469,7 +469,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
                                 <!-- Open on Instagram -->
                                 <template x-if="log.comment_id">
-                                    <a :href="'https://www.instagram.com/direct/inbox/'" target="_blank"
+                                    <a :href="'https://business.facebook.com/latest/inbox/all?selected_item_id=' + log.comment_id" target="_blank"
                                         class="p-2 text-gray-400 hover:text-pink-400 transition-colors"
                                         title="<?php echo __('view_on_instagram') ?: 'View on Instagram'; ?>">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
