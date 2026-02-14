@@ -488,12 +488,19 @@ class FacebookAPI
      */
     public function replyPrivateToComment($comment_id, $message, $access_token, $platform = 'facebook')
     {
+        // Both Facebook and Instagram now support private replies via the Messages API using comment_id as recipient
+        // However, Facebook also supports the legacy /{comment-id}/private_replies edge.
+        // For Instagram, we MUST use the Messages API.
+
         if ($platform === 'instagram') {
-            // Instagram Private Reply
-            $endpoint = $comment_id . '/private_replies';
-            $params = ['message' => $message];
+            $endpoint = 'me/messages';
+            $params = [
+                'recipient' => ['comment_id' => $comment_id],
+                'message' => ['text' => $message]
+            ];
             return $this->makeRequest($endpoint, $params, $access_token, 'POST');
         } else {
+            // For Facebook, use the same modern approach (Messages API) as it's more reliable for new permissions
             $endpoint = 'me/messages';
             $params = [
                 'recipient' => ['comment_id' => $comment_id],
@@ -501,9 +508,7 @@ class FacebookAPI
             ];
             return $this->makeRequest($endpoint, $params, $access_token, 'POST');
         }
-    }/**
-     * Like a comment
-     */
+    }
     /**
      * Like a comment
      */
