@@ -119,18 +119,23 @@ function handleFacebookEvent($data, $pdo)
 
                             $comment_id = $val['comment_id'] ?? $val['id'] ?? '';
                             $post_id = $val['post_id'] ?? $val['media_id'] ?? '';
+                            $parent_id = $val['parent_id'] ?? null;
+
                             // Instagram comment text is often just under 'text'
                             $message_text = $val['message'] ?? $val['text'] ?? '';
                             $sender_name = $val['from']['name'] ?? $val['from']['username'] ?? '';
 
+                            debugLog("Processing Comment: ID=$comment_id, Post=$post_id, Parent=$parent_id, Platform=$platform, Verb=$verb");
+
                             // 1. Check Moderation (Must check for both additions and edits)
                             $is_moderated = processModeration($pdo, $id, $comment_id, $message_text, $sender_name, $platform, $post_id);
-                            debugLog("Moderation Result for $comment_id: " . ($is_moderated ? "MODERATED" : "PASSED"));
+                            debugLog("Moderation Final Result: " . ($is_moderated ? "MODERATED (Action Taken)" : "PASSED (No Violation)"));
 
                             // 2. Only Auto-Reply if it's a NEW comment and NOT moderated
                             if ($verb === 'add' && !$is_moderated) {
-                                debugLog("Triggering Auto-Reply for $comment_id");
-                                processAutoReply($pdo, $id, $comment_id, $message_text, 'comment', $sender_id, $sender_name, $platform);
+                                debugLog("Triggering Auto-Reply flow for $comment_id");
+                                // We pass parent_id to skip private replies on nested comments for IG later
+                                processAutoReply($pdo, $id, $comment_id, $message_text, 'comment', $sender_id, $sender_name, $platform, $post_id, $parent_id);
                             }
                         }
                     }
@@ -140,7 +145,7 @@ function handleFacebookEvent($data, $pdo)
     }
 }
 
-function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $actual_sender_id = null, $sender_name = '', $platform = 'facebook')
+function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $actual_sender_id = null, $sender_name = '', $platform = 'facebook', $post_id = null, $parent_id = null)
 {
     // 1. Fetch Page Settings (Token, Schedule, Cooldown, AI Intelligence)
     $id_column = ($platform === 'instagram') ? 'ig_business_id' : 'page_id';
@@ -547,12 +552,20 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
         }
 
         // --- NEW: PRIVATE REPLY TO COMMENT ---
+        // For Instagram, private_replies only works for TSL (Top Level Comments) and NOT Story comments.
+        // Story comments in webhooks often lack media info or have specific flags.
+        $is_ig_reply = ($platform === 'instagram' && !empty($parent_id) && $parent_id !== $post_id);
+
         if ($private_reply_enabled && !empty($private_reply_text)) {
-            try {
-                $p_res = $fb->replyPrivateToComment($target_id, $private_reply_text, $access_token, $platform);
-                debugLog("Auto-Reply Private Result for $target_id: " . json_encode($p_res));
-            } catch (Exception $ep) {
-                debugLog("Auto-Reply Private ERROR for $target_id: " . $ep->getMessage());
+            if ($is_ig_reply) {
+                debugLog("Skipping IG Private Reply: Nested comments not supported by API.");
+            } else {
+                try {
+                    $p_res = $fb->replyPrivateToComment($target_id, $private_reply_text, $access_token, $platform);
+                    debugLog("Auto-Reply Private Result for $target_id: " . json_encode($p_res));
+                } catch (Exception $ep) {
+                    debugLog("Auto-Reply Private ERROR for $target_id: " . $ep->getMessage());
+                }
             }
         }
 

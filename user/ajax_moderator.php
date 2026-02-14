@@ -136,8 +136,9 @@ if ($action === 'delete_log' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // Attempt to delete from Facebook
-    $stmt = $pdo->prepare("SELECT page_access_token FROM fb_pages WHERE page_id = ?");
+    // Attempt to delete from Facebook/Instagram
+    $id_column = ($log['platform'] === 'instagram') ? 'ig_business_id' : 'page_id';
+    $stmt = $pdo->prepare("SELECT page_access_token FROM fb_pages WHERE $id_column = ?");
     $stmt->execute([$log['page_id']]);
     $token = $stmt->fetchColumn();
 

@@ -27,14 +27,17 @@ class FacebookAPI
         $access_token = trim($access_token);
         $url = $this->base_url . $this->api_version . '/' . ltrim($endpoint, '/');
 
-        // Log Request
-        $logMsg = date('Y-m-d H:i:s') . " - Req: $method $endpoint - Token Prefix: " . substr($access_token, 0, 5) . "\n";
-        file_put_contents(__DIR__ . '/../debug_api.txt', $logMsg, FILE_APPEND);
+        // Build base query string with access token
+        $query = ['access_token' => $access_token];
 
-        // Add App Secret Proof if secret is available and token is present
+        // Add App Secret Proof if secret is available
         if (!empty($this->app_secret) && !empty($access_token)) {
-            $params['appsecret_proof'] = hash_hmac('sha256', $access_token, $this->app_secret);
+            $query['appsecret_proof'] = hash_hmac('sha256', $access_token, $this->app_secret);
         }
+
+        // Log Request (Simplified)
+        $log_entry = date('Y-m-d H:i:s') . " - Method: $method - Endpoint: $endpoint\n";
+        file_put_contents(__DIR__ . '/../debug_api_log.txt', $log_entry, FILE_APPEND);
 
         $ch = curl_init();
         $headers = ['Accept: application/json'];
@@ -42,9 +45,9 @@ class FacebookAPI
         if ($method === 'POST') {
             curl_setopt($ch, CURLOPT_POST, true);
 
-            // Handle multipart/form-data for files
+            // Check for files
             $hasFile = false;
-            foreach ($params as $key => $val) {
+            foreach ($params as $val) {
                 if ($val instanceof CURLFile) {
                     $hasFile = true;
                     break;
@@ -52,18 +55,25 @@ class FacebookAPI
             }
 
             if ($hasFile) {
-                // For files, we MUST NOT use json_encode, and we MUST include the access token in fields
+                // Multi-part for files
                 $params['access_token'] = $access_token;
+                if (isset($query['appsecret_proof'])) {
+                    $params['appsecret_proof'] = $query['appsecret_proof'];
+                }
                 curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
             } else {
-                // Standard JSON POST
-                $url .= (strpos($url, '?') === false ? '?' : '&') . 'access_token=' . urlencode($access_token);
-                $headers[] = 'Content-Type: application/json';
-                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($params));
+                // JSON body (if params exist)
+                $url .= (strpos($url, '?') === false ? '?' : '&') . http_build_query($query);
+                if (!empty($params)) {
+                    $headers[] = 'Content-Type: application/json';
+                    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($params));
+                } else {
+                    // Empty body POST
+                    curl_setopt($ch, CURLOPT_POSTFIELDS, "");
+                }
             }
         } else {
             // GET, DELETE, etc.
-            $url .= (strpos($url, '?') === false ? '?' : '&') . 'access_token=' . urlencode($access_token);
             if ($method !== 'GET') {
                 curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
                 if (!empty($params)) {
@@ -71,43 +81,30 @@ class FacebookAPI
                     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($params));
                 }
             } else {
-                if (!empty($params))
-                    $url .= '&' . http_build_query($params);
+                // Merge params into query for GET
+                $query = array_merge($query, $params);
             }
+            $url .= (strpos($url, '?') === false ? '?' : '&') . http_build_query($query);
         }
 
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-        // Debugging Production (SSL Bypass)
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 300);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 60);
 
         $response = curl_exec($ch);
         $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-        // Debug logging
-        $debug_log = __DIR__ . '/../debug_api_log.txt';
-        $log_entry = date('Y-m-d H:i:s') . " - Endpoint: $endpoint - Code: $http_code - Method: $method\n";
-        if ($method === 'POST')
-            $log_entry .= " - Params: " . json_encode($params) . "\n";
-        $log_entry .= " - Response: " . $response . "\n\n";
-        file_put_contents($debug_log, $log_entry, FILE_APPEND);
-
-        if (curl_errno($ch)) {
-            $logFile = __DIR__ . '/../debug_api.txt';
-            file_put_contents($logFile, date('Y-m-d H:i:s') . " - cURL Error: " . curl_error($ch) . "\n", FILE_APPEND);
-        } else {
-            $logFile = __DIR__ . '/../debug_api.txt';
-            $respSnippet = (strlen($response) > 500) ? substr($response, 0, 500) . "..." : $response;
-            file_put_contents($logFile, date('Y-m-d H:i:s') . " - Resp ($http_code): " . $respSnippet . "\n", FILE_APPEND);
-        }
-        // LOGGING END
+        // Detailed Logging
+        $log_file = __DIR__ . '/../debug_api_log.txt';
+        $log_data = " - URL: " . (strlen($url) > 100 ? substr($url, 0, 100) . "..." : $url) . "\n";
+        if (!empty($params))
+            $log_data .= " - Body: " . json_encode($params) . "\n";
+        $log_data .= " - Code: $http_code - Response: " . $response . "\n\n";
+        file_put_contents($log_file, $log_data, FILE_APPEND);
 
         curl_close($ch);
-
         return json_decode($response, true);
     }
 
@@ -477,10 +474,9 @@ class FacebookAPI
         $endpoint = $comment_id;
 
         if ($platform === 'instagram') {
-            // Instagram requires parameters in query or form-data
+            // Instagram requires param in URL, NOT body
             $val = $status ? 'true' : 'false';
-            $endpoint .= "?hide=$val";
-            return $this->makeRequest($endpoint, ['hide' => $status], $access_token, 'POST');
+            return $this->makeRequest($endpoint . "?hide=$val", [], $access_token, 'POST');
         }
 
         $params = ['is_hidden' => $status];
@@ -493,9 +489,9 @@ class FacebookAPI
     public function replyPrivateToComment($comment_id, $message, $access_token, $platform = 'facebook')
     {
         if ($platform === 'instagram') {
-            // Instagram often requires 'message' in the query string AND/OR body for private_replies
+            // Instagram Private Reply: message MUST be in URL
             $endpoint = $comment_id . '/private_replies?message=' . urlencode($message);
-            return $this->makeRequest($endpoint, ['message' => $message], $access_token, 'POST');
+            return $this->makeRequest($endpoint, [], $access_token, 'POST');
         } else {
             $endpoint = 'me/messages';
             $params = [
@@ -510,9 +506,8 @@ class FacebookAPI
     public function likeComment($comment_id, $access_token, $platform = 'facebook')
     {
         if ($platform === 'instagram') {
-            // Instagram Like endpoint: POST /IG-COMMENT-ID?user_liked=true
-            $endpoint = $comment_id . '?user_liked=true';
-            return $this->makeRequest($endpoint, ['user_liked' => true], $access_token, 'POST');
+            // Instagram Like: must be in URL
+            return $this->makeRequest($comment_id . '?user_liked=true', [], $access_token, 'POST');
         }
         $endpoint = "$comment_id/likes";
         return $this->makeRequest($endpoint, [], $access_token, 'POST');
