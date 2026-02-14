@@ -173,6 +173,9 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 {
     // 1. Fetch Page Settings (Token, Schedule, Cooldown, AI Intelligence)
     // Try primary lookup by whichever ID Meta sent. IMPORTANT: SELECT p.ig_business_id too!
+    debugLog("processAutoReply: PageID=$page_id, TargetID=$target_id, Platform=$platform, Source=$source");
+
+    // Fetch Page
     $stmt = $pdo->prepare("SELECT p.page_id as fb_page_id, p.ig_business_id, p.page_access_token, p.page_name, p.bot_cooldown_seconds, p.bot_schedule_enabled, p.bot_schedule_start, p.bot_schedule_end, p.bot_exclude_keywords, p.bot_ai_sentiment_enabled, p.bot_anger_keywords, p.bot_repetition_threshold, p.bot_handover_reply, a.user_id 
                            FROM fb_pages p 
                            JOIN fb_accounts a ON p.account_id = a.id 
@@ -180,8 +183,17 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
     $stmt->execute([$page_id, $page_id]);
     $page = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if (!$page || !$page['page_access_token'])
+    if (!$page) {
+        debugLog("processAutoReply: Page NOT found in database for ID: $page_id");
         return;
+    }
+
+    if (!$page['page_access_token']) {
+        debugLog("processAutoReply: Missing Access Token for page: {$page['page_name']}");
+        return;
+    }
+
+    debugLog("processAutoReply: Page found: {$page['page_name']} (User ID: {$page['user_id']})");
 
     // Match Rule ID: Dashboard usually saves by the ID provided in the dropdown
     // For Instagram it's Business ID, for Facebook it's Page ID
@@ -245,8 +257,12 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
     // 2.2 Check Handover Protocol (Only if NO keyword match found)
     // We allow Keywords to BREAK/RESET handover state.
     if (!$matched_rule && $state && $state['conversation_state'] === 'handover') {
-        debugLog("Bot silenced due to Handover State for user $customer_id");
+        debugLog("processAutoReply: Bot silenced due to Handover State for user $customer_id");
         return;
+    }
+
+    if ($state && $state['conversation_state'] === 'handover' && $matched_rule) {
+        debugLog("processAutoReply: Overriding Handover state because Keyword rule matched.");
     }
 
     // 2.3 Global Anger Detection (Only if NO keyword match found)

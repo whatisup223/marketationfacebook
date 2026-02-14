@@ -112,6 +112,9 @@ class FacebookAPI
     // New Simplified sendMessage
     public function sendMessage($page_id, $access_token, $recipient_id, $message_text, $image_url = null)
     {
+        $res = null;
+        $endpoint = 'me/messages';
+
         // 1. Text Message (Primary)
         if (!empty($message_text)) {
             // Priority 1: Try as RESPONSE (Safest for < 24h)
@@ -120,9 +123,6 @@ class FacebookAPI
                 'message' => ['text' => $message_text],
                 'messaging_type' => 'RESPONSE'
             ];
-
-            // Explicit Page ID Endpoint
-            $endpoint = $page_id . '/messages';
 
             $res = $this->makeRequest($endpoint, $payload, $access_token, 'POST');
 
@@ -138,11 +138,6 @@ class FacebookAPI
                 unset($payload['messaging_type']);
                 unset($payload['tag']);
                 $res = $this->makeRequest($endpoint, $payload, $access_token, 'POST');
-            }
-
-            // Return if failed or no image to send
-            if (isset($res['error']) || empty($image_url)) {
-                return $res;
             }
         }
 
@@ -161,8 +156,10 @@ class FacebookAPI
                 ],
                 'messaging_type' => 'RESPONSE'
             ];
-            $endpoint = $page_id . '/messages';
-            return $this->makeRequest($endpoint, $img_payload, $access_token, 'POST');
+            $img_res = $this->makeRequest($endpoint, $img_payload, $access_token, 'POST');
+            if (empty($message_text)) {
+                $res = $img_res;
+            }
         }
 
         return $res ?? ['error' => 'No message content'];
@@ -189,7 +186,7 @@ class FacebookAPI
             'messaging_type' => 'RESPONSE'
         ];
 
-        $endpoint = $page_id . '/messages';
+        $endpoint = 'me/messages';
         return $this->makeRequest($endpoint, $payload, $access_token, 'POST');
     }
 
@@ -210,7 +207,7 @@ class FacebookAPI
             'messaging_type' => 'RESPONSE'
         ];
 
-        $endpoint = $page_id . '/messages';
+        $endpoint = 'me/messages';
         return $this->makeRequest($endpoint, $payload, $access_token, 'POST');
     }
 
@@ -932,10 +929,9 @@ class FacebookAPI
 
     public function subscribeApp($id, $access_token, $platform = 'facebook')
     {
-        // For Instagram, we MUST subscribe to the Page ID using a valid Page field (like 'feed').
-        // Instagram-specific fields (comments, mentions) are configured in the App Dashboard,
-        // and will start firing once the app is subscribed to the linked Page.
-        $fields = ($platform === 'instagram') ? 'feed' : 'feed,messages,messaging_postbacks,messaging_optins,message_deliveries,message_reads';
+        // Both platforms need these for Messenger/Direct Bot to work.
+        // Instagram also needs 'messages' to be explicitly subscribed via the linked Page.
+        $fields = 'feed,messages,messaging_postbacks,messaging_optins,message_deliveries,message_reads';
 
         // Passing fields in the URL to avoid "Capability" errors
         return $this->makeRequest("$id/subscribed_apps?subscribed_fields=" . urlencode($fields), [], $access_token, 'POST');

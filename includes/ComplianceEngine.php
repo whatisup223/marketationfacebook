@@ -29,6 +29,7 @@ class ComplianceEngine
     {
         // 1. Check if user has blocked the bot (Opt-out)
         if ($this->isUserOptedOut($recipient_id)) {
+            $this->logCompliance("BLOCKED: User $recipient_id opted out.");
             return ['allowed' => false, 'reason' => 'User opted out (STOP/UNSUBSCRIBE)'];
         }
 
@@ -37,17 +38,18 @@ class ComplianceEngine
         if ($message_type !== 'COMMENT') {
             $windowStatus = $this->check24HourWindow($recipient_id);
             if (!$windowStatus['is_open'] && $message_type === 'RESPONSE') {
-                // If window is closed, we can ONLY send specific tags, not standard responses
-                // Unless it's a specific "tag" type message allowed outside window
+                $this->logCompliance("BLOCKED: User $recipient_id outside 24h window. Reason: " . $windowStatus['closed_ago']);
                 return ['allowed' => false, 'reason' => 'Outside 24-hour window. Window closed ' . $windowStatus['closed_ago']];
             }
         }
 
         // 3. Rate Limiting (Anti-Spam)
         if ($this->isRateLimited($recipient_id)) {
+            $this->logCompliance("BLOCKED: User $recipient_id rate limited.");
             return ['allowed' => false, 'reason' => 'Rate limit exceeded (Too many messages in short time)'];
         }
 
+        $this->logCompliance("ALLOWED: User $recipient_id for $message_type");
         return ['allowed' => true, 'reason' => 'OK'];
     }
 
@@ -155,8 +157,15 @@ class ComplianceEngine
         return array_map('trim', explode(',', $kws));
     }
 
+    private function logCompliance($msg)
+    {
+        $logFile = dirname(__DIR__) . '/debug_compliance.txt';
+        file_put_contents($logFile, date('Y-m-d H:i:s') . " - " . $msg . "\n", FILE_APPEND);
+    }
+
     private function timeAgo($seconds)
     {
+        $seconds = abs($seconds);
         $hours = floor($seconds / 3600);
         $mins = floor(($seconds % 3600) / 60);
         return "$hours hours, $mins mins";
