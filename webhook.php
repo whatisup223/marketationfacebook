@@ -70,13 +70,26 @@ try {
         $pdo->exec("ALTER TABLE fb_moderation_rules ADD COLUMN ig_business_id VARCHAR(100) NULL");
     if (!in_array('platform', $mod_cols))
         $pdo->exec("ALTER TABLE fb_moderation_rules ADD COLUMN platform ENUM('facebook', 'instagram') DEFAULT 'facebook'");
-    // fb_moderation_logs: Avoid ENUM truncation/failure
+    // fb_moderation_logs: Force missing columns to fix SQL 1054 error
     try {
+        $cols = $pdo->query("SHOW COLUMNS FROM fb_moderation_logs")->fetchAll(PDO::FETCH_COLUMN);
+        if (!in_array('content', $cols))
+            $pdo->exec("ALTER TABLE fb_moderation_logs ADD COLUMN content TEXT NULL");
+        if (!in_array('user_name', $cols))
+            $pdo->exec("ALTER TABLE fb_moderation_logs ADD COLUMN user_name VARCHAR(255) NULL");
+        if (!in_array('reason', $cols))
+            $pdo->exec("ALTER TABLE fb_moderation_logs ADD COLUMN reason VARCHAR(255) NULL");
+        if (!in_array('platform', $cols))
+            $pdo->exec("ALTER TABLE fb_moderation_logs ADD COLUMN platform VARCHAR(50) DEFAULT 'facebook'");
+        if (!in_array('post_id', $cols))
+            $pdo->exec("ALTER TABLE fb_moderation_logs ADD COLUMN post_id VARCHAR(100) NULL");
+
         $pdo->exec("ALTER TABLE `fb_moderation_logs` MODIFY COLUMN `action_taken` VARCHAR(50) DEFAULT 'hide'");
     } catch (Exception $e) {
+        debugLog("Logging Migration Error: " . $e->getMessage());
     }
 } catch (Exception $em) {
-    debugLog("Migration Error: " . $em->getMessage());
+    debugLog("Master Migration Error: " . $em->getMessage());
 }
 
 // A. Check if it's Facebook Webhook
