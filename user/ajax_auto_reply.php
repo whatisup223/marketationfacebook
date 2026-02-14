@@ -341,6 +341,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Attempt to get a fresh Page Access Token using User Token (Recommended by FB)
             // This ensures we have the latest permissions and correct scope
+            $fresh_token = false;
             if (!empty($user_token)) {
                 $fresh_token = $fb->getPageAccessToken($user_token, $target_subscribe_id);
                 if ($fresh_token && $fresh_token !== $page_token) {
@@ -349,6 +350,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $update->execute([$fresh_token, $target_subscribe_id]);
                     $page_token = $fresh_token;
                 }
+            }
+
+            // CRITICAL CHECK: Prevent using User Access Token (EAASK...) for Page Subscription
+            // Page Tokens usually start with EAA... but have different structure.
+            // If we failed to get a fresh token AND the old token looks like a User Token (same as user_token), block it.
+            if ((!$fresh_token && $page_token === $user_token) || (strpos($page_token, 'EAASK') === 0 && strlen($page_token) < 200)) {
+                // EAASK is typical for User Tokens. Page tokens are often longer or different.
+                // NOTE: This check is heuristic. The real check is that it failed to work.
+                // But if we are here, it means we likely have a bad token.
+                $error_msg = __('error_page_token_missing') . " (Debug: Token seems to be a User Token, not Page Token)";
+                file_put_contents(__DIR__ . '/../debug_api.txt', date('Y-m-d H:i:s') . " - Error: Blocked User Token for Page Sub $target_subscribe_id\n", FILE_APPEND);
+                echo json_encode(['success' => false, 'error' => $error_msg]);
+                exit;
             }
 
             // Pass correct page_id and fresh token to subscribe
