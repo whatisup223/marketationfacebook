@@ -11,8 +11,10 @@ file_put_contents($logFile, date('Y-m-d H:i:s') . " - Input: " . $input . "\n", 
 
 function debugLog($msg)
 {
-    $logFile = __DIR__ . '/debug_webhook.txt';
-    file_put_contents($logFile, date('Y-m-d H:i:s') . " - " . (is_array($msg) ? json_encode($msg) : $msg) . "\n", FILE_APPEND);
+    $logFile = __DIR__ . '/MASTER_DEBUG.log';
+    $timestamp = date('Y-m-d H:i:s');
+    $content = (is_array($msg) || is_object($msg)) ? json_encode($msg, JSON_UNESCAPED_UNICODE) : $msg;
+    file_put_contents($logFile, "[$timestamp] $content\n", FILE_APPEND);
 }
 
 // 1. Handle Facebook Verification (GET request)
@@ -102,6 +104,7 @@ function handleFacebookEvent($data, $pdo)
     $object_type = $data['object'] ?? '';
     foreach ($data['entry'] as $entry) {
         $entry_id = $entry['id'] ?? '';
+        debugLog("RECEIVING WEBHOOK ENTRY: ID=" . $entry_id . " Object=" . $object_type);
 
         // Load Page/IG metadata to normalize IDs
         $stmt = $pdo->prepare("SELECT page_id, ig_business_id, page_name FROM fb_pages WHERE page_id = ? OR ig_business_id = ? LIMIT 1");
@@ -883,6 +886,7 @@ function processModeration($pdo, $id, $comment_id, $message_text, $sender_name =
         return true;
     }
 
+    debugLog("RESULT: No violation found for Comment $comment_id");
     return false;
 }
 
