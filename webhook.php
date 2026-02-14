@@ -169,7 +169,12 @@ function handleFacebookEvent($data, $pdo)
                             $post_id = $val['post_id'] ?? $val['media_id'] ?? '';
                             $parent_id = $val['parent_id'] ?? null;
                             $message_text = $val['message'] ?? $val['text'] ?? '';
+
+                            // Better name capture
                             $sender_name = $val['from']['name'] ?? $val['from']['username'] ?? '';
+                            if (empty($sender_name)) {
+                                $sender_name = ($object_type === 'instagram') ? "عميل إنستجرام" : "عميل فيسبوك";
+                            }
 
                             // PLATFORM DETECTION & ID NORMALIZATION
                             $platform = 'facebook';
@@ -825,7 +830,7 @@ function processModeration($pdo, $id, $comment_id, $message_text, $sender_name =
         $phone_pattern = '/(\+?[\d٠-٩]{1,4}[\s-]?[\d٠-٩]{7,14})|([\d٠-٩]{8,15})/u';
         if (preg_match($phone_pattern, $message_text)) {
             $violation = true;
-            $reason = "Phone Number Detected";
+            $reason = "تم اكتشاف رقم هاتف";
         }
     }
 
@@ -834,7 +839,7 @@ function processModeration($pdo, $id, $comment_id, $message_text, $sender_name =
         $link_pattern = '/(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9-]+\.(com|net|org|me|info|biz|co|app|xyz|site|online|link))/iu';
         if (preg_match($link_pattern, $message_text)) {
             $violation = true;
-            $reason = "Link Detected";
+            $reason = "تم اكتشاف رابط";
         }
     }
 
@@ -845,7 +850,7 @@ function processModeration($pdo, $id, $comment_id, $message_text, $sender_name =
             $kw = trim($kw);
             if (!empty($kw) && mb_stripos($message_text, $kw) !== false) {
                 $violation = true;
-                $reason = "Banned Keyword: $kw";
+                $reason = "كلمة محظورة: $kw";
                 break;
             }
         }

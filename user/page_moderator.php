@@ -474,12 +474,12 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 </div>
                             </div>
                             <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                                <!-- Open on Facebook -->
+                                <!-- Open on Platform -->
                                 <template x-if="log.comment_id">
-                                    <a :href="'https://facebook.com/' + (log.comment_id.includes('_') ? log.comment_id : log.page_id + '_' + log.comment_id)"
+                                    <a :href="log.platform === 'instagram' ? 'https://www.instagram.com/direct/inbox/' : 'https://facebook.com/' + (log.comment_id.includes('_') ? log.comment_id : log.page_id + '_' + log.comment_id)"
                                         target="_blank"
                                         class="p-2 text-gray-400 hover:text-indigo-400 transition-colors"
-                                        title="<?php echo __('view_on_facebook'); ?>">
+                                        :title="log.platform === 'instagram' ? '<?php echo __('view_on_instagram') ?: 'View on Instagram'; ?>' : '<?php echo __('view_on_facebook'); ?>'">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
