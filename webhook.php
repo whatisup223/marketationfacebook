@@ -201,22 +201,15 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
             $sender_name = $res['name'];
     }
 
-    // 2. Check Conversation State (Handover Protocol)
+    // 2. Fetch Conversation State & Rules
+    $state = null;
     if ($customer_id) {
         $stmt = $pdo->prepare("SELECT * FROM bot_conversation_states WHERE page_id = ? AND user_id = ? AND reply_source = ? AND platform = ? LIMIT 1");
         $stmt->execute([$page_id, $customer_id, $source, $platform]);
         $state = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        // If state is handover, bot is manually silenced for this user
-        if ($state && $state['conversation_state'] === 'handover') {
-            return;
-        }
-
     }
 
-    // 2. Find Rule Match
-    // Fetch ALL active rules for this page, platform and source
-    // Search using both possible IDs (Page ID and IG Business ID) for maximum robustness
+    // Fetch ALL active rules for this page
     $stmt = $pdo->prepare("SELECT * FROM auto_reply_rules WHERE (page_id = ? OR page_id = ?) AND reply_source = ? AND platform = ? AND is_active = 1 ORDER BY trigger_type DESC, id DESC");
     $stmt->execute([$page['fb_page_id'], $page['ig_business_id'], $source, $platform]);
     $all_rules = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -238,7 +231,6 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
                 continue;
 
             // Simplified Matching: Use mb_stripos for partial match (Better for Arabic)
-            // Example: keyword 'سعر' matches 'السعر', 'سعرك', etc.
             if (mb_stripos($incoming_text, $kw) !== false) {
                 $matched_rule = $rule;
                 $reply_msg = $rule['reply_message']; // Public Reply
@@ -250,7 +242,14 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
         }
     }
 
-    // 2.2 Global Anger Detection (Only if NO keyword match found)
+    // 2.2 Check Handover Protocol (Only if NO keyword match found)
+    // We allow Keywords to BREAK/RESET handover state.
+    if (!$matched_rule && $state && $state['conversation_state'] === 'handover') {
+        debugLog("Bot silenced due to Handover State for user $customer_id");
+        return;
+    }
+
+    // 2.3 Global Anger Detection (Only if NO keyword match found)
     // If we have a direct keyword match, we assume specific intent and reply regardless of tone.
     // If we're falling back to default/AI, we check for anger first.
     if (!$reply_msg && $page['bot_ai_sentiment_enabled'] && !empty($page['bot_anger_keywords'])) {
