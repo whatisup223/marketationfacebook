@@ -922,15 +922,15 @@ class FacebookAPI
     public function subscribeApp($id, $access_token, $platform = 'facebook')
     {
         if ($platform === 'instagram') {
-            // Instagram specific fields (Subscribed on the Page ID)
+            // Instagram Business Account fields
             return $this->makeRequest("$id/subscribed_apps", [
-                'subscribed_fields' => ['comments', 'mentions']
+                'subscribed_fields' => 'comments,mentions'
             ], $access_token, 'POST');
         }
 
         // Facebook Page fields
         return $this->makeRequest("$id/subscribed_apps", [
-            'subscribed_fields' => ['feed', 'messages', 'messaging_postbacks', 'messaging_optins', 'message_deliveries', 'message_reads']
+            'subscribed_fields' => 'feed,messages,messaging_postbacks,messaging_optins,message_deliveries,message_reads'
         ], $access_token, 'POST');
     }
 }
