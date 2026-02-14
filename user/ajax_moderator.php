@@ -251,8 +251,9 @@ if ($action === 'subscribe_page' && $_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
 
-        // Subscription MUST be done on the IG Business ID for Instagram, and Page ID for Facebook
-        $target_subscribe_id = ($platform === 'instagram') ? $page_id : $page['page_id'];
+        // IMPORTANT: Instagram webhooks are activated by subscribing the app to the LINKED Facebook Page.
+        // We MUST use the Facebook Page ID here, not the Instagram Business ID.
+        $target_subscribe_id = $page['page_id'];
 
         $fb = new FacebookAPI();
         // Subscribe the app
@@ -290,8 +291,8 @@ if ($action === 'unsubscribe_page' && $_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
 
-        // Unsubscription based on platform
-        $target_unsubscribe_id = ($platform === 'instagram') ? $page_id : $page['page_id'];
+        // Unsubscription must be done on the Facebook Page ID
+        $target_unsubscribe_id = $page['page_id'];
         $fb = new FacebookAPI();
         // Unsubscribe
         $res = $fb->makeRequest("$target_unsubscribe_id/subscribed_apps", [], $page['page_access_token'], 'DELETE');

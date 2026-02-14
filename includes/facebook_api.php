@@ -921,10 +921,12 @@ class FacebookAPI
 
     public function subscribeApp($id, $access_token, $platform = 'facebook')
     {
-        // For compatibility and to avoid "Capability" errors, we pass fields in the URL string
-        $fields = ($platform === 'instagram') ? 'comments,mentions' : 'feed,messages,messaging_postbacks,messaging_optins,message_deliveries,message_reads';
+        // For Instagram, we MUST subscribe to the Page ID using a valid Page field (like 'feed').
+        // Instagram-specific fields (comments, mentions) are configured in the App Dashboard,
+        // and will start firing once the app is subscribed to the linked Page.
+        $fields = ($platform === 'instagram') ? 'feed' : 'feed,messages,messaging_postbacks,messaging_optins,message_deliveries,message_reads';
 
-        // We call the POST method but with parameters in the URL, and an empty body
+        // Passing fields in the URL to avoid "Capability" errors
         return $this->makeRequest("$id/subscribed_apps?subscribed_fields=" . urlencode($fields), [], $access_token, 'POST');
     }
 }
