@@ -314,8 +314,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         try {
-            // Get page access token
-            $stmt = $pdo->prepare("SELECT page_access_token FROM fb_pages WHERE page_id = ?");
+            $platform = $_POST['platform'] ?? 'facebook';
+            $id_column = ($platform === 'instagram') ? 'ig_business_id' : 'page_id';
+
+            // Get page access token AND verify page exists via correct column
+            // We also need the FB page_id because subscription is done on the FB Page object
+            $stmt = $pdo->prepare("SELECT page_access_token, page_id FROM fb_pages WHERE $id_column = ?");
             $stmt->execute([$page_id]);
             $page = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -324,9 +328,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
 
+            // For API subscription, we ALWAYS use the Facebook Page ID
+            $target_subscribe_id = $page['page_id'];
+
             require_once '../includes/facebook_api.php';
             $fb = new FacebookAPI();
-            $res = $fb->subscribeApp($page_id, $page['page_access_token']);
+            // Pass correct page_id to subscribe
+            $res = $fb->subscribeApp($target_subscribe_id, $page['page_access_token']);
 
             if (isset($res['success']) && $res['success']) {
                 echo json_encode(['success' => true]);
@@ -361,6 +369,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'handovers' => 0,
                 'chart_data' => []
             ]);
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+        exit;
+    }
+
+    if ($action === 'unsubscribe_page') {
+        $page = null;
+        try {
+            $page_id = $_POST['page_id'] ?? '';
+            $platform = $_POST['platform'] ?? 'facebook';
+            $id_column = ($platform === 'instagram') ? 'ig_business_id' : 'page_id';
+
+            $stmt = $pdo->prepare("SELECT page_access_token, page_id FROM fb_pages WHERE $id_column = ?");
+            $stmt->execute([$page_id]);
+            $page = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$page)
+                throw new Exception('Page not found');
+
+            $target_id = $page['page_id'];
+            require_once '../includes/facebook_api.php';
+            $fb = new FacebookAPI();
+
+            // Unsubscribe
+            $res = $fb->makeRequest("$target_id/subscribed_apps", [], $page['page_access_token'], 'DELETE');
+
+            if (isset($res['success']) && $res['success']) {
+                echo json_encode(['success' => true, 'message' => 'Auto reply stopped']);
+            } else {
+                throw new Exception($res['error']['message'] ?? 'Unknown error');
+            }
         } catch (Exception $e) {
             echo json_encode(['success' => false, 'error' => $e->getMessage()]);
         }

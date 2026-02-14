@@ -246,9 +246,7 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
                         // Execute All
                         $fb->likeComment($target_id, $access_token);
                         $fb->replyToComment($target_id, $pub_msg, $access_token, $platform);
-                        if ($platform !== 'instagram') {
-                            $fb->replyPrivateToComment($target_id, $priv_msg, $access_token);
-                        }
+                        $fb->replyPrivateToComment($target_id, $priv_msg, $access_token);
                     }
                 }
 
@@ -372,9 +370,7 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 
                         $fb->likeComment($target_id, $access_token);
                         $fb->replyToComment($target_id, $pub_msg, $access_token, $platform);
-                        if ($platform !== 'instagram') {
-                            $fb->replyPrivateToComment($target_id, $priv_msg, $access_token);
-                        }
+                        $fb->replyPrivateToComment($target_id, $priv_msg, $access_token);
                     }
                 }
 
@@ -522,7 +518,7 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
         }
 
         // --- NEW: PRIVATE REPLY TO COMMENT ---
-        if ($private_reply_enabled && !empty($private_reply_text) && $platform !== 'instagram') {
+        if ($private_reply_enabled && !empty($private_reply_text)) {
             // Facebook allows sending a private message to the person who commented
             // We use the specific endpoint for this: /{comment_id}/private_replies
             // Note: This only works if the comment is less than 7 days old (usually instant)
