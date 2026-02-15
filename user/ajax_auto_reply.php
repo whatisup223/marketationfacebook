@@ -1,5 +1,6 @@
 <?php
 require_once '../includes/functions.php';
+ob_start();
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -556,6 +557,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } catch (Exception $e) {
             echo json_encode(['success' => false, 'error' => $e->getMessage()]);
         }
+        exit;
+    }
+
+    if ($action === 'debug_token_info') {
+        echo json_encode(['success' => true]);
         exit;
     }
 
