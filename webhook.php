@@ -130,9 +130,19 @@ function handleFacebookEvent($data, $pdo)
         // Handle Messaging (Messenger / Direct Messages)
         if (isset($entry['messaging'])) {
             foreach ($entry['messaging'] as $messaging) {
-                $sender_id = $messaging['sender']['id'] ?? '';
-                if ($sender_id == $entry_id)
+                // Skip echo messages (messages sent BY the bot)
+                if (isset($messaging['message']['is_echo']) && $messaging['message']['is_echo']) {
+                    debugLog("Skipping echo message from bot");
                     continue;
+                }
+
+                $sender_id = $messaging['sender']['id'] ?? '';
+
+                // Additional safety: Skip if sender is the page itself (shouldn't happen with is_echo check)
+                if ($sender_id == $entry_id) {
+                    debugLog("Skipping message from page itself: $sender_id");
+                    continue;
+                }
 
                 $message_text = '';
                 if (isset($messaging['message']['quick_reply']['payload'])) {
