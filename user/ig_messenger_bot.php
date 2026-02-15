@@ -1621,9 +1621,13 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     </template>
                 </div>
                 <div>
-                    <label
-                        class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-3"><?php echo __('reply_message'); ?></label>
-                    <textarea x-model="modalReply" rows="5" placeholder="<?php echo __('reply_placeholder'); ?>"
+                    <div class="flex justify-between items-center mb-3">
+                        <label class="block text-xs font-black text-gray-500 uppercase tracking-widest"><?php echo __('reply_message'); ?></label>
+                        <span class="text-[10px] font-mono" :class="modalReply.length > 900 ? 'text-red-400' : 'text-gray-500'">
+                            <span x-text="modalReply.length"></span>/1000
+                        </span>
+                    </div>
+                    <textarea x-model="modalReply" rows="5" maxlength="1000" placeholder="<?php echo __('reply_placeholder'); ?>"
                         class="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50 transition-all resize-none text-sm leading-relaxed"></textarea>
                 </div>
 
