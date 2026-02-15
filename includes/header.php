@@ -169,9 +169,9 @@ $h_sidebar_collapsed = isset($_COOKIE['sidebar_collapsed']) && $_COOKIE['sidebar
                 extend: {
                     fontFamily: {
                         <?php if ($lang === 'ar'): ?>
-                                                                                                                                                                                                                                                                                                                    sans: ['IBM Plex Sans Arabic', 'sans-serif'],
+                                                                                                                                                                                                                                                                                                                        sans: ['IBM Plex Sans Arabic', 'sans-serif'],
                         <?php else: ?>
-                                                                                                                                                                                                                                                                                                                    sans: ['Outfit', 'sans-serif'],
+                                                                                                                                                                                                                                                                                                                        sans: ['Outfit', 'sans-serif'],
                         <?php endif; ?>
                     },
                     colors: {
@@ -1128,6 +1128,21 @@ $h_sidebar_collapsed = isset($_COOKIE['sidebar_collapsed']) && $_COOKIE['sidebar
                                     <a href="<?php echo $prefix; ?>user/dashboard.php"
                                         class="-mx-3 block rounded-xl px-4 py-3 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'dashboard.php' ? 'text-indigo-400 bg-indigo-600/10 border border-indigo-500/20' : 'text-gray-300 hover:bg-gray-800 transition-colors'; ?>">
                                         <?php echo __('overview'); ?>
+                                    </a>
+
+                                    <!-- Smart Inbox (NEW) -->
+                                    <a href="<?php echo $prefix; ?>user/smart_inbox.php"
+                                        class="-mx-3 flex items-center justify-between rounded-xl px-4 py-3 text-base font-semibold leading-7 <?php echo basename($_SERVER['PHP_SELF']) == 'smart_inbox.php' ? 'text-white bg-gradient-to-r from-indigo-600 to-purple-600 shadow-lg shadow-indigo-600/20' : 'text-gray-300 hover:bg-gray-800 transition-colors'; ?>">
+                                        <div class="flex items-center gap-3">
+                                            <svg class="w-5 h-5 <?php echo basename($_SERVER['PHP_SELF']) == 'smart_inbox.php' ? 'text-white' : 'text-gray-500'; ?>"
+                                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                                            </svg>
+                                            <span><?php echo __('smart_inbox'); ?></span>
+                                        </div>
+                                        <span
+                                            class="text-[10px] font-bold bg-purple-500 text-white px-1.5 py-0.5 rounded shadow">AI</span>
                                     </a>
 
                                     <!-- Facebook Dropdown -->
