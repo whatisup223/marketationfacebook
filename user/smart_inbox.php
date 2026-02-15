@@ -7,7 +7,17 @@ if (!isLoggedIn()) {
 }
 ?>
 
-<div class="flex h-[calc(100vh-5rem)] w-full overflow-hidden bg-gray-900 font-sans" x-data="smartInbox()">
+<div class="fixed top-20 bottom-0 left-0 right-0 flex overflow-hidden bg-gray-900 font-sans" x-data="smartInbox()">
+    <style>
+        /* Force body not to scroll when on this page */
+        html,
+        body {
+            overflow: hidden !important;
+            height: 100% !important;
+            position: fixed;
+            width: 100%;
+        }
+    </style>
     <!-- Sidebar -->
     <?php include '../includes/user_sidebar.php'; ?>
 
@@ -163,7 +173,7 @@ if (!isLoggedIn()) {
     </div>
 
     <!-- Center Chat Area -->
-    <div class="flex-1 min-w-0 flex flex-col bg-gray-900 relative h-full overflow-hidden">
+    <div class="flex-1 min-w-0 flex flex-col bg-gray-900 relative h-full">
         <template x-if="!selectedConv">
             <div class="flex-1 flex flex-col items-center justify-center text-gray-500 p-6 text-center">
                 <!-- Mobile Toggle for empty state -->
@@ -201,7 +211,7 @@ if (!isLoggedIn()) {
             <div class="flex flex-col h-full overflow-hidden">
                 <!-- Chat Header -->
                 <div
-                    class="h-16 shrink-0 sticky top-0 z-20 border-b border-white/5 bg-gray-900/95 backdrop-blur-xl flex items-center justify-between px-3 md:px-6 gap-2">
+                    class="h-16 shrink-0 border-b border-white/5 bg-gray-900/95 backdrop-blur-xl flex items-center justify-between px-3 md:px-6 z-20 gap-2">
                     <div class="flex items-center gap-2 md:gap-3 min-w-0">
                         <!-- Sidebar Toggle -->
                         <button @click="sidebarOpen = !sidebarOpen"
@@ -253,7 +263,8 @@ if (!isLoggedIn()) {
                 </div>
 
                 <!-- Messages Area -->
-                <div class="flex-1 overflow-y-auto p-3 md:p-6 space-y-4 custom-scrollbar" id="messages-container">
+                <div class="flex-1 min-h-0 overflow-y-auto p-3 md:p-6 space-y-4 custom-scrollbar"
+                    id="messages-container">
                     <template x-for="msg in messages" :key="msg.id">
                         <div class="flex w-full" :class="msg.sender === 'page' ? 'justify-end' : 'justify-start'">
                             <div class="max-w-[85%] md:max-w-[70%] rounded-2xl p-3 md:p-4 text-sm relative group shadow-sm"
