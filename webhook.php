@@ -11,13 +11,10 @@ $input = file_get_contents('php://input');
 
 function debugLog($msg)
 {
-    // Production: Disabled for performance. Use MASTER_DEBUG.log only when needed for debugging.
-    /*
     $logFile = __DIR__ . '/MASTER_DEBUG.log';
     $timestamp = date('Y-m-d H:i:s');
     $content = (is_array($msg) || is_object($msg)) ? json_encode($msg, JSON_UNESCAPED_UNICODE) : $msg;
     file_put_contents($logFile, "[$timestamp] $content\n", FILE_APPEND);
-    */
 }
 
 // 1. Handle Facebook Verification (GET request)
@@ -741,10 +738,18 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
             $fb->sendImageMessage($api_actor_id, $access_token, $target_id, $image_url);
         }
 
+        // DEBUG: Log button data
+        debugLog("BUTTONS DEBUG: Raw from DB: " . ($matched_rule['reply_buttons'] ?? 'NULL'));
+        debugLog("BUTTONS DEBUG: Decoded: " . json_encode($buttons));
+        debugLog("BUTTONS DEBUG: Is Array: " . (is_array($buttons) ? 'YES' : 'NO'));
+        debugLog("BUTTONS DEBUG: Count: " . (is_array($buttons) ? count($buttons) : 0));
+
         // Then send text with buttons
         if ($buttons && is_array($buttons) && count($buttons) > 0) {
+            debugLog("BUTTONS DEBUG: Sending WITH buttons");
             $res = $fb->sendButtonMessage($api_actor_id, $access_token, $target_id, $reply_msg, $buttons);
         } else {
+            debugLog("BUTTONS DEBUG: Sending WITHOUT buttons");
             $res = $fb->sendMessage($api_actor_id, $access_token, $target_id, $reply_msg);
         }
 
