@@ -305,6 +305,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Update
                 $stmt = $pdo->prepare("UPDATE auto_reply_rules SET trigger_type = ?, keywords = ?, reply_message = ?, `reply_buttons` = ?, reply_image_url = ?, hide_comment = ?, is_ai_safe = ?, bypass_schedule = ?, bypass_cooldown = ?, private_reply_enabled = ?, private_reply_text = ?, auto_like_comment = ?, reply_source = ?, platform = ? WHERE id = ? AND page_id = ?");
                 $stmt->execute([$type, $keywords, $reply, $reply_buttons, $reply_image_url, $hide_comment, $is_ai_safe, $bypass_schedule, $bypass_cooldown, $private_reply_enabled, $private_reply_text, $auto_like_comment, $source, $platform, $rule_id, $page_id]);
+
+                // DEBUG: Verify what was saved
+                $verify = $pdo->prepare("SELECT reply_buttons FROM auto_reply_rules WHERE id = ?");
+                $verify->execute([$rule_id]);
+                $saved = $verify->fetchColumn();
+                file_put_contents(__DIR__ . '/../debug_save_rule.txt', "After UPDATE - Saved value: " . var_export($saved, true) . "\n\n", FILE_APPEND);
             } else {
                 // Check if existing default rule
                 if ($type === 'default') {
