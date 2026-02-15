@@ -529,7 +529,8 @@ class FacebookAPI
     public function likeComment($comment_id, $access_token, $platform = 'facebook', $is_hidden = false)
     {
         if ($platform === 'instagram') {
-            return ['success' => true, 'not_supported' => true];
+            // Instagram Liking: POST /{ig-comment-id}?user_likes=true
+            return $this->makeRequest($comment_id, ['user_likes' => true], $access_token, 'POST');
         }
         $endpoint = "$comment_id/likes";
         return $this->makeRequest($endpoint, [], $access_token, 'POST');
@@ -944,8 +945,8 @@ class FacebookAPI
     public function subscribeApp($id, $access_token, $platform = 'facebook')
     {
         // Both platforms need these for Messenger/Direct Bot to work.
-        // Instagram also needs 'messages' to be explicitly subscribed via the linked Page.
-        $fields = 'feed,messages,messaging_postbacks,messaging_optins,message_deliveries,message_reads';
+        // Instagram also needs 'comments' and 'messages' to be explicitly subscribed via the linked Page.
+        $fields = 'feed,messages,comments,messaging_postbacks,messaging_optins,message_deliveries,message_reads';
 
         // Passing fields in the URL to avoid "Capability" errors
         return $this->makeRequest("$id/subscribed_apps?subscribed_fields=" . urlencode($fields), [], $access_token, 'POST');

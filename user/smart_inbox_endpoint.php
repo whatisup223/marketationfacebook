@@ -103,7 +103,7 @@ try {
                 $sql .= " AND p.page_id = ?";
                 $params[] = $specificPageId;
             } else {
-                $sql .= " LIMIT 3";
+                $sql .= " LIMIT 100";
             }
 
             $stmt = $pdo->prepare($sql);
@@ -178,7 +178,10 @@ try {
                         if (isset($fbConv['participants']['data'])) {
                             foreach ($fbConv['participants']['data'] as $part) {
                                 if ($part['id'] != $task['id']) {
-                                    $clientName = $part['name'] ?? 'Instagram User';
+                                    $clientName = $part['name'] ?? $part['username'] ?? 'Instagram User';
+                                    if ($clientName === 'Instagram User' && isset($part['id'])) {
+                                        $clientName = "User " . substr($part['id'], -4);
+                                    }
                                     $clientPsid = $part['id'];
                                     break;
                                 }
@@ -262,9 +265,9 @@ try {
                 throw new Exception("Conversation or Page ID not found. Please sync again.");
             }
 
-            // 2. Get Page Access Token
-            $stmt = $pdo->prepare("SELECT p.page_access_token FROM fb_pages p JOIN fb_accounts a ON p.account_id = a.id WHERE p.page_id = ? AND a.user_id = ?");
-            $stmt->execute([$conv['page_id'], $userId]);
+            // 2. Get Page Access Token (Search by FB Page ID or IG Business ID)
+            $stmt = $pdo->prepare("SELECT p.page_access_token FROM fb_pages p JOIN fb_accounts a ON p.account_id = a.id WHERE (p.page_id = ? OR p.ig_business_id = ?) AND a.user_id = ?");
+            $stmt->execute([$conv['page_id'], $conv['page_id'], $userId]);
             $token = $stmt->fetchColumn();
 
             if (!$token) {
@@ -296,9 +299,11 @@ try {
 
             $metaId = $resData['message_id'] ?? null;
 
+            $nowUtc = date('Y-m-d H:i:s');
+
             // 4. Save to DB (Success) - Using standard helper logic
-            $stmt = $pdo->prepare("INSERT IGNORE INTO unified_messages (conversation_id, sender, message_text, meta_message_id, created_at) VALUES (?, 'page', ?, ?, NOW())");
-            $stmt->execute([$convId, $text, $metaId]);
+            $stmt = $pdo->prepare("INSERT IGNORE INTO unified_messages (conversation_id, sender, message_text, meta_message_id, created_at) VALUES (?, 'page', ?, ?, ?)");
+            $stmt->execute([$convId, $text, $metaId, $nowUtc]);
             $msgId = $pdo->lastInsertId() ?: null;
 
             if (!$msgId && $metaId) {
@@ -308,8 +313,8 @@ try {
             }
 
             // 5. Update Conversation
-            $stmt = $pdo->prepare("UPDATE unified_conversations SET last_message_text = ?, last_message_time = NOW() WHERE id = ?");
-            $stmt->execute(["You: " . mb_substr($text, 0, 50), $convId]);
+            $stmt = $pdo->prepare("UPDATE unified_conversations SET last_message_text = ?, last_message_time = ? WHERE id = ?");
+            $stmt->execute(["You: " . mb_substr($text, 0, 50), $nowUtc, $convId]);
 
             // 6. Trigger Pusher for other tabs
             $pusherData = [

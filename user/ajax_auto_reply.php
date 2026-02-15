@@ -291,6 +291,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $source = $_POST['source'] ?? 'comment';
         $platform = $_POST['platform'] ?? 'facebook';
 
+        // AUTO-DETECT Platform if it's default 'facebook'
+        if ($platform === 'facebook' && $page_id) {
+            $check = $pdo->prepare("SELECT id FROM fb_pages WHERE ig_business_id = ?");
+            $check->execute([$page_id]);
+            if ($check->fetch()) {
+                $platform = 'instagram';
+            }
+        }
+
         // Allow empty reply ONLY for default type (to disable it)
         if (!$page_id || ($type !== 'default' && !$reply)) {
             echo json_encode(['success' => false, 'error' => 'Missing required fields']);

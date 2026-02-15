@@ -854,8 +854,8 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         </div>
 
                         <!-- Option 2: Auto Like -->
-                        <div class="p-4 bg-white/5 rounded-2xl border border-white/5 flex flex-col justify-between hover:bg-white/10 transition-all cursor-not-allowed opacity-80"
-                            title="<?php echo __('auto_like_ig_desc'); ?>">
+                        <div class="p-4 bg-white/5 rounded-2xl border border-white/5 flex flex-col justify-between hover:bg-white/10 transition-all cursor-pointer"
+                            @click="defaultAutoLike = !defaultAutoLike">
                             <div class="flex justify-between items-start mb-2">
                                 <div class="p-2 bg-pink-500/10 rounded-lg text-pink-400">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -864,22 +864,18 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     </svg>
                                 </div>
                                 <div class="flex flex-col items-end gap-2">
-                                    <span
-                                        class="px-2 py-0.5 bg-pink-500/20 text-pink-400 text-[8px] font-bold rounded-full uppercase border border-pink-500/30">
-                                        <?php echo __('auto_like_ig_status'); ?>
-                                    </span>
-                                    <div
-                                        class="relative w-10 h-6 transition-all duration-200 ease-in-out rounded-full bg-gray-700/50 grayscale opacity-50">
-                                        <div
-                                            class="absolute w-4 h-4 transition-all duration-200 ease-in-out bg-white rounded-full top-1 left-1">
+                                    <div class="relative w-10 h-6 transition-all duration-200 ease-in-out rounded-full"
+                                        :class="defaultAutoLike ? 'bg-pink-600' : 'bg-gray-700'">
+                                        <div class="absolute w-4 h-4 transition-all duration-200 ease-in-out bg-white rounded-full top-1"
+                                            :class="defaultAutoLike ? 'left-5' : 'left-1'">
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             <div>
                                 <h4 class="font-bold text-white text-sm"><?php echo __('auto_like'); ?></h4>
-                                <p class="text-[9px] text-pink-400/70 mt-1 font-medium italic">
-                                    <?php echo __('auto_like_ig_desc'); ?>
+                                <p class="text-[9px] text-gray-500 mt-1 font-medium">
+                                    <?php echo __('auto_like_ig_desc') ?? 'Automatically like the user\'s comment.'; ?>
                                 </p>
                             </div>
                         </div>
@@ -1546,8 +1542,8 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         </div>
 
                         <!-- Auto Like -->
-                        <div class="flex flex-col gap-3 p-4 bg-white/5 rounded-2xl border border-white/5 opacity-80 cursor-not-allowed"
-                            title="<?php echo __('auto_like_ig_desc'); ?>">
+                        <div class="flex flex-col gap-3 p-4 bg-white/5 rounded-2xl border border-white/5 cursor-pointer"
+                            @click="modalAutoLikeComment = !modalAutoLikeComment">
                             <div class="flex items-center justify-between">
                                 <div class="p-2.5 bg-pink-500/10 rounded-xl text-pink-400">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1556,18 +1552,13 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                         </path>
                                     </svg>
                                 </div>
-                                <div class="flex flex-col items-end gap-1">
-                                    <span
-                                        class="px-1.5 py-0.5 bg-pink-500/20 text-pink-400 text-[7px] font-bold rounded-full uppercase border border-pink-500/30">
-                                        <?php echo __('auto_like_ig_status'); ?>
-                                    </span>
-                                    <div
-                                        class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in grayscale opacity-50">
-                                        <input type="checkbox" disabled
-                                            class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-not-allowed right-5 transition-all duration-300" />
-                                        <label
-                                            class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-700 cursor-not-allowed"></label>
-                                    </div>
+                                <div
+                                    class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                                    <input type="checkbox" x-model="modalAutoLikeComment"
+                                        class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
+                                    <label
+                                        class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-700 cursor-pointer"
+                                        :class="modalAutoLikeComment ? 'bg-pink-600' : 'bg-gray-700'"></label>
                                 </div>
                             </div>
                             <span

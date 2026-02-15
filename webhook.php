@@ -12,7 +12,8 @@ $input = file_get_contents('php://input');
 
 function debugLog($msg)
 {
-    // Debug logging disabled for production cleanup.
+    $logFile = __DIR__ . '/debug_webhook_master.txt';
+    file_put_contents($logFile, date('Y-m-d H:i:s') . " - " . $msg . "\n", FILE_APPEND);
 }
 
 // 1. Handle Facebook Verification (GET request)
@@ -85,6 +86,14 @@ try {
         $pdo->exec("ALTER TABLE `fb_moderation_logs` MODIFY COLUMN `action_taken` VARCHAR(50) DEFAULT 'hide'");
     } catch (Exception $e) {
         debugLog("Logging Migration Error: " . $e->getMessage());
+    }
+
+    // Ensure is_active exists in auto_reply_rules
+    try {
+        $cols = $pdo->query("SHOW COLUMNS FROM auto_reply_rules")->fetchAll(PDO::FETCH_COLUMN);
+        if (!in_array('is_active', $cols))
+            $pdo->exec("ALTER TABLE auto_reply_rules ADD COLUMN is_active TINYINT(1) DEFAULT 1");
+    } catch (Exception $e) {
     }
 } catch (Exception $em) {
     debugLog("Master Migration Error: " . $em->getMessage());
@@ -359,18 +368,18 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
         $sender_name = ($platform === 'instagram') ? 'User' : 'Customer';
     }
 
-    // 2. Fetch Conversation State & Rules
+    // 2. Fetch Conversation State (Handover / Anger detection)
     $state = null;
     if ($customer_id) {
-        $stmt = $pdo->prepare("SELECT * FROM bot_conversation_states WHERE page_id = ? AND user_id = ? AND reply_source = ? AND platform = ? LIMIT 1");
-        $stmt->execute([$page_id, $customer_id, $source, $platform]);
+        $stmt = $pdo->prepare("SELECT * FROM bot_conversation_states WHERE page_id = ? AND user_id = ? AND reply_source = ?");
+        $stmt->execute([$page_id, $customer_id, $source]);
         $state = $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     // STRICT HANDOVER CHECK: If user is in handover, DO NOT PROCESS ANYTHING.
     // The previous logic allowed keywords to break handover, which caused the bot to reactivate unintentionally.
     if ($state && $state['conversation_state'] === 'handover') {
-        debugLog("processAutoReply: Bot silenced due to Handover State for user $customer_id");
+        debugLog("SILENCE: Bot silenced due to Handover State for user $customer_id on $platform ($source)");
         return;
     }
 
@@ -638,6 +647,10 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
         debugLog("Applying Keyword Bypass for Schedule/Cooldown (Global Setting)");
     }
 
+    // Default Rules handle bypasses themselves via $bypass_schedule/cooldown, 
+    // but often users forgot to enable them. 
+    // We keep them strict unless the user explicitly toggled the bypass in UI.
+
     // 5.1 Schedule Check
     if (!$bypass_schedule && $page['bot_schedule_enabled']) {
         date_default_timezone_set('UTC'); // Set timezone to UTC as per instruction
@@ -779,7 +792,7 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 
                 // Fetch rule with keyword 'مهتم' for this page & platform
                 $stmt = $pdo->prepare("SELECT reply_buttons FROM auto_reply_rules WHERE page_id = ? AND platform = ? AND reply_source = 'message' AND trigger_type = 'keyword' AND keywords LIKE '%مهتم%' AND is_active = 1 LIMIT 1");
-                $stmt->execute([$db_page_id, $platform]);
+                $stmt->execute([$page['fb_page_id'], $platform]);
                 $main_menu_rule = $stmt->fetch(PDO::FETCH_ASSOC);
 
                 if ($main_menu_rule && !empty($main_menu_rule['reply_buttons'])) {
@@ -1085,19 +1098,30 @@ function updateUnifiedInbox($pdo, $platform, $pageId, $senderId, $senderName, $m
     $stmt->execute([$userId, $platform, $senderId]);
     $existing = $stmt->fetch(PDO::FETCH_ASSOC);
 
+    $nowUtc = date('Y-m-d H:i:s');
+    $finalSenderName = $senderName;
+
     if ($existing) {
         $convId = $existing['id'];
-        $stmt = $pdo->prepare("UPDATE unified_conversations SET last_message_text = ?, last_message_time = NOW(), client_name = ?, page_id = ? WHERE id = ?");
-        $stmt->execute([$messageText, $senderName, $pageId, $convId]);
+        // Don't override a good name with a generic one
+        if (empty($finalSenderName) || in_array($finalSenderName, ['Instagram User', 'Facebook User'])) {
+            $finalSenderName = $existing['client_name'] ?? 'User ' . substr($senderId, -4);
+        }
+
+        $stmt = $pdo->prepare("UPDATE unified_conversations SET last_message_text = ?, last_message_time = ?, client_name = ?, page_id = ? WHERE id = ?");
+        $stmt->execute([$messageText, $nowUtc, $finalSenderName, $pageId, $convId]);
     } else {
-        $stmt = $pdo->prepare("INSERT INTO unified_conversations (user_id, platform, client_psid, client_name, last_message_text, last_message_time, page_id) VALUES (?, ?, ?, ?, ?, NOW(), ?)");
-        $stmt->execute([$userId, $platform, $senderId, $senderName, $messageText, $pageId]);
+        if (empty($finalSenderName) || in_array($finalSenderName, ['Instagram User', 'Facebook User'])) {
+            $finalSenderName = 'User ' . substr($senderId, -4);
+        }
+        $stmt = $pdo->prepare("INSERT INTO unified_conversations (user_id, platform, client_psid, client_name, last_message_text, last_message_time, page_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$userId, $platform, $senderId, $finalSenderName, $messageText, $nowUtc, $pageId]);
         $convId = $pdo->lastInsertId();
     }
 
     // 4. Save Message
-    $stmt = $pdo->prepare("INSERT IGNORE INTO unified_messages (conversation_id, sender, message_text, meta_message_id, created_at) VALUES (?, ?, ?, ?, NOW())");
-    $stmt->execute([$convId, $senderType, $messageText, $metaMessageId]);
+    $stmt = $pdo->prepare("INSERT IGNORE INTO unified_messages (conversation_id, sender, message_text, meta_message_id, created_at) VALUES (?, ?, ?, ?, ?)");
+    $stmt->execute([$convId, $senderType, $messageText, $metaMessageId, $nowUtc]);
     $msgId = $pdo->lastInsertId();
 
     if (!$msgId && $metaMessageId) {
