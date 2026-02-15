@@ -19,11 +19,11 @@ if (!isLoggedIn()) {
         class="fixed inset-0 bg-gray-900/80 z-40 md:hidden" style="display: none;"></div>
 
     <!-- Mobile Advisor Backdrop -->
-    <div x-show="showRightSidebar && window.innerWidth < 1280" @click="showRightSidebar = false"
+    <div x-show="showRightSidebar" @click="showRightSidebar = false"
         x-transition:enter="transition-opacity ease-linear duration-300" x-transition:enter-start="opacity-0"
         x-transition:enter-end="opacity-100" x-transition:leave="transition-opacity ease-linear duration-300"
         x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-        class="fixed inset-0 bg-gray-900/80 z-40 md:hidden" style="display: none;"></div>
+        class="fixed inset-0 bg-gray-900/80 z-40" style="display: none;"></div>
 
     <!-- Left Sidebar (Conversations) -->
     <div x-show="sidebarOpen" x-transition:enter="transition ease-out duration-300"
@@ -309,11 +309,11 @@ if (!isLoggedIn()) {
     </div>
 
     <!-- Right Sidebar (Advisor Panel) -->
-    <div x-show="selectedConv && showRightSidebar" x-transition:enter="transition ease-out duration-300"
-        x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0"
-        x-transition:leave="transition ease-in duration-300" x-transition:leave-start="translate-x-0"
-        x-transition:leave-end="translate-x-full"
-        class="fixed inset-y-0 right-0 top-20 lg:top-0 z-50 w-80 lg:static border-l border-white/5 bg-gray-900/95 backdrop-blur-xl flex flex-col shadow-2xl lg:shadow-none overflow-hidden h-[calc(100vh-5rem)] lg:h-full">
+    <div x-show="selectedConv && showRightSidebar" x-transition:enter="transition ease-out duration-500"
+        x-transition:enter-start="ltr:translate-x-full rtl:-translate-x-full" x-transition:enter-end="translate-x-0"
+        x-transition:leave="transition ease-in duration-500" x-transition:leave-start="translate-x-0"
+        x-transition:leave-end="ltr:translate-x-full rtl:-translate-x-full"
+        class="fixed inset-y-0 right-0 rtl:right-auto rtl:left-0 top-20 lg:top-0 z-50 w-80 lg:w-96 border-x border-white/5 bg-gray-900/95 backdrop-blur-2xl flex flex-col shadow-[-20px_0_50px_rgba(0,0,0,0.5)] rtl:shadow-[20px_0_50px_rgba(0,0,0,0.5)] overflow-hidden h-[calc(100vh-5rem)] lg:h-full">
 
         <!-- Fixed Advisor Header -->
         <div
@@ -507,9 +507,6 @@ if (!isLoggedIn()) {
 
                     if (window.innerWidth < 1280) {
                         this.showRightSidebar = false;
-                    } else {
-                        // Re-open advisor when moving to extra large deskop
-                        this.showRightSidebar = true;
                     }
                 });
 
