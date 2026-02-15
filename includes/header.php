@@ -169,9 +169,9 @@ $h_sidebar_collapsed = isset($_COOKIE['sidebar_collapsed']) && $_COOKIE['sidebar
                 extend: {
                     fontFamily: {
                         <?php if ($lang === 'ar'): ?>
-                                                                                                                                                                                                                                                                                                                sans: ['IBM Plex Sans Arabic', 'sans-serif'],
+                                                                                                                                                                                                                                                                                                                    sans: ['IBM Plex Sans Arabic', 'sans-serif'],
                         <?php else: ?>
-                                                                                                                                                                                                                                                                                                                sans: ['Outfit', 'sans-serif'],
+                                                                                                                                                                                                                                                                                                                    sans: ['Outfit', 'sans-serif'],
                         <?php endif; ?>
                     },
                     colors: {
@@ -769,20 +769,22 @@ $h_sidebar_collapsed = isset($_COOKIE['sidebar_collapsed']) && $_COOKIE['sidebar
                     <?php endif; ?>
 
                     <!-- Profile Icon -->
-                    <a href="<?php echo isAdmin() ? $prefix . 'admin/profile.php' : $prefix . 'user/profile.php'; ?>"
-                        class="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-indigo-600 hover:border-indigo-500 transition-all duration-300 overflow-hidden shrink-0 group"
-                        title="<?php echo __('profile'); ?>">
-                        <?php if (isset($current_user) && $current_user['avatar']): ?>
-                            <img src="<?php echo $prefix . $current_user['avatar']; ?>"
-                                class="w-full h-full object-cover transition-transform group-hover:scale-110">
-                        <?php else: ?>
-                            <svg class="w-5 h-5 transition-transform group-hover:scale-110" fill="none"
-                                stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                            </svg>
-                        <?php endif; ?>
-                    </a>
+                    <?php if (isLoggedIn()): ?>
+                        <a href="<?php echo isAdmin() ? $prefix . 'admin/profile.php' : $prefix . 'user/profile.php'; ?>"
+                            class="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-indigo-600 hover:border-indigo-500 transition-all duration-300 overflow-hidden shrink-0 group"
+                            title="<?php echo __('profile'); ?>">
+                            <?php if (isset($current_user) && $current_user['avatar']): ?>
+                                <img src="<?php echo $prefix . $current_user['avatar']; ?>"
+                                    class="w-full h-full object-cover transition-transform group-hover:scale-110">
+                            <?php else: ?>
+                                <svg class="w-5 h-5 transition-transform group-hover:scale-110" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                </svg>
+                            <?php endif; ?>
+                        </a>
+                    <?php endif; ?>
 
                     <!-- Desktop Only Text Links -->
                     <div class="hidden lg:flex items-center space-x-4 rtl:space-x-reverse">
