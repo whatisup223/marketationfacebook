@@ -7,7 +7,7 @@ if (!isLoggedIn()) {
 }
 ?>
 
-<div class="flex h-[calc(100vh-5rem)] overflow-hidden bg-gray-900 font-sans" x-data="smartInbox()">
+<div class="flex h-[calc(100vh-5rem)] w-full overflow-hidden bg-gray-900 font-sans" x-data="smartInbox()">
     <!-- Sidebar -->
     <?php include '../includes/user_sidebar.php'; ?>
 
@@ -16,7 +16,11 @@ if (!isLoggedIn()) {
         x-transition:enter="transition-opacity ease-linear duration-300" x-transition:enter-start="opacity-0"
         x-transition:enter-end="opacity-100" x-transition:leave="transition-opacity ease-linear duration-300"
         x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-        class="fixed inset-0 bg-gray-900/80 z-20 md:hidden"></div>
+        class="fixed inset-0 bg-gray-900/80 z-40 md:hidden"></div>
+
+    <!-- Mobile Advisor Backdrop -->
+    <div x-show="showRightSidebar && window.innerWidth < 1280" @click="showRightSidebar = false"
+        class="fixed inset-0 bg-gray-900/80 z-40 md:hidden"></div>
 
     <!-- Left Sidebar (Conversations) -->
     <div x-show="sidebarOpen" x-transition:enter="transition ease-out duration-300"
@@ -156,14 +160,15 @@ if (!isLoggedIn()) {
     </div>
 
     <!-- Center Chat Area -->
-    <div class="flex-1 flex flex-col bg-gray-900 relative">
+    <div class="flex-1 min-w-0 flex flex-col bg-gray-900 relative h-full overflow-hidden">
         <template x-if="!selectedConv">
             <div class="flex-1 flex flex-col items-center justify-center text-gray-500 p-6 text-center">
                 <!-- Mobile Toggle for empty state -->
-                <button @click="sidebarOpen = true" 
-                        class="lg:hidden absolute top-4 left-4 p-3 bg-gray-800 text-indigo-400 rounded-xl border border-white/10 shadow-lg hover:text-white transition-all">
+                <button @click="sidebarOpen = true"
+                    class="lg:hidden absolute top-4 left-4 p-3 bg-gray-800 text-indigo-400 rounded-xl border border-white/10 shadow-lg hover:text-white transition-all">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M4 12h16M4 18h16"></path>
                     </svg>
                 </button>
 
@@ -178,10 +183,11 @@ if (!isLoggedIn()) {
                 <p class="text-sm text-gray-500 max-w-xs mx-auto">
                     <?php echo $lang === 'ar' ? 'اختر أي محادثة من القائمة الجانبية لبدء الدردشة مع عملائك وتحليلها بالذكاء الاصطناعي.' : 'Choose a conversation from the sidebar to start chatting and analyzing with AI.'; ?>
                 </p>
-                <button @click="sidebarOpen = true" 
-                        class="mt-6 lg:hidden px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-600/20 hover:bg-indigo-500 transition-all flex items-center gap-2">
+                <button @click="sidebarOpen = true"
+                    class="mt-6 lg:hidden px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-600/20 hover:bg-indigo-500 transition-all flex items-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M4 12h16M4 18h16"></path>
                     </svg>
                     <?php echo $lang === 'ar' ? 'فتح المحادثات' : 'Open Conversations'; ?>
                 </button>
@@ -244,12 +250,13 @@ if (!isLoggedIn()) {
                 </div>
 
                 <!-- Messages Area -->
-                <div class="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar" id="messages-container">
+                <div class="flex-1 overflow-y-auto p-3 md:p-6 space-y-4 custom-scrollbar" id="messages-container">
                     <template x-for="msg in messages" :key="msg.id">
                         <div class="flex w-full" :class="msg.sender === 'page' ? 'justify-end' : 'justify-start'">
-                            <div class="max-w-[70%] rounded-2xl p-4 text-sm relative group"
-                                :class="msg.sender === 'page' ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-gray-800 text-gray-200 rounded-tl-none border border-white/5'">
-                                <p x-text="msg.message_text" class="whitespace-pre-wrap leading-relaxed"></p>
+                            <div class="max-w-[85%] md:max-w-[70%] rounded-2xl p-3 md:p-4 text-sm relative group shadow-sm"
+                                :class="msg.sender === 'page' ? 'bg-indigo-600 text-white rounded-se-none' : 'bg-gray-800 text-gray-200 rounded-ss-none border border-white/5'">
+                                <p x-text="msg.message_text" class="whitespace-pre-wrap leading-relaxed break-words">
+                                </p>
                                 <span class="text-[10px] opacity-50 mt-1 block"
                                     :class="msg.sender === 'page' ? 'text-indigo-200 text-right' : 'text-gray-500'"
                                     x-text="formatTime(msg.created_at)"></span>
@@ -259,9 +266,9 @@ if (!isLoggedIn()) {
                 </div>
 
                 <!-- Fixed Bottom Section (Suggestions + Input) -->
-                <div class="shrink-0 flex flex-col bg-gray-900">
+                <div class="shrink-0 flex flex-col bg-gray-900 w-full overflow-hidden">
                     <!-- Smart Suggestions Bar -->
-                    <div class="px-6 py-2 border-t border-white/5 w-full overflow-hidden"
+                    <div class="px-3 md:px-6 py-2 border-t border-white/5 w-full overflow-hidden"
                         x-show="suggestions.length > 0">
                         <div class="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar max-w-full">
                             <div class="text-[10px] font-bold text-indigo-400 uppercase tracking-wider shrink-0 mr-2">
@@ -277,7 +284,7 @@ if (!isLoggedIn()) {
                     </div>
 
                     <!-- Input Area -->
-                    <div class="p-4 border-t border-white/5">
+                    <div class="p-2 md:p-4 border-t border-white/5">
                         <div
                             class="glass-panel rounded-2xl p-2 flex items-end gap-2 bg-gray-800/50 border border-white/10 focus-within:ring-2 ring-indigo-500/50 transition-all">
                             <textarea x-model="newMessage" placeholder="<?php echo __('type_message'); ?>" rows="1"
