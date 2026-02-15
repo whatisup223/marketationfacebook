@@ -158,13 +158,33 @@ if (!isLoggedIn()) {
     <!-- Center Chat Area -->
     <div class="flex-1 flex flex-col bg-gray-900 relative">
         <template x-if="!selectedConv">
-            <div class="flex-1 flex flex-col items-center justify-center text-gray-500">
-                <svg class="w-16 h-16 mb-4 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z">
-                    </path>
-                </svg>
-                <p><?php echo __('select_conversation'); ?></p>
+            <div class="flex-1 flex flex-col items-center justify-center text-gray-500 p-6 text-center">
+                <!-- Mobile Toggle for empty state -->
+                <button @click="sidebarOpen = true" 
+                        class="lg:hidden absolute top-4 left-4 p-3 bg-gray-800 text-indigo-400 rounded-xl border border-white/10 shadow-lg hover:text-white transition-all">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+
+                <div class="glass-panel p-8 rounded-full bg-gray-800/20 border border-white/5 mb-6">
+                    <svg class="w-16 h-16 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z">
+                        </path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2"><?php echo __('select_conversation'); ?></h3>
+                <p class="text-sm text-gray-500 max-w-xs mx-auto">
+                    <?php echo $lang === 'ar' ? 'اختر أي محادثة من القائمة الجانبية لبدء الدردشة مع عملائك وتحليلها بالذكاء الاصطناعي.' : 'Choose a conversation from the sidebar to start chatting and analyzing with AI.'; ?>
+                </p>
+                <button @click="sidebarOpen = true" 
+                        class="mt-6 lg:hidden px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-600/20 hover:bg-indigo-500 transition-all flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                    <?php echo $lang === 'ar' ? 'فتح المحادثات' : 'Open Conversations'; ?>
+                </button>
             </div>
         </template>
 
