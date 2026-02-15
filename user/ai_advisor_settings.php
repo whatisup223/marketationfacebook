@@ -118,7 +118,7 @@ $s = [
                             <input type="text" name="business_name"
                                 value="<?php echo htmlspecialchars($s['business_name']); ?>"
                                 class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                                placeholder="ex: Marketation Store">
+                                placeholder="<?php echo __('business_name_placeholder'); ?>">
                         </div>
 
                         <div>
@@ -127,11 +127,12 @@ $s = [
                             </label>
                             <select name="tone_of_voice"
                                 class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
-                                <option value="friendly" <?php echo $s['tone_of_voice'] == 'friendly' ? 'selected' : ''; ?>>Friendly & Casual</option>
-                                <option value="professional" <?php echo $s['tone_of_voice'] == 'professional' ? 'selected' : ''; ?>>Professional & Formal</option>
+                                <option value="friendly" <?php echo $s['tone_of_voice'] == 'friendly' ? 'selected' : ''; ?>><?php echo __('tone_friendly'); ?></option>
+                                <option value="professional" <?php echo $s['tone_of_voice'] == 'professional' ? 'selected' : ''; ?>><?php echo __('tone_professional'); ?></option>
                                 <option value="urgent" <?php echo $s['tone_of_voice'] == 'urgent' ? 'selected' : ''; ?>>
-                                    Urgent & Sales-Oriented</option>
-                                <option value="empathetic" <?php echo $s['tone_of_voice'] == 'empathetic' ? 'selected' : ''; ?>>Empathetic & Supportive</option>
+                                    <?php echo __('tone_urgent'); ?>
+                                </option>
+                                <option value="empathetic" <?php echo $s['tone_of_voice'] == 'empathetic' ? 'selected' : ''; ?>><?php echo __('tone_empathetic'); ?></option>
                             </select>
                         </div>
                     </div>
@@ -142,7 +143,7 @@ $s = [
                         </label>
                         <textarea name="business_description" rows="3"
                             class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                            placeholder="Briefly describe what your business does..."><?php echo htmlspecialchars($s['business_description']); ?></textarea>
+                            placeholder="<?php echo __('business_desc_placeholder'); ?>"><?php echo htmlspecialchars($s['business_description']); ?></textarea>
                     </div>
 
                     <div>
@@ -151,16 +152,16 @@ $s = [
                         </label>
                         <textarea name="products_services" rows="3"
                             class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                            placeholder="List your key products, prices, or services..."><?php echo htmlspecialchars($s['products_services']); ?></textarea>
+                            placeholder="<?php echo __('products_services_placeholder'); ?>"><?php echo htmlspecialchars($s['products_services']); ?></textarea>
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-300 mb-2">
-                            <?php echo __('custom_instructions'); ?> (Optional)
+                            <?php echo __('custom_instructions'); ?> (<?php echo __('optional'); ?>)
                         </label>
                         <textarea name="custom_instructions" rows="2"
                             class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                            placeholder="Any specific rules? e.g. 'Never offer discounts without manager approval'"><?php echo htmlspecialchars($s['custom_instructions']); ?></textarea>
+                            placeholder="<?php echo __('custom_instructions_placeholder'); ?>"><?php echo htmlspecialchars($s['custom_instructions']); ?></textarea>
                     </div>
                 </div>
 

@@ -8,6 +8,8 @@ if (!isLoggedIn()) {
 ?>
 
 <div class="flex h-screen overflow-hidden bg-gray-900 font-sans" x-data="smartInbox()">
+    <!-- Sidebar -->
+    <?php include '../includes/user_sidebar.php'; ?>
 
     <!-- Left Sidebar (Conversations) -->
     <div class="w-80 flex-shrink-0 border-r border-white/5 bg-gray-900/95 backdrop-blur-xl flex flex-col">
@@ -16,30 +18,25 @@ if (!isLoggedIn()) {
             <h2 class="text-lg font-bold text-white tracking-wide"><?php echo __('smart_inbox'); ?></h2>
             <div class="flex gap-2">
                 <!-- Sync Button -->
-                <button @click="syncConversations()" 
+                <button @click="syncConversations()"
                     class="p-2 text-gray-400 hover:text-indigo-400 transition-colors relative"
                     :title="'<?php echo __('sync_conversations'); ?>'">
                     <span x-show="syncing" class="absolute inset-0 flex items-center justify-center">
                         <svg class="w-5 h-5 animate-spin text-indigo-500" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                            </circle>
+                            <path class="opacity-75" fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                            </path>
                         </svg>
                     </span>
                     <span x-show="!syncing">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                            </path>
                         </svg>
                     </span>
-                </button>
-
-                <!-- Refresh (Standard) -->
-                <button @click="fetchConversations()" class="p-2 text-gray-400 hover:text-white transition-colors"
-                    title="<?php echo __('refresh'); ?>">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
-                        </path>
-                    </svg>
                 </button>
 
                 <a href="ai_advisor_settings.php" class="p-2 text-gray-400 hover:text-indigo-400 transition-colors"
@@ -76,7 +73,8 @@ if (!isLoggedIn()) {
                                 <span x-text="conv.client_name ? conv.client_name.charAt(0).toUpperCase() : '?'"></span>
                             </div>
                             <div>
-                                <h4 class="text-sm font-bold text-gray-200 leading-tight" x-text="conv.client_name || 'Unknown User'">
+                                <h4 class="text-sm font-bold text-gray-200 leading-tight"
+                                    x-text="conv.client_name || 'Unknown User'">
                                 </h4>
                                 <span class="text-[10px] text-gray-500"
                                     x-text="formatDate(conv.last_message_time)"></span>
@@ -152,7 +150,8 @@ if (!isLoggedIn()) {
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                         </svg>
-                        <span x-text="analyzing ? '<?php echo __('thinking'); ?>' : '<?php echo __('analyze_with_ai'); ?>'"></span>
+                        <span
+                            x-text="analyzing ? '<?php echo __('thinking'); ?>' : '<?php echo __('analyze_with_ai'); ?>'"></span>
                     </button>
                 </div>
 
@@ -213,7 +212,8 @@ if (!isLoggedIn()) {
         class="w-80 border-l border-white/5 bg-gray-900/95 backdrop-blur-xl flex flex-col overflow-y-auto custom-scrollbar">
 
         <div class="p-6 space-y-6">
-            <h3 class="text-sm font-bold text-gray-400 uppercase tracking-widest"><?php echo __('ai_advisor_insights'); ?></h3>
+            <h3 class="text-sm font-bold text-gray-400 uppercase tracking-widest">
+                <?php echo __('ai_advisor_insights'); ?></h3>
 
             <!-- Analysis Card -->
             <div
@@ -228,7 +228,8 @@ if (!isLoggedIn()) {
                 </div>
 
                 <h4 class="text-sm font-bold text-white mb-1"><?php echo __('intent'); ?></h4>
-                <p class="text-xs text-gray-400 mb-4" x-text="analysis.intent || '<?php echo __('not_analyzed_yet'); ?>'"></p>
+                <p class="text-xs text-gray-400 mb-4"
+                    x-text="analysis.intent || '<?php echo __('not_analyzed_yet'); ?>'"></p>
 
                 <h4 class="text-sm font-bold text-white mb-1"><?php echo __('summary'); ?></h4>
                 <p class="text-xs text-gray-400 leading-relaxed"
@@ -296,7 +297,7 @@ if (!isLoggedIn()) {
             },
 
             fetchConversations() {
-                fetch('../includes/api/smart_inbox_api.php?action=list_conversations')
+                fetch('smart_inbox_endpoint.php?action=list_conversations')
                     .then(r => r.json())
                     .then(data => {
                         if (data.success) {
@@ -307,7 +308,7 @@ if (!isLoggedIn()) {
 
             syncConversations() {
                 this.syncing = true;
-                fetch('../includes/api/smart_inbox_api.php?action=sync_conversations')
+                fetch('smart_inbox_endpoint.php?action=sync_conversations')
                     .then(r => r.json())
                     .then(data => {
                         this.syncing = false;
@@ -339,7 +340,7 @@ if (!isLoggedIn()) {
 
             fetchMessages(silent = false) {
                 if (!this.selectedConv) return;
-                fetch(`../includes/api/smart_inbox_api.php?action=get_messages&conversation_id=${this.selectedConv.id}`)
+                fetch(`smart_inbox_endpoint.php?action=get_messages&conversation_id=${this.selectedConv.id}`)
                     .then(r => r.json())
                     .then(data => {
                         if (data.success) {
@@ -356,7 +357,7 @@ if (!isLoggedIn()) {
                 if (!this.selectedConv) return;
                 this.analyzing = true;
 
-                fetch('../includes/api/smart_inbox_api.php?action=analyze_thread', {
+                fetch('smart_inbox_endpoint.php?action=analyze_thread', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ conversation_id: this.selectedConv.id })
@@ -404,7 +405,7 @@ if (!isLoggedIn()) {
                 });
                 this.$nextTick(() => this.scrollToBottom());
 
-                fetch('../includes/api/smart_inbox_api.php?action=send_message', {
+                fetch('smart_inbox_endpoint.php?action=send_message', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({

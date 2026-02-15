@@ -432,6 +432,22 @@ $translations = [
         'ai_settings' => 'إعدادات الذكاء الاصطناعي',
         'gemini_api_key' => 'مفتاح Gemini API',
         'gemini_api_key_desc' => 'أدخل مفتاح Google Gemini API الخاص بك لتفعيل خدمات الذكاء الاصطناعي في النظام.',
+        'openai_api_key' => 'مفتاح OpenAI API',
+        'openai_api_key_desc' => 'أدخل مفتاح OpenAI API الخاص بك (اختياري اذا كنت تفضل استخدام OpenAI بدلاً من Gemini).',
+        'openai_model' => 'موديل OpenAI',
+        'openai_model_desc' => 'موديل الذكاء الاصطناعي المستخدم (مثال: gpt-4o, gpt-4-turbo, gpt-3.5-turbo).',
+        'ai_provider' => 'مزود الخدمة',
+        'ai_provider_desc' => 'اختر المزود الذي ترغب في استخدامه.',
+
+        // AI Advisor Settings
+        'business_name_placeholder' => 'مثال: متجر ماركتيشن',
+        'business_desc_placeholder' => 'اشرح باختصار ما يقدمه عملك...',
+        'products_services_placeholder' => 'سرد لأهم المنتجات، الأسعار، أو الخدمات التي تقدمها...',
+        'custom_instructions_placeholder' => 'أي قواعد محددة؟ مثال: "لا تقدم خصومات دون موافقة المدير"',
+        'tone_friendly' => 'ودود وعفوي',
+        'tone_professional' => 'مهني ورسمي',
+        'tone_urgent' => 'مستعجل وموجه للمبيعات',
+        'tone_empathetic' => 'متعاطف وداعم',
 
         // Landing Page
         'features_title' => 'لماذا تستخدم أداتنا؟',

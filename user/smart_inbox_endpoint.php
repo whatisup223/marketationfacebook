@@ -1,6 +1,6 @@
 <?php
-require_once '../functions.php';
-require_once '../SmartInboxEngine.php';
+require_once '../includes/functions.php';
+require_once '../includes/SmartInboxEngine.php';
 
 header('Content-Type: application/json');
 
