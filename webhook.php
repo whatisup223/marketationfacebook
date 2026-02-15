@@ -165,13 +165,16 @@ function handleFacebookEvent($data, $pdo)
                 $platform = ($object_type === 'instagram') ? 'instagram' : 'facebook';
 
                 // --- NEW: Update Unified Inbox for Real-time ---
-                $sender_name = ''; // Will be fetched/guessed in update function
-                $sender_type = $is_echo ? 'page' : 'user';
-                // For echo messages, the 'sender' in the webhook is the Page ID, 
-                // but for our unified_conversations table, we always track by the 'User PSID'.
-                $client_psid = $is_echo ? $recipient_id : $sender_id;
-
-                updateUnifiedInbox($pdo, $platform, $entry_id, $client_psid, $sender_name, $message_text, $sender_type, $meta_id);
+                try {
+                    $sender_name = ''; // Will be fetched/guessed in update function
+                    $sender_type = $is_echo ? 'page' : 'user';
+                    // For echo messages, the 'sender' in the webhook is the Page ID, 
+                    // but for our unified_conversations table, we always track by the 'User PSID'.
+                    $client_psid = $is_echo ? $recipient_id : $sender_id;
+                    updateUnifiedInbox($pdo, $platform, $entry_id, $client_psid, $sender_name, $message_text, $sender_type, $meta_id);
+                } catch (Exception $e) {
+                    debugLog("Unified Inbox Update Failed: " . $e->getMessage());
+                }
 
                 // ONLY trigger Auto-Reply if NOT an echo
                 if (!$is_echo) {
@@ -1000,11 +1003,15 @@ function handleEvolutionEvent($data, $pdo)
             $text = $msg['message']['conversation'] ?? $msg['message']['extendedTextMessage']['text'] ?? '';
 
             if ($remoteJid && $text) {
-                $sender_name = $msg['pushName'] ?? 'WhatsApp User';
-                $senderType = $fromMe ? 'page' : 'user';
-                $cleanJid = explode('@', $remoteJid)[0];
-                $meta_id = $msg['key']['id'] ?? null;
-                updateUnifiedInbox($pdo, 'whatsapp', $instanceName, $cleanJid, $sender_name, $text, $senderType, $meta_id);
+                try {
+                    $sender_name = $msg['pushName'] ?? 'WhatsApp User';
+                    $senderType = $fromMe ? 'page' : 'user';
+                    $cleanJid = explode('@', $remoteJid)[0];
+                    $meta_id = $msg['key']['id'] ?? null;
+                    updateUnifiedInbox($pdo, 'whatsapp', $instanceName, $cleanJid, $sender_name, $text, $senderType, $meta_id);
+                } catch (Exception $e) {
+                    debugLog("WA Unified Inbox Update Failed: " . $e->getMessage());
+                }
             }
             break;
     }
