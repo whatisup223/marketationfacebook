@@ -60,6 +60,12 @@ try {
             echo json_encode(['success' => true, 'analysis' => $result]);
             break;
 
+        case 'list_pages':
+            $stmt = $pdo->prepare("SELECT p.page_id, p.page_name, p.ig_business_id, a.platform FROM fb_pages p JOIN fb_accounts a ON p.account_id = a.id WHERE a.user_id = ? AND a.is_active = 1");
+            $stmt->execute([$userId]);
+            echo json_encode(['success' => true, 'pages' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+            break;
+
         case 'sync_conversations':
             set_time_limit(120);
 
@@ -74,15 +80,25 @@ try {
                 }
             }
 
-            // 1. Get all pages for user 
-            $stmt = $pdo->prepare("
-                SELECT p.page_id, p.page_access_token, p.page_name, p.ig_business_id 
-                FROM fb_pages p 
-                JOIN fb_accounts a ON p.account_id = a.id 
-                WHERE a.user_id = ? AND a.is_active = 1
-                LIMIT 3
-            ");
-            $stmt->execute([$userId]);
+            $specificPageId = $_GET['page_id'] ?? null;
+
+            // 1. Get pages
+            $sql = "SELECT p.page_id, p.page_access_token, p.page_name, p.ig_business_id 
+                    FROM fb_pages p 
+                    JOIN fb_accounts a ON p.account_id = a.id 
+                    WHERE a.user_id = ? AND a.is_active = 1";
+
+            $params = [$userId];
+
+            if ($specificPageId) {
+                $sql .= " AND p.page_id = ?";
+                $params[] = $specificPageId;
+            } else {
+                $sql .= " LIMIT 3";
+            }
+
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
             $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             // Prevent session locking during long sync

@@ -27,7 +27,8 @@ if (!isLoggedIn()) {
             <h2 class="text-lg font-bold text-white tracking-wide"><?php echo __('smart_inbox'); ?></h2>
             <div class="flex gap-2">
                 <!-- Sync Button -->
-                <button @click="syncConversations()"
+                <!-- Sync Button -->
+                <button @click="openSyncModal()"
                     class="p-2 text-gray-400 hover:text-indigo-400 transition-colors relative"
                     :title="'<?php echo __('sync_conversations'); ?>'">
                     <span x-show="syncing" class="absolute inset-0 flex items-center justify-center">
@@ -125,10 +126,10 @@ if (!isLoggedIn()) {
                         <!-- Sentiment Dot -->
                         <div class="w-3 h-3 rounded-full shadow-lg border border-black/50" :class="{
                                 'bg-green-500': conv.ai_sentiment === 'positive',
-                                'bg-gray-500': conv.ai_sentiment === 'neutral' || !conv.ai_sentiment,
+                                'bg-gray-500': (conv.ai_sentiment === 'neutral' || !conv.ai_sentiment),
                                 'bg-yellow-500': conv.ai_sentiment === 'negative',
                                 'bg-red-600 animate-pulse': conv.ai_sentiment === 'angry'
-                            }" :title="'Sentiment: ' + (conv.ai_sentiment || 'Unknown')">
+                            }" :title="getSentimentLabel(conv.ai_sentiment)">
                         </div>
                     </div>
 
@@ -137,7 +138,8 @@ if (!isLoggedIn()) {
                     <!-- Intent Badge -->
                     <template x-if="conv.ai_intent && conv.ai_intent !== 'General'">
                         <span
-                            class="inline-block px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-300 text-[10px] font-medium border border-indigo-500/20"
+                            class="inline-block px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-300 text-[10px] font-medium border border-indigo-500/20 max-w-[150px] truncate"
+                            :title="conv.ai_intent"
                             x-text="conv.ai_intent"></span>
                     </template>
                 </div>
@@ -276,7 +278,7 @@ if (!isLoggedIn()) {
                             'bg-green-500/10 text-green-400 border-green-500/20': analysis.sentiment === 'positive',
                             'bg-gray-500/10 text-gray-400 border-gray-500/20': analysis.sentiment === 'neutral' || !analysis.sentiment,
                             'bg-red-500/10 text-red-400 border-red-500/20': ['negative', 'angry'].includes(analysis.sentiment)
-                        }" x-text="analysis.sentiment || '<?php echo __('waiting'); ?>'"></span>
+                        }" x-text="getSentimentLabel(analysis.sentiment)"></span>
                 </div>
 
                 <h4 class="text-sm font-bold text-white mb-1"><?php echo __('intent'); ?></h4>
@@ -322,12 +324,59 @@ if (!isLoggedIn()) {
         </div>
     </div>
 
+    <!-- Sync Selection Modal -->
+    <div x-show="syncModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+        x-cloak>
+        <div class="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl transform transition-all"
+            @click.away="syncModalOpen = false">
+            <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-indigo-500" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                <?php echo __('sync_conversations'); ?>
+            </h3>
+            
+            <p class="text-sm text-gray-400 mb-4"><?php echo __('choose_sync_target'); ?></p>
+
+            <div class="space-y-2 max-h-60 overflow-y-auto custom-scrollbar mb-4">
+                <!-- Sync All Option -->
+                <button @click="startSync(null)" class="w-full flex items-center justify-between p-3 rounded-xl bg-gray-800 hover:bg-gray-700 transition-colors border border-white/5 hover:border-indigo-500/30 group">
+                    <span class="text-sm font-medium text-white"><?php echo __('sync_all_pages'); ?></span>
+                    <span class="text-xs text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity">Recommended</span>
+                </button>
+
+                <template x-for="p in pages" :key="p.page_id">
+                    <button @click="startSync(p.page_id)" class="w-full flex items-center justify-between p-3 rounded-xl bg-gray-800/50 hover:bg-gray-700 transition-colors border border-white/5 group">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-blue-600/20 text-blue-400 flex items-center justify-center">
+                                <i class="fa-brands fa-facebook-f text-sm"></i>
+                            </div>
+                            <div class="text-left">
+                                <div class="text-sm font-medium text-gray-200" x-text="p.page_name"></div>
+                                <div class="text-[10px] text-gray-500" x-text="p.ig_business_id ? 'FB + IG Linked' : 'FB Only'"></div>
+                            </div>
+                        </div>
+                        <svg class="w-4 h-4 text-gray-600 group-hover:text-white" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </button>
+                </template>
+                
+                <div x-show="pages.length === 0" class="text-center py-4 text-gray-500 text-xs">
+                    Loading pages...
+                </div>
+            </div>
+
+            <button @click="syncModalOpen = false" class="w-full py-2 text-sm text-gray-400 hover:text-white">
+                <?php echo __('cancel'); ?>
+            </button>
+        </div>
+    </div>
 </div>
 
 <script>
     function smartInbox() {
         return {
             conversations: [],
+            pages: [],
+            syncModalOpen: false,
+            // ... rest of data
             messages: [],
             suggestions: [],
             selectedConv: null,
@@ -359,6 +408,17 @@ if (!isLoggedIn()) {
                     return true;
                 });
             },
+            
+            getSentimentLabel(val) {
+                if(!val) return '<?php echo __('neutral'); ?>';
+                const map = {
+                    'positive': '<?php echo __('positive'); ?>', // إيجابي
+                    'neutral': '<?php echo __('neutral'); ?>',   // محايد
+                    'negative': '<?php echo __('negative'); ?>', // سلبي
+                    'angry': '<?php echo __('angry'); ?>'        // غاضب
+                };
+                return map[val.toLowerCase()] || val;
+            },
 
             init() {
                 this.fetchConversations();
@@ -382,14 +442,34 @@ if (!isLoggedIn()) {
                     });
             },
 
-            syncConversations() {
+            openSyncModal() {
+                this.syncModalOpen = true;
+                if (this.pages.length === 0) {
+                    fetch('smart_inbox_endpoint.php?action=list_pages')
+                        .then(r => r.json())
+                        .then(d => { if(d.success) this.pages = d.pages; });
+                }
+            },
+
+            startSync(pageId) {
+                this.syncModalOpen = false;
+                this.syncConversations(pageId);
+            },
+
+            syncConversations(pageId = null) {
                 this.syncing = true;
-                fetch('smart_inbox_endpoint.php?action=sync_conversations')
+                const url = pageId ? `smart_inbox_endpoint.php?action=sync_conversations&page_id=${pageId}` : 'smart_inbox_endpoint.php?action=sync_conversations';
+                
+                fetch(url)
                     .then(r => r.json())
                     .then(data => {
                         this.syncing = false;
                         if (data.success) {
-                            // alert('<?php echo __('sync_success'); ?> (' + data.synced_count + ')');
+                            if (data.errors && data.errors.length > 0) {
+                                alert('Sync Completed with Warnings:\n' + data.errors.join('\n'));
+                            } else {
+                                // alert('<?php echo __('sync_success'); ?>');
+                            }
                             this.fetchConversations();
                         } else {
                             alert('<?php echo __('sync_error'); ?>: ' + (data.errors ? data.errors.join(', ') : 'Unknown'));
