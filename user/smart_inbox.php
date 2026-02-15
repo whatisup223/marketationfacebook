@@ -7,6 +7,8 @@ if (!isLoggedIn()) {
 }
 ?>
 
+<script src="https://js.pusher.com/8.0.1/pusher.min.js"></script>
+
 <div class="fixed top-20 bottom-0 left-0 right-0 flex overflow-hidden bg-gray-900 font-sans" x-data="smartInbox()">
     <style>
         /* Force body not to scroll when on this page */
@@ -527,10 +529,61 @@ if (!isLoggedIn()) {
                     if (window.innerWidth < 1024) this.sidebarOpen = false;
                 });
 
-                // Poll for new messages every 10s
+                // Poll for new messages every 30s (Fallback for Pusher)
                 setInterval(() => {
                     if (this.selectedConv) this.fetchMessages(true);
-                }, 10000);
+                    this.fetchConversations();
+                }, 30000);
+
+                this.initPusher();
+            },
+
+            initPusher() {
+                const pusherKey = '<?php echo getSetting('pusher_key'); ?>';
+                const pusherCluster = '<?php echo getSetting('pusher_cluster', 'eu'); ?>';
+                const userId = '<?php echo $_SESSION['user_id']; ?>';
+
+                if (!pusherKey) return;
+
+                const pusher = new Pusher(pusherKey, {
+                    cluster: pusherCluster
+                });
+
+                const channel = pusher.subscribe(`smart-inbox-${userId}`);
+                channel.bind('new-message', (data) => {
+                    console.log('Real-time message received:', data);
+                    this.handleNewMessage(data);
+                });
+            },
+
+            handleNewMessage(data) {
+                // 1. Update messages if this is the active conversation
+                if (this.selectedConv && this.selectedConv.id == data.conversation_id) {
+                    if (!this.messages.find(m => m.id == data.message.id)) {
+                        this.messages.push(data.message);
+                        this.$nextTick(() => {
+                            this.scrollToBottom();
+                            // If it's a new user message, trigger AI analysis automatically
+                            if (data.message.sender === 'user') {
+                                // optional: this.analyzeThread();
+                            }
+                        });
+                    }
+                }
+
+                // 2. Update conversation list
+                const idx = this.conversations.findIndex(c => c.id == data.conversation_id);
+                if (idx !== -1) {
+                    this.conversations[idx].last_message_text = data.conversation.last_message_text;
+                    this.conversations[idx].last_message_time = data.conversation.last_message_time;
+
+                    // Move to top
+                    const conv = this.conversations.splice(idx, 1)[0];
+                    this.conversations.unshift(conv);
+                } else {
+                    // Brand new conversation
+                    this.conversations.unshift(data.conversation);
+                }
             },
 
             fetchConversations() {

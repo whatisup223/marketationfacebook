@@ -3461,3 +3461,42 @@ function time_elapsed_string($datetime, $full = false)
         $string = array_slice($string, 0, 1);
     return $string ? implode(', ', $string) . ' ago' : 'just now';
 }
+
+function triggerPusherEvent($userId, $event, $data)
+{
+    $appId = getSetting('pusher_app_id');
+    $key = getSetting('pusher_key');
+    $secret = getSetting('pusher_secret');
+    $cluster = getSetting('pusher_cluster', 'eu');
+
+    if (!$appId || !$key || !$secret)
+        return false;
+
+    $channel = "smart-inbox-{$userId}";
+    $host = "api-{$cluster}.pusher.com";
+    $path = "/apps/{$appId}/events";
+
+    $body = json_encode([
+        'name' => $event,
+        'data' => json_encode($data),
+        'channels' => [$channel]
+    ]);
+
+    $method = "POST";
+    $timestamp = time();
+    $body_md5 = md5($body);
+    $query_string = "auth_key={$key}&auth_timestamp={$timestamp}&auth_version=1.0&body_md5={$body_md5}";
+    $auth_signature = hash_hmac('sha256', "{$method}\n{$path}\n{$query_string}", $secret);
+    $url = "https://{$host}{$path}?{$query_string}&auth_signature={$auth_signature}";
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+    $response = curl_exec($ch);
+    curl_close($ch);
+    return $response;
+}

@@ -293,6 +293,23 @@ try {
             $stmt = $pdo->prepare("UPDATE unified_conversations SET last_message_text = ?, last_message_time = NOW() WHERE id = ?");
             $stmt->execute(["You: " . mb_substr($text, 0, 50), $convId]);
 
+            // 6. Trigger Pusher for other tabs
+            $pusherData = [
+                'conversation_id' => $convId,
+                'message' => [
+                    'id' => $pdo->lastInsertId(),
+                    'sender' => 'page',
+                    'message_text' => $text,
+                    'created_at' => date('Y-m-d H:i:s')
+                ],
+                'conversation' => [
+                    'id' => $convId,
+                    'last_message_text' => "You: " . mb_substr($text, 0, 50),
+                    'last_message_time' => date('Y-m-d H:i:s')
+                ]
+            ];
+            triggerPusherEvent($userId, 'new-message', $pusherData);
+
             echo json_encode(['success' => true]);
             break;
 

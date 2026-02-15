@@ -165,6 +165,11 @@ function handleFacebookEvent($data, $pdo)
 
                 $platform = ($object_type === 'instagram') ? 'instagram' : 'facebook';
                 // For Instagram Messaging, entry_id IS the IG Business ID
+
+                // --- NEW: Update Unified Inbox for Real-time ---
+                $sender_name = ''; // Will be fetched/guessed in update function or processAutoReply
+                updateUnifiedInbox($pdo, $platform, $entry_id, $sender_id, $sender_name, $message_text, 'user');
+
                 processAutoReply($pdo, $entry_id, $sender_id, $message_text, 'message', null, '', $platform, null, null, $is_payload_interaction);
             }
         }
@@ -983,7 +988,17 @@ function handleEvolutionEvent($data, $pdo)
             break;
 
         case 'messages.upsert':
-            // Logic for WA auto-reply could go here
+            $msg = $data['data'] ?? [];
+            $remoteJid = $msg['key']['remoteJid'] ?? '';
+            $fromMe = $msg['key']['fromMe'] ?? false;
+            $text = $msg['message']['conversation'] ?? $msg['message']['extendedTextMessage']['text'] ?? '';
+
+            if ($remoteJid && $text) {
+                $sender_name = $msg['pushName'] ?? 'WhatsApp User';
+                $senderType = $fromMe ? 'page' : 'user';
+                $cleanJid = explode('@', $remoteJid)[0];
+                updateUnifiedInbox($pdo, 'whatsapp', $instanceName, $cleanJid, $sender_name, $text, $senderType);
+            }
             break;
     }
 }
@@ -1022,4 +1037,70 @@ function triggerHandoverEmail($pdo, $user_id, $page_name, $source, $sender_name,
     </div>";
 
     sendUserEmail($user_id, $user['email'], $subject, $body, $smtp);
+}
+
+/**
+ * Updates the Unified Inbox tables and triggers Pusher real-time event
+ */
+function updateUnifiedInbox($pdo, $platform, $pageId, $senderId, $senderName, $messageText, $senderType = 'user')
+{
+    // 1. Find User ID
+    $userId = null;
+    if ($platform === 'whatsapp') {
+        $stmt = $pdo->prepare("SELECT user_id FROM wa_accounts WHERE instance_name = ? LIMIT 1");
+        $stmt->execute([$pageId]);
+        $userId = $stmt->fetchColumn();
+    } else {
+        $stmt = $pdo->prepare("SELECT a.user_id FROM fb_pages p JOIN fb_accounts a ON p.account_id = a.id WHERE p.page_id = ? OR p.ig_business_id = ? LIMIT 1");
+        $stmt->execute([$pageId, $pageId]);
+        $userId = $stmt->fetchColumn();
+    }
+
+    if (!$userId)
+        return;
+
+    // 2. Resolve Name if empty (for FB/IG)
+    if (empty($senderName) && $platform !== 'whatsapp') {
+        $senderName = ($platform === 'instagram') ? 'Instagram User' : 'Facebook User';
+        // Optional: Could fetch from API if not too heavy
+    }
+
+    // 3. Upsert Conversation
+    $stmt = $pdo->prepare("SELECT id FROM unified_conversations WHERE user_id = ? AND platform = ? AND client_psid = ?");
+    $stmt->execute([$userId, $platform, $senderId]);
+    $existing = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($existing) {
+        $convId = $existing['id'];
+        $stmt = $pdo->prepare("UPDATE unified_conversations SET last_message_text = ?, last_message_time = NOW(), client_name = ?, page_id = ? WHERE id = ?");
+        $stmt->execute([$messageText, $senderName, $pageId, $convId]);
+    } else {
+        $stmt = $pdo->prepare("INSERT INTO unified_conversations (user_id, platform, client_psid, client_name, last_message_text, last_message_time, page_id) VALUES (?, ?, ?, ?, ?, NOW(), ?)");
+        $stmt->execute([$userId, $platform, $senderId, $senderName, $messageText, $pageId]);
+        $convId = $pdo->lastInsertId();
+    }
+
+    // 4. Save Message
+    $stmt = $pdo->prepare("INSERT INTO unified_messages (conversation_id, sender, message_text, created_at) VALUES (?, ?, ?, NOW())");
+    $stmt->execute([$convId, $senderType, $messageText]);
+    $msgId = $pdo->lastInsertId();
+
+    // 5. Trigger Pusher
+    $eventData = [
+        'conversation_id' => $convId,
+        'message' => [
+            'id' => $msgId,
+            'sender' => $senderType,
+            'message_text' => $messageText,
+            'created_at' => date('Y-m-d H:i:s')
+        ],
+        'conversation' => [
+            'id' => $convId,
+            'client_name' => $senderName,
+            'last_message_text' => $messageText,
+            'last_message_time' => date('Y-m-d H:i:s'),
+            'platform' => $platform
+        ]
+    ];
+    triggerPusherEvent($userId, 'new-message', $eventData);
 }
