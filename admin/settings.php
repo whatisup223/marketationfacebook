@@ -429,6 +429,9 @@ require_once __DIR__ . '/../includes/header.php';
                         <button onclick="switchTab('ai_settings')"
                             class="tab-btn px-5 py-2.5 rounded-xl text-sm font-bold transition-all border border-white/5"
                             data-tab="ai_settings"><?php echo __('ai_settings'); ?></button>
+                        <button onclick="switchTab('pusher')"
+                            class="tab-btn px-5 py-2.5 rounded-xl text-sm font-bold transition-all border border-white/5"
+                            data-tab="pusher"><?php echo $lang === 'ar' ? 'البث المباشر (Pusher)' : 'Live Updates (Pusher)'; ?></button>
                     </div>
                 </div>
                 <!-- Edge Fades (Optional Visual Hint) -->
@@ -689,6 +692,56 @@ require_once __DIR__ . '/../includes/header.php';
                     </div>
                 </div>
 
+            </div>
+
+            <!-- Pusher Settings Tab -->
+            <div id="pusher-tab" class="tab-content hidden space-y-6">
+                <div class="glass-card p-6 md:p-8 rounded-2xl border border-white/5">
+                    <h3 class="text-lg font-bold text-white mb-6 flex items-center">
+                        <span class="w-2 h-6 bg-orange-500 rounded-full mr-3"></span>
+                        <?php echo $lang === 'ar' ? 'إعدادات البث المباشر (Pusher)' : 'Pusher Real-time Settings'; ?>
+                    </h3>
+
+                    <div class="grid lg:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-gray-400 text-sm font-medium mb-2">App ID</label>
+                                <input type="text" name="pusher_app_id"
+                                    value="<?php echo $settings['pusher_app_id'] ?? ''; ?>" class="setting-input"
+                                    placeholder="e.g. 1234567">
+                            </div>
+                            <div>
+                                <label class="block text-gray-400 text-sm font-medium mb-2">Key</label>
+                                <input type="text" name="pusher_key"
+                                    value="<?php echo $settings['pusher_key'] ?? ''; ?>" class="setting-input"
+                                    placeholder="e.g. 8d2b...">
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-gray-400 text-sm font-medium mb-2">Secret</label>
+                                <input type="password" name="pusher_secret"
+                                    value="<?php echo $settings['pusher_secret'] ?? ''; ?>" class="setting-input"
+                                    placeholder="Keep it secret">
+                            </div>
+                            <div>
+                                <label class="block text-gray-400 text-sm font-medium mb-2">Cluster</label>
+                                <input type="text" name="pusher_cluster"
+                                    value="<?php echo $settings['pusher_cluster'] ?? 'eu'; ?>" class="setting-input"
+                                    placeholder="e.g. eu or mt1">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 p-4 bg-orange-500/10 border border-orange-500/20 rounded-xl">
+                        <p class="text-xs text-orange-300 leading-relaxed">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            <?php echo $lang === 'ar'
+                                ? 'هذه الإعدادات تسمح للنظام بتحديث الرسائل وترتيب المحادثات تلقائياً في وقتها الفعلي دون الحاجة لتحديث الصفحة.'
+                                : 'These settings allow the system to update messages and reorder conversations automatically in real-time without refreshing the page.'; ?>
+                        </p>
+                    </div>
+                </div>
             </div>
 
             <!-- Header Settings Tab -->
