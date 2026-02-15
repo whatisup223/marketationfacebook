@@ -2093,7 +2093,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         if (data.success) {
                             this.debugInfo = data;
                         }
-                    });
+                    }).catch(() => {});
             },
 
             subscribePage() {
@@ -2357,7 +2357,8 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         if (data.success) {
                             this.stats = data.stats;
                         }
-                    });
+                    })
+                    .catch(() => { });
             },
 
             openCustomRangeModal() {
