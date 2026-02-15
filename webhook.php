@@ -124,13 +124,12 @@ function handleFacebookEvent($data, $pdo)
         // Handle Messaging (Messenger / Direct Messages)
         if (isset($entry['messaging'])) {
             foreach ($entry['messaging'] as $messaging) {
-                // Skip echo messages (messages sent BY the bot)
-                if (isset($messaging['message']['is_echo']) && $messaging['message']['is_echo']) {
-                    debugLog("Skipping echo message from bot");
-                    continue;
-                }
-
                 $sender_id = $messaging['sender']['id'] ?? '';
+                $recipient_id = $messaging['recipient']['id'] ?? '';
+                $is_echo = isset($messaging['message']['is_echo']) && $messaging['message']['is_echo'];
+
+                $message_text = '';
+                $meta_id = $messaging['message']['mid'] ?? null;
 
                 // Additional safety: Skip if sender is the page itself (shouldn't happen with is_echo check)
                 if ($sender_id == $entry_id) {
@@ -164,13 +163,20 @@ function handleFacebookEvent($data, $pdo)
                     continue;
 
                 $platform = ($object_type === 'instagram') ? 'instagram' : 'facebook';
-                // For Instagram Messaging, entry_id IS the IG Business ID
 
                 // --- NEW: Update Unified Inbox for Real-time ---
-                $sender_name = ''; // Will be fetched/guessed in update function or processAutoReply
-                updateUnifiedInbox($pdo, $platform, $entry_id, $sender_id, $sender_name, $message_text, 'user');
+                $sender_name = ''; // Will be fetched/guessed in update function
+                $sender_type = $is_echo ? 'page' : 'user';
+                // For echo messages, the 'sender' in the webhook is the Page ID, 
+                // but for our unified_conversations table, we always track by the 'User PSID'.
+                $client_psid = $is_echo ? $recipient_id : $sender_id;
 
-                processAutoReply($pdo, $entry_id, $sender_id, $message_text, 'message', null, '', $platform, null, null, $is_payload_interaction);
+                updateUnifiedInbox($pdo, $platform, $entry_id, $client_psid, $sender_name, $message_text, $sender_type, $meta_id);
+
+                // ONLY trigger Auto-Reply if NOT an echo
+                if (!$is_echo) {
+                    processAutoReply($pdo, $entry_id, $sender_id, $message_text, 'message', null, '', $platform, null, null, $is_payload_interaction);
+                }
             }
         }
 
@@ -997,7 +1003,8 @@ function handleEvolutionEvent($data, $pdo)
                 $sender_name = $msg['pushName'] ?? 'WhatsApp User';
                 $senderType = $fromMe ? 'page' : 'user';
                 $cleanJid = explode('@', $remoteJid)[0];
-                updateUnifiedInbox($pdo, 'whatsapp', $instanceName, $cleanJid, $sender_name, $text, $senderType);
+                $meta_id = $msg['key']['id'] ?? null;
+                updateUnifiedInbox($pdo, 'whatsapp', $instanceName, $cleanJid, $sender_name, $text, $senderType, $meta_id);
             }
             break;
     }
@@ -1042,7 +1049,7 @@ function triggerHandoverEmail($pdo, $user_id, $page_name, $source, $sender_name,
 /**
  * Updates the Unified Inbox tables and triggers Pusher real-time event
  */
-function updateUnifiedInbox($pdo, $platform, $pageId, $senderId, $senderName, $messageText, $senderType = 'user')
+function updateUnifiedInbox($pdo, $platform, $pageId, $senderId, $senderName, $messageText, $senderType = 'user', $metaMessageId = null)
 {
     // 1. Find User ID
     $userId = null;
@@ -1081,9 +1088,16 @@ function updateUnifiedInbox($pdo, $platform, $pageId, $senderId, $senderName, $m
     }
 
     // 4. Save Message
-    $stmt = $pdo->prepare("INSERT INTO unified_messages (conversation_id, sender, message_text, created_at) VALUES (?, ?, ?, NOW())");
-    $stmt->execute([$convId, $senderType, $messageText]);
+    $stmt = $pdo->prepare("INSERT IGNORE INTO unified_messages (conversation_id, sender, message_text, meta_message_id, created_at) VALUES (?, ?, ?, ?, NOW())");
+    $stmt->execute([$convId, $senderType, $messageText, $metaMessageId]);
     $msgId = $pdo->lastInsertId();
+
+    if (!$msgId && $metaMessageId) {
+        // If insert ignored because of duplicate meta_id, get the existing ID
+        $stmt = $pdo->prepare("SELECT id FROM unified_messages WHERE meta_message_id = ?");
+        $stmt->execute([$metaMessageId]);
+        $msgId = $stmt->fetchColumn();
+    }
 
     // 5. Trigger Pusher
     $eventData = [

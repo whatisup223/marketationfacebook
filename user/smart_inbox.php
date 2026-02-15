@@ -637,7 +637,10 @@ if (!isLoggedIn()) {
             },
 
             selectConversation(conv) {
+                if (this.selectedConv && this.selectedConv.id === conv.id) return;
+                
                 this.selectedConv = conv;
+                this.messages = []; // Clear for loading state
                 this.analysis = {
                     sentiment: conv.ai_sentiment,
                     intent: conv.ai_intent,
@@ -655,7 +658,38 @@ if (!isLoggedIn()) {
                     .then(data => {
                         if (data.success) {
                             const isAtBottom = this.isScrolledToBottom();
-                            this.messages = data.messages;
+                            const serverMsgs = data.messages;
+
+                            if (!silent) {
+                                this.messages = serverMsgs;
+                            } else {
+                                // Intelligent merge for background sync
+                                serverMsgs.forEach(serverMsg => {
+                                    // 1. Check if message already exists by ID
+                                    const existingIdx = this.messages.findIndex(m => m.id == serverMsg.id);
+                                    if (existingIdx !== -1) {
+                                        // Update existing (maybe timestamp or status changed)
+                                        this.messages[existingIdx] = serverMsg;
+                                        return;
+                                    }
+
+                                    // 2. Check if it's a 'temp' message being confirmed
+                                    const tempIdx = this.messages.findIndex(m =>
+                                        m.id.toString().startsWith('temp-') &&
+                                        m.sender === serverMsg.sender &&
+                                        m.message_text === serverMsg.message_text
+                                    );
+
+                                    if (tempIdx !== -1) {
+                                        // Replace temp with real server message
+                                        this.messages[tempIdx] = serverMsg;
+                                    } else {
+                                        // Brand new message (e.g. from user via webhook)
+                                        this.messages.push(serverMsg);
+                                    }
+                                });
+                            }
+
                             if (!silent || isAtBottom) {
                                 this.$nextTick(() => this.scrollToBottom());
                             }
@@ -736,8 +770,15 @@ if (!isLoggedIn()) {
             },
 
             scrollToBottom() {
-                const container = document.getElementById('messages-container');
-                if (container) container.scrollTop = container.scrollHeight;
+                setTimeout(() => {
+                    const container = document.getElementById('messages-container');
+                    if (container) {
+                        container.scrollTo({
+                            top: container.scrollHeight,
+                            behavior: 'smooth'
+                        });
+                    }
+                }, 50);
             },
 
             isScrolledToBottom() {

@@ -217,19 +217,19 @@ try {
                         if (isset($msgData['data'])) {
                             $messages = array_reverse($msgData['data']);
 
-                            // Batch insert approach would be better, but sticking to loop for now
+                            // Batched insert would be better, but sticking to loop for now
                             // Optimization: Check most recent message in DB first
-
                             foreach ($messages as $m) {
                                 if (!isset($m['message']))
                                     continue;
                                 $senderType = ($m['from']['id'] == $task['id']) ? 'page' : 'user';
                                 $msgTime = date('Y-m-d H:i:s', strtotime($m['created_time']));
+                                $metaId = $m['id'] ?? null;
 
                                 // Quick check to avoid duplicates
-                                // Use IGNORE or ON DUPLICATE KEY UPDATE to avoid select
-                                $inMsg = $pdo->prepare("INSERT IGNORE INTO unified_messages (conversation_id, sender, message_text, created_at) VALUES (?, ?, ?, ?)");
-                                $inMsg->execute([$convId, $senderType, $m['message'], $msgTime]);
+                                // Use IGNORE because we added UNIQUE KEY on meta_message_id
+                                $inMsg = $pdo->prepare("INSERT IGNORE INTO unified_messages (conversation_id, sender, message_text, created_at, meta_message_id) VALUES (?, ?, ?, ?, ?)");
+                                $inMsg->execute([$convId, $senderType, $m['message'], $msgTime, $metaId]);
                             }
                         }
                     }
