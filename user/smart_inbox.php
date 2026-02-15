@@ -19,9 +19,14 @@ if (!isLoggedIn()) {
         class="fixed inset-0 bg-gray-900/80 z-20 md:hidden"></div>
 
     <!-- Left Sidebar (Conversations) -->
-    <div :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'"
-        class="fixed inset-y-0 left-0 z-30 w-80 md:relative flex-shrink-0 border-r border-white/5 bg-gray-900/95 backdrop-blur-xl flex flex-col transition-transform duration-300 ease-in-out md:ml-20">
-        <!-- Added md:ml-20 to offset persistent sidebar -->
+    <div x-show="sidebarOpen"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="-translate-x-full"
+         x-transition:enter-end="translate-x-0"
+         x-transition:leave="transition ease-in duration-300"
+         x-transition:leave-start="translate-x-0"
+         x-transition:leave-end="-translate-x-full"
+         class="fixed inset-y-0 left-0 z-30 w-72 md:w-80 lg:static flex-shrink-0 border-r border-white/5 bg-gray-900/95 backdrop-blur-xl flex flex-col h-full shadow-2xl lg:shadow-none">
         <!-- Header -->
         <div class="p-4 border-b border-white/5 flex items-center justify-between">
             <h2 class="text-lg font-bold text-white tracking-wide"><?php echo __('smart_inbox'); ?></h2>
@@ -170,40 +175,40 @@ if (!isLoggedIn()) {
         <template x-if="selectedConv">
             <div class="flex-1 flex flex-col h-full">
                 <!-- Chat Header -->
-                <div
-                    class="h-16 border-b border-white/5 bg-gray-900/95 backdrop-blur-xl flex items-center justify-between px-4 md:px-6 z-10">
-                    <div class="flex items-center gap-3">
-                        <!-- Mobile Toggle -->
-                        <button @click="sidebarOpen = !sidebarOpen" class="md:hidden text-gray-400 hover:text-white">
+                <div class="h-16 border-b border-white/5 bg-gray-900/95 backdrop-blur-xl flex items-center justify-between px-3 md:px-6 z-10 gap-2">
+                    <div class="flex items-center gap-2 md:gap-3 min-w-0">
+                        <!-- Sidebar Toggle -->
+                        <button @click="sidebarOpen = !sidebarOpen" class="p-2 -ml-2 text-gray-400 hover:text-white transition-colors shrink-0">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M4 6h16M4 12h16M4 18h16"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                             </svg>
                         </button>
-                        <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
+
+                        <div class="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center text-white font-bold shrink-0 text-xs md:text-base pointer-events-none"
                             :class="selectedConv?.platform === 'facebook' ? 'bg-blue-600' : 'bg-pink-600'">
                             <span x-text="selectedConv?.client_name ? selectedConv.client_name.charAt(0) : '?'"></span>
                         </div>
-                        <div>
-                            <h3 class="font-bold text-white text-lg"
+                        <div class="min-w-0">
+                            <h3 class="font-bold text-white text-sm md:text-lg truncate"
                                 x-text="selectedConv?.client_name || '<?php echo __('unknown'); ?>'"></h3>
-                            <div class="flex items-center gap-2">
+                            <div class="hidden sm:flex items-center gap-2 opacity-60">
                                 <span class="w-2 h-2 rounded-full bg-green-500"></span>
-                                <span class="text-xs text-gray-400 capitalize"
+                                <span class="text-[10px] md:text-xs text-gray-400 capitalize"
                                     x-text="selectedConv?.platform || ''"></span>
                             </div>
                         </div>
                     </div>
 
                     <button @click="analyzing = true; analyzeThread()"
-                        class="flex items-center gap-2 px-4 py-2 bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 rounded-lg border border-indigo-500/30 transition-all text-sm font-bold">
-                        <svg class="w-4 h-4" :class="analyzing ? 'animate-spin' : ''" fill="none" stroke="currentColor"
+                        class="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 rounded-lg border border-indigo-500/30 transition-all text-[10px] md:text-sm font-bold shrink-0">
+                        <svg class="w-3 h-3 md:w-4 md:h-4" :class="analyzing ? 'animate-spin' : ''" fill="none" stroke="currentColor"
                             viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                         </svg>
-                        <span
+                        <span class="hidden xs:inline"
                             x-text="analyzing ? '<?php echo __('thinking'); ?>' : '<?php echo __('analyze_with_ai'); ?>'"></span>
+                        <span class="xs:hidden" x-text="analyzing ? '...' : 'AI'"></span>
                     </button>
                 </div>
 
@@ -422,10 +427,25 @@ if (!isLoggedIn()) {
 
             init() {
                 this.fetchConversations();
+                
+                // Set initial state
+                this.sidebarOpen = window.innerWidth >= 1024;
+
+                // Handle Resize auto-close
+                window.addEventListener('resize', () => {
+                    if (window.innerWidth < 1024 && this.sidebarOpen) {
+                        this.sidebarOpen = false;
+                    } else if (window.innerWidth >= 1280 && !this.sidebarOpen) {
+                        // Optional: Re-open on very large screens
+                        this.sidebarOpen = true;
+                    }
+                });
+
                 // Close sidebar when selecting convo on mobile
                 this.$watch('selectedConv', () => {
-                    if (window.innerWidth < 768) this.sidebarOpen = false;
+                    if (window.innerWidth < 1024) this.sidebarOpen = false;
                 });
+
                 // Poll for new messages every 10s
                 setInterval(() => {
                     if (this.selectedConv) this.fetchMessages(true);
