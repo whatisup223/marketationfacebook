@@ -637,7 +637,7 @@ if (!isLoggedIn()) {
 
             selectConversation(conv) {
                 if (this.selectedConv && this.selectedConv.id === conv.id) return;
-                
+
                 this.selectedConv = conv;
                 this.messages = []; // Clear for loading state
                 this.analysis = {
@@ -664,8 +664,11 @@ if (!isLoggedIn()) {
                             } else {
                                 // Intelligent merge for background sync
                                 serverMsgs.forEach(serverMsg => {
-                                    // 1. Check if message already exists by ID
-                                    const existingIdx = this.messages.findIndex(m => m.id == serverMsg.id);
+                                    // Check by database ID OR Meta ID to prevent duplicates
+                                    const existingIdx = this.messages.findIndex(m =>
+                                        m.id == serverMsg.id ||
+                                        (m.meta_message_id && serverMsg.meta_message_id && m.meta_message_id === serverMsg.meta_message_id)
+                                    );
                                     if (existingIdx !== -1) {
                                         // Update existing (maybe timestamp or status changed)
                                         this.messages[existingIdx] = serverMsg;
@@ -769,15 +772,12 @@ if (!isLoggedIn()) {
             },
 
             scrollToBottom() {
-                setTimeout(() => {
+                this.$nextTick(() => {
                     const container = document.getElementById('messages-container');
                     if (container) {
-                        container.scrollTo({
-                            top: container.scrollHeight,
-                            behavior: 'smooth'
-                        });
+                        container.scrollTop = container.scrollHeight;
                     }
-                }, 50);
+                });
             },
 
             isScrolledToBottom() {

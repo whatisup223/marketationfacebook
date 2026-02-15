@@ -1,5 +1,6 @@
 <?php
 require_once '../includes/functions.php';
+date_default_timezone_set('UTC'); // Force UTC for API consistency
 require_once '../includes/SmartInboxEngine.php';
 
 header('Content-Type: application/json');
@@ -293,9 +294,18 @@ try {
                 throw new Exception("FB API Error: " . ($resData['error']['message'] ?? $result));
             }
 
-            // 4. Save to DB (Success)
-            $stmt = $pdo->prepare("INSERT INTO unified_messages (conversation_id, sender, message_text) VALUES (?, 'page', ?)");
-            $stmt->execute([$convId, $text]);
+            $metaId = $resData['message_id'] ?? null;
+
+            // 4. Save to DB (Success) - Using standard helper logic
+            $stmt = $pdo->prepare("INSERT IGNORE INTO unified_messages (conversation_id, sender, message_text, meta_message_id, created_at) VALUES (?, 'page', ?, ?, NOW())");
+            $stmt->execute([$convId, $text, $metaId]);
+            $msgId = $pdo->lastInsertId() ?: null;
+
+            if (!$msgId && $metaId) {
+                $stmt = $pdo->prepare("SELECT id FROM unified_messages WHERE meta_message_id = ?");
+                $stmt->execute([$metaId]);
+                $msgId = $stmt->fetchColumn();
+            }
 
             // 5. Update Conversation
             $stmt = $pdo->prepare("UPDATE unified_conversations SET last_message_text = ?, last_message_time = NOW() WHERE id = ?");
@@ -305,10 +315,11 @@ try {
             $pusherData = [
                 'conversation_id' => $convId,
                 'message' => [
-                    'id' => $pdo->lastInsertId(),
+                    'id' => $msgId,
                     'sender' => 'page',
                     'message_text' => $text,
-                    'created_at' => date('Y-m-d H:i:s')
+                    'created_at' => date('Y-m-d H:i:s'),
+                    'meta_message_id' => $metaId
                 ],
                 'conversation' => [
                     'id' => $convId,

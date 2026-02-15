@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('UTC');
 /**
  * Universal Webhook Handler
  * Handles both Evolution API (WhatsApp) and Facebook (Comments & Messenger)
@@ -639,7 +640,7 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 
     // 5.1 Schedule Check
     if (!$bypass_schedule && $page['bot_schedule_enabled']) {
-        date_default_timezone_set('Africa/Cairo');
+        date_default_timezone_set('UTC'); // Set timezone to UTC as per instruction
         $now = date('H:i');
         $start = !empty($page['bot_schedule_start']) ? substr($page['bot_schedule_start'], 0, 5) : '00:00';
         $end = !empty($page['bot_schedule_end']) ? substr($page['bot_schedule_end'], 0, 5) : '23:59';
