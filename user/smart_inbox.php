@@ -621,12 +621,11 @@ if (!isLoggedIn()) {
                         if (data.success) {
                             if (data.errors && data.errors.length > 0) {
                                 alert('Sync Completed with Warnings:\n' + data.errors.join('\n'));
-                            } else {
-                                // alert('<?php echo __('sync_success'); ?>');
                             }
                             this.fetchConversations();
                         } else {
-                            alert('<?php echo __('sync_error'); ?>: ' + (data.errors ? data.errors.join(', ') : 'Unknown'));
+                            const errorMsg = data.error || (data.errors ? data.errors.join(', ') : 'Unknown Error');
+                            alert('<?php echo __('sync_error'); ?>: ' + errorMsg);
                         }
                     })
                     .catch(e => {

@@ -69,14 +69,22 @@ try {
         case 'sync_conversations':
             set_time_limit(120);
 
-            // Self-Healing DB: Ensure page_id column exists
+            // Self-Healing DB: Ensure columns exist
             try {
                 $pdo->query("SELECT page_id FROM unified_conversations LIMIT 1");
             } catch (Exception $e) {
-                // Column likely missing, add it
                 try {
                     $pdo->exec("ALTER TABLE unified_conversations ADD COLUMN page_id VARCHAR(50) NULL AFTER platform");
-                } catch (Exception $ex) { /* Ignore if race condition */
+                } catch (Exception $ex) {
+                }
+            }
+            try {
+                $pdo->query("SELECT meta_message_id FROM unified_messages LIMIT 1");
+            } catch (Exception $e) {
+                try {
+                    $pdo->exec("ALTER TABLE unified_messages ADD COLUMN meta_message_id VARCHAR(255) NULL AFTER message_text");
+                    $pdo->exec("ALTER TABLE unified_messages ADD UNIQUE KEY uk_meta_id (meta_message_id)");
+                } catch (Exception $ex) {
                 }
             }
 
@@ -319,6 +327,9 @@ try {
 
 } catch (Exception $e) {
     http_response_code(500);
-    echo json_encode(['error' => $e->getMessage()]);
+    $errorMsg = $e->getMessage();
+    // Log detailed error for debugging
+    error_log("Smart Inbox Error: " . $errorMsg . " in " . $e->getFile() . ":" . $e->getLine());
+    echo json_encode(['success' => false, 'error' => $errorMsg]);
 }
 ?>
