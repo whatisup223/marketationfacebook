@@ -355,6 +355,13 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
         $state = $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    // STRICT HANDOVER CHECK: If user is in handover, DO NOT PROCESS ANYTHING.
+    // The previous logic allowed keywords to break handover, which caused the bot to reactivate unintentionally.
+    if ($state && $state['conversation_state'] === 'handover') {
+        debugLog("processAutoReply: Bot silenced due to Handover State for user $customer_id");
+        return;
+    }
+
     // Fetch ALL active rules for this page
     $stmt = $pdo->prepare("SELECT * FROM auto_reply_rules WHERE (page_id = ? OR page_id = ?) AND reply_source = ? AND platform = ? AND is_active = 1 ORDER BY trigger_type DESC, id DESC");
     $stmt->execute([$page['fb_page_id'], $page['ig_business_id'], $source, $platform]);
@@ -388,16 +395,6 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
         }
     }
 
-    // 2.2 Check Handover Protocol (Only if NO keyword match found)
-    // We allow Keywords to BREAK/RESET handover state.
-    if (!$matched_rule && $state && $state['conversation_state'] === 'handover') {
-        debugLog("processAutoReply: Bot silenced due to Handover State for user $customer_id");
-        return;
-    }
-
-    if ($state && $state['conversation_state'] === 'handover' && $matched_rule) {
-        debugLog("processAutoReply: Overriding Handover state because Keyword rule matched.");
-    }
 
     // 2.3 Global Anger Detection (Only if NO keyword match found)
     // If we have a direct keyword match, we assume specific intent and reply regardless of tone.
