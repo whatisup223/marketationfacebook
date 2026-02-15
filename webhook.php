@@ -143,14 +143,24 @@ function handleFacebookEvent($data, $pdo)
 
                 $is_payload_interaction = false;
                 $message_text = '';
+
+                // 1. Quick Reply (Button Click)
                 if (isset($messaging['message']['quick_reply']['payload'])) {
                     $message_text = $messaging['message']['quick_reply']['payload'];
                     $is_payload_interaction = true;
-                } elseif (isset($messaging['message']['text'])) {
-                    $message_text = $messaging['message']['text'];
-                } elseif (isset($messaging['postback']['payload'])) {
+                    // debugLog("Event: Quick Reply Detected: $message_text");
+                }
+                // 2. Postback (Button Click) - Prioritize over text to avoid false negatives
+                elseif (isset($messaging['postback']['payload'])) {
                     $message_text = $messaging['postback']['payload'];
                     $is_payload_interaction = true;
+                    // debugLog("Event: Postback Detected: $message_text");
+                }
+                // 3. Text Message (User Typing)
+                elseif (isset($messaging['message']['text'])) {
+                    $message_text = $messaging['message']['text'];
+                    $is_payload_interaction = false; // Strictly False
+                    // debugLog("Event: Text Message Detected: $message_text");
                 }
 
                 if (!$message_text)
@@ -234,7 +244,7 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 {
     // 1. Fetch Page Settings (Token, Schedule, Cooldown, AI Intelligence)
     // Try primary lookup by whichever ID Meta sent. IMPORTANT: SELECT p.ig_business_id too!
-    debugLog("processAutoReply: PageID=$page_id, TargetID=$target_id, Platform=$platform, Source=$source");
+    debugLog("processAutoReply: PageID=$page_id, TargetID=$target_id, Platform=$platform, Source=$source, IsPayload=" . ($is_payload_interaction ? 'YES' : 'NO'));
 
     // Fetch Page
     $stmt = $pdo->prepare("SELECT p.page_id as fb_page_id, p.ig_business_id, p.page_access_token, p.page_name, p.bot_cooldown_seconds, p.bot_schedule_enabled, p.bot_schedule_start, p.bot_schedule_end, p.bot_exclude_keywords, p.bot_ai_sentiment_enabled, p.bot_anger_keywords, p.bot_repetition_threshold, p.bot_handover_reply, a.user_id 
