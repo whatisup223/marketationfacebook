@@ -19,14 +19,11 @@ if (!isLoggedIn()) {
         class="fixed inset-0 bg-gray-900/80 z-20 md:hidden"></div>
 
     <!-- Left Sidebar (Conversations) -->
-    <div x-show="sidebarOpen"
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="-translate-x-full"
-         x-transition:enter-end="translate-x-0"
-         x-transition:leave="transition ease-in duration-300"
-         x-transition:leave-start="translate-x-0"
-         x-transition:leave-end="-translate-x-full"
-         class="fixed inset-y-0 left-0 z-30 w-72 md:w-80 lg:static flex-shrink-0 border-r border-white/5 bg-gray-900/95 backdrop-blur-xl flex flex-col h-full shadow-2xl lg:shadow-none">
+    <div x-show="sidebarOpen" x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0"
+        x-transition:leave="transition ease-in duration-300" x-transition:leave-start="translate-x-0"
+        x-transition:leave-end="-translate-x-full"
+        class="fixed inset-y-0 left-0 z-30 w-72 md:w-80 lg:static flex-shrink-0 border-r border-white/5 bg-gray-900/95 backdrop-blur-xl flex flex-col h-full shadow-2xl lg:shadow-none">
         <!-- Header -->
         <div class="p-4 border-b border-white/5 flex items-center justify-between">
             <h2 class="text-lg font-bold text-white tracking-wide"><?php echo __('smart_inbox'); ?></h2>
@@ -144,8 +141,7 @@ if (!isLoggedIn()) {
                     <template x-if="conv.ai_intent && conv.ai_intent !== 'General'">
                         <span
                             class="inline-block px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-300 text-[10px] font-medium border border-indigo-500/20 max-w-[150px] truncate"
-                            :title="conv.ai_intent"
-                            x-text="conv.ai_intent"></span>
+                            :title="conv.ai_intent" x-text="conv.ai_intent"></span>
                     </template>
                 </div>
             </template>
@@ -175,12 +171,15 @@ if (!isLoggedIn()) {
         <template x-if="selectedConv">
             <div class="flex-1 flex flex-col h-full">
                 <!-- Chat Header -->
-                <div class="h-16 border-b border-white/5 bg-gray-900/95 backdrop-blur-xl flex items-center justify-between px-3 md:px-6 z-10 gap-2">
+                <div
+                    class="h-16 border-b border-white/5 bg-gray-900/95 backdrop-blur-xl flex items-center justify-between px-3 md:px-6 z-10 gap-2">
                     <div class="flex items-center gap-2 md:gap-3 min-w-0">
                         <!-- Sidebar Toggle -->
-                        <button @click="sidebarOpen = !sidebarOpen" class="p-2 -ml-2 text-gray-400 hover:text-white transition-colors shrink-0">
+                        <button @click="sidebarOpen = !sidebarOpen"
+                            class="p-2 -ml-2 text-gray-400 hover:text-white transition-colors shrink-0">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 6h16M4 12h16M4 18h16"></path>
                             </svg>
                         </button>
 
@@ -199,17 +198,29 @@ if (!isLoggedIn()) {
                         </div>
                     </div>
 
-                    <button @click="analyzing = true; analyzeThread()"
-                        class="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 rounded-lg border border-indigo-500/30 transition-all text-[10px] md:text-sm font-bold shrink-0">
-                        <svg class="w-3 h-3 md:w-4 md:h-4" :class="analyzing ? 'animate-spin' : ''" fill="none" stroke="currentColor"
-                            viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                        </svg>
-                        <span class="hidden xs:inline"
-                            x-text="analyzing ? '<?php echo __('thinking'); ?>' : '<?php echo __('analyze_with_ai'); ?>'"></span>
-                        <span class="xs:hidden" x-text="analyzing ? '...' : 'AI'"></span>
-                    </button>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <!-- AI Analysis Button -->
+                        <button @click="analyzing = true; analyzeThread()"
+                            class="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 rounded-lg border border-indigo-500/30 transition-all text-[10px] md:text-sm font-bold shrink-0">
+                            <svg class="w-3 h-3 md:w-4 md:h-4" :class="analyzing ? 'animate-spin' : ''" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                            <span class="hidden xs:inline"
+                                x-text="analyzing ? '<?php echo __('thinking'); ?>' : '<?php echo __('analyze_with_ai'); ?>'"></span>
+                            <span class="xs:hidden" x-text="analyzing ? '...' : 'AI'"></span>
+                        </button>
+
+                        <!-- Advisor Toggle Button (!) -->
+                        <button @click="showRightSidebar = !showRightSidebar" class="p-2 rounded-lg transition-all"
+                            :class="showRightSidebar ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'bg-gray-800 text-gray-400 hover:text-white'">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Messages Area -->
@@ -265,9 +276,11 @@ if (!isLoggedIn()) {
     </div>
 
     <!-- Right Sidebar (Advisor Panel) -->
-    <div x-show="selectedConv" x-transition:enter="transition ease-out duration-300"
+    <div x-show="selectedConv && showRightSidebar" x-transition:enter="transition ease-out duration-300"
         x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0"
-        class="w-80 border-l border-white/5 bg-gray-900/95 backdrop-blur-xl flex flex-col overflow-y-auto custom-scrollbar">
+        x-transition:leave="transition ease-in duration-300" x-transition:leave-start="translate-x-0"
+        x-transition:leave-end="translate-x-full"
+        class="fixed inset-y-0 right-0 z-40 w-80 lg:static border-l border-white/5 bg-gray-900/95 backdrop-blur-xl flex flex-col overflow-y-auto custom-scrollbar shadow-2xl lg:shadow-none">
 
         <div class="p-6 space-y-6">
             <h3 class="text-sm font-bold text-gray-400 uppercase tracking-widest">
@@ -335,34 +348,45 @@ if (!isLoggedIn()) {
         <div class="bg-gray-900 border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl transform transition-all"
             @click.away="syncModalOpen = false">
             <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                <svg class="w-5 h-5 text-indigo-500" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                <svg class="w-5 h-5 text-indigo-500" fill="none" viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                    </path>
+                </svg>
                 <?php echo __('sync_conversations'); ?>
             </h3>
-            
+
             <p class="text-sm text-gray-400 mb-4"><?php echo __('choose_sync_target'); ?></p>
 
             <div class="space-y-2 max-h-60 overflow-y-auto custom-scrollbar mb-4">
                 <!-- Sync All Option -->
-                <button @click="startSync(null)" class="w-full flex items-center justify-between p-3 rounded-xl bg-gray-800 hover:bg-gray-700 transition-colors border border-white/5 hover:border-indigo-500/30 group">
+                <button @click="startSync(null)"
+                    class="w-full flex items-center justify-between p-3 rounded-xl bg-gray-800 hover:bg-gray-700 transition-colors border border-white/5 hover:border-indigo-500/30 group">
                     <span class="text-sm font-medium text-white"><?php echo __('sync_all_pages'); ?></span>
-                    <span class="text-xs text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity">Recommended</span>
+                    <span
+                        class="text-xs text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity">Recommended</span>
                 </button>
 
                 <template x-for="p in pages" :key="p.page_id">
-                    <button @click="startSync(p.page_id)" class="w-full flex items-center justify-between p-3 rounded-xl bg-gray-800/50 hover:bg-gray-700 transition-colors border border-white/5 group">
+                    <button @click="startSync(p.page_id)"
+                        class="w-full flex items-center justify-between p-3 rounded-xl bg-gray-800/50 hover:bg-gray-700 transition-colors border border-white/5 group">
                         <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full bg-blue-600/20 text-blue-400 flex items-center justify-center">
+                            <div
+                                class="w-8 h-8 rounded-full bg-blue-600/20 text-blue-400 flex items-center justify-center">
                                 <i class="fa-brands fa-facebook-f text-sm"></i>
                             </div>
                             <div class="text-left">
                                 <div class="text-sm font-medium text-gray-200" x-text="p.page_name"></div>
-                                <div class="text-[10px] text-gray-500" x-text="p.ig_business_id ? 'FB + IG Linked' : 'FB Only'"></div>
+                                <div class="text-[10px] text-gray-500"
+                                    x-text="p.ig_business_id ? 'FB + IG Linked' : 'FB Only'"></div>
                             </div>
                         </div>
-                        <svg class="w-4 h-4 text-gray-600 group-hover:text-white" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        <svg class="w-4 h-4 text-gray-600 group-hover:text-white" fill="none" viewBox="0 0 24 24">
+                            <path stroke="currentColor" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
                     </button>
                 </template>
-                
+
                 <div x-show="pages.length === 0" class="text-center py-4 text-gray-500 text-xs">
                     Loading pages...
                 </div>
@@ -389,6 +413,7 @@ if (!isLoggedIn()) {
             analyzing: false,
             syncing: false,
             sidebarOpen: false,
+            showRightSidebar: true, // Default open on desktop
             activeTab: 'all',
             searchQuery: '',
 
@@ -413,9 +438,9 @@ if (!isLoggedIn()) {
                     return true;
                 });
             },
-            
+
             getSentimentLabel(val) {
-                if(!val) return '<?php echo __('neutral'); ?>';
+                if (!val) return '<?php echo __('neutral'); ?>';
                 const map = {
                     'positive': '<?php echo __('positive'); ?>', // إيجابي
                     'neutral': '<?php echo __('neutral'); ?>',   // محايد
@@ -427,17 +452,21 @@ if (!isLoggedIn()) {
 
             init() {
                 this.fetchConversations();
-                
-                // Set initial state
+
+                // Set initial states based on screen size
+                const isDesktop = window.innerWidth >= 1280;
                 this.sidebarOpen = window.innerWidth >= 1024;
+                this.showRightSidebar = isDesktop;
 
                 // Handle Resize auto-close
                 window.addEventListener('resize', () => {
-                    if (window.innerWidth < 1024 && this.sidebarOpen) {
+                    if (window.innerWidth < 1024) {
                         this.sidebarOpen = false;
-                    } else if (window.innerWidth >= 1280 && !this.sidebarOpen) {
-                        // Optional: Re-open on very large screens
-                        this.sidebarOpen = true;
+                    }
+                    if (window.innerWidth < 1280) {
+                        this.showRightSidebar = false;
+                    } else if (window.innerWidth >= 1280) {
+                        this.showRightSidebar = true;
                     }
                 });
 
@@ -467,7 +496,7 @@ if (!isLoggedIn()) {
                 if (this.pages.length === 0) {
                     fetch('smart_inbox_endpoint.php?action=list_pages')
                         .then(r => r.json())
-                        .then(d => { if(d.success) this.pages = d.pages; });
+                        .then(d => { if (d.success) this.pages = d.pages; });
                 }
             },
 
@@ -479,7 +508,7 @@ if (!isLoggedIn()) {
             syncConversations(pageId = null) {
                 this.syncing = true;
                 const url = pageId ? `smart_inbox_endpoint.php?action=sync_conversations&page_id=${pageId}` : 'smart_inbox_endpoint.php?action=sync_conversations';
-                
+
                 fetch(url)
                     .then(r => r.json())
                     .then(data => {
