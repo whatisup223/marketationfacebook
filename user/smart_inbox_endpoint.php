@@ -115,6 +115,8 @@ try {
                         'token' => $page['page_access_token'], // Uses same page token usually
                         'name' => $page['page_name'] . ' (IG)'
                     ];
+                } else {
+                    $errors[] = "Page '{$page['page_name']}' has no linked Instagram Business Account.";
                 }
 
                 foreach ($tasks as $task) {
@@ -136,6 +138,8 @@ try {
                     $data = json_decode($response, true);
 
                     if ($httpCode !== 200 || !isset($data['data'])) {
+                        $errMsg = isset($data['error']) ? $data['error']['message'] : "HTTP $httpCode";
+                        $errors[] = "{$task['name']} Sync Failed: $errMsg";
                         continue;
                     }
 

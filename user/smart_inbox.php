@@ -96,9 +96,14 @@ if (!isLoggedIn()) {
                     <div class="flex justify-between items-start mb-1">
                         <div class="flex items-center gap-2">
                             <!-- Platform Icon -->
-                            <div class="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs"
-                                :class="conv.platform === 'facebook' ? 'bg-blue-600' : 'bg-pink-600'">
-                                <span x-text="conv.client_name ? conv.client_name.charAt(0).toUpperCase() : '?'"></span>
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-lg shrink-0"
+                                :class="conv.platform === 'facebook' ? 'bg-blue-600' : 'bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-500'">
+                                <template x-if="conv.platform === 'facebook'">
+                                    <i class="fa-brands fa-facebook-f"></i>
+                                </template>
+                                <template x-if="conv.platform !== 'facebook'">
+                                    <i class="fa-brands fa-instagram"></i>
+                                </template>
                             </div>
                             <div>
                                 <h4 class="text-sm font-bold text-gray-200 leading-tight"
