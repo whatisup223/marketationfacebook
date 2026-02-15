@@ -1670,7 +1670,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     </label>
                     <div class="space-y-3 mb-3">
                         <template x-for="(btn, index) in modalButtons" :key="index">
-                            <div class="flex gap-2 items-center">
+                            <div class="flex gap-3 items-end">
                                 <div class="flex-1 space-y-1">
                                     <input type="text" x-model="btn.title"
                                         placeholder="<?php echo __('button_label_placeholder'); ?>"
