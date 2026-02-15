@@ -641,6 +641,49 @@ try {
         $pdo->exec("ALTER TABLE `fb_pages` ADD COLUMN `bot_handover_reply` TEXT DEFAULT NULL AFTER `bot_repetition_threshold`");
     }
 
+    // --- 046: Smart Unified Inbox & AI Advisor ---
+    $pdo->exec("CREATE TABLE IF NOT EXISTS `ai_advisor_settings` (
+        `user_id` INT PRIMARY KEY,
+        `business_name` VARCHAR(255),
+        `business_description` TEXT,
+        `products_services` TEXT,
+        `tone_of_voice` VARCHAR(50) DEFAULT 'friendly',
+        `is_active` TINYINT(1) DEFAULT 0,
+        `custom_instructions` TEXT, 
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+    $pdo->exec("CREATE TABLE IF NOT EXISTS `unified_conversations` (
+        `id` INT AUTO_INCREMENT PRIMARY KEY,
+        `user_id` INT NOT NULL,
+        `platform` ENUM('facebook', 'instagram') NOT NULL,
+        `client_psid` VARCHAR(255) NOT NULL,
+        `client_name` VARCHAR(255),
+        `last_message_text` TEXT,
+        `last_message_time` DATETIME,
+        `is_read` TINYINT(1) DEFAULT 0,
+        `ai_sentiment` ENUM('positive', 'neutral', 'negative', 'angry') DEFAULT NULL,
+        `ai_intent` VARCHAR(100) DEFAULT NULL,
+        `ai_summary` TEXT,
+        `ai_next_best_action` TEXT,
+        `ai_suggested_replies` JSON,
+        `last_analyzed_at` DATETIME,
+        `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY `unique_client` (`user_id`, `platform`, `client_psid`),
+        FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+    $pdo->exec("CREATE TABLE IF NOT EXISTS `unified_messages` (
+        `id` INT AUTO_INCREMENT PRIMARY KEY,
+        `conversation_id` INT NOT NULL,
+        `sender` ENUM('user', 'page') NOT NULL,
+        `message_text` TEXT,
+        `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (`conversation_id`) REFERENCES `unified_conversations`(`id`) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
     echo "✅ Master Migration completed successfully!\n";
 
 } catch (Exception $e) {
