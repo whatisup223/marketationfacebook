@@ -96,13 +96,21 @@ if (!isLoggedIn()) {
                     <div class="flex justify-between items-start mb-1">
                         <div class="flex items-center gap-2">
                             <!-- Platform Icon -->
-                            <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-lg shrink-0"
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center text-white shrink-0 shadow-lg"
                                 :class="conv.platform === 'facebook' ? 'bg-blue-600' : 'bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-500'">
                                 <template x-if="conv.platform === 'facebook'">
-                                    <i class="fa-brands fa-facebook-f"></i>
+                                    <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                                        <path
+                                            d="M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036c-2.148 0-2.797 1.603-2.797 4.16v1.972h3.618l-.291 3.667h-3.327v7.98h-5.017z" />
+                                    </svg>
                                 </template>
                                 <template x-if="conv.platform !== 'facebook'">
-                                    <i class="fa-brands fa-instagram"></i>
+                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                                        <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                                    </svg>
                                 </template>
                             </div>
                             <div>
@@ -213,8 +221,9 @@ if (!isLoggedIn()) {
                 </div>
 
                 <!-- Smart Suggestions Bar -->
-                <div class="px-6 py-2 bg-gray-900 border-t border-white/5" x-show="suggestions.length > 0">
-                    <div class="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                <div class="px-6 py-2 bg-gray-900 border-t border-white/5 w-full overflow-hidden"
+                    x-show="suggestions.length > 0">
+                    <div class="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar max-w-full">
                         <div class="text-[10px] font-bold text-indigo-400 uppercase tracking-wider shrink-0 mr-2">
                             <?php echo __('ai_suggestions'); ?>
                         </div>
