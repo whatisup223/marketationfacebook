@@ -296,6 +296,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
 
+        // DEBUG: Log what we received
+        file_put_contents(__DIR__ . '/../debug_save_rule.txt', date('Y-m-d H:i:s') . " - POST Data:\n" . print_r($_POST, true) . "\n\n", FILE_APPEND);
+        file_put_contents(__DIR__ . '/../debug_save_rule.txt', "reply_buttons value: " . var_export($reply_buttons, true) . "\n\n", FILE_APPEND);
+
         try {
             if ($rule_id) {
                 // Update
