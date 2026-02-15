@@ -285,7 +285,7 @@ if (!isLoggedIn()) {
                     </svg>
                     <?php echo __('next_best_action'); ?>
                 </h3>
-                <p class="text-sm text-gray-200 font-medium leading-relaxed"
+                <p class="text-sm text-gray-200 font-medium leading-relaxed break-words whitespace-pre-wrap"
                     x-text="analysis.next_best_action || '<?php echo __('no_recommendation'); ?>'"></p>
             </div>
 
@@ -320,27 +320,27 @@ if (!isLoggedIn()) {
             newMessage: '',
             analyzing: false,
             syncing: false,
-            sidebarOpen: false, 
+            sidebarOpen: false,
             activeTab: 'all',
             searchQuery: '',
-            
+
             analysis: {
                 sentiment: null,
                 intent: null,
                 summary: null,
                 next_best_action: null
             },
-            
+
             get filteredConversations() {
                 return this.conversations.filter(c => {
                     // Tab Filter
                     if (this.activeTab !== 'all' && c.platform !== this.activeTab) return false;
-                    
+
                     // Search Filter
                     if (this.searchQuery) {
                         const q = this.searchQuery.toLowerCase();
-                        return (c.client_name && c.client_name.toLowerCase().includes(q)) || 
-                               (c.last_message_text && c.last_message_text.toLowerCase().includes(q));
+                        return (c.client_name && c.client_name.toLowerCase().includes(q)) ||
+                            (c.last_message_text && c.last_message_text.toLowerCase().includes(q));
                     }
                     return true;
                 });
@@ -350,7 +350,7 @@ if (!isLoggedIn()) {
                 this.fetchConversations();
                 // Close sidebar when selecting convo on mobile
                 this.$watch('selectedConv', () => {
-                   if (window.innerWidth < 768) this.sidebarOpen = false;
+                    if (window.innerWidth < 768) this.sidebarOpen = false;
                 });
                 // Poll for new messages every 10s
                 setInterval(() => {

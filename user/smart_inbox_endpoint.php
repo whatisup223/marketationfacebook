@@ -85,6 +85,9 @@ try {
             $stmt->execute([$userId]);
             $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+            // Prevent session locking during long sync
+            session_write_close();
+
             $syncedCount = 0;
             $errors = [];
             $startTime = time();
@@ -118,9 +121,9 @@ try {
                     if (time() - $startTime > 90)
                         break;
 
-                    $url = "https://graph.facebook.com/v19.0/{$task['id']}/conversations?fields=id,updated_time,participants,messages.limit(1){message,created_time,from}&limit=50&access_token={$task['token']}";
+                    $url = "https://graph.facebook.com/v19.0/{$task['id']}/conversations?fields=id,updated_time,participants,messages.limit(1){message,created_time,from}&limit=20&access_token={$task['token']}";
                     if ($task['platform'] === 'instagram') {
-                        $url = "https://graph.facebook.com/v19.0/{$task['id']}/conversations?platform=instagram&fields=id,updated_time,participants,messages.limit(1){message,created_time,from}&limit=50&access_token={$task['token']}";
+                        $url = "https://graph.facebook.com/v19.0/{$task['id']}/conversations?platform=instagram&fields=id,updated_time,participants,messages.limit(1){message,created_time,from}&limit=20&access_token={$task['token']}";
                     }
 
                     $ch = curl_init($url);

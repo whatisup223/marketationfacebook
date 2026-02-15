@@ -84,13 +84,15 @@ class SmartInboxEngine
         Tone: {$context['tone_of_voice']}
         Rules: {$context['custom_instructions']}
 
-        Analyze this conversation strictly returning VALID JSON only:
+        Analyze this conversation strictly returning VALID JSON only. 
+        IMPORTANT: ALL VALUES MUST BE IN ARABIC (except keys).
+        
         {
             \"sentiment\": \"positive|neutral|negative|angry\",
-            \"intent\": \"short intent\",
-            \"summary\": \"1 sentence summary\",
-            \"next_best_action\": \"advice for agent\",
-            \"suggested_replies\": [\"reply1\", \"reply2\"]
+            \"intent\": \"short intent in arabic\",
+            \"summary\": \"1 sentence summary in arabic\",
+            \"next_best_action\": \"advice for agent in arabic\",
+            \"suggested_replies\": [\"reply1 in arabic\", \"reply2 in arabic\"]
         }
 
         Conversation:
