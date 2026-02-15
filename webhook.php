@@ -744,6 +744,31 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
         debugLog("BUTTONS DEBUG: Is Array: " . (is_array($buttons) ? 'YES' : 'NO'));
         debugLog("BUTTONS DEBUG: Count: " . (is_array($buttons) ? count($buttons) : 0));
 
+        // RESTORED FEATURE: Persistent Menu Logic
+        // If the current reply HAS NO BUTTONS, try to append the "items" from the Main Menu rule (keyword: 'مهتم')
+        // This simulates a persistent menu behavior where the user can always navigate back.
+        if (!$buttons || !is_array($buttons) || count($buttons) === 0) {
+
+            // Only do this if we are NOT already in the main menu (avoid loop if main menu itself has no buttons - unlikely)
+            if (mb_strpos($matched_rule['keywords'], 'مهتم') === false) {
+
+                debugLog("BUTTONS DEBUG: No buttons in current rule. Attempting to fetch Main Menu buttons...");
+
+                // Fetch rule with keyword 'مهتم' for this page & platform
+                $stmt = $pdo->prepare("SELECT reply_buttons FROM auto_reply_rules WHERE page_id = ? AND platform = ? AND reply_source = 'message' AND trigger_type = 'keyword' AND keywords LIKE '%مهتم%' AND is_active = 1 LIMIT 1");
+                $stmt->execute([$db_page_id, $platform]);
+                $main_menu_rule = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                if ($main_menu_rule && !empty($main_menu_rule['reply_buttons'])) {
+                    $potential_buttons = json_decode($main_menu_rule['reply_buttons'], true);
+                    if (is_array($potential_buttons) && count($potential_buttons) > 0) {
+                        $buttons = $potential_buttons;
+                        debugLog("BUTTONS DEBUG: Successfully loaded Main Menu buttons from 'مهتم' rule.");
+                    }
+                }
+            }
+        }
+
         // Then send text with buttons
         if ($buttons && is_array($buttons) && count($buttons) > 0) {
             debugLog("BUTTONS DEBUG: Sending WITH buttons");

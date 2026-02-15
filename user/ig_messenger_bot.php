@@ -1694,116 +1694,123 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                                 <?php echo __('missing_rule'); ?>
                                             </span>
                                         </template>
-                                    </div>
-                                    <div class="relative">
-                                        <input type="text" x-model="btn.payload"
-                                            placeholder="<?php echo __('button_payload_placeholder'); ?>"
-                                            class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white text-xs focus:ring-1 focus:ring-pink-500 font-mono text-indigo-300 pr-16 leading-none">
-                                        <button @click="suggestPayload(index)" type="button"
-                                            class="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] bg-pink-500/10 hover:bg-pink-500/20 text-pink-400 px-2 py-1 rounded-lg border border-pink-500/10 transition-colors uppercase font-black">
-                                            <?php echo __('suggest_payload'); ?>
-                                        </button>
-                                    </div>
-                                </div>
-                                <button @click="removeButton(index)"
-                                    class="p-3 bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500/20 transition-colors border border-red-500/10">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M6 18L18 6M6 6l12 12"></path>
-                                    </svg>
-                                </button>
-                            </div>
+                                        </span>
                         </template>
                     </div>
-                    <button type="button" @click="addButton()" x-show="modalButtons.length < 3"
-                        class="w-full py-3 border border-dashed border-white/10 rounded-xl text-xs font-bold text-gray-400 hover:text-white hover:border-white/30 hover:bg-white/5 transition-all flex items-center justify-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4">
-                            </path>
-                        </svg>
-                        <?php echo __('add_button'); ?>
-                    </button>
-                    <p class="text-[10px] text-gray-500 mt-2 italic"><?php echo __('buttons_hint'); ?></p>
-                </div>
+                    <div class="relative">
+                        <input type="text" x-model="btn.payload" list="available-payloads"
+                            placeholder="<?php echo __('button_payload_placeholder'); ?>"
+                            class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white text-xs focus:ring-1 focus:ring-pink-500 font-mono text-indigo-300 pr-16 leading-none">
 
+                        <datalist id="available-payloads">
+                            <template x-for="rule in fullRules" :key="rule.id">
+                                <template x-for="keyword in rule.keywords.split(',').map(k => k.trim())" :key="keyword">
+                                    <option :value="keyword" x-text="keyword"></option>
+                                </template>
+                            </template>
+                        </datalist>
 
-
-                <!-- Advanced Feature Flags -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div class="flex flex-col gap-3 p-4 bg-white/5 rounded-2xl border border-white/5">
-                        <div class="flex items-center justify-between">
-                            <div class="p-2.5 bg-pink-500/10 rounded-xl text-pink-400">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z">
-                                    </path>
-                                </svg>
-                            </div>
-                            <div
-                                class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
-                                <input type="checkbox" x-model="modalAiSafe" id="toggleAiSafeMod"
-                                    class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
-                                <label for="toggleAiSafeMod" :class="modalAiSafe ? 'bg-pink-600' : 'bg-gray-700'"
-                                    class="toggle-label block overflow-hidden h-5 rounded-full cursor-pointer transition-colors"></label>
-                            </div>
-                        </div>
-                        <span
-                            class="text-[9px] font-black text-white uppercase tracking-wider"><?php echo __('ai_safe_rule'); ?></span>
-                    </div>
-
-                    <div class="flex flex-col gap-3 p-4 bg-white/5 rounded-2xl border border-white/5">
-                        <div class="flex items-center justify-between">
-                            <div class="p-2.5 bg-orange-500/10 rounded-xl text-orange-400">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                            </div>
-                            <div
-                                class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
-                                <input type="checkbox" x-model="modalBypassSchedule" id="toggleBypassSchMod"
-                                    class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
-                                <label for="toggleBypassSchMod"
-                                    :class="modalBypassSchedule ? 'bg-pink-600' : 'bg-gray-700'"
-                                    class="toggle-label block overflow-hidden h-5 rounded-full cursor-pointer transition-colors"></label>
-                            </div>
-                        </div>
-                        <span
-                            class="text-[9px] font-black text-white uppercase tracking-wider"><?php echo __('bypass_schedule_rule'); ?></span>
-                    </div>
-
-                    <div class="flex flex-col gap-3 p-4 bg-white/5 rounded-2xl border border-white/5">
-                        <div class="flex items-center justify-between">
-                            <div class="p-2.5 bg-green-500/10 rounded-xl text-green-400">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z">
-                                    </path>
-                                </svg>
-                            </div>
-                            <div
-                                class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in flex-shrink-0">
-                                <input type="checkbox" x-model="modalBypassCooldown" id="toggleBypassCoolMod"
-                                    class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
-                                <label for="toggleBypassCoolMod"
-                                    :class="modalBypassCooldown ? 'bg-pink-600' : 'bg-gray-700'"
-                                    class="toggle-label block overflow-hidden h-5 rounded-full cursor-pointer transition-colors"></label>
-                            </div>
-                        </div>
-                        <span
-                            class="text-[9px] font-black text-white uppercase tracking-wider"><?php echo __('bypass_cooldown_rule'); ?></span>
+                        <button @click="suggestPayload(index)" type="button"
+                            class="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] bg-pink-500/10 hover:bg-pink-500/20 text-pink-400 px-2 py-1 rounded-lg border border-pink-500/10 transition-colors uppercase font-black">
+                            <?php echo __('suggest_payload'); ?>
+                        </button>
                     </div>
                 </div>
-
-
-
-                <button @click="saveRule()"
-                    class="w-full bg-pink-600 hover:bg-pink-500 text-white font-bold py-4 rounded-2xl shadow-xl shadow-pink-600/20 transition-all transform active:scale-95 text-lg">
-                    <?php echo __('save_rule'); ?>
+                <button @click="removeButton(index)"
+                    class="p-3 bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500/20 transition-colors border border-red-500/10">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
                 </button>
             </div>
+            </template>
+        </div>
+        <button type="button" @click="addButton()" x-show="modalButtons.length < 3"
+            class="w-full py-3 border border-dashed border-white/10 rounded-xl text-xs font-bold text-gray-400 hover:text-white hover:border-white/30 hover:bg-white/5 transition-all flex items-center justify-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4">
+                </path>
+            </svg>
+            <?php echo __('add_button'); ?>
+        </button>
+        <p class="text-[10px] text-gray-500 mt-2 italic"><?php echo __('buttons_hint'); ?></p>
+    </div>
+
+
+
+    <!-- Advanced Feature Flags -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div class="flex flex-col gap-3 p-4 bg-white/5 rounded-2xl border border-white/5">
+            <div class="flex items-center justify-between">
+                <div class="p-2.5 bg-pink-500/10 rounded-xl text-pink-400">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z">
+                        </path>
+                    </svg>
+                </div>
+                <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                    <input type="checkbox" x-model="modalAiSafe" id="toggleAiSafeMod"
+                        class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
+                    <label for="toggleAiSafeMod" :class="modalAiSafe ? 'bg-pink-600' : 'bg-gray-700'"
+                        class="toggle-label block overflow-hidden h-5 rounded-full cursor-pointer transition-colors"></label>
+                </div>
+            </div>
+            <span
+                class="text-[9px] font-black text-white uppercase tracking-wider"><?php echo __('ai_safe_rule'); ?></span>
+        </div>
+
+        <div class="flex flex-col gap-3 p-4 bg-white/5 rounded-2xl border border-white/5">
+            <div class="flex items-center justify-between">
+                <div class="p-2.5 bg-orange-500/10 rounded-xl text-orange-400">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                    <input type="checkbox" x-model="modalBypassSchedule" id="toggleBypassSchMod"
+                        class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
+                    <label for="toggleBypassSchMod" :class="modalBypassSchedule ? 'bg-pink-600' : 'bg-gray-700'"
+                        class="toggle-label block overflow-hidden h-5 rounded-full cursor-pointer transition-colors"></label>
+                </div>
+            </div>
+            <span
+                class="text-[9px] font-black text-white uppercase tracking-wider"><?php echo __('bypass_schedule_rule'); ?></span>
+        </div>
+
+        <div class="flex flex-col gap-3 p-4 bg-white/5 rounded-2xl border border-white/5">
+            <div class="flex items-center justify-between">
+                <div class="p-2.5 bg-green-500/10 rounded-xl text-green-400">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z">
+                        </path>
+                    </svg>
+                </div>
+                <div
+                    class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in flex-shrink-0">
+                    <input type="checkbox" x-model="modalBypassCooldown" id="toggleBypassCoolMod"
+                        class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 right-5 transition-all duration-300" />
+                    <label for="toggleBypassCoolMod" :class="modalBypassCooldown ? 'bg-pink-600' : 'bg-gray-700'"
+                        class="toggle-label block overflow-hidden h-5 rounded-full cursor-pointer transition-colors"></label>
+                </div>
+            </div>
+            <span
+                class="text-[9px] font-black text-white uppercase tracking-wider"><?php echo __('bypass_cooldown_rule'); ?></span>
         </div>
     </div>
+
+
+
+    <button @click="saveRule()"
+        class="w-full bg-pink-600 hover:bg-pink-500 text-white font-bold py-4 rounded-2xl shadow-xl shadow-pink-600/20 transition-all transform active:scale-95 text-lg">
+        <?php echo __('save_rule'); ?>
+    </button>
+</div>
+</div>
+</div>
 </div>
 
 <!-- Custom Range Modal -->
