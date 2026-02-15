@@ -13,18 +13,37 @@ if (!isLoggedIn()) {
     <div class="w-80 flex-shrink-0 border-r border-white/5 bg-gray-900/95 backdrop-blur-xl flex flex-col">
         <!-- Header -->
         <div class="p-4 border-b border-white/5 flex items-center justify-between">
-            <h2 class="text-lg font-bold text-white tracking-wide">Smart Inbox</h2>
+            <h2 class="text-lg font-bold text-white tracking-wide"><?php echo __('smart_inbox'); ?></h2>
             <div class="flex gap-2">
+                <!-- Sync Button -->
+                <button @click="syncConversations()" 
+                    class="p-2 text-gray-400 hover:text-indigo-400 transition-colors relative"
+                    :title="'<?php echo __('sync_conversations'); ?>'">
+                    <span x-show="syncing" class="absolute inset-0 flex items-center justify-center">
+                        <svg class="w-5 h-5 animate-spin text-indigo-500" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </span>
+                    <span x-show="!syncing">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                    </span>
+                </button>
+
+                <!-- Refresh (Standard) -->
                 <button @click="fetchConversations()" class="p-2 text-gray-400 hover:text-white transition-colors"
-                    title="Refresh">
+                    title="<?php echo __('refresh'); ?>">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
                         </path>
                     </svg>
                 </button>
+
                 <a href="ai_advisor_settings.php" class="p-2 text-gray-400 hover:text-indigo-400 transition-colors"
-                    title="Settings">
+                    title="<?php echo __('settings'); ?>">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
@@ -38,7 +57,7 @@ if (!isLoggedIn()) {
 
         <!-- Search -->
         <div class="p-4">
-            <input type="text" placeholder="Search conversations..."
+            <input type="text" placeholder="<?php echo __('search_conversations'); ?>"
                 class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 transition-colors">
         </div>
 
@@ -54,10 +73,10 @@ if (!isLoggedIn()) {
                             <!-- Platform Icon -->
                             <div class="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs"
                                 :class="conv.platform === 'facebook' ? 'bg-blue-600' : 'bg-pink-600'">
-                                <span x-text="conv.client_name.charAt(0).toUpperCase()"></span>
+                                <span x-text="conv.client_name ? conv.client_name.charAt(0).toUpperCase() : '?'"></span>
                             </div>
                             <div>
-                                <h4 class="text-sm font-bold text-gray-200 leading-tight" x-text="conv.client_name">
+                                <h4 class="text-sm font-bold text-gray-200 leading-tight" x-text="conv.client_name || 'Unknown User'">
                                 </h4>
                                 <span class="text-[10px] text-gray-500"
                                     x-text="formatDate(conv.last_message_time)"></span>
@@ -77,7 +96,7 @@ if (!isLoggedIn()) {
                     <p class="text-xs text-gray-400 line-clamp-1 mb-2" x-text="conv.last_message_text"></p>
 
                     <!-- Intent Badge -->
-                    <template x-if="conv.ai_intent">
+                    <template x-if="conv.ai_intent && conv.ai_intent !== 'General'">
                         <span
                             class="inline-block px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-300 text-[10px] font-medium border border-indigo-500/20"
                             x-text="conv.ai_intent"></span>
@@ -86,7 +105,10 @@ if (!isLoggedIn()) {
             </template>
 
             <div x-show="conversations.length === 0" class="text-center text-gray-500 text-sm mt-10">
-                No active conversations found.
+                <?php echo __('no_active_conversations'); ?>
+                <div class="mt-2 text-xs text-gray-600">
+                    <?php echo __('sync_from_linked_fb'); ?>
+                </div>
             </div>
         </div>
     </div>
@@ -100,7 +122,7 @@ if (!isLoggedIn()) {
                         d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z">
                     </path>
                 </svg>
-                <p>Select a conversation to start chatting</p>
+                <p><?php echo __('select_conversation'); ?></p>
             </div>
         </template>
 
@@ -112,7 +134,7 @@ if (!isLoggedIn()) {
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
                             :class="selectedConv.platform === 'facebook' ? 'bg-blue-600' : 'bg-pink-600'">
-                            <span x-text="selectedConv.client_name.charAt(0)"></span>
+                            <span x-text="selectedConv.client_name ? selectedConv.client_name.charAt(0) : '?'"></span>
                         </div>
                         <div>
                             <h3 class="font-bold text-white text-lg" x-text="selectedConv.client_name"></h3>
@@ -130,7 +152,7 @@ if (!isLoggedIn()) {
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                         </svg>
-                        <span x-text="analyzing ? 'Thinking...' : 'Analyze with AI'"></span>
+                        <span x-text="analyzing ? '<?php echo __('thinking'); ?>' : '<?php echo __('analyze_with_ai'); ?>'"></span>
                     </button>
                 </div>
 
@@ -153,7 +175,7 @@ if (!isLoggedIn()) {
                 <div class="px-6 py-2 bg-gray-900 border-t border-white/5" x-show="suggestions.length > 0">
                     <div class="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar">
                         <div class="text-[10px] font-bold text-indigo-400 uppercase tracking-wider shrink-0 mr-2">
-                            AI Suggestions:
+                            <?php echo __('ai_suggestions'); ?>
                         </div>
                         <template x-for="reply in suggestions">
                             <button @click="newMessage = reply"
@@ -168,7 +190,7 @@ if (!isLoggedIn()) {
                 <div class="p-4 bg-gray-900 border-t border-white/5">
                     <div
                         class="glass-panel rounded-2xl p-2 flex items-end gap-2 bg-gray-800/50 border border-white/10 focus-within:ring-2 ring-indigo-500/50 transition-all">
-                        <textarea x-model="newMessage" placeholder="Type a message..." rows="1"
+                        <textarea x-model="newMessage" placeholder="<?php echo __('type_message'); ?>" rows="1"
                             class="w-full bg-transparent border-none text-white focus:ring-0 resize-none max-h-32 py-3 px-3 custom-scrollbar"
                             @keydown.enter.prevent="if(!$event.shiftKey) sendMessage()"></textarea>
 
@@ -191,26 +213,26 @@ if (!isLoggedIn()) {
         class="w-80 border-l border-white/5 bg-gray-900/95 backdrop-blur-xl flex flex-col overflow-y-auto custom-scrollbar">
 
         <div class="p-6 space-y-6">
-            <h3 class="text-sm font-bold text-gray-400 uppercase tracking-widest">AI Advisor Insights</h3>
+            <h3 class="text-sm font-bold text-gray-400 uppercase tracking-widest"><?php echo __('ai_advisor_insights'); ?></h3>
 
             <!-- Analysis Card -->
             <div
                 class="glass-panel p-5 rounded-2xl bg-gradient-to-br from-gray-800/50 to-gray-900/50 border border-white/10 group hover:border-indigo-500/30 transition-all">
                 <div class="flex items-center justify-between mb-4">
-                    <span class="text-xs font-bold text-gray-400">Current Mood</span>
+                    <span class="text-xs font-bold text-gray-400"><?php echo __('current_mood'); ?></span>
                     <span class="px-2 py-1 rounded-md text-xs font-bold uppercase border" :class="{
                             'bg-green-500/10 text-green-400 border-green-500/20': analysis.sentiment === 'positive',
                             'bg-gray-500/10 text-gray-400 border-gray-500/20': analysis.sentiment === 'neutral' || !analysis.sentiment,
                             'bg-red-500/10 text-red-400 border-red-500/20': ['negative', 'angry'].includes(analysis.sentiment)
-                        }" x-text="analysis.sentiment || 'Waiting...'"></span>
+                        }" x-text="analysis.sentiment || '<?php echo __('waiting'); ?>'"></span>
                 </div>
 
-                <h4 class="text-sm font-bold text-white mb-1">Intent</h4>
-                <p class="text-xs text-gray-400 mb-4" x-text="analysis.intent || 'Not analyzed yet'"></p>
+                <h4 class="text-sm font-bold text-white mb-1"><?php echo __('intent'); ?></h4>
+                <p class="text-xs text-gray-400 mb-4" x-text="analysis.intent || '<?php echo __('not_analyzed_yet'); ?>'"></p>
 
-                <h4 class="text-sm font-bold text-white mb-1">Summary</h4>
+                <h4 class="text-sm font-bold text-white mb-1"><?php echo __('summary'); ?></h4>
                 <p class="text-xs text-gray-400 leading-relaxed"
-                    x-text="analysis.summary || 'Analyze the conversation to generate a summary.'"></p>
+                    x-text="analysis.summary || '<?php echo __('analyze_summary_hint'); ?>'"></p>
             </div>
 
             <!-- Next Best Action -->
@@ -222,22 +244,22 @@ if (!isLoggedIn()) {
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                     </svg>
-                    Next Best Action
+                    <?php echo __('next_best_action'); ?>
                 </h3>
                 <p class="text-sm text-gray-200 font-medium leading-relaxed"
-                    x-text="analysis.next_best_action || 'No recommendation available yet.'"></p>
+                    x-text="analysis.next_best_action || '<?php echo __('no_recommendation'); ?>'"></p>
             </div>
 
             <!-- Customer Info (Mockup for now) -->
             <div class="border-t border-white/10 pt-6">
-                <h3 class="text-xs font-bold text-gray-500 uppercase mb-4">Customer Details</h3>
+                <h3 class="text-xs font-bold text-gray-500 uppercase mb-4"><?php echo __('customer_details'); ?></h3>
                 <div class="space-y-3">
                     <div class="flex justify-between text-xs">
-                        <span class="text-gray-400">Name</span>
+                        <span class="text-gray-400"><?php echo __('name'); ?></span>
                         <span class="text-white font-medium" x-text="selectedConv.client_name"></span>
                     </div>
                     <div class="flex justify-between text-xs">
-                        <span class="text-gray-400">Platform ID</span>
+                        <span class="text-gray-400"><?php echo __('platform_id'); ?></span>
                         <span class="text-white font-medium font-mono"
                             x-text="selectedConv.client_psid.substring(0, 10) + '...'"></span>
                     </div>
@@ -257,6 +279,7 @@ if (!isLoggedIn()) {
             selectedConv: null,
             newMessage: '',
             analyzing: false,
+            syncing: false,
             analysis: {
                 sentiment: null,
                 intent: null,
@@ -279,6 +302,26 @@ if (!isLoggedIn()) {
                         if (data.success) {
                             this.conversations = data.conversations;
                         }
+                    });
+            },
+
+            syncConversations() {
+                this.syncing = true;
+                fetch('../includes/api/smart_inbox_api.php?action=sync_conversations')
+                    .then(r => r.json())
+                    .then(data => {
+                        this.syncing = false;
+                        if (data.success) {
+                            // alert('<?php echo __('sync_success'); ?> (' + data.synced_count + ')');
+                            this.fetchConversations();
+                        } else {
+                            alert('<?php echo __('sync_error'); ?>: ' + (data.errors ? data.errors.join(', ') : 'Unknown'));
+                        }
+                    })
+                    .catch(e => {
+                        this.syncing = false;
+                        console.error(e);
+                        alert('<?php echo __('sync_error'); ?>');
                     });
             },
 

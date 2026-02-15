@@ -32,9 +32,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $stmt = $pdo->prepare($sql);
     if ($stmt->execute([$user_id, $business_name, $business_desc, $products, $tone, $custom, $is_active])) {
-        $message = "Settings saved successfully! Your AI Advisor is now updated.";
+        $message = __('settings_saved_success');
     } else {
-        $message = "Error saving settings.";
+        $message = __('save_failed');
     }
 }
 
@@ -129,8 +129,8 @@ $s = [
                                 class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
                                 <option value="friendly" <?php echo $s['tone_of_voice'] == 'friendly' ? 'selected' : ''; ?>>Friendly & Casual</option>
                                 <option value="professional" <?php echo $s['tone_of_voice'] == 'professional' ? 'selected' : ''; ?>>Professional & Formal</option>
-                                <option value="urgent" <?php echo $s['tone_of_voice'] == 'urgent' ? 'selected' : ''; ?>
-                                    >Urgent & Sales-Oriented</option>
+                                <option value="urgent" <?php echo $s['tone_of_voice'] == 'urgent' ? 'selected' : ''; ?>>
+                                    Urgent & Sales-Oriented</option>
                                 <option value="empathetic" <?php echo $s['tone_of_voice'] == 'empathetic' ? 'selected' : ''; ?>>Empathetic & Supportive</option>
                             </select>
                         </div>

@@ -53,10 +53,135 @@ try {
                 throw new Exception("Unauthorized access to conversation.");
 
             // Instantiate Engine
+            // Re-instantiate to be safe if file was just included
             $engine = new SmartInboxEngine($pdo);
             $result = $engine->analyzeCreateReply($convId, $userId);
 
             echo json_encode(['success' => true, 'analysis' => $result]);
+            break;
+
+        case 'sync_conversations':
+            // 1. Get all pages for user including IG business ID if available
+            $stmt = $pdo->prepare("
+                SELECT p.page_id, p.page_access_token, p.page_name, p.ig_business_id 
+                FROM fb_pages p 
+                JOIN fb_accounts a ON p.account_id = a.id 
+                WHERE a.user_id = ? AND a.is_active = 1
+            ");
+            $stmt->execute([$userId]);
+            $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $syncedCount = 0;
+            $errors = [];
+
+            foreach ($pages as $page) {
+                $tasks = [];
+
+                // Task 1: Facebook Conversations
+                $tasks[] = [
+                    'platform' => 'facebook',
+                    'id' => $page['page_id'],
+                    'token' => $page['page_access_token'],
+                    'name' => $page['page_name'] . ' (FB)'
+                ];
+
+                // Task 2: Instagram Conversations (if linked)
+                if (!empty($page['ig_business_id'])) {
+                    $tasks[] = [
+                        'platform' => 'instagram',
+                        'id' => $page['ig_business_id'],
+                        'token' => $page['page_access_token'], // Uses same page token usually
+                        'name' => $page['page_name'] . ' (IG)'
+                    ];
+                }
+
+                foreach ($tasks as $task) {
+                    $url = "https://graph.facebook.com/v19.0/{$task['id']}/conversations?fields=id,updated_time,participants,messages.limit(1){message,created_time,from}&limit=50&access_token={$task['token']}";
+                    if ($task['platform'] === 'instagram') {
+                        $url = "https://graph.facebook.com/v19.0/{$task['id']}/conversations?platform=instagram&fields=id,updated_time,participants,messages.limit(1){message,created_time,from}&limit=50&access_token={$task['token']}";
+                    }
+
+                    $ch = curl_init($url);
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                    $response = curl_exec($ch);
+                    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                    curl_close($ch);
+
+                    $data = json_decode($response, true);
+
+                    if ($httpCode !== 200 || !isset($data['data'])) {
+                        // $errors[] = "Error syncing {$task['name']}: " . ($data['error']['message'] ?? 'Unknown Error');
+                        continue;
+                    }
+
+                    foreach ($data['data'] as $fbConv) {
+                        $clientName = "Unknown User";
+                        $clientPsid = null;
+
+                        if (isset($fbConv['participants']['data'])) {
+                            foreach ($fbConv['participants']['data'] as $part) {
+                                if ($part['id'] != $task['id']) {
+                                    $clientName = $part['name'] ?? 'Instagram User';
+                                    $clientPsid = $part['id'];
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (!$clientPsid)
+                            continue;
+
+                        $lastMsgText = $fbConv['messages']['data'][0]['message'] ?? '[Media/Other]';
+                        $lastMsgTime = isset($fbConv['messages']['data'][0]['created_time'])
+                            ? date('Y-m-d H:i:s', strtotime($fbConv['messages']['data'][0]['created_time']))
+                            : date('Y-m-d H:i:s');
+
+                        // Upsert
+                        $check = $pdo->prepare("SELECT id FROM unified_conversations WHERE user_id = ? AND platform = ? AND client_psid = ?");
+                        $check->execute([$userId, $task['platform'], $clientPsid]);
+                        $existing = $check->fetch();
+
+                        if ($existing) {
+                            $convId = $existing['id'];
+                            $upd = $pdo->prepare("UPDATE unified_conversations SET last_message_text = ?, last_message_time = ?, client_name = ? WHERE id = ?");
+                            $upd->execute([$lastMsgText, $lastMsgTime, $clientName, $convId]);
+                        } else {
+                            $ins = $pdo->prepare("INSERT INTO unified_conversations (user_id, platform, client_psid, client_name, last_message_text, last_message_time) VALUES (?, ?, ?, ?, ?, ?)");
+                            $ins->execute([$userId, $task['platform'], $clientPsid, $clientName, $lastMsgText, $lastMsgTime]);
+                            $convId = $pdo->lastInsertId();
+                        }
+
+                        $syncedCount++;
+
+                        // Fetch Messages
+                        $msgUrl = "https://graph.facebook.com/v19.0/{$fbConv['id']}/messages?fields=id,message,created_time,from&limit=50&access_token={$task['token']}";
+                        $chMsg = curl_init($msgUrl);
+                        curl_setopt($chMsg, CURLOPT_RETURNTRANSFER, true);
+                        $msgResp = curl_exec($chMsg);
+                        curl_close($chMsg);
+                        $msgData = json_decode($msgResp, true);
+
+                        if (isset($msgData['data'])) {
+                            $messages = array_reverse($msgData['data']);
+                            foreach ($messages as $m) {
+                                if (!isset($m['message']))
+                                    continue;
+                                $senderType = ($m['from']['id'] == $task['id']) ? 'page' : 'user';
+                                $msgTime = date('Y-m-d H:i:s', strtotime($m['created_time']));
+
+                                $dup = $pdo->prepare("SELECT id FROM unified_messages WHERE conversation_id = ? AND created_at = ? AND sender = ?");
+                                $dup->execute([$convId, $msgTime, $senderType]);
+                                if (!$dup->fetch()) {
+                                    $inMsg = $pdo->prepare("INSERT INTO unified_messages (conversation_id, sender, message_text, created_at) VALUES (?, ?, ?, ?)");
+                                    $inMsg->execute([$convId, $senderType, $m['message'], $msgTime]);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            echo json_encode(['success' => true, 'synced_count' => $syncedCount, 'errors' => $errors]);
             break;
 
         case 'send_message':
