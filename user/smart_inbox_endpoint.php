@@ -80,13 +80,19 @@ try {
                 }
             }
             try {
-                $pdo->query("SELECT meta_message_id FROM unified_messages LIMIT 1");
-            } catch (Exception $e) {
-                try {
+                // 1. Column meta_message_id
+                $cols = $pdo->query("SHOW COLUMNS FROM unified_messages LIKE 'meta_message_id'")->fetchAll();
+                if (empty($cols)) {
                     $pdo->exec("ALTER TABLE unified_messages ADD COLUMN meta_message_id VARCHAR(255) NULL AFTER message_text");
-                    $pdo->exec("ALTER TABLE unified_messages ADD UNIQUE KEY uk_meta_id (meta_message_id)");
-                } catch (Exception $ex) {
                 }
+                // 2. Unique Index uk_meta_id
+                $idx = $pdo->query("SHOW INDEX FROM unified_messages WHERE Key_name = 'uk_meta_id'")->fetchAll();
+                if (empty($idx)) {
+                    // Clean duplicates first to ensure index can be created
+                    $pdo->exec("DELETE t1 FROM unified_messages t1 INNER JOIN unified_messages t2 WHERE t1.id < t2.id AND t1.meta_message_id = t2.meta_message_id AND t1.meta_message_id IS NOT NULL");
+                    $pdo->exec("ALTER TABLE unified_messages ADD UNIQUE KEY uk_meta_id (meta_message_id)");
+                }
+            } catch (Exception $ex) {
             }
 
             $specificPageId = $_GET['page_id'] ?? null;
@@ -229,8 +235,6 @@ try {
                         if (isset($msgData['data'])) {
                             $messages = array_reverse($msgData['data']);
 
-                            // Batched insert would be better, but sticking to loop for now
-                            // Optimization: Check most recent message in DB first
                             foreach ($messages as $m) {
                                 if (!isset($m['message']))
                                     continue;
@@ -238,10 +242,9 @@ try {
                                 $msgTime = date('Y-m-d H:i:s', strtotime($m['created_time']));
                                 $metaId = $m['id'] ?? null;
 
-                                // Quick check to avoid duplicates
-                                // Use IGNORE because we added UNIQUE KEY on meta_message_id
-                                $inMsg = $pdo->prepare("INSERT IGNORE INTO unified_messages (conversation_id, sender, message_text, created_at, meta_message_id) VALUES (?, ?, ?, ?, ?)");
-                                $inMsg->execute([$convId, $senderType, $m['message'], $msgTime, $metaId]);
+                                // Use IGNORE with correct column order for uk_meta_id
+                                $inMsg = $pdo->prepare("INSERT IGNORE INTO unified_messages (conversation_id, sender, message_text, meta_message_id, created_at) VALUES (?, ?, ?, ?, ?)");
+                                $inMsg->execute([$convId, $senderType, $m['message'], $metaId, $msgTime]);
                             }
                         }
                     }

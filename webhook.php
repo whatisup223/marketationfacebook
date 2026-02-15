@@ -141,9 +141,9 @@ function handleFacebookEvent($data, $pdo)
                 $message_text = '';
                 $meta_id = $messaging['message']['mid'] ?? null;
 
-                // Additional safety: Skip if sender is the page itself (shouldn't happen with is_echo check)
-                if ($sender_id == $entry_id) {
-                    debugLog("Skipping message from page itself: $sender_id");
+                // Additional safety: Skip if sender is the page itself, UNLESS it's an echo (bot/manual reply)
+                if ($sender_id == $entry_id && !$is_echo) {
+                    debugLog("Skipping non-echo message from page itself: $sender_id");
                     continue;
                 }
 
@@ -181,7 +181,11 @@ function handleFacebookEvent($data, $pdo)
                     // For echo messages, the 'sender' in the webhook is the Page ID, 
                     // but for our unified_conversations table, we always track by the 'User PSID'.
                     $client_psid = $is_echo ? $recipient_id : $sender_id;
-                    updateUnifiedInbox($pdo, $platform, $entry_id, $client_psid, $sender_name, $message_text, $sender_type, $meta_id);
+
+                    // Capture timestamp if provided (Convert ms to datetime)
+                    $msgTimestamp = isset($messaging['timestamp']) ? date('Y-m-d H:i:s', $messaging['timestamp'] / 1000) : null;
+
+                    updateUnifiedInbox($pdo, $platform, $entry_id, $client_psid, $sender_name, $message_text, $sender_type, $meta_id, $msgTimestamp);
                 } catch (Exception $e) {
                     debugLog("Unified Inbox Update Failed: " . $e->getMessage());
                 }
@@ -1070,8 +1074,29 @@ function triggerHandoverEmail($pdo, $user_id, $page_name, $source, $sender_name,
 /**
  * Updates the Unified Inbox tables and triggers Pusher real-time event
  */
-function updateUnifiedInbox($pdo, $platform, $pageId, $senderId, $senderName, $messageText, $senderType = 'user', $metaMessageId = null)
+function updateUnifiedInbox($pdo, $platform, $pageId, $senderId, $senderName, $messageText, $senderType = 'user', $metaMessageId = null, $customTimestamp = null)
 {
+    // Self-Healing: Ensure column and index exist
+    static $migrationDone = false;
+    if (!$migrationDone) {
+        try {
+            // 1. Column
+            $cols = $pdo->query("SHOW COLUMNS FROM unified_messages LIKE 'meta_message_id'")->fetchAll();
+            if (empty($cols)) {
+                $pdo->exec("ALTER TABLE unified_messages ADD COLUMN meta_message_id VARCHAR(255) NULL AFTER message_text");
+            }
+            // 2. Index (Clean duplicates first)
+            $idx = $pdo->query("SHOW INDEX FROM unified_messages WHERE Key_name = 'uk_meta_id'")->fetchAll();
+            if (empty($idx)) {
+                // Remove duplicates to allow index creation
+                $pdo->exec("DELETE t1 FROM unified_messages t1 INNER JOIN unified_messages t2 WHERE t1.id < t2.id AND t1.meta_message_id = t2.meta_message_id AND t1.meta_message_id IS NOT NULL");
+                $pdo->exec("ALTER TABLE unified_messages ADD UNIQUE KEY uk_meta_id (meta_message_id)");
+            }
+            $migrationDone = true;
+        } catch (Exception $e) { /* Fail silently */
+        }
+    }
+
     // 1. Find User ID
     $userId = null;
     if ($platform === 'whatsapp') {
@@ -1098,20 +1123,20 @@ function updateUnifiedInbox($pdo, $platform, $pageId, $senderId, $senderName, $m
     $stmt->execute([$userId, $platform, $senderId]);
     $existing = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    $nowUtc = date('Y-m-d H:i:s');
+    $nowUtc = $customTimestamp ?: date('Y-m-d H:i:s');
     $finalSenderName = $senderName;
 
     if ($existing) {
         $convId = $existing['id'];
         // Don't override a good name with a generic one
-        if (empty($finalSenderName) || in_array($finalSenderName, ['Instagram User', 'Facebook User'])) {
-            $finalSenderName = $existing['client_name'] ?? 'User ' . substr($senderId, -4);
+        if (empty($finalSenderName) || in_array($finalSenderName, ['Instagram User', 'Facebook User', 'عميل إنستجرام', 'عميل فيسبوك'])) {
+            $finalSenderName = $existing['client_name'] ?? ('User ' . substr($senderId, -4));
         }
 
         $stmt = $pdo->prepare("UPDATE unified_conversations SET last_message_text = ?, last_message_time = ?, client_name = ?, page_id = ? WHERE id = ?");
         $stmt->execute([$messageText, $nowUtc, $finalSenderName, $pageId, $convId]);
     } else {
-        if (empty($finalSenderName) || in_array($finalSenderName, ['Instagram User', 'Facebook User'])) {
+        if (empty($finalSenderName) || in_array($finalSenderName, ['Instagram User', 'Facebook User', 'عميل إنستجرام', 'عميل فيسبوك'])) {
             $finalSenderName = 'User ' . substr($senderId, -4);
         }
         $stmt = $pdo->prepare("INSERT INTO unified_conversations (user_id, platform, client_psid, client_name, last_message_text, last_message_time, page_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
@@ -1138,13 +1163,13 @@ function updateUnifiedInbox($pdo, $platform, $pageId, $senderId, $senderName, $m
             'id' => $msgId,
             'sender' => $senderType,
             'message_text' => $messageText,
-            'created_at' => date('Y-m-d H:i:s')
+            'created_at' => $nowUtc
         ],
         'conversation' => [
             'id' => $convId,
-            'client_name' => $senderName,
+            'client_name' => $finalSenderName,
             'last_message_text' => $messageText,
-            'last_message_time' => date('Y-m-d H:i:s'),
+            'last_message_time' => $nowUtc,
             'platform' => $platform
         ]
     ];
