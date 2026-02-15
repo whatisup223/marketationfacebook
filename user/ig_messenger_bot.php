@@ -1696,9 +1696,17 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                         </template>
                                     </div>
                                     <div class="relative">
-                                        <input type="text" x-model="btn.payload"
+                                        <input type="text" x-model="btn.payload" list="available-payloads"
                                             placeholder="<?php echo __('button_payload_placeholder'); ?>"
                                             class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white text-xs focus:ring-1 focus:ring-pink-500 font-mono text-indigo-300 pr-16 leading-none">
+                                        <datalist id="available-payloads">
+                                            <template x-for="rule in fullRules" :key="rule.id">
+                                                <template x-for="keyword in rule.keywords.split(',').map(k => k.trim())"
+                                                    :key="keyword">
+                                                    <option :value="keyword" x-text="keyword"></option>
+                                                </template>
+                                            </template>
+                                        </datalist>
                                         <button @click="suggestPayload(index)" type="button"
                                             class="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] bg-pink-500/10 hover:bg-pink-500/20 text-pink-400 px-2 py-1 rounded-lg border border-pink-500/10 transition-colors uppercase font-black">
                                             <?php echo __('suggest_payload'); ?>

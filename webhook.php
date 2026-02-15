@@ -744,6 +744,19 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
         debugLog("BUTTONS DEBUG: Is Array: " . (is_array($buttons) ? 'YES' : 'NO'));
         debugLog("BUTTONS DEBUG: Count: " . (is_array($buttons) ? count($buttons) : 0));
 
+        // INSTAGRAM FIX: If no buttons, fetch main menu buttons from default rule
+        if ($platform === 'instagram' && (!$buttons || !is_array($buttons) || count($buttons) === 0)) {
+            debugLog("BUTTONS DEBUG: No buttons found, fetching main menu...");
+            $stmt = $pdo->prepare("SELECT reply_buttons FROM auto_reply_rules WHERE page_id = ? AND platform = 'instagram' AND reply_source = 'message' AND trigger_type = 'keyword' AND keywords LIKE '%مهتم%' AND is_active = 1 LIMIT 1");
+            $stmt->execute([$db_page_id]);
+            $main_menu_rule = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($main_menu_rule && !empty($main_menu_rule['reply_buttons'])) {
+                $buttons = json_decode($main_menu_rule['reply_buttons'], true);
+                debugLog("BUTTONS DEBUG: Loaded main menu buttons: " . json_encode($buttons));
+            }
+        }
+
         // Then send text with buttons
         if ($buttons && is_array($buttons) && count($buttons) > 0) {
             debugLog("BUTTONS DEBUG: Sending WITH buttons");
