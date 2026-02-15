@@ -141,13 +141,16 @@ function handleFacebookEvent($data, $pdo)
                     continue;
                 }
 
+                $is_payload_interaction = false;
                 $message_text = '';
                 if (isset($messaging['message']['quick_reply']['payload'])) {
                     $message_text = $messaging['message']['quick_reply']['payload'];
+                    $is_payload_interaction = true;
                 } elseif (isset($messaging['message']['text'])) {
                     $message_text = $messaging['message']['text'];
                 } elseif (isset($messaging['postback']['payload'])) {
                     $message_text = $messaging['postback']['payload'];
+                    $is_payload_interaction = true;
                 }
 
                 if (!$message_text)
@@ -155,7 +158,7 @@ function handleFacebookEvent($data, $pdo)
 
                 $platform = ($object_type === 'instagram') ? 'instagram' : 'facebook';
                 // For Instagram Messaging, entry_id IS the IG Business ID
-                processAutoReply($pdo, $entry_id, $sender_id, $message_text, 'message', null, '', $platform);
+                processAutoReply($pdo, $entry_id, $sender_id, $message_text, 'message', null, '', $platform, null, null, $is_payload_interaction);
             }
         }
 
@@ -227,7 +230,7 @@ function handleFacebookEvent($data, $pdo)
     }
 }
 
-function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $actual_sender_id = null, $sender_name = '', $platform = 'facebook', $post_id = null, $parent_id = null)
+function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $actual_sender_id = null, $sender_name = '', $platform = 'facebook', $post_id = null, $parent_id = null, $is_payload_interaction = false)
 {
     // 1. Fetch Page Settings (Token, Schedule, Cooldown, AI Intelligence)
     // Try primary lookup by whichever ID Meta sent. IMPORTANT: SELECT p.ig_business_id too!
@@ -746,8 +749,9 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
 
         // RESTORED FEATURE: Persistent Menu Logic
         // If the current reply HAS NO BUTTONS, try to append the "items" from the Main Menu rule (keyword: 'مهتم')
-        // This simulates a persistent menu behavior where the user can always navigate back.
-        if (!$buttons || !is_array($buttons) || count($buttons) === 0) {
+        // *SMART LOGIC*: Only append if the user INTERACTED WITH A BUTTON (Payload/Quick Reply).
+        // This prevents buttons from appearing on every random text message.
+        if ((!$buttons || !is_array($buttons) || count($buttons) === 0) && $is_payload_interaction) {
 
             // Only do this if we are NOT already in the main menu (avoid loop if main menu itself has no buttons - unlikely)
             if (mb_strpos($matched_rule['keywords'], 'مهتم') === false) {
