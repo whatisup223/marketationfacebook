@@ -131,14 +131,14 @@ if (!isLoggedIn()) {
                     class="h-16 border-b border-white/5 bg-gray-900/95 backdrop-blur-xl flex items-center justify-between px-6 z-10">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
-                            :class="selectedConv.platform === 'facebook' ? 'bg-blue-600' : 'bg-pink-600'">
-                            <span x-text="selectedConv.client_name ? selectedConv.client_name.charAt(0) : '?'"></span>
+                            :class="selectedConv?.platform === 'facebook' ? 'bg-blue-600' : 'bg-pink-600'">
+                            <span x-text="selectedConv?.client_name ? selectedConv.client_name.charAt(0) : '?'"></span>
                         </div>
                         <div>
-                            <h3 class="font-bold text-white text-lg" x-text="selectedConv.client_name"></h3>
+                            <h3 class="font-bold text-white text-lg" x-text="selectedConv?.client_name || '<?php echo __('unknown'); ?>'"></h3>
                             <div class="flex items-center gap-2">
                                 <span class="w-2 h-2 rounded-full bg-green-500"></span>
-                                <span class="text-xs text-gray-400 capitalize" x-text="selectedConv.platform"></span>
+                                <span class="text-xs text-gray-400 capitalize" x-text="selectedConv?.platform || ''"></span>
                             </div>
                         </div>
                     </div>
@@ -213,7 +213,8 @@ if (!isLoggedIn()) {
 
         <div class="p-6 space-y-6">
             <h3 class="text-sm font-bold text-gray-400 uppercase tracking-widest">
-                <?php echo __('ai_advisor_insights'); ?></h3>
+                <?php echo __('ai_advisor_insights'); ?>
+            </h3>
 
             <!-- Analysis Card -->
             <div
@@ -257,12 +258,13 @@ if (!isLoggedIn()) {
                 <div class="space-y-3">
                     <div class="flex justify-between text-xs">
                         <span class="text-gray-400"><?php echo __('name'); ?></span>
-                        <span class="text-white font-medium" x-text="selectedConv.client_name"></span>
+                        <span class="text-white font-medium"
+                            x-text="selectedConv?.client_name || '<?php echo __('unknown'); ?>'"></span>
                     </div>
                     <div class="flex justify-between text-xs">
                         <span class="text-gray-400"><?php echo __('platform_id'); ?></span>
                         <span class="text-white font-medium font-mono"
-                            x-text="selectedConv.client_psid.substring(0, 10) + '...'"></span>
+                            x-text="selectedConv?.client_psid ? selectedConv.client_psid.substring(0, 10) + '...' : ''"></span>
                     </div>
                 </div>
             </div>
