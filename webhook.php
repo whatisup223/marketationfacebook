@@ -705,7 +705,7 @@ function processAutoReply($pdo, $page_id, $target_id, $incoming_text, $source, $
     // COMPLIANCE CHECK: Init Engine
     $compliance = new ComplianceEngine($pdo, $page_id, $access_token);
 
-    // A. Track this user interaction (opens window)
+    // A. Track this user interaction (opens window) - MUST BE BEFORE canSendMessage check!
     debugLog("STEP: Refreshing interaction time...");
     $compliance->refreshLastInteraction($customer_id, $source);
 
