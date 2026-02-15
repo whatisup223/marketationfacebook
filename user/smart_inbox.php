@@ -169,10 +169,9 @@ if (!isLoggedIn()) {
         </template>
 
         <template x-if="selectedConv">
-            <div class="flex-1 flex flex-col h-full">
+            <div class="flex flex-col h-full overflow-hidden">
                 <!-- Chat Header -->
-                <div
-                    class="h-16 border-b border-white/5 bg-gray-900/95 backdrop-blur-xl flex items-center justify-between px-3 md:px-6 z-10 gap-2">
+                <div class="h-16 shrink-0 border-b border-white/5 bg-gray-900/95 backdrop-blur-xl flex items-center justify-between px-3 md:px-6 z-10 gap-2">
                     <div class="flex items-center gap-2 md:gap-3 min-w-0">
                         <!-- Sidebar Toggle -->
                         <button @click="sidebarOpen = !sidebarOpen"
@@ -238,37 +237,40 @@ if (!isLoggedIn()) {
                     </template>
                 </div>
 
-                <!-- Smart Suggestions Bar -->
-                <div class="px-6 py-2 bg-gray-900 border-t border-white/5 w-full overflow-hidden"
-                    x-show="suggestions.length > 0">
-                    <div class="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar max-w-full">
-                        <div class="text-[10px] font-bold text-indigo-400 uppercase tracking-wider shrink-0 mr-2">
-                            <?php echo __('ai_suggestions'); ?>
+                <!-- Fixed Bottom Section (Suggestions + Input) -->
+                <div class="shrink-0 flex flex-col bg-gray-900">
+                    <!-- Smart Suggestions Bar -->
+                    <div class="px-6 py-2 border-t border-white/5 w-full overflow-hidden"
+                        x-show="suggestions.length > 0">
+                        <div class="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar max-w-full">
+                            <div class="text-[10px] font-bold text-indigo-400 uppercase tracking-wider shrink-0 mr-2">
+                                <?php echo __('ai_suggestions'); ?>
+                            </div>
+                            <template x-for="reply in suggestions">
+                                <button @click="newMessage = reply"
+                                    class="shrink-0 px-3 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs hover:bg-indigo-500/20 hover:border-indigo-500/40 transition-all cursor-pointer whitespace-nowrap">
+                                    <span x-text="reply"></span>
+                                </button>
+                            </template>
                         </div>
-                        <template x-for="reply in suggestions">
-                            <button @click="newMessage = reply"
-                                class="shrink-0 px-3 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs hover:bg-indigo-500/20 hover:border-indigo-500/40 transition-all cursor-pointer whitespace-nowrap">
-                                <span x-text="reply"></span>
-                            </button>
-                        </template>
                     </div>
-                </div>
 
-                <!-- Input Area -->
-                <div class="p-4 bg-gray-900 border-t border-white/5">
-                    <div
-                        class="glass-panel rounded-2xl p-2 flex items-end gap-2 bg-gray-800/50 border border-white/10 focus-within:ring-2 ring-indigo-500/50 transition-all">
-                        <textarea x-model="newMessage" placeholder="<?php echo __('type_message'); ?>" rows="1"
-                            class="w-full bg-transparent border-none text-white focus:ring-0 resize-none max-h-32 py-3 px-3 custom-scrollbar"
-                            @keydown.enter.prevent="if(!$event.shiftKey) sendMessage()"></textarea>
+                    <!-- Input Area -->
+                    <div class="p-4 border-t border-white/5">
+                        <div
+                            class="glass-panel rounded-2xl p-2 flex items-end gap-2 bg-gray-800/50 border border-white/10 focus-within:ring-2 ring-indigo-500/50 transition-all">
+                            <textarea x-model="newMessage" placeholder="<?php echo __('type_message'); ?>" rows="1"
+                                class="w-full bg-transparent border-none text-white focus:ring-0 resize-none max-h-32 py-3 px-3 custom-scrollbar"
+                                @keydown.enter.prevent="if(!$event.shiftKey) sendMessage()"></textarea>
 
-                        <button @click="sendMessage()"
-                            class="p-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition-all shadow-lg shadow-indigo-500/20 mb-1">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
-                            </svg>
-                        </button>
+                            <button @click="sendMessage()"
+                                class="p-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition-all shadow-lg shadow-indigo-600/20 mb-1">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -276,17 +278,24 @@ if (!isLoggedIn()) {
     </div>
 
     <!-- Right Sidebar (Advisor Panel) -->
-    <div x-show="selectedConv && showRightSidebar" x-transition:enter="transition ease-out duration-300"
-        x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0"
-        x-transition:leave="transition ease-in duration-300" x-transition:leave-start="translate-x-0"
-        x-transition:leave-end="translate-x-full"
-        class="fixed inset-y-0 right-0 z-40 w-80 lg:static border-l border-white/5 bg-gray-900/95 backdrop-blur-xl flex flex-col overflow-y-auto custom-scrollbar shadow-2xl lg:shadow-none">
-
-        <div class="p-6 space-y-6">
-            <h3 class="text-sm font-bold text-gray-400 uppercase tracking-widest">
+    <div x-show="selectedConv && showRightSidebar" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="translate-x-full"
+         x-transition:enter-end="translate-x-0"
+         x-transition:leave="transition ease-in duration-300"
+         x-transition:leave-start="translate-x-0"
+         x-transition:leave-end="translate-x-full"
+         class="fixed inset-y-0 right-0 z-40 w-80 lg:static border-l border-white/5 bg-gray-900/95 backdrop-blur-xl flex flex-col shadow-2xl lg:shadow-none overflow-hidden h-full">
+        
+        <!-- Fixed Advisor Header -->
+        <div class="h-16 shrink-0 border-b border-white/5 flex items-center px-6 bg-black/20">
+            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest">
                 <?php echo __('ai_advisor_insights'); ?>
             </h3>
+        </div>
 
+        <!-- Scrollable Advisor Content -->
+        <div class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
             <!-- Analysis Card -->
             <div
                 class="glass-panel p-5 rounded-2xl bg-gradient-to-br from-gray-800/50 to-gray-900/50 border border-white/10 group hover:border-indigo-500/30 transition-all">

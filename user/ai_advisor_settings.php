@@ -60,7 +60,7 @@ $s = [
     <?php include '../includes/user_sidebar.php'; ?>
 
     <!-- Main Content -->
-    <div class="flex-1 p-4 lg:p-8 ml-0 lg:ml-64 transition-all duration-300">
+    <div class="flex-1 p-4 lg:p-8 transition-all duration-300" :class="sidebarCollapsed ? 'lg:ms-20' : 'lg:ms-64'">
         <div class="max-w-4xl mx-auto space-y-6">
 
             <!-- Header -->
@@ -73,6 +73,15 @@ $s = [
                         <?php echo __('ai_advisor_desc'); ?>
                     </p>
                 </div>
+
+                <a href="smart_inbox.php"
+                    class="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 text-gray-300 rounded-xl border border-white/10 transition-all font-bold text-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    <?php echo $lang === 'ar' ? 'العودة للبريد الموحد' : 'Back to Smart Inbox'; ?>
+                </a>
             </div>
 
             <?php if ($message): ?>
