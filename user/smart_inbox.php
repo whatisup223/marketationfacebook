@@ -7,7 +7,7 @@ if (!isLoggedIn()) {
 }
 ?>
 
-<div class="flex h-screen overflow-hidden bg-gray-900 font-sans" x-data="smartInbox()">
+<div class="flex h-[calc(100vh-5rem)] overflow-hidden bg-gray-900 font-sans" x-data="smartInbox()">
     <!-- Sidebar -->
     <?php include '../includes/user_sidebar.php'; ?>
 
@@ -171,7 +171,8 @@ if (!isLoggedIn()) {
         <template x-if="selectedConv">
             <div class="flex flex-col h-full overflow-hidden">
                 <!-- Chat Header -->
-                <div class="h-16 shrink-0 border-b border-white/5 bg-gray-900/95 backdrop-blur-xl flex items-center justify-between px-3 md:px-6 z-10 gap-2">
+                <div
+                    class="h-16 shrink-0 sticky top-0 z-20 border-b border-white/5 bg-gray-900/95 backdrop-blur-xl flex items-center justify-between px-3 md:px-6 gap-2">
                     <div class="flex items-center gap-2 md:gap-3 min-w-0">
                         <!-- Sidebar Toggle -->
                         <button @click="sidebarOpen = !sidebarOpen"
@@ -278,17 +279,15 @@ if (!isLoggedIn()) {
     </div>
 
     <!-- Right Sidebar (Advisor Panel) -->
-    <div x-show="selectedConv && showRightSidebar" 
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="translate-x-full"
-         x-transition:enter-end="translate-x-0"
-         x-transition:leave="transition ease-in duration-300"
-         x-transition:leave-start="translate-x-0"
-         x-transition:leave-end="translate-x-full"
-         class="fixed inset-y-0 right-0 z-40 w-80 lg:static border-l border-white/5 bg-gray-900/95 backdrop-blur-xl flex flex-col shadow-2xl lg:shadow-none overflow-hidden h-full">
-        
+    <div x-show="selectedConv && showRightSidebar" x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0"
+        x-transition:leave="transition ease-in duration-300" x-transition:leave-start="translate-x-0"
+        x-transition:leave-end="translate-x-full"
+        class="fixed inset-y-0 right-0 top-20 lg:top-0 z-40 w-80 lg:static border-l border-white/5 bg-gray-900/95 backdrop-blur-xl flex flex-col shadow-2xl lg:shadow-none overflow-hidden h-[calc(100vh-5rem)] lg:h-full">
+
         <!-- Fixed Advisor Header -->
-        <div class="h-16 shrink-0 border-b border-white/5 flex items-center px-6 bg-black/20">
+        <div
+            class="h-16 shrink-0 sticky top-0 z-10 border-b border-white/5 flex items-center px-6 bg-gray-900/95 backdrop-blur-md">
             <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest">
                 <?php echo __('ai_advisor_insights'); ?>
             </h3>
