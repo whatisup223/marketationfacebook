@@ -40,9 +40,10 @@ if (!isLoggedIn()) {
         x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0"
         x-transition:leave="transition ease-in duration-300" x-transition:leave-start="translate-x-0"
         x-transition:leave-end="-translate-x-full"
-        class="fixed inset-y-0 left-0 z-50 w-72 md:w-80 lg:static flex-shrink-0 border-r border-white/5 bg-gray-900/95 backdrop-blur-xl flex flex-col h-full shadow-2xl lg:shadow-none">
-        <!-- Header -->
-        <div class="p-4 border-b border-white/5 flex items-center justify-between">
+        class="fixed inset-y-0 top-20 lg:top-0 left-0 z-50 w-72 md:w-80 lg:static flex-shrink-0 border-r border-white/5 bg-gray-900/95 backdrop-blur-xl flex flex-col h-[calc(100vh-5.0rem)] lg:h-full shadow-2xl lg:shadow-none">
+
+        <!-- Sidebar Header (Fixed) -->
+        <div class="p-4 border-b border-white/5 flex items-center justify-between shrink-0 bg-gray-900/50">
             <h2 class="text-lg font-bold text-white tracking-wide"><?php echo __('smart_inbox'); ?></h2>
             <div class="flex gap-2">
                 <!-- Sync Button -->
@@ -81,8 +82,8 @@ if (!isLoggedIn()) {
             </div>
         </div>
 
-        <!-- Tabs & Search -->
-        <div class="p-4 space-y-3">
+        <!-- Tabs & Search (Fixed) -->
+        <div class="p-4 space-y-3 shrink-0 bg-gray-900/30">
             <!-- Platform Tabs -->
             <div class="flex bg-gray-800 p-1 rounded-lg">
                 <button @click="activeTab = 'all'"
