@@ -779,22 +779,30 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 </label>
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                                     <template x-for="(btn, idx) in defaultReplyButtons" :key="idx">
-                                        <div class="bg-white/5 border border-white/5 rounded-2xl p-3 flex flex-col gap-2 relative group/btn">
-                                            <input type="text" x-model="btn.title" 
+                                        <div
+                                            class="bg-white/5 border border-white/5 rounded-2xl p-3 flex flex-col gap-2 relative group/btn">
+                                            <input type="text" x-model="btn.title"
                                                 class="bg-transparent border-0 border-b border-white/10 text-xs text-white focus:ring-0 focus:border-indigo-500 p-0"
                                                 placeholder="<?php echo __('button_label_placeholder'); ?>">
-                                            <input type="text" x-model="btn.payload" 
+                                            <input type="text" x-model="btn.payload"
                                                 class="bg-transparent border-0 text-[10px] text-gray-500 focus:ring-0 p-0"
                                                 placeholder="<?php echo __('button_payload_placeholder'); ?>">
-                                            <button @click="removeDefaultButton(idx)" 
+                                            <button @click="removeDefaultButton(idx)"
                                                 class="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center scale-0 group-hover/btn:scale-100 transition-transform">
-                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                </svg>
                                             </button>
                                         </div>
                                     </template>
                                     <button x-show="defaultReplyButtons.length < 3" @click="addDefaultButton()"
                                         class="border-2 border-dashed border-white/5 rounded-2xl p-3 flex items-center justify-center text-gray-500 hover:text-indigo-400 hover:border-indigo-500/30 transition-all text-xs gap-2">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 4v16m8-8H4"></path>
+                                        </svg>
                                         <?php echo __('add_button'); ?>
                                     </button>
                                 </div>
@@ -2378,7 +2386,8 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
             deleteRule(id) {
                 if (!confirm('<?php echo __('confirm_delete_rule'); ?>')) return;
                 let formData = new FormData();
-                formData.append('id', id);
+                formData.append('rule_id', id);
+                formData.append('page_id', this.selectedPageId);
                 fetch('ajax_auto_reply.php?action=delete_rule', { method: 'POST', body: formData })
                     .then(res => res.json())
                     .then(data => { if (data.success) this.fetchRules(); });
