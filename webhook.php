@@ -11,10 +11,7 @@ $input = file_get_contents('php://input');
 
 function debugLog($msg)
 {
-    $logFile = __DIR__ . '/MASTER_DEBUG.log';
-    $timestamp = date('Y-m-d H:i:s');
-    $content = (is_array($msg) || is_object($msg)) ? json_encode($msg, JSON_UNESCAPED_UNICODE) : $msg;
-    file_put_contents($logFile, "[$timestamp] $content\n", FILE_APPEND);
+    // Debug logging disabled for production cleanup.
 }
 
 // 1. Handle Facebook Verification (GET request)
