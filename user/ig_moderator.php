@@ -246,261 +246,265 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                                 class="w-8 h-8 rounded-full bg-blue-500 flex-shrink-0 border border-black/20 flex items-center justify-center text-white text-xs">
                                                 A</div>
                                             <div class="flex-1">
-                                                class="bg-[#3a3b3c] rounded-2xl px-3 py-2 inline-block text-[#e4e6eb]
-                                                relative break-words">
-                                                <div class="font-bold text-xs mb-0.5">Ahmed Ali</div>
-                                                <div class="text-[13px]">ممكن تكلمني على 01012345678؟</div>
-                                                <div class="absolute inset-0 rounded-2xl flex flex-col items-center justify-center p-2 text-white text-center"
-                                                    :class="rules.action_type === 'hide' ? 'bg-indigo-950/80 backdrop-blur-[2px] border border-pink-500/30' : 'bg-red-600 shadow-[0_0_20px_rgba(220,38,38,0.5)]'">
-                                                    <span
-                                                        class="text-[10px] font-black"><?php echo __('phone_violation'); ?></span>
-                                                    <span class="text-[8px] font-bold uppercase opacity-80"
-                                                        x-text="rules.action_type === 'hide' ? '<?php echo __('bot_action_hide'); ?>' : '<?php echo __('bot_action_delete'); ?>'"></span>
+                                                <div
+                                                    class="bg-[#3a3b3c] rounded-2xl px-3 py-2 inline-block text-[#e4e6eb] relative break-words">
+                                                    <div class="font-bold text-xs mb-0.5">Ahmed Ali</div>
+                                                    <div class="text-[13px]">ممكن تكلمني على 01012345678؟</div>
+                                                    <div class="absolute inset-0 rounded-2xl flex flex-col items-center justify-center p-2 text-white text-center"
+                                                        :class="rules.action_type === 'hide' ? 'bg-indigo-950/80 backdrop-blur-[2px] border border-pink-500/30' : 'bg-red-600 shadow-[0_0_20px_rgba(220,38,38,0.5)]'">
+                                                        <span
+                                                            class="text-[10px] font-black"><?php echo __('phone_violation'); ?></span>
+                                                        <span class="text-[8px] font-bold uppercase opacity-80"
+                                                            x-text="rules.action_type === 'hide' ? '<?php echo __('bot_action_hide'); ?>' : '<?php echo __('bot_action_delete'); ?>'"></span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
+                                    </template>
+
+                                    <!-- Link Example -->
+                                    <template x-if="rules.hide_links">
+                                        <div class="flex gap-2 animate-in slide-in-from-left-4 duration-300">
+                                            <div
+                                                class="w-8 h-8 rounded-full bg-green-500 flex-shrink-0 border border-black/20 flex items-center justify-center text-white text-xs">
+                                                S</div>
+                                            <div class="flex-1">
+                                                <div
+                                                    class="bg-[#3a3b3c] rounded-2xl px-3 py-2 inline-block text-[#e4e6eb] relative">
+                                                    <div class="font-bold text-xs mb-0.5">Sami J.</div>
+                                                    <div class="text-[13px]">Check this out: www.mysite.com</div>
+                                                    <div class="absolute inset-0 rounded-2xl flex flex-col items-center justify-center p-2 text-white text-center"
+                                                        :class="rules.action_type === 'hide' ? 'bg-indigo-950/80 backdrop-blur-[2px] border border-pink-500/30' : 'bg-red-600 shadow-[0_0_20px_rgba(220,38,38,0.5)]'">
+                                                        <span
+                                                            class="text-[10px] font-black"><?php echo __('link_violation'); ?></span>
+                                                        <span class="text-[8px] font-bold uppercase opacity-80"
+                                                            x-text="rules.action_type === 'hide' ? '<?php echo __('bot_action_hide'); ?>' : '<?php echo __('bot_action_delete'); ?>'"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
+
+                                    <!-- Keyword Example -->
+                                    <template x-if="rules.banned_keywords && rules.banned_keywords.trim().length > 0">
+                                        <div class="flex gap-2 animate-in slide-in-from-left-4 duration-300">
+                                            <div
+                                                class="w-8 h-8 rounded-full bg-purple-500 flex-shrink-0 border border-black/20 flex items-center justify-center text-white text-xs">
+                                                M</div>
+                                            <div class="flex-1">
+                                                <div
+                                                    class="bg-[#3a3b3c] rounded-2xl px-3 py-2 inline-block text-[#e4e6eb] relative">
+                                                    <div class="font-bold text-xs mb-0.5">Mona K.</div>
+                                                    <div class="text-[13px] truncate max-w-[160px]">
+                                                        <?php echo __('simulated_keyword_comment'); ?>
+                                                    </div>
+                                                    <div class="absolute inset-0 rounded-2xl flex flex-col items-center justify-center px-4 text-white text-center"
+                                                        :class="rules.action_type === 'hide' ? 'bg-indigo-950/80 backdrop-blur-[2px] border border-pink-500/30' : 'bg-red-600 shadow-[0_0_20px_rgba(220,38,38,0.5)]'">
+                                                        <span class="text-[10px] font-black truncate w-full"
+                                                            x-text="'<?php echo __('keyword_violation'); ?>' + rules.banned_keywords.split(/[،,]/).slice(0, 1).map(k => k.trim()) + (rules.banned_keywords.split(/[،,]/).length > 1 ? '...' : '')"></span>
+                                                        <span class="text-[8px] font-bold uppercase opacity-80"
+                                                            x-text="rules.action_type === 'hide' ? '<?php echo __('bot_action_hide'); ?>' : '<?php echo __('bot_action_delete'); ?>'"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
                                 </div>
-                                </template>
 
-                                <!-- Link Example -->
-                                <template x-if="rules.hide_links">
-                                    <div class="flex gap-2 animate-in slide-in-from-left-4 duration-300">
-                                        <div
-                                            class="w-8 h-8 rounded-full bg-green-500 flex-shrink-0 border border-black/20 flex items-center justify-center text-white text-xs">
-                                            S</div>
-                                        <div class="flex-1">
-                                            <div
-                                                class="bg-[#3a3b3c] rounded-2xl px-3 py-2 inline-block text-[#e4e6eb] relative">
-                                                <div class="font-bold text-xs mb-0.5">Sami J.</div>
-                                                <div class="text-[13px]">Check this out: www.mysite.com</div>
-                                                <div class="absolute inset-0 rounded-2xl flex flex-col items-center justify-center p-2 text-white text-center"
-                                                    :class="rules.action_type === 'hide' ? 'bg-indigo-950/80 backdrop-blur-[2px] border border-pink-500/30' : 'bg-red-600 shadow-[0_0_20px_rgba(220,38,38,0.5)]'">
-                                                    <span
-                                                        class="text-[10px] font-black"><?php echo __('link_violation'); ?></span>
-                                                    <span class="text-[8px] font-bold uppercase opacity-80"
-                                                        x-text="rules.action_type === 'hide' ? '<?php echo __('bot_action_hide'); ?>' : '<?php echo __('bot_action_delete'); ?>'"></span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </template>
-
-                                <!-- Keyword Example -->
-                                <template x-if="rules.banned_keywords && rules.banned_keywords.trim().length > 0">
-                                    <div class="flex gap-2 animate-in slide-in-from-left-4 duration-300">
-                                        <div
-                                            class="w-8 h-8 rounded-full bg-purple-500 flex-shrink-0 border border-black/20 flex items-center justify-center text-white text-xs">
-                                            M</div>
-                                        <div class="flex-1">
-                                            <div
-                                                class="bg-[#3a3b3c] rounded-2xl px-3 py-2 inline-block text-[#e4e6eb] relative">
-                                                <div class="font-bold text-xs mb-0.5">Mona K.</div>
-                                                <div class="text-[13px] truncate max-w-[160px]">
-                                                    <?php echo __('simulated_keyword_comment'); ?>
-                                                </div>
-                                                <div class="absolute inset-0 rounded-2xl flex flex-col items-center justify-center px-4 text-white text-center"
-                                                    :class="rules.action_type === 'hide' ? 'bg-indigo-950/80 backdrop-blur-[2px] border border-pink-500/30' : 'bg-red-600 shadow-[0_0_20px_rgba(220,38,38,0.5)]'">
-                                                    <span class="text-[10px] font-black truncate w-full"
-                                                        x-text="'<?php echo __('keyword_violation'); ?>' + rules.banned_keywords.split(/[،,]/).slice(0, 1).map(k => k.trim()) + (rules.banned_keywords.split(/[،,]/).length > 1 ? '...' : '')"></span>
-                                                    <span class="text-[8px] font-bold uppercase opacity-80"
-                                                        x-text="rules.action_type === 'hide' ? '<?php echo __('bot_action_hide'); ?>' : '<?php echo __('bot_action_delete'); ?>'"></span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </template>
-                            </div>
-
-                            <!-- Summary Hint -->
-                            <div class="bg-pink-600/5 rounded-2xl border border-pink-500/10 p-4 text-center mt-4">
-                                <p class="text-[10px] font-bold text-indigo-300">
-                                    <?php echo __('simulation_hint'); ?>
-                                </p>
+                                <!-- Summary Hint -->
+                                <div class="bg-pink-600/5 rounded-2xl border border-pink-500/10 p-4 text-center mt-4">
+                                    <p class="text-[10px] font-bold text-indigo-300">
+                                        <?php echo __('simulation_hint'); ?>
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Rules Area (Order 1 on mobile, Order 2 on desktop) -->
-        <div class="lg:col-span-8 order-1 lg:order-2" x-show="selectedPageId">
-            <div
-                class="glass-panel p-4 md:p-8 rounded-[2rem] border border-white/10 bg-gray-800/40 backdrop-blur-2xl hover:border-pink-500/30 transition-all shadow-2xl relative overflow-hidden group">
-                <div class="absolute top-0 left-0 w-1 h-full bg-pink-600 opacity-50"></div>
+            <!-- Rules Area (Order 1 on mobile, Order 2 on desktop) -->
+            <div class="lg:col-span-8 order-1 lg:order-2" x-show="selectedPageId">
+                <div
+                    class="glass-panel p-4 md:p-8 rounded-[2rem] border border-white/10 bg-gray-800/40 backdrop-blur-2xl hover:border-pink-500/30 transition-all shadow-2xl relative overflow-hidden group">
+                    <div class="absolute top-0 left-0 w-1 h-full bg-pink-600 opacity-50"></div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <!-- Left: Keywords & Activation -->
-                    <div class="space-y-6">
-                        <div class="flex justify-between items-center px-1">
-                            <h3 class="text-xl font-bold text-white"><?php echo __('moderation_rules'); ?></h3>
-                            <div class="flex items-center gap-2">
-                                <span
-                                    class="text-[10px] font-bold text-gray-500 uppercase"><?php echo __('active'); ?></span>
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" x-model="rules.is_active" class="sr-only peer">
-                                    <div
-                                        class="w-10 h-5 bg-gray-700 rounded-full peer peer-checked:bg-pink-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full">
-                                    </div>
-                                </label>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label
-                                class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-3"><?php echo __('banned_keywords'); ?></label>
-                            <textarea x-model="rules.banned_keywords" @input="updateModerationResult()" rows="5"
-                                class="w-full bg-black/40 border border-white/10 rounded-2xl p-5 text-white placeholder-gray-600 focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all text-sm leading-relaxed"
-                                placeholder="الكلمات الممنوعة، افصل بينها بفاصلة..."></textarea>
-                        </div>
-                    </div>
-
-                    <!-- Right: Smart Options & Action -->
-                    <div class="space-y-6">
-                        <label
-                            class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-3"><?php echo __('smart_filtering'); ?></label>
-
-                        <div class="space-y-3">
-                            <div @click="rules.hide_phones = !rules.hide_phones; updateModerationResult()"
-                                class="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 cursor-pointer hover:bg-white/10 transition-all">
-                                <span class="text-sm font-bold text-white"><?php echo __('hide_phones'); ?></span>
-                                <div class="w-5 h-5 rounded-md border-2 border-pink-500 flex items-center justify-center transition-colors"
-                                    :class="rules.hide_phones ? 'bg-pink-600' : ''">
-                                    <svg x-show="rules.hide_phones" class="w-4 h-4 text-white" fill="none"
-                                        stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
-                                            d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </div>
-                            </div>
-
-                            <div @click="rules.hide_links = !rules.hide_links; updateModerationResult()"
-                                class="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 cursor-pointer hover:bg-white/10 transition-all">
-                                <span class="text-sm font-bold text-white"><?php echo __('hide_links'); ?></span>
-                                <div class="w-5 h-5 rounded-md border-2 border-pink-500 flex items-center justify-center transition-colors"
-                                    :class="rules.hide_links ? 'bg-pink-600' : ''">
-                                    <svg x-show="rules.hide_links" class="w-4 h-4 text-white" fill="none"
-                                        stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
-                                            d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label
-                                class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-3"><?php echo __('action_to_take'); ?></label>
-                            <div class="flex gap-2">
-                                <button @click="rules.action_type = 'hide'; updateModerationResult()"
-                                    class="flex-1 py-3 px-4 rounded-xl border-2 font-bold transition-all text-xs"
-                                    :class="rules.action_type === 'hide' ? 'bg-pink-600/20 border-pink-600 text-white' : 'bg-black/40 border-white/5 text-gray-500'">
-                                    <?php echo __('hide_action'); ?>
-                                </button>
-                                <button @click="rules.action_type = 'delete'; updateModerationResult()"
-                                    class="flex-1 py-3 px-4 rounded-xl border-2 font-bold transition-all text-xs"
-                                    :class="rules.action_type === 'delete' ? 'bg-red-600/20 border-red-600 text-white' : 'bg-black/40 border-white/5 text-gray-500'">
-                                    <?php echo __('delete_action'); ?>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Save Settings -->
-                <div class="mt-8 pt-8 border-t border-white/5">
-                    <button @click="saveRules()" :disabled="saving"
-                        class="w-full py-4 bg-pink-600 hover:bg-pink-500 text-white rounded-2xl font-bold shadow-xl shadow-pink-600/20 transition-all flex items-center justify-center gap-3">
-                        <svg x-show="saving" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
-                            </circle>
-                            <path class="opacity-75" fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                            </path>
-                        </svg>
-                        <span x-text="saving ? '...' : '<?php echo __('save_settings'); ?>'"></span>
-                    </button>
-                </div>
-            </div>
-        </div>
-</div>
-
-<!-- Logs Section (Order 3 on mobile, Order 3 on desktop - will sit under Rules Area) -->
-<div class="lg:col-span-8 lg:col-start-5 order-3" x-show="selectedPageId">
-    <div class="glass-panel p-4 md:p-8 rounded-[2rem] border border-white/10 bg-gray-800/40 backdrop-blur-2xl">
-        <div class="flex justify-between items-center mb-6 px-1">
-            <h3 class="text-xl font-bold text-white"><?php echo __('moderation_logs'); ?></h3>
-            <button @click="loadLogs()"
-                class="text-pink-400 hover:text-indigo-300 transition-all flex items-center gap-2"
-                :class="loadingLogs ? 'opacity-50' : ''" :disabled="loadingLogs">
-                <svg class="w-5 h-5" :class="loadingLogs ? 'animate-spin' : ''" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                <span
-                    class="text-[10px] font-bold uppercase tracking-widest hidden md:inline"><?php echo __('sync_pages'); ?></span>
-            </button>
-        </div>
-
-        <div class="space-y-3 max-h-[500px] overflow-y-auto pr-2 messenger-scrollbar">
-            <template x-for="log in logs" :key="log.id">
-                <div class="p-4 bg-black/40 rounded-2xl border border-white/5 flex items-center justify-between group">
-                    <div class="flex items-center gap-4 min-w-0">
-                        <div class="w-10 h-10 rounded-xl bg-pink-500/10 flex-shrink-0 flex items-center justify-center font-bold text-pink-400"
-                            x-text="(log.user_name || 'C').charAt(0).toUpperCase()"></div>
-                        <div class="min-w-0 flex-1">
-                            <div class="flex items-center gap-2 flex-wrap">
-                                <span class="font-bold text-white text-sm"
-                                    x-text="log.user_name || '<?php echo $user_lang === 'ar' ? 'عميل إنستجرام' : 'Instagram Client'; ?>'"></span>
-                                <span class="px-2 py-0.5 rounded-full text-[8px] font-black uppercase whitespace-nowrap"
-                                    :class="log.action_taken === 'hide' ? 'bg-pink-500/20 text-pink-400' : (log.action_taken === 'delete' ? 'bg-red-500/20 text-red-500' : 'bg-gray-500/20 text-gray-400')"
-                                    x-text="log.action_taken === 'hide' ? '<?php echo __('bot_action_hide'); ?>' : (log.action_taken === 'delete' ? '<?php echo __('bot_action_delete'); ?>' : '<?php echo __('silenced'); ?>')"></span>
-                                <template x-if="log.reason">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- Left: Keywords & Activation -->
+                        <div class="space-y-6">
+                            <div class="flex justify-between items-center px-1">
+                                <h3 class="text-xl font-bold text-white"><?php echo __('moderation_rules'); ?></h3>
+                                <div class="flex items-center gap-2">
                                     <span
-                                        class="px-2 py-0.5 rounded-full text-[8px] font-bold bg-white/5 text-gray-400 border border-white/5 whitespace-nowrap"
-                                        x-text="log.reason"></span>
-                                </template>
+                                        class="text-[10px] font-bold text-gray-500 uppercase"><?php echo __('active'); ?></span>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" x-model="rules.is_active" class="sr-only peer">
+                                        <div
+                                            class="w-10 h-5 bg-gray-700 rounded-full peer peer-checked:bg-pink-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full">
+                                        </div>
+                                    </label>
+                                </div>
                             </div>
-                            <p class="text-xs text-gray-500 italic mt-1 line-clamp-1 break-all" x-text="log.content">
-                            </p>
+
+                            <div>
+                                <label
+                                    class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-3"><?php echo __('banned_keywords'); ?></label>
+                                <textarea x-model="rules.banned_keywords" @input="updateModerationResult()" rows="5"
+                                    class="w-full bg-black/40 border border-white/10 rounded-2xl p-5 text-white placeholder-gray-600 focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all text-sm leading-relaxed"
+                                    placeholder="الكلمات الممنوعة، افصل بينها بفاصلة..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Right: Smart Options & Action -->
+                        <div class="space-y-6">
+                            <label
+                                class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-3"><?php echo __('smart_filtering'); ?></label>
+
+                            <div class="space-y-3">
+                                <div @click="rules.hide_phones = !rules.hide_phones; updateModerationResult()"
+                                    class="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 cursor-pointer hover:bg-white/10 transition-all">
+                                    <span class="text-sm font-bold text-white"><?php echo __('hide_phones'); ?></span>
+                                    <div class="w-5 h-5 rounded-md border-2 border-pink-500 flex items-center justify-center transition-colors"
+                                        :class="rules.hide_phones ? 'bg-pink-600' : ''">
+                                        <svg x-show="rules.hide_phones" class="w-4 h-4 text-white" fill="none"
+                                            stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                                                d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </div>
+                                </div>
+
+                                <div @click="rules.hide_links = !rules.hide_links; updateModerationResult()"
+                                    class="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 cursor-pointer hover:bg-white/10 transition-all">
+                                    <span class="text-sm font-bold text-white"><?php echo __('hide_links'); ?></span>
+                                    <div class="w-5 h-5 rounded-md border-2 border-pink-500 flex items-center justify-center transition-colors"
+                                        :class="rules.hide_links ? 'bg-pink-600' : ''">
+                                        <svg x-show="rules.hide_links" class="w-4 h-4 text-white" fill="none"
+                                            stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                                                d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label
+                                    class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-3"><?php echo __('action_to_take'); ?></label>
+                                <div class="flex gap-2">
+                                    <button @click="rules.action_type = 'hide'; updateModerationResult()"
+                                        class="flex-1 py-3 px-4 rounded-xl border-2 font-bold transition-all text-xs"
+                                        :class="rules.action_type === 'hide' ? 'bg-pink-600/20 border-pink-600 text-white' : 'bg-black/40 border-white/5 text-gray-500'">
+                                        <?php echo __('hide_action'); ?>
+                                    </button>
+                                    <button @click="rules.action_type = 'delete'; updateModerationResult()"
+                                        class="flex-1 py-3 px-4 rounded-xl border-2 font-bold transition-all text-xs"
+                                        :class="rules.action_type === 'delete' ? 'bg-red-600/20 border-red-600 text-white' : 'bg-black/40 border-white/5 text-gray-500'">
+                                        <?php echo __('delete_action'); ?>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div
-                        class="flex items-center gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-all flex-shrink-0">
-                        <!-- Open on Instagram -->
-                        <template x-if="log.comment_id">
-                            <a :href="'https://business.facebook.com/latest/inbox/all?selected_item_id=' + log.comment_id"
-                                target="_blank" class="p-2 text-gray-400 hover:text-pink-400 transition-colors"
-                                title="<?php echo __('view_on_instagram') ?: 'View on Instagram'; ?>">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                </svg>
-                            </a>
-                        </template>
 
-                        <!-- Delete Log -->
-                        <button @click="confirmDelete(log)"
-                            class="p-2 text-gray-400 hover:text-red-500 transition-colors"
-                            title="<?php echo __('delete'); ?>">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    <!-- Save Settings -->
+                    <div class="mt-8 pt-8 border-t border-white/5">
+                        <button @click="saveRules()" :disabled="saving"
+                            class="w-full py-4 bg-pink-600 hover:bg-pink-500 text-white rounded-2xl font-bold shadow-xl shadow-pink-600/20 transition-all flex items-center justify-center gap-3">
+                            <svg x-show="saving" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                    stroke-width="4">
+                                </circle>
+                                <path class="opacity-75" fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                </path>
                             </svg>
+                            <span x-text="saving ? '...' : '<?php echo __('save_settings'); ?>'"></span>
                         </button>
                     </div>
                 </div>
-            </template>
-
-            <template x-if="logs.length === 0">
-                <div class="py-12 text-center text-gray-600 italic text-sm">
-                    <?php echo __('no_moderation_logs'); ?>
-                </div>
-            </template>
+            </div>
         </div>
-    </div>
-</div>
+
+        <!-- Logs Section (Order 3 on mobile, Order 3 on desktop - will sit under Rules Area) -->
+        <div class="lg:col-span-8 lg:col-start-5 order-3" x-show="selectedPageId">
+            <div class="glass-panel p-4 md:p-8 rounded-[2rem] border border-white/10 bg-gray-800/40 backdrop-blur-2xl">
+                <div class="flex justify-between items-center mb-6 px-1">
+                    <h3 class="text-xl font-bold text-white"><?php echo __('moderation_logs'); ?></h3>
+                    <button @click="loadLogs()"
+                        class="text-pink-400 hover:text-indigo-300 transition-all flex items-center gap-2"
+                        :class="loadingLogs ? 'opacity-50' : ''" :disabled="loadingLogs">
+                        <svg class="w-5 h-5" :class="loadingLogs ? 'animate-spin' : ''" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        <span
+                            class="text-[10px] font-bold uppercase tracking-widest hidden md:inline"><?php echo __('sync_pages'); ?></span>
+                    </button>
+                </div>
+
+                <div class="space-y-3 max-h-[500px] overflow-y-auto pr-2 messenger-scrollbar">
+                    <template x-for="log in logs" :key="log.id">
+                        <div
+                            class="p-4 bg-black/40 rounded-2xl border border-white/5 flex items-center justify-between group">
+                            <div class="flex items-center gap-4 min-w-0">
+                                <div class="w-10 h-10 rounded-xl bg-pink-500/10 flex-shrink-0 flex items-center justify-center font-bold text-pink-400"
+                                    x-text="(log.user_name || 'C').charAt(0).toUpperCase()"></div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <span class="font-bold text-white text-sm"
+                                            x-text="log.user_name || '<?php echo $user_lang === 'ar' ? 'عميل إنستجرام' : 'Instagram Client'; ?>'"></span>
+                                        <span
+                                            class="px-2 py-0.5 rounded-full text-[8px] font-black uppercase whitespace-nowrap"
+                                            :class="log.action_taken === 'hide' ? 'bg-pink-500/20 text-pink-400' : (log.action_taken === 'delete' ? 'bg-red-500/20 text-red-500' : 'bg-gray-500/20 text-gray-400')"
+                                            x-text="log.action_taken === 'hide' ? '<?php echo __('bot_action_hide'); ?>' : (log.action_taken === 'delete' ? '<?php echo __('bot_action_delete'); ?>' : '<?php echo __('silenced'); ?>')"></span>
+                                        <template x-if="log.reason">
+                                            <span
+                                                class="px-2 py-0.5 rounded-full text-[8px] font-bold bg-white/5 text-gray-400 border border-white/5 whitespace-nowrap"
+                                                x-text="log.reason"></span>
+                                        </template>
+                                    </div>
+                                    <p class="text-xs text-gray-500 italic mt-1 line-clamp-1 break-all"
+                                        x-text="log.content">
+                                    </p>
+                                </div>
+                            </div>
+                            <div
+                                class="flex items-center gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-all flex-shrink-0">
+                                <!-- Open on Instagram -->
+                                <template x-if="log.comment_id">
+                                    <a :href="'https://business.facebook.com/latest/inbox/all?selected_item_id=' + log.comment_id"
+                                        target="_blank" class="p-2 text-gray-400 hover:text-pink-400 transition-colors"
+                                        title="<?php echo __('view_on_instagram') ?: 'View on Instagram'; ?>">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                        </svg>
+                                    </a>
+                                </template>
+
+                                <!-- Delete Log -->
+                                <button @click="confirmDelete(log)"
+                                    class="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                                    title="<?php echo __('delete'); ?>">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template x-if="logs.length === 0">
+                        <div class="py-12 text-center text-gray-600 italic text-sm">
+                            <?php echo __('no_moderation_logs'); ?>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
 
 </div> <!-- End Main Body Grid -->
 </main> <!-- End Main -->
