@@ -1622,12 +1622,15 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 </div>
                 <div>
                     <div class="flex justify-between items-center mb-3">
-                        <label class="block text-xs font-black text-gray-500 uppercase tracking-widest"><?php echo __('reply_message'); ?></label>
-                        <span class="text-[10px] font-mono" :class="modalReply.length > 900 ? 'text-red-400' : 'text-gray-500'">
+                        <label
+                            class="block text-xs font-black text-gray-500 uppercase tracking-widest"><?php echo __('reply_message'); ?></label>
+                        <span class="text-[10px] font-mono"
+                            :class="modalReply.length > 900 ? 'text-red-400' : 'text-gray-500'">
                             <span x-text="modalReply.length"></span>/1000
                         </span>
                     </div>
-                    <textarea x-model="modalReply" rows="5" maxlength="1000" placeholder="<?php echo __('reply_placeholder'); ?>"
+                    <textarea x-model="modalReply" rows="5" maxlength="1000"
+                        placeholder="<?php echo __('reply_placeholder'); ?>"
                         class="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50 transition-all resize-none text-sm leading-relaxed"></textarea>
                 </div>
 
@@ -2431,7 +2434,8 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
             deleteRule(id) {
                 if (!confirm('<?php echo __('confirm_delete_rule'); ?>')) return;
                 let formData = new FormData();
-                formData.append('id', id);
+                formData.append('rule_id', id);
+                formData.append('page_id', this.selectedPageId);
                 fetch('ajax_auto_reply.php?platform=instagram&action=delete_rule', { method: 'POST', body: formData })
                     .then(res => res.json())
                     .then(data => { if (data.success) this.fetchRules(); });
