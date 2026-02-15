@@ -11,8 +11,17 @@ if (!isLoggedIn()) {
     <!-- Sidebar -->
     <?php include '../includes/user_sidebar.php'; ?>
 
+    <!-- Mobile Sidebar Backdrop -->
+    <div x-show="sidebarOpen" @click="sidebarOpen = false"
+        x-transition:enter="transition-opacity ease-linear duration-300" x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100" x-transition:leave="transition-opacity ease-linear duration-300"
+        x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+        class="fixed inset-0 bg-gray-900/80 z-20 md:hidden"></div>
+
     <!-- Left Sidebar (Conversations) -->
-    <div class="w-80 flex-shrink-0 border-r border-white/5 bg-gray-900/95 backdrop-blur-xl flex flex-col">
+    <div :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'"
+        class="fixed inset-y-0 left-0 z-30 w-80 md:relative flex-shrink-0 border-r border-white/5 bg-gray-900/95 backdrop-blur-xl flex flex-col transition-transform duration-300 ease-in-out md:ml-20">
+        <!-- Added md:ml-20 to offset persistent sidebar -->
         <!-- Header -->
         <div class="p-4 border-b border-white/5 flex items-center justify-between">
             <h2 class="text-lg font-bold text-white tracking-wide"><?php echo __('smart_inbox'); ?></h2>
@@ -52,15 +61,34 @@ if (!isLoggedIn()) {
             </div>
         </div>
 
-        <!-- Search -->
-        <div class="p-4">
-            <input type="text" placeholder="<?php echo __('search_conversations'); ?>"
+        <!-- Tabs & Search -->
+        <div class="p-4 space-y-3">
+            <!-- Platform Tabs -->
+            <div class="flex bg-gray-800 p-1 rounded-lg">
+                <button @click="activeTab = 'all'"
+                    :class="activeTab === 'all' ? 'bg-indigo-600 text-white shadow' : 'text-gray-400 hover:text-white'"
+                    class="flex-1 py-1 text-xs font-bold rounded-md transition-all">
+                    <?php echo __('all'); ?>
+                </button>
+                <button @click="activeTab = 'facebook'"
+                    :class="activeTab === 'facebook' ? 'bg-blue-600 text-white shadow' : 'text-gray-400 hover:text-white'"
+                    class="flex-1 py-1 text-xs font-bold rounded-md transition-all">
+                    FB
+                </button>
+                <button @click="activeTab = 'instagram'"
+                    :class="activeTab === 'instagram' ? 'bg-pink-600 text-white shadow' : 'text-gray-400 hover:text-white'"
+                    class="flex-1 py-1 text-xs font-bold rounded-md transition-all">
+                    IG
+                </button>
+            </div>
+
+            <input type="text" x-model="searchQuery" placeholder="<?php echo __('search_conversations'); ?>"
                 class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 transition-colors">
         </div>
 
         <!-- List -->
         <div class="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
-            <template x-for="conv in conversations" :key="conv.id">
+            <template x-for="conv in filteredConversations" :key="conv.id">
                 <div @click="selectConversation(conv)"
                     :class="selectedConv && selectedConv.id === conv.id ? 'bg-white/10 border-indigo-500/50' : 'hover:bg-white/5 border-transparent'"
                     class="p-3 rounded-xl cursor-pointer border transition-all group relative">
@@ -128,17 +156,26 @@ if (!isLoggedIn()) {
             <div class="flex-1 flex flex-col h-full">
                 <!-- Chat Header -->
                 <div
-                    class="h-16 border-b border-white/5 bg-gray-900/95 backdrop-blur-xl flex items-center justify-between px-6 z-10">
+                    class="h-16 border-b border-white/5 bg-gray-900/95 backdrop-blur-xl flex items-center justify-between px-4 md:px-6 z-10">
                     <div class="flex items-center gap-3">
+                        <!-- Mobile Toggle -->
+                        <button @click="sidebarOpen = !sidebarOpen" class="md:hidden text-gray-400 hover:text-white">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 6h16M4 12h16M4 18h16"></path>
+                            </svg>
+                        </button>
                         <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
                             :class="selectedConv?.platform === 'facebook' ? 'bg-blue-600' : 'bg-pink-600'">
                             <span x-text="selectedConv?.client_name ? selectedConv.client_name.charAt(0) : '?'"></span>
                         </div>
                         <div>
-                            <h3 class="font-bold text-white text-lg" x-text="selectedConv?.client_name || '<?php echo __('unknown'); ?>'"></h3>
+                            <h3 class="font-bold text-white text-lg"
+                                x-text="selectedConv?.client_name || '<?php echo __('unknown'); ?>'"></h3>
                             <div class="flex items-center gap-2">
                                 <span class="w-2 h-2 rounded-full bg-green-500"></span>
-                                <span class="text-xs text-gray-400 capitalize" x-text="selectedConv?.platform || ''"></span>
+                                <span class="text-xs text-gray-400 capitalize"
+                                    x-text="selectedConv?.platform || ''"></span>
                             </div>
                         </div>
                     </div>
@@ -283,15 +320,38 @@ if (!isLoggedIn()) {
             newMessage: '',
             analyzing: false,
             syncing: false,
+            sidebarOpen: false, 
+            activeTab: 'all',
+            searchQuery: '',
+            
             analysis: {
                 sentiment: null,
                 intent: null,
                 summary: null,
                 next_best_action: null
             },
+            
+            get filteredConversations() {
+                return this.conversations.filter(c => {
+                    // Tab Filter
+                    if (this.activeTab !== 'all' && c.platform !== this.activeTab) return false;
+                    
+                    // Search Filter
+                    if (this.searchQuery) {
+                        const q = this.searchQuery.toLowerCase();
+                        return (c.client_name && c.client_name.toLowerCase().includes(q)) || 
+                               (c.last_message_text && c.last_message_text.toLowerCase().includes(q));
+                    }
+                    return true;
+                });
+            },
 
             init() {
                 this.fetchConversations();
+                // Close sidebar when selecting convo on mobile
+                this.$watch('selectedConv', () => {
+                   if (window.innerWidth < 768) this.sidebarOpen = false;
+                });
                 // Poll for new messages every 10s
                 setInterval(() => {
                     if (this.selectedConv) this.fetchMessages(true);
@@ -414,8 +474,16 @@ if (!isLoggedIn()) {
                         conversation_id: this.selectedConv.id,
                         message_text: text
                     })
-                }).then(() => {
-                    this.fetchMessages(true); // Sync real ID
+                }).then(r => r.json()).then(data => {
+                    if (!data.success) {
+                        alert('Failed to send: ' + (data.error || 'Unknown error'));
+                        this.messages.pop(); // Remove optimistic msg
+                    } else {
+                        this.fetchMessages(true); // Sync real ID
+                    }
+                }).catch(e => {
+                    alert('Conn Error');
+                    this.messages.pop();
                 });
             },
 

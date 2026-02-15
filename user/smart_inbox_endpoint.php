@@ -17,7 +17,7 @@ $action = $_GET['action'] ?? '';
 try {
     switch ($action) {
         case 'list_conversations':
-            $stmt = $pdo->prepare("SELECT * FROM unified_conversations WHERE user_id = ? ORDER BY last_message_time DESC LIMIT 20");
+            $stmt = $pdo->prepare("SELECT * FROM unified_conversations WHERE user_id = ? ORDER BY last_message_time DESC LIMIT 100");
             $stmt->execute([$userId]);
             $convs = $stmt->fetchAll(PDO::FETCH_ASSOC);
             echo json_encode(['success' => true, 'conversations' => $convs]);
@@ -61,7 +61,18 @@ try {
             break;
 
         case 'sync_conversations':
-            set_time_limit(120); // Allow script to run for 2 minutes
+            set_time_limit(120);
+
+            // Self-Healing DB: Ensure page_id column exists
+            try {
+                $pdo->query("SELECT page_id FROM unified_conversations LIMIT 1");
+            } catch (Exception $e) {
+                // Column likely missing, add it
+                try {
+                    $pdo->exec("ALTER TABLE unified_conversations ADD COLUMN page_id VARCHAR(50) NULL AFTER platform");
+                } catch (Exception $ex) { /* Ignore if race condition */
+                }
+            }
 
             // 1. Get all pages for user 
             $stmt = $pdo->prepare("
@@ -158,11 +169,11 @@ try {
 
                         if ($existing) {
                             $convId = $existing['id'];
-                            $upd = $pdo->prepare("UPDATE unified_conversations SET last_message_text = ?, last_message_time = ?, client_name = ? WHERE id = ?");
-                            $upd->execute([$lastMsgText, $lastMsgTime, $clientName, $convId]);
+                            $upd = $pdo->prepare("UPDATE unified_conversations SET last_message_text = ?, last_message_time = ?, client_name = ?, page_id = ? WHERE id = ?");
+                            $upd->execute([$lastMsgText, $lastMsgTime, $clientName, $task['id'], $convId]);
                         } else {
-                            $ins = $pdo->prepare("INSERT INTO unified_conversations (user_id, platform, client_psid, client_name, last_message_text, last_message_time) VALUES (?, ?, ?, ?, ?, ?)");
-                            $ins->execute([$userId, $task['platform'], $clientPsid, $clientName, $lastMsgText, $lastMsgTime]);
+                            $ins = $pdo->prepare("INSERT INTO unified_conversations (user_id, platform, client_psid, client_name, last_message_text, last_message_time, page_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
+                            $ins->execute([$userId, $task['platform'], $clientPsid, $clientName, $lastMsgText, $lastMsgTime, $task['id']]);
                             $convId = $pdo->lastInsertId();
                         }
 
@@ -206,18 +217,58 @@ try {
             break;
 
         case 'send_message':
-            // Placeholder logic to "send" a message (save to DB)
             $input = json_decode(file_get_contents('php://input'), true);
             $convId = $input['conversation_id'];
             $text = $input['message_text'];
 
-            // Save to DB as 'page' sender
+            // 1. Get Conversation Details to find Page ID and Client PSID
+            $stmt = $pdo->prepare("SELECT platform, client_psid, page_id FROM unified_conversations WHERE id = ? AND user_id = ?");
+            $stmt->execute([$convId, $userId]);
+            $conv = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$conv || !$conv['page_id']) {
+                throw new Exception("Conversation or Page ID not found. Please sync again.");
+            }
+
+            // 2. Get Page Access Token
+            $stmt = $pdo->prepare("SELECT p.page_access_token FROM fb_pages p JOIN fb_accounts a ON p.account_id = a.id WHERE p.page_id = ? AND a.user_id = ?");
+            $stmt->execute([$conv['page_id'], $userId]);
+            $token = $stmt->fetchColumn();
+
+            if (!$token) {
+                throw new Exception("Page Access Token not found.");
+            }
+
+            // 3. Send via Graph API
+            $url = "https://graph.facebook.com/v19.0/me/messages?access_token={$token}";
+            $body = [
+                'recipient' => ['id' => $conv['client_psid']],
+                'message' => ['text' => $text],
+                'messaging_type' => 'RESPONSE'
+            ];
+
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($body));
+            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+            $result = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            $resData = json_decode($result, true);
+
+            if ($httpCode !== 200 || isset($resData['error'])) {
+                throw new Exception("FB API Error: " . ($resData['error']['message'] ?? $result));
+            }
+
+            // 4. Save to DB (Success)
             $stmt = $pdo->prepare("INSERT INTO unified_messages (conversation_id, sender, message_text) VALUES (?, 'page', ?)");
             $stmt->execute([$convId, $text]);
 
-            // Update conversation last message
+            // 5. Update Conversation
             $stmt = $pdo->prepare("UPDATE unified_conversations SET last_message_text = ?, last_message_time = NOW() WHERE id = ?");
-            $stmt->execute(["You: " . substr($text, 0, 50), $convId]);
+            $stmt->execute(["You: " . mb_substr($text, 0, 50), $convId]);
 
             echo json_encode(['success' => true]);
             break;
